@@ -1,7 +1,7 @@
 {
     global:
         JNI_OnLoad;
-        LogMessage;
+        _ZN4lynx4base7logging*;
     local:
         *;
 };
