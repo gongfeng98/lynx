@@ -843,6 +843,10 @@
   [_templateRender setExtraTiming:timingInfo];
 }
 
+- (void)setFluencyTracerEnabled:(LynxBooleanOption)enabled {
+  [_templateRender setFluencyTracerEnabled:enabled];
+}
+
 - (void)putParamsForReportingEvents:(NSDictionary<NSString*, id>*)params {
   [_templateRender putExtraParamsForReportingEvents:params];
 }

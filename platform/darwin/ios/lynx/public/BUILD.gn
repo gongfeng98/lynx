@@ -10,6 +10,7 @@ import("//lynx/tools/gn_tools/podspec_target_template.gni")
 public_shared_sources = [
   "LynxBackgroundRuntime.h",
   "LynxBlurImageProcessor.h",
+  "LynxBooleanOption.h",
   "LynxFatImageProcessor.h",
   "LynxImageBlurUtils.h",
   "LynxImageLoader.h",

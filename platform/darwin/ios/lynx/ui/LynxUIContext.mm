@@ -224,7 +224,7 @@
   self.fixNewImageDownSampling = config.fixNewImageDownSampling;
   // If EnableLynxFluency is configured, Lynx will determine whether to enable fluency
   // metics based on this probability when creating a LynxView.
-  [self.fluencyInnerListener setFluencyPageconfigProbability:config.fluencyPageConfigProbability];
+  [self.fluencyInnerListener setPageConfigProbability:config.fluencyPageConfigProbability];
 
   [self setEnableTextLayerRender:config.enableTextLayerRenderer];
 

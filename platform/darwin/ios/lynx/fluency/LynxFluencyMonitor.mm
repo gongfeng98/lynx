@@ -3,13 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 
 #import "LynxFluencyMonitor.h"
+#import <Lynx/LynxBooleanOption.h>
 #import <Lynx/LynxEventReporter.h>
 #import <Lynx/LynxScrollListener.h>
 #import <Lynx/LynxService.h>
+#import <Lynx/LynxTraceEvent.h>
 #import <Lynx/LynxView+Internal.h>
 #import "LynxFPSMonitor.h"
 #import "LynxTemplateRender+Internal.h"
-#import "LynxTraceEvent.h"
 #include "core/services/fluency/fluency_tracer.h"
 
 typedef NS_ENUM(NSInteger, ForceStatus) {
@@ -20,6 +21,8 @@ typedef NS_ENUM(NSInteger, ForceStatus) {
 
 @implementation LynxFluencyMonitor {
   ForceStatus _forceStatus;
+  BOOL _probabilityDetermined;
+  LynxBooleanOption _enabledBySampling;
   CGFloat _fluencyPageconfigProbability;
 }
 
@@ -96,6 +99,7 @@ typedef NS_ENUM(NSInteger, ForceStatus) {
     @"lynxsdk_fluency_drop7_ratio" : @(derivedMetrics.drop7Ratio * 1000),
     @"lynxsdk_fluency_drop25_ratio" : @(derivedMetrics.drop25Ratio * 1000),
     @"lynxsdk_fluency_pageconfig_probability" : @(_fluencyPageconfigProbability),
+    @"lynxsdk_fluency_enabled_by_sampling" : @(_enabledBySampling),
   }];
 
   return result;
@@ -112,15 +116,30 @@ typedef NS_ENUM(NSInteger, ForceStatus) {
   [LynxEventReporter onEvent:@"lynxsdk_fluency_event" instanceId:instanceId props:json];
 }
 
-- (void)setFluencyPageconfigProbability:(CGFloat)probability {
+- (void)setEnabledBySampling:(LynxBooleanOption)enabledBySampling {
+  _enabledBySampling = enabledBySampling;
+  [self updateStatus];
+}
+
+- (void)setPageConfigProbability:(CGFloat)probability {
   _fluencyPageconfigProbability = probability;
-  if (probability >= 0) {
+  _probabilityDetermined = NO;  // reset the flag when page config probability is set again.
+  [self updateStatus];
+}
+
+- (void)updateStatus {
+  double probability = _fluencyPageconfigProbability;
+  if (!_probabilityDetermined && probability >= 0) {
+    _probabilityDetermined = YES;
     int randomValue = arc4random_uniform(100);
     if (randomValue <= probability * 100) {
       _forceStatus = ForceStatusForcedOn;
     } else {
       _forceStatus = ForceStatusForcedOff;
     }
+  } else if (_enabledBySampling != LynxBooleanOptionUnset) {
+    _forceStatus =
+        _enabledBySampling == LynxBooleanOptionTrue ? ForceStatusForcedOn : ForceStatusForcedOff;
   }
 }
 

@@ -2028,6 +2028,10 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   }
 }
 
+- (void)setFluencyTracerEnabled:(LynxBooleanOption)enabledBySampling {
+  [_lynxUIRenderer setFluencyTracerEnabled:enabledBySampling];
+}
+
 - (void)putExtraParamsForReportingEvents:(NSDictionary<NSString*, id>*)params {
   [LynxEventReporter putExtraParams:params forInstanceId:self.instanceId];
 }

@@ -138,6 +138,10 @@
   [uiContext setUIConfig:configAdapter];
 }
 
+- (void)setFluencyTracerEnabled:(LynxBooleanOption)enabledBySampling {
+  [_uiOwner.uiContext.fluencyInnerListener setEnabledBySampling:enabledBySampling];
+}
+
 - (BOOL)needPaintingContextProxy {
   return YES;
 }

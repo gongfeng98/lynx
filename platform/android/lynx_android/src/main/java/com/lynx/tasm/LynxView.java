@@ -193,6 +193,22 @@ public class LynxView extends UIBodyView {
   }
 
   /**
+   * Set whether to enable fluency metics collection.
+   *
+   * @param enabled Whether to enable fluency metics collection.
+   * Pass LynxBooleanOption.Unset to use the default behavior, i.e. the env value
+   * of `ENABLE_FLUENCY_TRACE`(injected via the LynxTrailService).
+   * Pass LynxBooleanOption.True to enable fluency metrics collection.
+   * Pass LynxBooleanOption.False to disable fluency metrics collection.
+   *
+   * @note This method is only effective when PageConfig is not configured with
+   * kEnableLynxScrollFluency.
+   */
+  public void setFluencyTracerEnabled(LynxBooleanOption enabled) {
+    mLynxTemplateRender.setFluencyTracerEnabled(enabled);
+  }
+
+  /**
    * Put parameters for reporting events, overriding old values if the parameters already exist.
    * @param params common parameters for report events, these values will be merged with params of
    *     EventReporter.onEvent.

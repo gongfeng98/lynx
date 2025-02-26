@@ -508,6 +508,12 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
     onTraceEventEnd(eventName);
   }
 
+  public void setFluencyTracerEnabled(LynxBooleanOption enabledBySampling) {
+    if (mLynxContext != null) {
+      mLynxContext.getFluencyTraceHelper().setEnabledBySampling(enabledBySampling);
+    }
+  }
+
   public void putExtraParamsForReportingEvents(final Map<String, Object> params) {
     String eventName = "LynxTemplateRender.putExtraParamsForReportEvents";
     onTraceEventBegin(eventName);

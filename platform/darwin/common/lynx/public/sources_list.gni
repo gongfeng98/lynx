@@ -113,6 +113,7 @@ common_lynx_public_headers =
                     "base/LynxConverter+UI.h",
                     "base/LynxConverter.h",
                     "base/LynxDefines.h",
+                    "base/LynxBooleanOption.h",
                     "base/LynxResourceServiceFetcher.h",
                     "base/LynxThreadManager.h",
                     "base/LynxCSSType.h",
