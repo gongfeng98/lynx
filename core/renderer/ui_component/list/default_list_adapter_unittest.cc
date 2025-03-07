@@ -21,6 +21,7 @@
 #include "core/renderer/ui_component/list/testing/utils.h"
 #include "core/shell/tasm_operation_queue.h"
 #include "core/shell/testing/mock_tasm_delegate.h"
+#include "third_party/googletest/googlemock/include/gmock/gmock.h"
 #include "third_party/googletest/googletest/include/gtest/gtest.h"
 
 namespace lynx {
@@ -32,12 +33,21 @@ static constexpr int32_t kHeight = 1920;
 static constexpr float kDefaultLayoutsUnitPerPx = 1.f;
 static constexpr double kDefaultPhysicalPixelsPerLayoutUnit = 1.f;
 
+class MockDefaultListAdapter : public DefaultListAdapter {
+ public:
+  MockDefaultListAdapter(ListContainerImpl* list_container_impl,
+                         Element* element)
+      : DefaultListAdapter(list_container_impl, element) {}
+
+  MOCK_METHOD(void, OnErrorOccurred, (lynx::base::LynxError error), (override));
+};
+
 class DefaultListAdapterTest : public ::testing::Test {
  public:
   std::unique_ptr<lynx::tasm::ElementManager> manager;
   std::shared_ptr<::testing::NiceMock<test::MockTasmDelegate>> tasm_mediator;
   fml::RefPtr<list::MockListElement> list_element_ref;
-  std::unique_ptr<DefaultListAdapter> default_list_adapter;
+  std::unique_ptr<MockDefaultListAdapter> default_list_adapter;
   std::unique_ptr<ListContainerImpl> list_container;
   std::unique_ptr<ListChildrenHelper> list_children_helper;
 
@@ -64,7 +74,7 @@ class DefaultListAdapterTest : public ::testing::Test {
                                   enqueue_component, component_at_indexes));
     list_container =
         std::make_unique<ListContainerImpl>(list_element_ref.get());
-    default_list_adapter = std::make_unique<DefaultListAdapter>(
+    default_list_adapter = std::make_unique<MockDefaultListAdapter>(
         list_container.get(), list_element_ref.get());
     list_children_helper = std::make_unique<ListChildrenHelper>();
   }
@@ -296,6 +306,57 @@ TEST_F(DefaultListAdapterTest, FiberDiffCase1) {
     EXPECT_TRUE(item_holder->sticky_bottom());
     EXPECT_TRUE(base::FloatsEqual(item_holder->height(), 50));
   }
+}
+
+TEST_F(DefaultListAdapterTest, FiberDiffCase2) {
+  // test no illegal item key
+  list::InsertAction insert_action{
+      .insert_ops_ = {
+          {.position_ = 0, "A_0", 100, false, false, false},
+          {.position_ = 1, "B_1", 100, false, false, false},
+          {.position_ = 2, "C_2", 100, false, false, false},
+          {.position_ = 3, "D_3", 100, false, false, false},
+          {.position_ = 4, "E_4", 100, false, false, false},
+      }};
+  list::FiberDiffResult fiber_diff_result_0{
+      .insert_action_ = insert_action,
+  };
+  EXPECT_CALL(*(default_list_adapter.get()), OnErrorOccurred(::testing::_))
+      .Times(0);
+  default_list_adapter->UpdateFiberDataSource(
+      lepus::Value(fiber_diff_result_0.Resolve()));
+
+  // test illegal item key
+  list::InsertAction insert_action_1{
+      .insert_ops_ = {
+          {.position_ = 0, "", 100, false, false, false},
+      }};
+  list::FiberDiffResult fiber_diff_result_1{
+      .insert_action_ = insert_action_1,
+  };
+  EXPECT_CALL(*(default_list_adapter.get()), OnErrorOccurred(::testing::_))
+      .Times(1);
+  default_list_adapter->UpdateFiberDataSource(
+      lepus::Value(fiber_diff_result_1.Resolve()));
+}
+
+TEST_F(DefaultListAdapterTest, FiberDiffCase3) {
+  // test duplicated item key
+  list::InsertAction insert_action{
+      .insert_ops_ = {
+          {.position_ = 0, "A_0", 100, false, false, false},
+          {.position_ = 1, "B_1", 100, false, false, false},
+          {.position_ = 2, "C_2", 100, false, false, false},
+          {.position_ = 3, "D_3", 100, false, false, false},
+          {.position_ = 4, "D_3", 100, false, false, false},
+      }};
+  list::FiberDiffResult fiber_diff_result_0{
+      .insert_action_ = insert_action,
+  };
+  EXPECT_CALL(*(default_list_adapter.get()), OnErrorOccurred(::testing::_))
+      .Times(1);
+  default_list_adapter->UpdateFiberDataSource(
+      lepus::Value(fiber_diff_result_0.Resolve()));
 }
 
 }  // namespace testing
