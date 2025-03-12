@@ -27,7 +27,9 @@ public class LynxDevToolNGDelegate {
 
   private native long nativeCreateLynxDevToolNG();
 
-  public void sendMessageToDebugPlatform(@NonNull String type, @NonNull String msg) {
+  // TODO(zhoumingsong.smile) Apply thread synchronization to all methods accessing
+  // mLynxDevToolNGPtr
+  public synchronized void sendMessageToDebugPlatform(@NonNull String type, @NonNull String msg) {
     if (mLynxDevToolNGPtr != 0) {
       nativeSendMessageToDebugPlatform(mLynxDevToolNGPtr, type, msg);
     }
@@ -52,7 +54,7 @@ public class LynxDevToolNGDelegate {
 
   private native void nativeOnTasmCreated(long nativePtr, long shellPtr);
 
-  public void destroy() {
+  public synchronized void destroy() {
     if (mLynxDevToolNGPtr != 0) {
       nativeDestroy(mLynxDevToolNGPtr);
       mLynxDevToolNGPtr = 0;
