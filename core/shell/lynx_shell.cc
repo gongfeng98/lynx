@@ -989,6 +989,7 @@ void LynxShell::EnsureTemplateDataThreadSafe(
     const std::shared_ptr<tasm::TemplateData>& template_data) {
   // need clone template data if consumed by tasm thread
   if (template_data != nullptr && !(engine_actor_->CanRunNow())) {
+    LOGI("EnsureTemplateDataThreadSafe CloneValue." << this);
     template_data->CloneValue();
   }
 }
@@ -998,6 +999,7 @@ lepus::Value LynxShell::EnsureGlobalPropsThreadSafe(
   // need clone global props if consumed by tasm thread
   TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxShell::EnsureGlobalPropsThreadSafe");
   if (!(engine_actor_->CanRunNow())) {
+    LOGI("EnsureGlobalPropsThreadSafe CloneValue." << this);
     return lynx::lepus::Value::Clone(global_props);
   } else {
     return global_props;

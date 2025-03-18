@@ -283,6 +283,7 @@ public final class TemplateData {
     mData.clear();
 
     if (buffer != null && buffer.position() > 0) {
+      LLog.i(TAG, "flush data." + this);
       addUpdateAction(new UpdateAction(buffer));
       if (mNativeData == 0) {
         mNativeData = nativeParseData(buffer, buffer.position());

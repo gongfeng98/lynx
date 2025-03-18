@@ -30,6 +30,7 @@ jlong ParseStringData(JNIEnv* env, jclass jcaller, jstring data) {
 }
 
 void ReleaseData(JNIEnv* env, jclass jcaller, jlong data) {
+  LOGI("ReleaseData:" << data);
   auto json_data = reinterpret_cast<rapidjson::Document*>(data);
   delete json_data;
 }
