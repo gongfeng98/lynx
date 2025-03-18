@@ -90,6 +90,8 @@ class LinuxCrashObserver(CrashObserver):
             lldb_core_analysis_cmd = f'lldb -c {core_file} -o "bt" -o "q"'
             lldb_output = subprocess.check_output(lldb_core_analysis_cmd, shell=True)
             Log.print(lldb_output.decode("utf-8"))
+        else:
+            Log.warning(f"core dump file not found: {core_file}")
 
 
 def CrashObserverFactory():
