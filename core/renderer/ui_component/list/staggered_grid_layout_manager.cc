@@ -105,8 +105,10 @@ void StaggeredGridLayoutManager::UpdateStartAndEndLinesStatus(
 }
 
 void StaggeredGridLayoutManager::OnBatchLayoutChildren() {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY,
-              "StaggeredGridLayoutManager::OnBatchLayoutChildren");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "OnBatchLayoutChildren",
+              [this](lynx::perfetto::EventContext ctx) {
+                UpdateTraceDebugInfo(ctx.event());
+              });
   OnPrepareForLayoutChildren();
 
   // Note: To avoid nested invoking OnBatchLayoutChildren,
@@ -144,8 +146,10 @@ void StaggeredGridLayoutManager::OnBatchLayoutChildren() {
 
 void StaggeredGridLayoutManager::OnLayoutChildren(
     bool is_component_finished /* = false */, int component_index /* = -1 */) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY,
-              "StaggeredGridLayoutManager::OnLayoutChildren");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "OnLayoutChildren",
+              [this](lynx::perfetto::EventContext ctx) {
+                UpdateTraceDebugInfo(ctx.event());
+              });
   if (!list_container_ || !list_children_helper_) {
     return;
   }
@@ -259,7 +263,10 @@ void StaggeredGridLayoutManager::OnLayoutAfter() {
 }
 
 void StaggeredGridLayoutManager::HandleLayoutOrScrollResult(bool is_layout) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "HandlePlatformOperation");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "HandleLayoutOrScrollResult",
+              [this](lynx::perfetto::EventContext ctx) {
+                UpdateTraceDebugInfo(ctx.event());
+              });
   if (list_container_->enable_batch_render()) {
     // batch render.
     ListLayoutManager::HandleLayoutOrScrollResult(is_layout);
@@ -567,8 +574,10 @@ float StaggeredGridLayoutManager::CalculateCrossAxisPosition(
 void StaggeredGridLayoutManager::ScrollByInternal(float content_offset,
                                                   float original_offset,
                                                   bool from_platform) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY,
-              "StaggeredGridLayoutManager::ScrollByInternal");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "ScrollByInternal",
+              [this](lynx::perfetto::EventContext ctx) {
+                UpdateTraceDebugInfo(ctx.event());
+              });
   float delta = content_offset - last_content_offset_;
   if (!list_container_ || fabs(delta) < 10e-6) {
     FlushContentSizeAndOffsetToPlatform(content_offset);
@@ -865,6 +874,15 @@ StaggeredGridLayoutManager::GetMinEndSpanItemInfoForEndLines(
   int span_index = static_cast<int>(std::distance(end_lines.begin(), it));
   return {span_index, end_indexes[span_index]};
 }
+
+#if ENABLE_TRACE_PERFETTO
+void StaggeredGridLayoutManager::UpdateTraceDebugInfo(TraceEvent* event) const {
+  ListLayoutManager::UpdateTraceDebugInfo(event);
+  auto* list_type_info = event->add_debug_annotations();
+  list_type_info->set_name("list_type");
+  list_type_info->set_string_value("waterfall");
+}
+#endif
 
 }  // namespace tasm
 }  // namespace lynx

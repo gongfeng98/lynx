@@ -102,6 +102,9 @@ class LinearLayoutManager : public ListLayoutManager {
       list::LayoutDirection layout_direction);
   virtual int GetTargetIndexForPreloadBuffer(
       int start_index, list::LayoutDirection layout_direction);
+#if ENABLE_TRACE_PERFETTO
+  void UpdateTraceDebugInfo(TraceEvent* event) const override;
+#endif
 
  private:
   void OnLayoutChildrenInternal(ListAnchorManager::AnchorInfo& anchor_info,

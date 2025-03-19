@@ -18,8 +18,10 @@ LinearLayoutManager::LinearLayoutManager(ListContainerImpl* list_container_impl)
     : ListLayoutManager(list_container_impl) {}
 
 void LinearLayoutManager::OnBatchLayoutChildren() {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY,
-              "LinearLayoutManager::OnBatchLayoutChildren");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "OnBatchLayoutChildren",
+              [this](lynx::perfetto::EventContext ctx) {
+                UpdateTraceDebugInfo(ctx.event());
+              });
 
   OnPrepareForLayoutChildren();
 
@@ -58,7 +60,11 @@ void LinearLayoutManager::OnBatchLayoutChildren() {
 
 void LinearLayoutManager::OnLayoutChildren(
     bool is_component_finished /* = false */, int component_index /* = -1 */) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LinearLayoutManager::OnLayoutChildren");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "OnLayoutChildren",
+              [this](lynx::perfetto::EventContext ctx) {
+                UpdateTraceDebugInfo(ctx.event());
+              });
+
   if (!list_container_ || !list_children_helper_) {
     return;
   }
@@ -176,7 +182,10 @@ void LinearLayoutManager::OnLayoutAfter(LayoutState& layout_state) {
 
 void LinearLayoutManager::HandleLayoutOrScrollResult(LayoutState& layout_state,
                                                      bool is_layout) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "HandlePlatformOperation");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "HandleLayoutOrScrollResult",
+              [this](lynx::perfetto::EventContext ctx) {
+                UpdateTraceDebugInfo(ctx.event());
+              });
   if (list_container_->enable_batch_render()) {
     ListLayoutManager::HandleLayoutOrScrollResult(is_layout);
   } else {
@@ -293,6 +302,10 @@ void LinearLayoutManager::FillWithAnchor(
  * or end.
  */
 bool LinearLayoutManager::Preload(LayoutState& layout_state) {
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "Preload",
+              [this](lynx::perfetto::EventContext ctx) {
+                UpdateTraceDebugInfo(ctx.event());
+              });
   const auto& on_screen_children = list_children_helper_->on_screen_children();
   layout_state.ResetPreloadIndex();
   list_children_helper_->ClearInPreloadChildren();
@@ -452,7 +465,10 @@ int LinearLayoutManager::GetTargetIndexForPreloadBuffer(
 void LinearLayoutManager::ScrollByInternal(float content_offset,
                                            float original_offset,
                                            bool from_platform) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LinearLayoutManager::ScrollByInternal");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "ScrollByInternal",
+              [this](lynx::perfetto::EventContext ctx) {
+                UpdateTraceDebugInfo(ctx.event());
+              });
   if (!list_container_ || !list_children_helper_) {
     return;
   }
@@ -887,6 +903,15 @@ void LinearLayoutManager::PreloadSection(LayoutState& layout_state) {
     }
   }
 }
+
+#if ENABLE_TRACE_PERFETTO
+void LinearLayoutManager::UpdateTraceDebugInfo(TraceEvent* event) const {
+  ListLayoutManager::UpdateTraceDebugInfo(event);
+  auto* list_type_info = event->add_debug_annotations();
+  list_type_info->set_name("list_type");
+  list_type_info->set_string_value("single");
+}
+#endif
 
 }  // namespace tasm
 }  // namespace lynx

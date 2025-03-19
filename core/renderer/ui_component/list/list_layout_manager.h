@@ -45,7 +45,6 @@ class ListLayoutManager {
                                  float original_x, float original_y);
   void ScrollToPosition(int index, float offset, int align, bool smooth);
   void ScrollStopped();
-
   float GetWidth() const;
   float GetHeight() const;
   float GetHeightAfterPadding() const;
@@ -166,6 +165,9 @@ class ListLayoutManager {
   void OnPrepareForLayoutChildren();
   void SendAnchorDebugInfo(ListAnchorManager::AnchorInfo& anchor_info);
   void HandleLayoutOrScrollResult(bool is_layout);
+#if ENABLE_TRACE_PERFETTO
+  virtual void UpdateTraceDebugInfo(TraceEvent* event) const;
+#endif
 
  private:
   bool UpdateStickyItemsInternal(int& layout_changed_position,

@@ -527,5 +527,17 @@ bool ListLayoutManager::IsItemHolderNotSticky(
              list_orientation_helper_->GetDecoratedEnd(item_holder));
 }
 
+#if ENABLE_TRACE_PERFETTO
+void ListLayoutManager::UpdateTraceDebugInfo(TraceEvent* event) const {
+  auto* content_size_info = event->add_debug_annotations();
+  content_size_info->set_name("content_size");
+  content_size_info->set_string_value(std::to_string(content_size_));
+
+  auto* content_offset_info = event->add_debug_annotations();
+  content_offset_info->set_name("content_offset");
+  content_offset_info->set_string_value(std::to_string(content_offset_));
+}
+#endif
+
 }  // namespace tasm
 }  // namespace lynx

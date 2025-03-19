@@ -79,6 +79,9 @@ class StaggeredGridLayoutManager : public ListLayoutManager {
                         bool from_platform) override;
   void LayoutInvalidItemHolder(int first_invalid_index) override;
   float GetTargetContentSize() override;
+#if ENABLE_TRACE_PERFETTO
+  void UpdateTraceDebugInfo(TraceEvent* event) const override;
+#endif
 
  private:
   // Update layout state
