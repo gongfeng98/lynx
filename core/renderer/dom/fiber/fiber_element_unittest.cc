@@ -12579,6 +12579,22 @@ TEST_P(FiberElementTest, MarkRenderRootElementTest) {
   EXPECT_TRUE(subtree_wrapper->render_root_element_ == nullptr);
 }
 
+TEST_P(FiberElementTest, FontSizeResetTest) {
+  auto page = manager->CreateFiberPage("page", 11);
+
+  auto text = manager->CreateFiberText("text");
+  text->SetRawInlineStyles(lepus::Value("font-size:20px"));
+  page->InsertNode(text);
+  page->FlushActionsAsRoot();
+  EXPECT_TRUE(text->GetFontSize() == 20);
+
+  text->RemoveAllInlineStyles();
+  text->SetRawInlineStyles(lepus::Value(""));
+  page->FlushActionsAsRoot();
+  EXPECT_TRUE(text->GetFontSize() ==
+              manager->GetLynxEnvConfig().PageDefaultFontSize());
+}
+
 INSTANTIATE_TEST_SUITE_P(FiberElementTestModule, FiberElementTest,
                          ::testing::ValuesIn(fiber_element_generation_params));
 

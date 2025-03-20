@@ -2674,8 +2674,15 @@ void FiberElement::ResetFontSize() {
   auto font_size = element_manager()->GetLynxEnvConfig().PageDefaultFontSize();
   auto root_font_size = is_page() ? font_size : GetFontSize();
 
-  SetFontSizeForAllElement(font_size, root_font_size);
-  UpdateLayoutNodeFontSize(font_size, root_font_size);
+  if (font_size != GetFontSize()) {
+    SetFontSizeForAllElement(font_size, root_font_size);
+    PreparePropBundleIfNeed();
+    prop_bundle_->SetProps(
+        CSSProperty::GetPropertyName(CSSPropertyID::kPropertyIDFontSize)
+            .c_str(),
+        font_size);
+    UpdateLayoutNodeFontSize(font_size, root_font_size);
+  }
 }
 
 Element *FiberElement::Sibling(int offset) const {

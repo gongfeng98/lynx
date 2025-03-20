@@ -428,6 +428,11 @@ void Element::ResetStyleInternal(CSSPropertyID css_id) {
 void Element::ResetCSSValue(CSSPropertyID css_id) {
   CheckDynamicUnit(css_id, CSSValue::Empty(), true);
 
+  if (css_id == kPropertyIDFontSize) {
+    // font-size has been reset to default value in WillResetCSSValue
+    return;
+  }
+
   bool is_layout_only = LayoutNode::IsLayoutOnly(css_id);
   bool need_layout = is_layout_only || LayoutNode::IsLayoutWanted(css_id);
   if (need_layout) {
