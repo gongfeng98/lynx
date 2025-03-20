@@ -1887,14 +1887,11 @@ void TemplateAssembler::SendTouchEvent(const std::string& name,
 }
 
 void TemplateAssembler::StartEventGenerate(const lepus::Value& event_params) {
-  if (!template_loaded_) {
-    LOGI("Lynx StartEventGenerate failed, template_loaded_=false"
-         << " this:" << this);
-    return;
-  }
-  if (destroyed()) {
-    LOGI("Lynx StartEventGenerate failed, destroyed=true"
-         << " this:" << this);
+  if (!template_loaded_ || destroyed()) {
+    LOGI(
+        "Lynx StartEventGenerate failed, template_loaded_=false or "
+        "destroyed=true"
+        << " this:" << this);
     return;
   }
   if (!EnableLynxAir()) {
@@ -1905,14 +1902,11 @@ void TemplateAssembler::StartEventGenerate(const lepus::Value& event_params) {
 }
 
 void TemplateAssembler::StartEventCapture(int64_t event_id) {
-  if (!template_loaded_) {
-    LOGI("Lynx StartEventCapture failed, template_loaded_=false"
-         << " this:" << this);
-    return;
-  }
-  if (destroyed()) {
-    LOGI("Lynx StartEventCapture failed, destroyed=true"
-         << " this:" << this);
+  if (!template_loaded_ || destroyed()) {
+    LOGI(
+        "Lynx StartEventCapture failed, template_loaded_=false or "
+        "destroyed=true"
+        << " this:" << this);
     return;
   }
   if (!EnableLynxAir()) {
@@ -1922,14 +1916,10 @@ void TemplateAssembler::StartEventCapture(int64_t event_id) {
 }
 
 void TemplateAssembler::StartEventBubble(int64_t event_id) {
-  if (!template_loaded_) {
-    LOGI("Lynx StartEventBubble failed, template_loaded_=false"
-         << " this:" << this);
-    return;
-  }
-  if (destroyed()) {
-    LOGI("Lynx StartEventBubble failed, destroyed=true"
-         << " this:" << this);
+  if (!template_loaded_ || destroyed()) {
+    LOGI(
+        "Lynx StartEventBubble failed, template_loaded_=false or destroyed=true"
+        << " this:" << this);
     return;
   }
   if (!EnableLynxAir()) {
@@ -1939,13 +1929,8 @@ void TemplateAssembler::StartEventBubble(int64_t event_id) {
 }
 
 void TemplateAssembler::StartEventFire(bool is_stop, int64_t event_id) {
-  if (!template_loaded_) {
-    LOGI("Lynx StartEventFire failed, template_loaded_=false"
-         << " this:" << this);
-    return;
-  }
-  if (destroyed()) {
-    LOGI("Lynx StartEventFire failed, destroyed=true"
+  if (!template_loaded_ || destroyed()) {
+    LOGI("Lynx StartEventFire failed, template_loaded_=false or destroyed=true"
          << " this:" << this);
     return;
   }
