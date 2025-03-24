@@ -239,7 +239,7 @@ std::unique_ptr<lynx::pub::Value> TimingInfoNg::GetPipelineEntry(
     // framework-pipeline may don't have item.
     const auto& framework_infos = it->second;
     auto framework_value = framework_infos.ToPubMap(false, value_factory_);
-    (*entry).PushValueToMap(kFrameworkPipelineTiming,
+    (*entry).PushValueToMap(kFrameworkRenderingTiming,
                             std::move(framework_value));
   }
   return entry;

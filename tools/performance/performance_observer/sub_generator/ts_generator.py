@@ -37,7 +37,7 @@ def generate_ts(class_name, definition, definitions, file_imports):
         if "$ref" in value:
             # Dealing with reference types
             ref_type = value["$ref"].split('/')[-1]
-            if ref_type == 'FrameworkPipelineTiming':
+            if ref_type == 'FrameworkRenderingTiming':
                 # Special handling of inconsistent properties on multiple platforms, and no update of import files
                 prop_type = ref_type + f'[keyof {ref_type}]'
             else:

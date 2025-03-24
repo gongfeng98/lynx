@@ -37,7 +37,7 @@ def generate_objc_interface(class_name, definition, definitions, file_imports):
     for prop, value in properties.items():
         if "$ref" in value:
             ref_type = value["$ref"].split('/')[-1] + "*"
-            if ref_type == 'FrameworkPipelineTiming*':
+            if ref_type == 'FrameworkRenderingTiming*':
                 prop_type = "NSDictionary*"
             else:
                 prop_type = objc_lynx_prefix + ref_type
@@ -92,7 +92,7 @@ def generate_objc_implementation(class_name, definition, definitions, file_impor
     for prop, value in properties.items():
         if "$ref" in value:
             ref_type = value["$ref"].split('/')[-1]
-            if ref_type == 'FrameworkPipelineTiming':
+            if ref_type == 'FrameworkRenderingTiming':
                 objc_implementation += f'        self.{prop} = dictionary[@"{prop}"];\n'
             else:
                 objc_implementation += f'        self.{prop} = dictionary[@"{prop}"] ? [[{objc_lynx_prefix}{ref_type} alloc] initWithDictionary:dictionary[@"{prop}"]] : nil;\n'

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.2.6
+
+- Rename PipelineEntry.FrameworkPipelineTiming to PipelineEntry.FrameworkRenderingTiming
+
 ## 3.2.5
 
 ### Patch Changes

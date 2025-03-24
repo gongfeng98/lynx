@@ -83,7 +83,7 @@ def generate_java(class_name, definition, definitions, file_imports):
         if "$ref" in value:
             # use ref class
             ref_type = value["$ref"].split('/')[-1]
-            if ref_type == 'FrameworkPipelineTiming':
+            if ref_type == 'FrameworkRenderingTiming':
                 # Special handling of inconsistent attributes across multiple platforms without updating the reference file.
                 prop_type = "HashMap<String, Object>"
             else:
@@ -120,7 +120,7 @@ def generate_java(class_name, definition, definitions, file_imports):
         if "$ref" in value:
             # use ref class
             ref_type = value["$ref"].split('/')[-1]
-            if ref_type == 'FrameworkPipelineTiming':
+            if ref_type == 'FrameworkRenderingTiming':
                 prop_type = "HashMap<String, Object>"
                 java_code += f'        this.{prop} = props.get("{prop}") != null ? (HashMap<String, Object>) props.get("{prop}") : new HashMap<>();\n'
             else:

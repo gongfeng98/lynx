@@ -1,4 +1,4 @@
-FrameworkPipelineTiming:
+FrameworkRenderingTiming:
   type: object
   x-ts-only: true
 
@@ -42,5 +42,5 @@ PipelineEntry:
           type: number
         paintEnd:
           type: number
-        frameworkPipelineTiming:
-          $ref: '#/FrameworkPipelineTiming'
+        frameworkRenderingTiming:
+          $ref: '#/FrameworkRenderingTiming'

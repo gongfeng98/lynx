@@ -98,13 +98,13 @@ static constexpr const char kTotalActualFMP[] = "totalActualFmp";
  * PerformanceEntries of type "pipeline" will block tracking data based on the
  * following structure. Note: Since the SDK cannot clearly identify what markers
  * different versions of various DSLs will input, those data will be stored
- * directly as a Map in kFrameworkPipelineTiming. Note: Unlike Metric and Init,
+ * directly as a Map in kFrameworkRenderingTiming. Note: Unlike Metric and Init,
  * the Pipeline type does not have a specific EntryName. The EntryName will be
  * determined based on the 'origin' stored in the PipelineOption.
  * {
  *   kEntryTypePipeline,
  *   kEntryName,
- *   kFrameworkPipelineTiming: {
+ *   kFrameworkRenderingTiming: {
  *      timestamp marked by frontend frameworks.
  *   },
  *   attributes,
@@ -142,8 +142,8 @@ static constexpr const char kLayoutUiOperationExecuteStart[] =
 static constexpr const char kLayoutUiOperationExecuteEnd[] =
     "layoutUiOperationExecuteEnd";
 static constexpr const char kPaintEnd[] = "paintEnd";  // paint
-static constexpr const char kFrameworkPipelineTiming[] =
-    "frameworkPipelineTiming";
+static constexpr const char kFrameworkRenderingTiming[] =
+    "frameworkRenderingTiming";
 // LoadBundleEntry is a special type of pipeline entry that possesses all the
 // fields of a PipelineEntry, in addition to the following extra fields.
 static constexpr const char kEntryNameLoadBundle[] = "loadBundle";
