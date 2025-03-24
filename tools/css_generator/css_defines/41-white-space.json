@@ -1,6 +1,6 @@
 {
     "name": "white-space",
-    "id": 41,
+    "id": 42,
     "type": "enum",
     "default_value": "normal",
     "version": "1.0",

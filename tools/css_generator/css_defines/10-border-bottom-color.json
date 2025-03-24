@@ -1,6 +1,6 @@
 {
     "name": "border-bottom-color",
-    "id": 10,
+    "id": 11,
     "type": "color",
     "default_value": "black",
     "version": "1.0",

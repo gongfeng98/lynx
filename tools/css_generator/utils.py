@@ -311,7 +311,7 @@ TEST(CSSProperty, Order) {
   test_str = ""
   for val in json_obj:
     test_str += define_template.substitute(name=underline2hump(
-        val['name']), order=val['id'] + 1)
+        val['name']), order=val['id'])
   test_str += "  EXPECT_EQ(kPropertyEnd, " + str(len(json_obj) + 1) + ");\n"
   with open(path, 'w', encoding="utf-8") as file:
     file.seek(0,0)

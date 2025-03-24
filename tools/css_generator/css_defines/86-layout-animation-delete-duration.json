@@ -1,6 +1,6 @@
 {
     "name": "layout-animation-delete-duration",
-    "id": 86,
+    "id": 87,
     "type": "time",
     "default_value": "0s",
     "version": "1.0",

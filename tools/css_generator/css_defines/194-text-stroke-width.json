@@ -1,6 +1,6 @@
 {
     "name": "text-stroke-width",
-    "id": 194,
+    "id": 195,
     "type": "border-width",
     "default_value": "0px",
     "version": "2.10",

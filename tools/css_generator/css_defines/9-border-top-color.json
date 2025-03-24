@@ -1,6 +1,6 @@
 {
     "name": "border-top-color",
-    "id": 9,
+    "id": 10,
     "type": "color",
     "default_value": "black",
     "version": "1.0",

@@ -1,6 +1,6 @@
 {
     "name": "visibility",
-    "id": 103,
+    "id": 104,
     "type": "enum",
     "default_value": "visible",
     "version": "1.0",

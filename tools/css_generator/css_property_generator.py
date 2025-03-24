@@ -37,7 +37,7 @@ def gen(json_obj):
     css_str += template.substitute(name=utils.underline2hump(
         val['name']), css_name=val['name'], default=val['default_value'])
     i = i + 1
-    css_java_str += css_java_template.substitute(name=utils.underline2hump(val['name']), id=val['id'] + 1)
+    css_java_str += css_java_template.substitute(name=utils.underline2hump(val['name']), id=val['id'])
     css_java_constant_str += css_java_constant_str_template.substitute(css_name=val['name'])
   
   css_java_constant_str += """

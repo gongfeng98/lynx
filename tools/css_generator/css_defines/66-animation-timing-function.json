@@ -1,6 +1,6 @@
 {
     "name": "animation-timing-function",
-    "id": 66,
+    "id": 67,
     "type": "timing-function",
     "default_value": "linear",
     "version": "1.0",

@@ -1,6 +1,6 @@
 {
     "name": "layout-animation-delete-property",
-    "id": 89,
+    "id": 90,
     "type": "animation-property",
     "default_value": "opacity",
     "version": "1.0",

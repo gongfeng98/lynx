@@ -1,6 +1,6 @@
 {
     "name": "background-repeat",
-    "id": 100,
+    "id": 101,
     "type": "complex",
     "default_value": "no-repeat",
     "version": "1.0",

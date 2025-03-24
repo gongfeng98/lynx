@@ -1,6 +1,6 @@
 {
     "name": "border-color",
-    "id": 59,
+    "id": 60,
     "type": "complex",
     "default_value": "black",
     "version": "1.0",

@@ -1,6 +1,6 @@
 {
     "name": "border-left-width",
-    "id": 17,
+    "id": 18,
     "type": "border-width",
     "default_value": "0px",
     "version": "1.0",

@@ -1,6 +1,6 @@
 {
     "name": "word-break",
-    "id": 121,
+    "id": 122,
     "type": "enum",
     "default_value": "normal",
     "version": "1.0",

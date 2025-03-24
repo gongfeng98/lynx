@@ -1,6 +1,6 @@
 {
     "name": "background-clip",
-    "id": 122,
+    "id": 123,
     "type": "complex",
     "default_value": "border-box",
     "version": "1.0",

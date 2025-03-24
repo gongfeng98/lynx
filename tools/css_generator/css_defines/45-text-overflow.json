@@ -1,6 +1,6 @@
 {
     "name": "text-overflow",
-    "id": 45,
+    "id": 46,
     "type": "enum",
     "default_value": "clip",
     "version": "1.0",

@@ -1,6 +1,6 @@
 {
     "name": "font-weight",
-    "id": 47,
+    "id": 48,
     "type": "enum",
     "default_value": "normal",
     "version": "1.0",

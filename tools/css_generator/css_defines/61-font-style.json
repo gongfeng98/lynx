@@ -1,6 +1,6 @@
 {
     "name": "font-style",
-    "id": 61,
+    "id": 62,
     "type": "enum",
     "default_value": "normal",
     "version": "1.0",

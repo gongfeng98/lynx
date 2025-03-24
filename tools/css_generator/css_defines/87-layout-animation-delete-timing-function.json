@@ -1,6 +1,6 @@
 {
     "name": "layout-animation-delete-timing-function",
-    "id": 87,
+    "id": 88,
     "type": "timing-function",
     "default_value": "linear",
     "version": "1.0",
