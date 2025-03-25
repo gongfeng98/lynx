@@ -177,10 +177,6 @@ void QuickjsDebugger::DebuggerSendResponseWithViewID(int32_t message_id,
   }
 }
 
-void QuickjsDebugger::ConsoleAPICalledMessageWithRID(LEPUSValue *message) {
-  SendConsoleAPICalledNotificationWithRID(context_->GetContext(), message);
-}
-
 void QuickjsDebugger::ScriptParsedWithViewID(LEPUSScriptSource *script,
                                              int32_t session_id) {
   SendScriptParsedNotificationWithViewID(context_->GetContext(), script,
@@ -198,10 +194,10 @@ void QuickjsDebugger::DebuggerPauseOnDebuggerKeyword(const uint8_t *pc) {
 }
 
 void QuickjsDebugger::OnConsoleMessage(const std::string &message,
-                                       int32_t runtime_id) {
+                                       const std::string &url) {
   for (const auto &session : inspector_->GetSessions()) {
     if (session.second && GetConsoleInspectEnableState(session.first)) {
-      session.second->OnConsoleMessage(message, runtime_id);
+      session.second->OnConsoleMessage(message, url);
     }
   }
 }

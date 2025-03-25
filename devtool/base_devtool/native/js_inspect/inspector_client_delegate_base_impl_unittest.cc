@@ -197,13 +197,9 @@ TEST_F(InspectorClientDelegateBaseImplTest, ParseStrToJson) {
   std::string message = "{\"id\":1,\"method\":\"Debugger.enable\"}";
   std::string error_message =
       "{\"method\":\"Runtime.consoleAPICalled\",\"params\":{\"type\":\"log\","
-      "\"args\":[{\"type\":\"string\",\"value\":\"runtimeId:1\"},{\"type\":"
-      "\"string\",\"value\":\"test slice: "
+      "\"args\":[{\"type\":\"string\",\"value\":\"test slice: "
       "\"},{\"type\":\"string\",\"value\":\"\\uD83D\"}],\"executionContextId\":"
-      "1,\"timestamp\":408333,\"stackTrace\":{\"callFrames\":[{"
-      "\"functionName\":\"logWithRuntimeId\",\"scriptId\":\"12\",\"url\":"
-      "\"file://shared/"
-      "lynx_core.js\",\"lineNumber\":8271,\"columnNumber\":35}]}}}";
+      "1,\"timestamp\":408333,\"stackTrace\":{\"callFrames\":[]}}}";
 
   rapidjson::Document json_mes;
   EXPECT_TRUE(v8_delegate_->ParseStrToJson(json_mes, message));

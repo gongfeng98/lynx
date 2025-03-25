@@ -14,6 +14,7 @@ constexpr int kDefaultGlobalRuntimeID = -1;
 constexpr char kLepusDefaultContextName[] = "__Card__";
 
 constexpr char kScriptUrlPrefix[] = "file://view";
+constexpr char kScriptCoreUrl[] = "lynx_core.js";
 
 constexpr char kTypeGetStopAtEntry[] = "GetStopAtEntry";
 constexpr char kTypeSetStopAtEntry[] = "SetStopAtEntry";
@@ -29,6 +30,8 @@ constexpr char kKeyStringType[] = "string";
 constexpr char kKeyFunctionDeclaration[] = "functionDeclaration";
 constexpr char kKeyObjectId[] = "objectId";
 constexpr char kKeyExpression[] = "expression";
+constexpr char kKeyStackTrace[] = "stackTrace";
+constexpr char kKeyCallFrames[] = "callFrames";
 
 // parameters extended by ourselves
 constexpr char kKeyViewId[] = "viewId";

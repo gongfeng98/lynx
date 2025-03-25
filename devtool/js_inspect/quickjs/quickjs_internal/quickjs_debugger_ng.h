@@ -78,9 +78,6 @@ class QuickjsDebugger {
   void DebuggerSendResponseWithViewID(int32_t message_id, const char* message,
                                       int32_t session_id);
 
-  // send console messages with runtime id
-  void ConsoleAPICalledMessageWithRID(LEPUSValue* message);
-
   // send script parsed event with view id
   void ScriptParsedWithViewID(LEPUSScriptSource* script, int32_t session_id);
 
@@ -94,7 +91,7 @@ class QuickjsDebugger {
   // pause on debugger keyword
   void DebuggerPauseOnDebuggerKeyword(const uint8_t* pc);
 
-  void OnConsoleMessage(const std::string& message, int32_t runtime_id);
+  void OnConsoleMessage(const std::string& message, const std::string& url);
 
   void SetContextConsoleInspect(bool enable, int32_t session_id);
 

@@ -52,7 +52,7 @@ class QJSInspector {
     virtual void SendResponse(int call_id, const std::string& message) = 0;
     virtual void SendNotification(const std::string& message) = 0;
     virtual void OnConsoleMessage(const std::string& message,
-                                  int32_t runtime_id) = 0;
+                                  const std::string& url) = 0;
   };
   virtual std::unique_ptr<QJSInspectorSession> Connect(
       QJSChannel* channel, const std::string& group_id, int32_t session_id) = 0;

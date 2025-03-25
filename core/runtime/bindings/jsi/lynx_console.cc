@@ -307,9 +307,7 @@ piper::Value Console::CallJSEngineConsole(Runtime* rt, const Value* args,
   if (count > 0) {
     if (is_devtool_enabled) {
       piper::Object global = rt->global();
-      JSRuntimeType rt_type = rt->type();
-      auto console = global.getProperty(
-          *rt, rt_type == JSRuntimeType::quickjs ? "lynxConsole" : "console");
+      auto console = global.getProperty(*rt, "console");
       if (console && console->isObject() &&
           !console->getObject(*rt).isHostObject(*rt) &&
           console->getObject(*rt).hasProperty(*rt, func_name.c_str())) {

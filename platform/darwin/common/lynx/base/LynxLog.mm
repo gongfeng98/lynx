@@ -36,7 +36,6 @@
 
 static NSInteger gDefaultDelegateId = -1;
 static NSInteger gCurrentId = 0;
-static NSInteger gDefaultRuntimeId = -1;
 static NSMutableDictionary *gDelegateDic = [[NSMutableDictionary alloc] init];
 #ifdef DEBUG
 static LynxLogLevel gLogMinLevel = LynxLogLevelDebug;
@@ -48,8 +47,7 @@ static LynxLogDelegate *gDebugLoggingDelegate;
 
 void SetDebugLoggingDelegate(LynxLogDelegate *delegate) { gDebugLoggingDelegate = delegate; }
 
-void PrintLogMessageForDebug(LynxLogLevel level, NSString *message,
-                             int64_t runtimeId = gDefaultRuntimeId) {
+void PrintLogMessageForDebug(LynxLogLevel level, NSString *message) {
   if (gDebugLoggingDelegate == nullptr || level < gDebugLoggingDelegate.minLogLevel) {
     return;
   }
@@ -57,11 +55,7 @@ void PrintLogMessageForDebug(LynxLogLevel level, NSString *message,
   if (logFunction == nil) {
     return;
   }
-  NSString *msgWithRid = message;
-  if (runtimeId != gDefaultRuntimeId) {
-    msgWithRid = [NSString stringWithFormat:@"argRuntimeId:%lld&%@", runtimeId, message];
-  }
-  logFunction(level, msgWithRid);
+  logFunction(level, message);
 }
 
 // turn off by default
@@ -88,7 +82,7 @@ void PrintLogMessageByLogDelegate(LogMessage *msg, const char *tag) {
                           : [[NSString stringWithUTF8String:msg->stream().str().c_str()]
                                 substringFromIndex:msg->messageStart()];
   // print native's log to devtool for debug
-  PrintLogMessageForDebug(level, message, msg->runtimeId());
+  PrintLogMessageForDebug(level, message);
 
   NSArray<LynxLogDelegate *> *delegates = GetLoggingDelegates();
   for (LynxLogDelegate *delegate in delegates) {

@@ -64,7 +64,7 @@ class InspectorClientDelegateImpl : public InspectorClientDelegateBaseImpl {
   void SendResponse(const std::string& message, int instance_id) override;
 
   void OnConsoleMessage(const std::string& message, int instance_id,
-                        int runtime_id) override;
+                        const std::string& url) override;
 
   void InsertDebugger(const std::shared_ptr<JavaScriptDebuggerNG>& debugger,
                       bool single_group);
@@ -120,10 +120,13 @@ class InspectorClientDelegateImpl : public InspectorClientDelegateBaseImpl {
                                      int instance_id) override;
   std::string PrepareResponseMessage(const std::string& message,
                                      int instance_id) override;
+
+  // The meaning of return value of the following 4 functions: if the return
+  // value is true, do not send this message to the DevTool frontend.
   bool HandleMessageConsoleAPICalled(rapidjson::Document& message);
-  bool HandleMessageConsoleAPICalledFromV8(rapidjson::Document& message);
-  void HandleMessageConsoleAPICalledFromQuickjs(rapidjson::Document& message);
-  void HandleMessageConsoleAPICalledFromLepus(rapidjson::Document& message);
+  void HandleConsoleFromMTS(rapidjson::Document& message);
+  bool HandleStackTraceOfConsole(rapidjson::Document& message);
+  bool HandleConsolePostedFromMTSToBTS(rapidjson::Document& message);
 
   std::string GenMessageCallFunctionOn(const std::string& object_id,
                                        int message_id = 0);

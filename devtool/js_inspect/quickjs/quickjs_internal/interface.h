@@ -139,12 +139,8 @@ void SendScriptFailToParseNotificationWithViewID(LEPUSContext *ctx,
 // for shared context qjs debugger: delete qjs debugger script by URL
 void DeleteScriptByURL(LEPUSContext *ctx, const char *filename);
 
-// for shared context qjs debugger: send consoleAPICalled event with runtime id
-void SendConsoleAPICalledNotificationWithRID(LEPUSContext *ctx,
-                                             LEPUSValue *msg);
-
 // delete corresponding console message using runtime id
-void DeleteConsoleMessageWithRID(LEPUSContext *ctx, int32_t rid);
+void DeleteConsoleMessageWithURL(LEPUSContext *ctx, const char *url);
 
 // get context id
 int32_t GetExecutionContextId(LEPUSContext *ctx);

@@ -37,10 +37,9 @@ namespace quickjs_inspector {
   V(17, ScriptFailToParseWithViewIDCB) \
   V(18, SetSessionEnableStateCB)       \
   V(19, GetSessionStateCB)             \
-  V(20, SendConsoleAPICalledWithRIDCB) \
-  V(21, GetSessionEnableStateCB)       \
-  V(22, NULL)                          \
-  V(23, OnConsoleMessageCB)
+  V(20, GetSessionEnableStateCB)       \
+  V(21, NULL)                          \
+  V(22, OnConsoleMessageCB)
 
 typedef enum ProtocolType {
   DEBUGGER_ENABLE,
@@ -142,17 +141,6 @@ static void SendConsoleAPICalledCB(LEPUSContext *ctx, LEPUSValue *console_msg) {
   auto *inspected_context = QJSInspectedContext::GetFromJsContext(ctx);
   if (inspected_context != nullptr) {
     inspected_context->GetDebugger()->ConsoleAPICalled(console_msg);
-  }
-}
-
-// send Runtime.consoleAPICalled event for console.xxx, with runtime id for
-// shared context debugger
-static void SendConsoleAPICalledWithRIDCB(LEPUSContext *ctx,
-                                          LEPUSValue *console_msg) {
-  auto *inspected_context = QJSInspectedContext::GetFromJsContext(ctx);
-  if (inspected_context != nullptr) {
-    inspected_context->GetDebugger()->ConsoleAPICalledMessageWithRID(
-        console_msg);
   }
 }
 
@@ -313,7 +301,7 @@ static void GetSessionEnableStateCB(LEPUSContext *ctx, int32_t session_id,
 }
 
 static void OnConsoleMessageCB(LEPUSContext *ctx, LEPUSValue console_message,
-                               int32_t runtime_id) {
+                               const char *url) {
   auto *inspected_context = QJSInspectedContext::GetFromJsContext(ctx);
 
   if (inspected_context != nullptr) {
@@ -324,7 +312,7 @@ static void OnConsoleMessageCB(LEPUSContext *ctx, LEPUSValue console_message,
       LEPUS_FreeValue(ctx, json);
     }
     inspected_context->GetDebugger()->OnConsoleMessage(
-        std::string{str ? str : ""}, runtime_id);
+        std::string{str ? str : ""}, std::string(url));
     if (!LEPUS_IsGCMode(ctx)) {
       LEPUS_FreeCString(ctx, str);
     }

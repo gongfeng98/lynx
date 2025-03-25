@@ -74,8 +74,8 @@ void QuickjsInspectorManagerImpl::DestroyInspector() {
       // functions when reloading.
       for (const auto &url : scripts_) {
         inspector_client_->RemoveScript(inspector_group_id_, url);
+        inspector_client_->RemoveConsole(inspector_group_id_, url);
       }
-      inspector_client_->RemoveConsole(inspector_group_id_, runtime_id_);
     }
   }
 }

@@ -60,9 +60,9 @@ void InspectorClientDelegateImpl::SendResponse(const std::string& message,
 
 void InspectorClientDelegateImpl::OnConsoleMessage(const std::string& message,
                                                    int instance_id,
-                                                   int runtime_id) {
-  int mes_view_id = GetViewIdByRuntimeId(runtime_id);
-  if (runtime_id == kDefaultGlobalRuntimeID || mes_view_id == instance_id) {
+                                                   const std::string& url) {
+  if (GetScriptViewId(url) == instance_id ||
+      url.find(kScriptCoreUrl) != std::string::npos) {
     auto debugger = GetDebuggerByViewId(instance_id).lock();
     CHECK_NULL_AND_LOG_RETURN(debugger, "js debug: debugger is null");
     auto js_debugger =
@@ -452,79 +452,24 @@ std::string InspectorClientDelegateImpl::PrepareResponseMessage(
 
 bool InspectorClientDelegateImpl::HandleMessageConsoleAPICalled(
     rapidjson::Document& message) {
-  if (vm_type_ == kKeyEngineV8) {
-    return HandleMessageConsoleAPICalledFromV8(message);
-  } else if (vm_type_ == kKeyEngineQuickjs) {
-    HandleMessageConsoleAPICalledFromQuickjs(message);
-  } else if (vm_type_ == kKeyEngineLepus) {
-    HandleMessageConsoleAPICalledFromLepus(message);
-  }
-  return false;
-}
-
-bool InspectorClientDelegateImpl::HandleMessageConsoleAPICalledFromV8(
-    rapidjson::Document& message) {
-  if (!message.HasMember(kKeyParams) ||
-      !message[kKeyParams].HasMember(kKeyArgs)) {
+  if (vm_type_ == kKeyEngineLepus) {
+    HandleConsoleFromMTS(message);
     return false;
   }
-  auto& args = message[kKeyParams][kKeyArgs];
-  if (args.IsArray() && args.GetArray().Size() > 1 &&
-      args[0].HasMember(kKeyType) &&
-      strcmp(args[0][kKeyType].GetString(), kKeyStringType) == 0) {
-    std::string value = args[0][kKeyValue].GetString();
-    int64_t runtime_id = kErrorViewID;
-    std::string console_group_id = kErrorGroupStr;
-
-    if (value.find(kKeyLepusRuntimeId) != std::string::npos) {
-      runtime_id = std::stoi(value.substr(strlen(kKeyLepusRuntimeId) + 1));
-      message[kKeyParams].AddMember(
-          rapidjson::Value(kKeyConsoleTag, message.GetAllocator()),
-          rapidjson::Value(kKeyEngineLepus, message.GetAllocator()),
-          message.GetAllocator());
-    } else if (value.find(kKeyRuntimeId) != std::string::npos) {
-      runtime_id = std::stoi(value.substr(strlen(kKeyRuntimeId) + 1));
-    } else if (value.find(kKeyGroupId) != std::string::npos) {
-      console_group_id = value.substr(strlen(kKeyGroupId) + 1);
-    } else {
-      return false;
-    }
-    message[kKeyParams][kKeyArgs].Erase(message[kKeyParams][kKeyArgs].Begin());
-
-    if (runtime_id != kErrorViewID) {
-      int console_id = GetViewIdByRuntimeId(runtime_id);
-      if (console_id == kErrorViewID) {
-        return true;
-      }
-      message[kKeyParams].AddMember(
-          rapidjson::Value(kKeyConsoleId, message.GetAllocator()),
-          rapidjson::Value(console_id), message.GetAllocator());
-    } else if (console_group_id != kErrorGroupStr) {
-      message[kKeyParams].AddMember(
-          rapidjson::Value(kKeyGroupId, message.GetAllocator()),
-          rapidjson::Value(console_group_id, message.GetAllocator()),
-          message.GetAllocator());
-    }
+  if (HandleStackTraceOfConsole(message)) {
+    return true;
+  }
+  // After optimizing the MTS debugging, we can remove this logic.
+  if (HandleConsolePostedFromMTSToBTS(message)) {
+    return true;
   }
   return false;
 }
 
-void InspectorClientDelegateImpl::HandleMessageConsoleAPICalledFromQuickjs(
-    rapidjson::Document& message) {
-  if (message.HasMember(kKeyParams) &&
-      message[kKeyParams].HasMember(kKeyRuntimeId)) {
-    int runtime_id = message[kKeyParams][kKeyRuntimeId].GetInt();
-    int console_view_id = GetViewIdByRuntimeId(runtime_id);
-    message[kKeyParams].RemoveMember(kKeyRuntimeId);
-    message[kKeyParams].AddMember(
-        rapidjson::Value(kKeyConsoleId, message.GetAllocator()),
-        rapidjson::Value(console_view_id), message.GetAllocator());
-  }
-}
-
-void InspectorClientDelegateImpl::HandleMessageConsoleAPICalledFromLepus(
+void InspectorClientDelegateImpl::HandleConsoleFromMTS(
     rapidjson::Document& message) {
   if (message.HasMember(kKeyParams)) {
+    // After optimizing the MTS debugging, we can remove consoleTag.
     message[kKeyParams].AddMember(
         rapidjson::Value(kKeyConsoleTag, message.GetAllocator()),
         rapidjson::Value(kKeyEngineLepus, message.GetAllocator()),
@@ -533,6 +478,82 @@ void InspectorClientDelegateImpl::HandleMessageConsoleAPICalledFromLepus(
         rapidjson::Value(kKeyConsoleId, message.GetAllocator()),
         rapidjson::Value(kDefaultViewID), message.GetAllocator());
   }
+}
+
+bool InspectorClientDelegateImpl::HandleStackTraceOfConsole(
+    rapidjson::Document& message) {
+  if (!message.HasMember(kKeyParams)) {
+    return false;
+  }
+  std::string script_url;
+  if (vm_type_ == kKeyEngineV8) {
+    if (!message[kKeyParams].HasMember(kKeyStackTrace) ||
+        !message[kKeyParams][kKeyStackTrace].HasMember(kKeyCallFrames)) {
+      return false;
+    }
+    const auto& callframes =
+        message[kKeyParams][kKeyStackTrace][kKeyCallFrames];
+    if (!callframes.IsArray() || callframes.GetArray().Size() < 1) {
+      return false;
+    }
+    const auto& frame = callframes.GetArray()[0];
+    if (!frame.HasMember(kKeyScriptId) || !frame.HasMember(kKeyUrl)) {
+      return false;
+    }
+    int script_id = std::atoi(frame[kKeyScriptId].GetString());
+    if (IsScriptIdInvalid(script_id)) {
+      return true;
+    }
+    script_url = frame[kKeyUrl].GetString();
+  } else if (vm_type_ == kKeyEngineQuickjs) {
+    if (message[kKeyParams].HasMember(kKeyUrl)) {
+      script_url = message[kKeyParams][kKeyUrl].GetString();
+    }
+  }
+  if (script_url.empty()) {
+    return false;
+  }
+  int script_view_id = GetScriptViewId(script_url);
+  if (script_view_id != kErrorViewID) {
+    message[kKeyParams].AddMember(
+        rapidjson::Value(kKeyConsoleId, message.GetAllocator()),
+        rapidjson::Value(script_view_id), message.GetAllocator());
+  }
+  return false;
+}
+
+bool InspectorClientDelegateImpl::HandleConsolePostedFromMTSToBTS(
+    rapidjson::Document& message) {
+  if (!message.HasMember(kKeyParams) ||
+      !message[kKeyParams].HasMember(kKeyArgs)) {
+    return false;
+  }
+  auto& args = message[kKeyParams][kKeyArgs];
+  if (!args.IsArray() || args.GetArray().Size() < 1) {
+    return false;
+  }
+  if (!args[0].HasMember(kKeyType) ||
+      strcmp(args[0][kKeyType].GetString(), kKeyStringType) != 0) {
+    return false;
+  }
+  std::string value = args[0][kKeyValue].GetString();
+  if (value.find(kKeyLepusRuntimeId) == std::string::npos) {
+    return false;
+  }
+  message[kKeyParams][kKeyArgs].Erase(message[kKeyParams][kKeyArgs].Begin());
+  message[kKeyParams].AddMember(
+      rapidjson::Value(kKeyConsoleTag, message.GetAllocator()),
+      rapidjson::Value(kKeyEngineLepus, message.GetAllocator()),
+      message.GetAllocator());
+  int64_t runtime_id = std::stoi(value.substr(strlen(kKeyLepusRuntimeId) + 1));
+  int console_id = GetViewIdByRuntimeId(runtime_id);
+  if (console_id == kErrorViewID) {
+    return true;
+  }
+  message[kKeyParams].AddMember(
+      rapidjson::Value(kKeyConsoleId, message.GetAllocator()),
+      rapidjson::Value(console_id), message.GetAllocator());
+  return false;
 }
 
 std::string InspectorClientDelegateImpl::GenMessageCallFunctionOn(

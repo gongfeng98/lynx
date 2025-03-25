@@ -30,7 +30,7 @@ class QJSChannelImplNG : public quickjs_inspector::QJSInspector::QJSChannel {
   void SendResponse(int call_id, const std::string& message) override;
   void SendNotification(const std::string& message) override;
   void OnConsoleMessage(const std::string& message,
-                        int32_t runtime_id) override;
+                        const std::string& url) override;
 
   void DispatchProtocolMessage(const std::string& message);
   void SchedulePauseOnNextStatement(const std::string& reason);
@@ -65,7 +65,7 @@ class QJSInspectorClientImpl : public quickjs_inspector::QJSInspectorClient,
       const std::string& object_id, const std::string& group_id,
       std::function<void(const std::string&)> callback) override;
   void OnConsoleMessage(const std::string& message, int instance_id,
-                        int runtime_id);
+                        const std::string& url);
 
   std::string InitInspector(LEPUSContext* context, const std::string& group_id,
                             const std::string& name = "");
@@ -86,10 +86,9 @@ class QJSInspectorClientImpl : public quickjs_inspector::QJSInspectorClient,
   // destroyed.
   // params:
   // group_id: The group_id after mapping.
-  // url: Url of the script needs to be removed.
-  // runtime_id: An argument of console messages when using "lynxConsole".
+  // url: Url of the script or console messages need to be removed.
   void RemoveScript(const std::string& group_id, const std::string& url);
-  void RemoveConsole(const std::string& group_id, int runtime_id);
+  void RemoveConsole(const std::string& group_id, const std::string& url);
 
  private:
   void SetContext(LEPUSContext* context, const std::string& group_id);

@@ -47,10 +47,10 @@ void QJSChannelImplNG::SendNotification(const std::string &message) {
 }
 
 void QJSChannelImplNG::OnConsoleMessage(const std::string &message,
-                                        int32_t runtime_id) {
+                                        const std::string &url) {
   auto sp = client_wp_.lock();
   if (sp != nullptr) {
-    sp->OnConsoleMessage(message, instance_id_, runtime_id);
+    sp->OnConsoleMessage(message, instance_id_, url);
   }
 }
 
@@ -144,10 +144,11 @@ void QJSInspectorClientImpl::GetConsoleObject(
 }
 
 void QJSInspectorClientImpl::OnConsoleMessage(const std::string &message,
-                                              int instance_id, int runtime_id) {
+                                              int instance_id,
+                                              const std::string &url) {
   auto sp = delegate_wp_.lock();
   if (sp != nullptr) {
-    sp->OnConsoleMessage(message, instance_id, runtime_id);
+    sp->OnConsoleMessage(message, instance_id, url);
   }
 }
 
@@ -214,10 +215,10 @@ void QJSInspectorClientImpl::RemoveScript(const std::string &group_id,
 }
 
 void QJSInspectorClientImpl::RemoveConsole(const std::string &group_id,
-                                           int runtime_id) {
+                                           const std::string &url) {
   auto it = contexts_.find(group_id);
   if (it != contexts_.end()) {
-    DeleteConsoleMessageWithRID(it->second, runtime_id);
+    DeleteConsoleMessageWithURL(it->second, url.c_str());
   }
 }
 

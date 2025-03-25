@@ -14,7 +14,7 @@ namespace devtool {
 class InspectorClientQJSDelegate {
  public:
   virtual void OnConsoleMessage(const std::string& message, int instance_id,
-                                int runtime_id) {}
+                                const std::string& url) {}
 };
 
 }  // namespace devtool

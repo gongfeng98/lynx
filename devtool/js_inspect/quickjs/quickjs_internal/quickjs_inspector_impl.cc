@@ -67,8 +67,8 @@ void QJSInspectorSessionImpl::SendProtocolNotification(
 }
 
 void QJSInspectorSessionImpl::OnConsoleMessage(const std::string& message,
-                                               int32_t runtime_id) {
-  channel_->OnConsoleMessage(message, runtime_id);
+                                               const std::string& url) {
+  channel_->OnConsoleMessage(message, url);
 }
 // QJSInspectorSessionImpl ends.
 

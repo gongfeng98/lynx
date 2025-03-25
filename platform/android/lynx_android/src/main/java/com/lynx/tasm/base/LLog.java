@@ -152,36 +152,28 @@ public class LLog {
     }
   }
 
-  private static void logByDebugLoggingDelegate(int level, String tag, String msg) {
-    logByDebugLoggingDelegate(level, tag, msg, sDefaultRuntimeId);
-  }
-
   /**
    * upload logs to devtool for debug mode
    */
-  private static void logByDebugLoggingDelegate(int level, String tag, String msg, long runtimeId) {
+  private static void logByDebugLoggingDelegate(int level, String tag, String msg) {
     if (sDebugLoggingDelegate == null || !LynxEnv.inst().isLynxDebugEnabled()) {
       return;
     }
-    String msgWithRid = msg;
-    if (runtimeId != sDefaultRuntimeId) {
-      msgWithRid = "argRuntimeId:" + runtimeId + "&" + msg;
-    }
     switch (level) {
       case VERBOSE:
-        sDebugLoggingDelegate.v(tag, msgWithRid);
+        sDebugLoggingDelegate.v(tag, msg);
         break;
       case DEBUG:
-        sDebugLoggingDelegate.d(tag, msgWithRid);
+        sDebugLoggingDelegate.d(tag, msg);
         break;
       case INFO:
-        sDebugLoggingDelegate.i(tag, msgWithRid);
+        sDebugLoggingDelegate.i(tag, msg);
         break;
       case WARN:
-        sDebugLoggingDelegate.w(tag, msgWithRid);
+        sDebugLoggingDelegate.w(tag, msg);
         break;
       case ERROR:
-        sDebugLoggingDelegate.e(tag, msgWithRid);
+        sDebugLoggingDelegate.e(tag, msg);
         break;
     }
   }
@@ -326,7 +318,7 @@ public class LLog {
         service.logByPlatform(priority, tag, msg);
       }
       // 1.upload all logs to devtool for debug mode
-      logByDebugLoggingDelegate(priority, tag, msg, runtimeId);
+      logByDebugLoggingDelegate(priority, tag, msg);
       // 2.only upload external JS logs and console.report to logging delegate
       logJS(priority, tag, msg, source, runtimeId, channelType, messageStart);
     } catch (Throwable e) {

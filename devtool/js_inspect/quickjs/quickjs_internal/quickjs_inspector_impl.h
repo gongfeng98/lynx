@@ -32,7 +32,7 @@ class QJSInspectorSessionImpl : public QJSInspectorSession {
 
   void SendProtocolResponse(int call_id, const std::string& message);
   void SendProtocolNotification(const std::string& message);
-  void OnConsoleMessage(const std::string& message, int32_t runtime_id);
+  void OnConsoleMessage(const std::string& message, const std::string& url);
 
  private:
   QJSInspectorSessionImpl(QJSInspectorImpl* inspector, int32_t session_id,
