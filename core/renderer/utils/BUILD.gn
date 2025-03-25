@@ -43,3 +43,17 @@ lynx_core_source_set("gtest_renderer_utils_android") {
   sources = [ "android/event_converter_android_unittest.cc" ]
   deps = [ "//third_party/googletest:gtest_sources" ]
 }
+
+unittest_exec("renderer_utils_unittests_exec") {
+  testonly = true
+
+  sources = [
+    "prop_bundle_style_writer_unittest.cc",
+    "prop_bundle_style_writer_unittest.h",
+  ]
+
+  deps = [
+    "//lynx/core/renderer:tasm",
+    "//lynx/core/renderer/dom:dom",
+  ]
+}
