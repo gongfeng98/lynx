@@ -62,9 +62,7 @@ public class DevToolPlatformAndroidDelegate {
 
     mFacadePtr = nativeCreateDevToolPlatformFacade();
 
-    if (lynxView != null) {
-      mTouchHelper = new EmulateTouchHelper(mLynxView);
-    }
+    mTouchHelper = new EmulateTouchHelper(mLynxView);
 
     mReloadHelper = null;
 

@@ -142,9 +142,10 @@ public class LynxInspectorOwner implements LynxBaseInspectorOwnerNG {
       mUITreeHelper.attachLynxUIOwner(uiOwner);
     }
     LynxView lynxView = mLynxView.get();
-    if (lynxView != null) {
-      mPlatform = new DevToolPlatformAndroidDelegate(lynxView, uiOwner);
-    }
+    // Do not add a null check for lynxView here.
+    // DevToolPlatformAndroidDelegate must be constructed even if lynxView is initially null.
+    // LynxView will be reattached to DevToolPlatformAndroidDelegate later.
+    mPlatform = new DevToolPlatformAndroidDelegate(lynxView, uiOwner);
   }
 
   @Override
