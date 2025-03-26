@@ -200,7 +200,6 @@ std::shared_ptr<Animation> CSSKeyframeManager::CreateAnimation(
   // 2. create keyframe Models& animation Curves according to CSS keyframe
   // tokens
   MakeKeyframeModel(animation.get(), data.name.str());
-  LOGI("Animation create complete, name is: " << data.name.str());
   return animation;
 }
 

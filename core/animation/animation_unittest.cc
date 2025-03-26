@@ -56,7 +56,7 @@ class AnimationTest : public ::testing::Test {
     auto effect = animation::KeyframeEffect::Create();
     InitTestEffect(*effect);
     test_animation->SetKeyframeEffect(std::move(effect));
-    element_ = manager->CreateNode("view", nullptr);
+    element_ = manager->CreateNode("view", std::make_shared<AttributeHolder>());
     test_animation->BindElement(element_.get());
     return test_animation;
   }
@@ -239,11 +239,14 @@ TEST_F(AnimationTest, SendStartEvent) {
   test_animation_data.name = "test_animation";
   test_animation_data.duration = 1000;
   test_animation->UpdateAnimationData(test_animation_data);
-
+  test_animation->GetElement()->data_model()->SetStaticEvent(
+      "bindEvent", "animationstart", "onanimationstart");
+  test_animation->GetElement()->data_model()->SetStaticEvent(
+      "bindEvent", "animationcancel", "onanimationcancel");
   // keyframe test
   test_animation->SendStartEvent();
-  EXPECT_TRUE(std::strcmp(tasm_mediator->GetAnimationEventType(),
-                          "animationstart") == 0);
+  EXPECT_TRUE(std::string(tasm_mediator->GetAnimationEventType()) ==
+              "animationstart");
   lepus::Value params = tasm_mediator->GetAnimationEventParams();
   EXPECT_TRUE(params.IsTable());
   EXPECT_TRUE(params.Table()->Contains("new_animator") &&
@@ -261,17 +264,21 @@ TEST_F(AnimationTest, SendStartEvent) {
 
   test_animation->Play();
   test_animation->Destroy();
-  EXPECT_TRUE(std::strcmp(tasm_mediator->GetAnimationEventType(),
-                          "animationcancel") == 0);
+  EXPECT_TRUE(std::string(tasm_mediator->GetAnimationEventType()) ==
+              "animationcancel");
 
   // transition test
   test_animation = InitTestAnimation();
+  test_animation->GetElement()->data_model()->SetStaticEvent(
+      "bindEvent", "transitionstart", "ontransitionstart");
+  test_animation->GetElement()->data_model()->SetStaticEvent(
+      "bindEvent", "transitioncancel", "ontransitioncancel");
   test_animation->SetTransitionFlag();
   test_animation->UpdateAnimationData(test_animation_data);
 
   test_animation->SendStartEvent();
-  EXPECT_TRUE(std::strcmp(tasm_mediator->GetAnimationEventType(),
-                          "transitionstart") == 0);
+  EXPECT_TRUE(std::string(tasm_mediator->GetAnimationEventType()) ==
+              "transitionstart");
   params = tasm_mediator->GetAnimationEventParams();
   EXPECT_TRUE(params.IsTable());
   EXPECT_TRUE(params.Table()->Contains("new_animator") &&
@@ -289,8 +296,8 @@ TEST_F(AnimationTest, SendStartEvent) {
 
   test_animation->Play();
   test_animation->Destroy();
-  EXPECT_TRUE(std::strcmp(tasm_mediator->GetAnimationEventType(),
-                          "transitioncancel") == 0);
+  EXPECT_TRUE(std::string(tasm_mediator->GetAnimationEventType()) ==
+              std::string("transitioncancel"));
 }
 
 TEST_F(AnimationTest, SendEndEvent) {
@@ -298,20 +305,23 @@ TEST_F(AnimationTest, SendEndEvent) {
   auto test_animation_data = starlight::AnimationData();
   test_animation_data.name = "test_animation";
   test_animation->UpdateAnimationData(test_animation_data);
+  test_animation->GetElement()->data_model()->SetStaticEvent(
+      "bindEvent", "animationend", "onanimationend");
 
   // keyframe test
   test_animation->SendEndEvent();
-  EXPECT_TRUE(
-      std::strcmp(tasm_mediator->GetAnimationEventType(), "animationend") == 0);
+  EXPECT_TRUE(std::string(tasm_mediator->GetAnimationEventType()) ==
+              "animationend");
 
   // transition test
   test_animation = InitTestAnimation();
   test_animation->SetTransitionFlag();
   test_animation->UpdateAnimationData(test_animation_data);
-
+  test_animation->GetElement()->data_model()->SetStaticEvent(
+      "bindEvent", "transitionend", "ontransitionend");
   test_animation->SendEndEvent();
-  EXPECT_TRUE(std::strcmp(tasm_mediator->GetAnimationEventType(),
-                          "transitionend") == 0);
+  EXPECT_TRUE(std::string(tasm_mediator->GetAnimationEventType()) ==
+              "transitionend");
 }
 
 TEST_F(AnimationTest, SendCancelEvent) {
@@ -319,20 +329,24 @@ TEST_F(AnimationTest, SendCancelEvent) {
   auto test_animation_data = starlight::AnimationData();
   test_animation_data.name = "test_animation";
   test_animation->UpdateAnimationData(test_animation_data);
+  test_animation->GetElement()->data_model()->SetStaticEvent(
+      "bindEvent", "animationcancel", "onanimationcancel");
 
   // keyframe test
   test_animation->SendCancelEvent();
-  EXPECT_TRUE(std::strcmp(tasm_mediator->GetAnimationEventType(),
-                          "animationcancel") == 0);
+  EXPECT_TRUE(std::string(tasm_mediator->GetAnimationEventType()) ==
+              "animationcancel");
 
   // transition test
   test_animation = InitTestAnimation();
   test_animation->SetTransitionFlag();
   test_animation->UpdateAnimationData(test_animation_data);
+  test_animation->GetElement()->data_model()->SetStaticEvent(
+      "bindEvent", "transitioncancel", "ontransitioncancel");
 
   test_animation->SendCancelEvent();
-  EXPECT_TRUE(std::strcmp(tasm_mediator->GetAnimationEventType(),
-                          "transitioncancel") == 0);
+  EXPECT_TRUE(std::string(tasm_mediator->GetAnimationEventType()) ==
+              "transitioncancel");
 }
 
 TEST_F(AnimationTest, SendIterationEvent) {
@@ -340,11 +354,13 @@ TEST_F(AnimationTest, SendIterationEvent) {
   auto test_animation_data = starlight::AnimationData();
   test_animation_data.name = "test_animation";
   test_animation->UpdateAnimationData(test_animation_data);
+  test_animation->GetElement()->data_model()->SetStaticEvent(
+      "bindEvent", "animationiteration", "onanimationiteration");
 
   // keyframe test
   test_animation->SendIterationEvent();
-  EXPECT_TRUE(std::strcmp(tasm_mediator->GetAnimationEventType(),
-                          "animationiteration") == 0);
+  EXPECT_TRUE(std::string(tasm_mediator->GetAnimationEventType()) ==
+              "animationiteration");
 }
 
 TEST_F(AnimationTest, TestDelayEvent) {
@@ -363,6 +379,10 @@ TEST_F(AnimationTest, TestDelayEvent) {
     animation_data->delay = 1000;
     animation_data->fill_mode = starlight::AnimationFillModeType::kForwards;
     test_animation->UpdateAnimationData(*animation_data);
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationstart", "onanimationstart");
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationend", "onanimationend");
     // update start time
     fml::TimePoint start_time =
         fml::TimePoint::FromEpochDelta(fml::TimeDelta::FromSecondsF(1.0f));
@@ -410,6 +430,12 @@ TEST_F(AnimationTest, TestDelayEvent) {
     animation_data->delay = 1000;
     animation_data->fill_mode = starlight::AnimationFillModeType::kBackwards;
     test_animation->UpdateAnimationData(*animation_data);
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationstart", "onanimationstart");
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationend", "onanimationend");
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationiteration", "onanimationiteration");
     // update start time
     fml::TimePoint start_time =
         fml::TimePoint::FromEpochDelta(fml::TimeDelta::FromSecondsF(1.0f));
@@ -470,6 +496,13 @@ TEST_F(AnimationTest, ShouldSendTwoStartEvent) {
     animation_data->iteration_count = 1;
     animation_data->fill_mode = starlight::AnimationFillModeType::kBoth;
     test_animation->UpdateAnimationData(*animation_data);
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationstart", "onanimationstart");
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationend", "onanimationend");
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationcancel", "onanimationcancel");
+
     // update start time
     fml::TimePoint start_time =
         fml::TimePoint::FromEpochDelta(fml::TimeDelta::FromSecondsF(1.0f));
@@ -626,6 +659,10 @@ TEST_F(AnimationTest, TestDurationZero) {
     // update start time
     fml::TimePoint start_time =
         fml::TimePoint::FromEpochDelta(fml::TimeDelta::FromSecondsF(1.0f));
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationstart", "onanimationstart");
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationend", "onanimationend");
     test_animation->DoFrame(start_time);
     EXPECT_TRUE(tasm_mediator->has_received_animation_start_event() &&
                 tasm_mediator->has_received_animation_end_event() &&
@@ -653,6 +690,10 @@ TEST_F(AnimationTest, TestDurationZero) {
     animation_data->delay = 1000;
     animation_data->fill_mode = starlight::AnimationFillModeType::kBackwards;
     test_animation->UpdateAnimationData(*animation_data);
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationstart", "onanimationstart");
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationend", "onanimationend");
     // update start time
     fml::TimePoint start_time =
         fml::TimePoint::FromEpochDelta(fml::TimeDelta::FromSecondsF(1.0f));
@@ -686,7 +727,12 @@ TEST_F(AnimationTest, TestDurationZero) {
     animation_data->delay = 3000;
     animation_data->fill_mode = starlight::AnimationFillModeType::kBackwards;
     test_animation->UpdateAnimationData(*animation_data);
-
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationstart", "onanimationstart");
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationend", "onanimationend");
+    test_animation->GetElement()->data_model()->SetStaticEvent(
+        "bindEvent", "animationcancel", "onanimationcancel");
     tick_time =
         fml::TimePoint::FromEpochDelta(fml::TimeDelta::FromSecondsF(3.5f));
     tasm_mediator->ClearAnimationEvent();

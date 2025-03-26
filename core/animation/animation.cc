@@ -84,6 +84,13 @@ void Animation::Destroy(bool need_clear_effect) {
 }
 
 void Animation::CreateEventAndSend(const char* event) {
+  if (element_->event_map().find(event) == element_->event_map().end() &&
+      element_->lepus_event_map().find(event) ==
+          element_->lepus_event_map().end() &&
+      element_->global_bind_event_map().find(event) ==
+          element_->global_bind_event_map().end()) {
+    return;
+  }
   auto dict = lepus::Dictionary::Create();
   BASE_STATIC_STRING_DECL(kNewAnimator, "new_animator");
   BASE_STATIC_STRING_DECL(kAnimationType, "animation_type");
@@ -147,7 +154,6 @@ void Animation::DoFrame(fml::TimePoint& frame_time) {
   if (frame_time != fml::TimePoint::Min()) {
     Tick(frame_time);
     if (HasFinishedAll(frame_time)) {
-      LOGI("[animation] all keyframe effect has finished!");
       Stop();
     }
   }
