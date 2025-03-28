@@ -727,6 +727,10 @@ class ElementManager {
     return config_ ? config_->GetEnableReloadLifecycle() : false;
   }
 
+  bool GetEnableMultiTouch() const {
+    return config_ ? config_->GetEnableMultiTouch() : false;
+  }
+
   std::shared_ptr<base::VSyncMonitor> &vsync_monitor() {
     return vsync_monitor_;
   }
