@@ -8,6 +8,44 @@ cmake_minimum_required(VERSION 3.4.1)
 
 enable_language(ASM)
 
+set(action_foreach_target 
+  lynx__tools__gn_tools__test_action_foreach_test
+  )
+
+set(${action_foreach_target}__sources
+  ${ROOT_PATH}/lynx/tools/gn_tools/test/action_foreach/files/to/dir/sources1.cc
+  ${ROOT_PATH}/lynx/tools/gn_tools/test/action_foreach/files/to/dir/sources2.cc
+  ${ROOT_PATH}/lynx/tools/gn_tools/test/action_foreach/files/to/dir/sources3.cc
+  )
+
+set(${action_foreach_target}__output
+  ${ROOT_PATH}/out/gn_cmake_test/gen/action_foreach/files/to/dir/sources1.cc
+  ${ROOT_PATH}/out/gn_cmake_test/gen/action_foreach/files/to/dir/sources2.cc
+  ${ROOT_PATH}/out/gn_cmake_test/gen/action_foreach/files/to/dir/sources3.cc
+  )
+
+add_custom_command(OUTPUT ${${action_foreach_target}__output}
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${ROOT_PATH}/out/gn_cmake_test/gen/action_foreach/files/to/dir"
+  COMMAND python3 "${ROOT_PATH}/lynx/tools/gn_tools/action_foreach_files.py"
+    "--script"
+    "${ROOT_PATH}/lynx/tools/gn_tools/action_foreach_test.py"
+    "--arguments"
+    "@&--sources@&{{source}}@&{{source}}@&--destinations@&${ROOT_PATH}/out/gn_cmake_test/gen/lynx/tools/gn_tools/test/{{source_name_part}}.h@&${ROOT_PATH}/out/gn_cmake_test/gen/lynx/tools/gn_tools/test/{{source_name_part}}.cc"
+    "--sources"
+    "${${action_foreach_target}__sources}"
+    "--target-dir"
+    "${ROOT_PATH}/lynx/tools/gn_tools/test"
+    "--gn-out-dir"
+    "${ROOT_PATH}/out/gn_cmake_test/"
+    "--root-dir"
+    "${ROOT_PATH}"
+  DEPENDS  ${${action_foreach_target}__sources}
+  WORKING_DIRECTORY "${ROOT_PATH}/out/gn_cmake_test/"
+  COMMENT "action_foreach: ${action_foreach_target}"
+  VERBATIM)
+add_custom_target(${action_foreach_target} SOURCES ${${action_foreach_target}__sources} DEPENDS ${${action_foreach_target}__output})
+
+
 add_library(lynx__tools__gn_tools__test_cmake_test OBJECT EXCLUDE_FROM_ALL
   ${ROOT_PATH}/lynx/tools/gn_tools/test/gn_test_shared.cc
   ${ROOT_PATH}/lynx/tools/gn_tools/test/gn_test_shared.h
@@ -47,6 +85,7 @@ target_compile_options(lynx__tools__gn_tools__test_cmake_test PRIVATE
   )
 
 add_dependencies(lynx__tools__gn_tools__test_cmake_test
+  lynx__tools__gn_tools__test_action_foreach_test
   lynx__tools__gn_tools__test_copy_test_dirs_to_dir
   lynx__tools__gn_tools__test_copy_test_file_to_file
   lynx__tools__gn_tools__test_copy_test_files_to_dir
@@ -208,6 +247,7 @@ target_compile_options(lynx__tools__gn_tools__test_gn_test_source PRIVATE
   )
 
 add_dependencies(lynx__tools__gn_tools__test_gn_test_source
+  lynx__tools__gn_tools__test_action_foreach_test
   lynx__tools__gn_tools__test_copy_test_dirs_to_dir
   lynx__tools__gn_tools__test_copy_test_file_to_file
   lynx__tools__gn_tools__test_copy_test_files_to_dir
@@ -224,6 +264,7 @@ add_library(gn_test SHARED
   )
 
 add_dependencies(gn_test
+  lynx__tools__gn_tools__test_action_foreach_test
   lynx__tools__gn_tools__test_copy_test_dirs_to_dir
   lynx__tools__gn_tools__test_copy_test_file_to_file
   lynx__tools__gn_tools__test_copy_test_files_to_dir

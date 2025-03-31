@@ -31,6 +31,8 @@ def main():
       shutil.copytree(src, dst, dirs_exist_ok=True)
       print(f"Copied directory: {src} -> {dst}")
     else:
+      if not os.path.exists(os.path.dirname(dst)):
+        os.makedirs(os.path.dirname(dst))
       shutil.copy2(src, dst)
       print(f"Copied file: {src} -> {dst}")
   

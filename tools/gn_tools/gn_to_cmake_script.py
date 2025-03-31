@@ -379,7 +379,8 @@ class Writer:
       self.out.write('"\n')
 
     self.out.write('  COMMAND python3 "')
-    self.out.write(cmake_string_escape(script))
+    script_rel_path = project.instead_source_path_prefix(script)
+    self.out.write(cmake_string_escape(script_rel_path))
     self.out.write('"')
     if arguments:
       self.out.write('\n    "')
@@ -426,26 +427,52 @@ class Writer:
     
     return target.cmake_name
 
+  def storage_response_file_contents(self, target, project):
+    response_file_contents = target.response_file_contents
+    arguments = target.args
+    if len(response_file_contents) <= 0 or len(arguments) <= 0:
+      return arguments
+    response_file_dir = os.path.join(project.build_path, 'rsp_files')
+    response_file_path = os.path.join(response_file_dir, target.cmake_name + '.rsp')
+    if not os.path.exists(response_file_dir):
+      os.makedirs(response_file_dir, exist_ok=True)
+    with open(response_file_path, 'w+') as response_file:
+      for content in target.response_file_contents:
+        response_file.write(f"{content}\n")
+    response_file.close()
+    if '{{response_file_name}}' in arguments:
+      index = arguments.index('{{response_file_name}}')
+      arguments[index] = response_file_path
+    return arguments
+
   def write_action_target(self, target, project):
     if type(target) != Target:
       return -1
-    arguments = target.args
-    if target.response_file_contents != []:
-      response_file_dir = os.path.join(project.build_path, 'rsp_files')
-      response_file_path = os.path.join(response_file_dir, target.cmake_name + '.rsp')
-      if not os.path.exists(response_file_dir):
-        os.makedirs(response_file_dir, exist_ok=True)
-      with open(response_file_path, 'w+') as response_file:
-        for content in target.response_file_contents:
-          response_file.write(f"{content}\n")
-      response_file.close()
-      if '{{response_file_name}}' in arguments:
-        index = arguments.index('{{response_file_name}}')
-        arguments[index] = response_file_path
+    arguments = self.storage_response_file_contents(target, project)
 
-    script = project.instead_source_path_prefix(target.script)
+    return self.write_script_target(target.script, arguments, target, project)
 
-    return self.write_script_target(script, arguments, target, project)
+  def write_action_foreach_target(self, target, project):
+    if type(target)!= Target:
+      return -1
+    action_foreach_arguments = self.storage_response_file_contents(target, project)
+    action_script_path = os.path.join(os.path.dirname(__file__), 'action_foreach_files.py')
+
+    action_foreach_script = project.instead_source_path_prefix(target.script)
+    action_foreach_args = project.instead_source_path_prefix_list(action_foreach_arguments)
+    target_dir = project.instead_source_path_prefix(target.gn_name.split(':')[0])
+    gn_out_dir = project.instead_source_path_prefix(project.build_path)
+    root_dir = project.instead_source_path_prefix(project.root_path)
+
+    action_script_args = ['--script', action_foreach_script]
+    action_script_args += ['--arguments', '@&' + '@&'.join(action_foreach_args)] 
+    action_script_args += ['--sources', '${${action_foreach_target}__sources}']
+    action_script_args += ['--target-dir', target_dir]
+    action_script_args += ['--gn-out-dir', gn_out_dir]
+    action_script_args += ['--root-dir', root_dir]
+
+    return self.write_script_target(action_script_path, action_script_args, target, project)
+
 
   def write_copy_target(self, target, project):
     if type(target) != Target:
@@ -457,9 +484,8 @@ class Writer:
     outputs = project.instead_source_path_prefix_list(target.outputs)
     arguments = ['--sources'] + sources_paths + ['--destinations'] + outputs
     copy_script_path = os.path.join(os.path.dirname(__file__), 'copy_files.py')
-    script = project.instead_source_path_prefix(copy_script_path)
 
-    return self.write_script_target(script, arguments, target, project)
+    return self.write_script_target(copy_script_path, arguments, target, project)
 
   def write_target_sources(self, target, project):
     if len(target.sources) > 0:
@@ -499,8 +525,12 @@ class Writer:
   def write_target(self, target, project):
     if target.gn_type == 'action':
       self.write_action_target(target, project)
+    elif target.gn_type == 'action_foreach':
+      self.write_action_foreach_target(target, project)
     elif target.gn_type == 'copy':
       self.write_copy_target(target, project)
+    elif target.gn_type not in cmake_target_types.keys() or target.gn_type == None:
+      print(f"Warning: the {target.gn_type} of {target.gn_name} is not supported.")
     elif len(target.sources) > 0 :
       self.write_source_target(target, project)
 

@@ -92,6 +92,7 @@ test_source_set("gn_test_source") {
   }
 
   public_deps = [
+    ":action_foreach_test",
     ":copy_test",
     ":gn_test_action",
   ]
@@ -142,6 +143,25 @@ copy("copy_test_dirs_to_dir") {
 
   outputs = [ "$target_gen_dir/{{source_file_part}}" ]
   deps = [ ":copy_test_files_to_dir" ]
+}
+
+action_foreach("action_foreach_test") {
+  script = "//lynx/tools/gn_tools/action_foreach_test.py"
+  sources = [
+    "action_foreach/files/to/dir/sources1.cc",
+    "action_foreach/files/to/dir/sources2.cc",
+    "action_foreach/files/to/dir/sources3.cc",
+  ]
+  outputs = [ "$root_gen_dir/action_foreach/files/to/dir/{{source_file_part}}" ]
+
+  args = [
+    "--sources",
+    "{{source}}",
+    "{{source}}",
+    "--destinations",
+    "$target_gen_dir/{{source_name_part}}.h",
+    "$target_gen_dir/{{source_name_part}}.cc",
+  ]
 }
 
 #### podspec_target template test ####
