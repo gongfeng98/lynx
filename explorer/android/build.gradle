@@ -7,7 +7,7 @@ buildscript {
         minSdkVersion = 21
         compileSdkVersion = 30
         targetSdkVersion = 29
-        buildToolsVersion = '29.0.1'
+        buildToolsVersion = '29.0.2'
         ndkVersion = ndk_version
         enable_coverage_bool = (enable_coverage == 'true')
 

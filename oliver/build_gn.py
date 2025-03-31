@@ -66,7 +66,7 @@ def build_by_ninja(root_path, show_log):
   if show_log:
     command = '%s -C %s oliver_group -v' % (ninja_path, output_path)
   else:
-    command = '%s -C %s oliver_group' % (ninja_path, output_path)
+    command = '%s -C %s oliver_group -v' % (ninja_path, output_path)
   result = subprocess.check_call(command, shell=True)
   return result
 
