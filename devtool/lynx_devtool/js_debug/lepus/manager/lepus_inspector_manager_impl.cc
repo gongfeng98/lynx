@@ -23,8 +23,7 @@ void LepusInspectorManagerImpl::InitInspector(
     Context* context, const std::shared_ptr<InspectorLepusObserver>& observer,
     const std::string& context_name) {
   // Do not support debugging lazy components of non-LepusNG.
-  if (!observer->IsDebugEnabled() ||
-      (!context->IsLepusNGContext() &&
+  if ((!context->IsLepusNGContext() &&
        context_name != devtool::kLepusDefaultContextName)) {
     return;
   }
@@ -49,7 +48,11 @@ void LepusInspectorManagerImpl::SetDebugInfo(const std::string& debug_info_url,
     return;
   }
 
-  inspector_client_->SetDebugInfo(file_name, sp->GetDebugInfo(debug_info_url));
+  std::string debug_info;
+  if (sp->IsDebugEnabled()) {
+    debug_info = sp->GetDebugInfo(debug_info_url);
+  }
+  inspector_client_->SetDebugInfo(file_name, debug_info);
   sp->PrepareForScriptEval(inspector_name_);
 }
 

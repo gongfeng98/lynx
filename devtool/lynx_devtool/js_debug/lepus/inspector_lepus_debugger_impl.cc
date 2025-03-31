@@ -4,6 +4,8 @@
 
 #include "devtool/lynx_devtool/js_debug/lepus/inspector_lepus_debugger_impl.h"
 
+#include "devtool/lynx_devtool/config/devtool_config.h"
+
 namespace lynx {
 namespace devtool {
 
@@ -56,8 +58,10 @@ void InspectorLepusDebuggerImpl::OnInspectorInited(
   delegate->SetInspectorClient(client);
   client->SetInspectorClientDelegate(delegate);
 
-  delegate->OnTargetCreated();
-  delegate->DispatchInitMessage(kDefaultViewID, false);
+  if (tasm::LynxEnv::GetInstance().IsDevToolConnected()) {
+    delegate->OnTargetCreated();
+    delegate->DispatchInitMessage(kDefaultViewID, false);
+  }
 }
 
 void InspectorLepusDebuggerImpl::OnContextDestroyed(const std::string &name) {
@@ -69,10 +73,13 @@ void InspectorLepusDebuggerImpl::OnContextDestroyed(const std::string &name) {
 }
 
 void InspectorLepusDebuggerImpl::PrepareForScriptEval(const std::string &name) {
-  std::unique_lock<std::mutex> lock(mutex_);
-  auto it = delegates_.find(name);
-  if (it != delegates_.end()) {
-    it->second->SetStopAtEntry(true, kDefaultViewID);
+  if (tasm::LynxEnv::GetInstance().IsDevToolConnected()) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    auto it = delegates_.find(name);
+    if (it != delegates_.end()) {
+      it->second->SetStopAtEntry(DevToolConfig::ShouldStopAtEntry(true),
+                                 kDefaultViewID);
+    }
   }
 }
 
@@ -90,6 +97,13 @@ void InspectorLepusDebuggerImpl::RunOnTargetThread(base::closure &&closure,
   auto sp = devtool_mediator_wp_.lock();
   CHECK_NULL_AND_LOG_RETURN(sp, "lepus debug: devtool_mediator_ is null");
   sp->RunOnTASMThread(std::move(closure), run_now);
+}
+
+void InspectorLepusDebuggerImpl::UpdateTarget() {
+  std::unique_lock<std::mutex> lock(mutex_);
+  for (const auto &delegate : delegates_) {
+    delegate.second->OnTargetCreated();
+  }
 }
 
 }  // namespace devtool

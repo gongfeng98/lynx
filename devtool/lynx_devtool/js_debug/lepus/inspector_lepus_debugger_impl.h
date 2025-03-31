@@ -38,6 +38,8 @@ class InspectorLepusDebuggerImpl : public JavaScriptDebuggerNG {
 
   void RunOnTargetThread(base::closure&& closure, bool run_now = true) override;
 
+  void UpdateTarget();
+
  private:
   std::shared_ptr<InspectorLepusObserverImpl> observer_;
   // There may be multiple lepus contexts if the LynxView contains lazy

@@ -60,6 +60,7 @@ constexpr char kMethodDebuggerRemoveBreakpoint[] = "Debugger.removeBreakpoint";
 constexpr char kMethodDebuggerSetPauseOnExceptions[] =
     "Debugger.setPauseOnExceptions";
 constexpr char kMethodRuntimeEnable[] = "Runtime.enable";
+constexpr char kMethodRuntimeDisable[] = "Runtime.disable";
 constexpr char kMethodProfilerEnable[] = "Profiler.enable";
 
 // Events

@@ -9,6 +9,7 @@
 
 #include <memory>
 
+#include "core/renderer/utils/lynx_env.h"
 #include "devtool/testing/mock/devtool_platform_facade_mock.h"
 #include "devtool/testing/mock/inspector_client_ng_mock.h"
 #include "third_party/googletest/googletest/include/gtest/gtest.h"
@@ -77,19 +78,23 @@ TEST_F(InspectorLepusDebuggerImplTest, OnInspectorInited) {
   EXPECT_EQ(delegate->client_wp_.lock(), client1);
   EXPECT_EQ(client1->delegate_wp_.lock(), delegate);
 
-  EXPECT_EQ(delegate->target_created_, true);
-  EXPECT_EQ(client1->message_queue_.size(), 2);
-  EXPECT_EQ(client1->message_queue_.front(),
-            "{\"id\":0,\"method\":\"Debugger.enable\"}");
-  EXPECT_EQ(client1->message_queue_.back(),
-            "{\"id\":0,\"method\":\"Profiler.enable\"}");
+  EXPECT_EQ(delegate->target_created_, false);
+  EXPECT_EQ(client1->message_queue_.size(), 0);
 
+  tasm::LynxEnv::GetInstance().SetBoolLocalEnv("devtool_connected", true);
   std::shared_ptr<lynx::testing::InspectorClientNGMock> client2 =
       std::make_shared<lynx::testing::InspectorClientNGMock>();
   debugger_->OnInspectorInited(kKeyEngineLepus, kKeyEngineLepus, client2);
   EXPECT_EQ(debugger_->delegates_.size(), 1);
   EXPECT_EQ(delegate->client_wp_.lock(), client2);
   EXPECT_EQ(client2->delegate_wp_.lock(), delegate);
+
+  EXPECT_EQ(delegate->target_created_, true);
+  EXPECT_EQ(client2->message_queue_.size(), 2);
+  EXPECT_EQ(client2->message_queue_.front(),
+            "{\"id\":0,\"method\":\"Debugger.enable\"}");
+  EXPECT_EQ(client2->message_queue_.back(),
+            "{\"id\":0,\"method\":\"Profiler.enable\"}");
 
   std::shared_ptr<lynx::testing::InspectorClientNGMock> client3 =
       std::make_shared<lynx::testing::InspectorClientNGMock>();
@@ -116,7 +121,22 @@ TEST_F(InspectorLepusDebuggerImplTest, PrepareForScriptEval) {
   debugger_->PrepareForScriptEval("test");
   EXPECT_EQ(client->stop_at_entry_, false);
   debugger_->PrepareForScriptEval(kKeyEngineLepus);
+  EXPECT_EQ(client->stop_at_entry_, false);
+
+  tasm::LynxEnv::GetInstance().SetBoolLocalEnv("devtool_connected", true);
+  debugger_->PrepareForScriptEval("test");
+  EXPECT_EQ(client->stop_at_entry_, false);
+  debugger_->PrepareForScriptEval(kKeyEngineLepus);
+  EXPECT_EQ(client->stop_at_entry_, false);
+
+  DevToolConfig::SetStopAtEntry(true, true);
+  debugger_->PrepareForScriptEval("test");
+  EXPECT_EQ(client->stop_at_entry_, false);
+  debugger_->PrepareForScriptEval(kKeyEngineLepus);
   EXPECT_EQ(client->stop_at_entry_, true);
+
+  // reset for next test
+  DevToolConfig::SetStopAtEntry(false, true);
 }
 
 }  // namespace testing

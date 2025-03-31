@@ -212,6 +212,7 @@ class LynxDevToolMediator
   void SendLayoutTree();
   void SendCDPEvent(const Json::Value& msg);
   void DispatchJSMessage(const Json::Value& message);
+  void UpdateTarget();
 
   void LayerTreeDidChange();
 

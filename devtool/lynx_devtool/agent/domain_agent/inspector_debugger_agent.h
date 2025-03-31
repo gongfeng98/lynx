@@ -5,6 +5,8 @@
 #ifndef DEVTOOL_LYNX_DEVTOOL_AGENT_DOMAIN_AGENT_INSPECTOR_DEBUGGER_AGENT_H_
 #define DEVTOOL_LYNX_DEVTOOL_AGENT_DOMAIN_AGENT_INSPECTOR_DEBUGGER_AGENT_H_
 
+#include <unordered_map>
+
 #include "devtool/base_devtool/native/public/cdp_domain_agent_base.h"
 #include "devtool/base_devtool/native/public/message_sender.h"
 #include "devtool/lynx_devtool/agent/lynx_devtool_mediator.h"
@@ -22,7 +24,13 @@ class InspectorDebuggerAgent : public CDPDomainAgentBase {
                   const Json::Value& message) override;
 
  private:
+  typedef void (InspectorDebuggerAgent::*DebuggerAgentMethod)(
+      const Json::Value& message);
+
+  void Enable(const Json::Value& message);
+
   std::shared_ptr<LynxDevToolMediator> devtool_mediator_;
+  std::unordered_map<std::string, DebuggerAgentMethod> functions_map_;
 };
 }  // namespace devtool
 }  // namespace lynx

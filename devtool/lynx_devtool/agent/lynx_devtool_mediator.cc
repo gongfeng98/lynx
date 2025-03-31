@@ -620,6 +620,12 @@ void LynxDevToolMediator::DispatchJSMessage(const Json::Value& message) {
   }
 }
 
+void LynxDevToolMediator::UpdateTarget() {
+  if (lepus_debugger_ != nullptr) {
+    lepus_debugger_->UpdateTarget();
+  }
+}
+
 void LynxDevToolMediator::SetRuntimeEnableNeeded(bool enable) {
   CHECK_NULL_AND_LOG_RETURN(js_debugger_, "js_debugger_ is null");
   js_debugger_->SetRuntimeEnableNeeded(enable);

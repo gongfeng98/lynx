@@ -121,6 +121,8 @@ class InspectorClientDelegateImpl : public InspectorClientDelegateBaseImpl {
   std::string PrepareResponseMessage(const std::string& message,
                                      int instance_id) override;
 
+  void HandleMessageRuntimeDisable(int instance_id);
+
   // The meaning of return value of the following 4 functions: if the return
   // value is true, do not send this message to the DevTool frontend.
   bool HandleMessageConsoleAPICalled(rapidjson::Document& message);

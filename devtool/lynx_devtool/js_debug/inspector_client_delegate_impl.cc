@@ -143,14 +143,11 @@ void InspectorClientDelegateImpl::OnTargetDestroyed() {
   if (!target_created_) {
     return;
   }
-  auto it = view_id_to_bundle_.find(kDefaultViewID);
-  if (it != view_id_to_bundle_.end()) {
-    auto sp = it->second.debugger_.lock();
-    if (sp != nullptr) {
-      // Send messages directly without executing PrepareResponseMessage.
-      sp->SendResponse(GenMessageDetachedFromTarget(target_id_));
-      sp->SendResponse(GenMessageTargetDestroyed(target_id_));
-    }
+  auto sp = GetDebuggerByViewId(kDefaultViewID).lock();
+  if (sp != nullptr) {
+    // Send messages directly without executing PrepareResponseMessage.
+    sp->SendResponse(GenMessageDetachedFromTarget(target_id_));
+    sp->SendResponse(GenMessageTargetDestroyed(target_id_));
   }
   target_created_ = false;
 }
@@ -374,6 +371,11 @@ void InspectorClientDelegateImpl::UpdateCurrentDebugAppId(int view_id,
 
 std::string InspectorClientDelegateImpl::PrepareDispatchMessage(
     rapidjson::Document& message, int instance_id) {
+  std::string method = message[kKeyMethod].GetString();
+  if (method == kMethodRuntimeDisable) {
+    HandleMessageRuntimeDisable(instance_id);
+  }
+
   RemoveInvalidMembers(message);
 
   CacheBreakpointsByRequestMessage(message,
@@ -448,6 +450,21 @@ std::string InspectorClientDelegateImpl::PrepareResponseMessage(
 
   res = base::ToJson(json_mes);
   return res;
+}
+
+void InspectorClientDelegateImpl::HandleMessageRuntimeDisable(int instance_id) {
+  // The current debugging instance will be changed when receiving the
+  // Runtime.disable message, so we need to reset these settings.
+  if (vm_type_ == kKeyEngineLepus) {
+    OnTargetDestroyed();
+  } else {
+    auto debugger = GetDebuggerByViewId(instance_id).lock();
+    if (debugger != nullptr) {
+      auto js_debugger =
+          std::static_pointer_cast<InspectorJavaScriptDebuggerImpl>(debugger);
+      js_debugger->SetRuntimeEnableNeeded(false);
+    }
+  }
 }
 
 bool InspectorClientDelegateImpl::HandleMessageConsoleAPICalled(

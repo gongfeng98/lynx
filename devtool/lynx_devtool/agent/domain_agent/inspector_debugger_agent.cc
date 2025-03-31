@@ -9,10 +9,23 @@ namespace devtool {
 
 InspectorDebuggerAgent::InspectorDebuggerAgent(
     const std::shared_ptr<LynxDevToolMediator>& devtool_mediator)
-    : devtool_mediator_(devtool_mediator) {}
+    : devtool_mediator_(devtool_mediator) {
+  functions_map_["Debugger.enable"] = &InspectorDebuggerAgent::Enable;
+}
+
+void InspectorDebuggerAgent::Enable(const Json::Value& message) {
+  if (!message.isMember("sessionId")) {
+    devtool_mediator_->UpdateTarget();
+  }
+}
 
 void InspectorDebuggerAgent::CallMethod(
     const std::shared_ptr<MessageSender>& sender, const Json::Value& message) {
+  std::string method = message["method"].asString();
+  auto iter = functions_map_.find(method);
+  if (iter != functions_map_.end()) {
+    (this->*(iter->second))(message);
+  }
   devtool_mediator_->DispatchJSMessage(message);
 }
 }  // namespace devtool
