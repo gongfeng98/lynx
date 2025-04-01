@@ -1397,6 +1397,217 @@ using Stack = std::stack<T, Vector<T>>;
 template <class T, size_t N>
 using InlineStack = std::stack<T, InlineVector<T, N>>;
 
+/**
+ * @brief Ordered map/set base on array. Performance consideration:
+ *  1. Insertion is relatively slow because of reallocation and moving of
+ * elements. While map/set also need rebalancing of RB tree.
+ * Performance test data shows that when the key is a basic type such as int,
+ * the insertion performance of the container is still ahead of std::map when
+ * the data volume reaches several thousands. When the key is a type with
+ * relatively low movement overhead such as std::string, the insertion
+ * performance is on par with std::map when the data volume reaches 30-50.
+ * Besides, ordered map/set on array supports real reserve() to pre-allocate
+ * container buffer.
+ *  2. Finding is array-based binary-search which should outperform map/set
+ * because array is linear and much simpler.
+ *  3. Memory layout is much better than node-based map and unordered_map
+ * because elements are stored linearly and continuously.
+ *  4. Compiled binary size is the same as map/set and smaller than
+ * unordered_map/unordered_set.
+ *  5. Struct type size(16b) is smaller than std::map, std::set,
+ * std::unordered_map and std::unordered_set.
+ *
+ * Best use scenarios:
+ * 1. Small amount of data, from dozens to hundreds.
+ * 2. Low moving overhead for Key and Value, such as primitive types,
+ * std::string, std::shared_ptr.
+ * 3. More queries than data modifications.
+ *
+ * Please use the following specialized types:
+ *   OrderedFlatMap
+ *   InlineOrderedFlatMap
+ *   OrderedFlatSet
+ *   InlineOrderedFlatSet
+ *
+ * When implementing custom Compare method. Use f(const K&, const K&) as
+ * signature to avoid unnecessary copy.
+ */
+template <class K, class T, size_t N, class Compare = std::less<K>>
+struct BinarySearchArray {
+ private:
+  static constexpr auto is_map = !std::is_void_v<T>;
+  struct StoredPair {
+    K first;
+    T second;
+  };
+  using store_value_type = typename std::conditional_t<is_map, StoredPair, K>;
+  using container_type =
+      typename std::conditional_t<(N > 0), InlineVector<store_value_type, N>,
+                                  Vector<store_value_type>>;
+  using store_iterator = typename container_type::iterator;
+
+ public:
+  // User sees const K for key.
+  struct Pair {
+    const K first;
+    T second;
+  };
+
+  using key_type = K;
+  using mapped_type = T;
+  using value_type = typename std::conditional_t<is_map, Pair, K>;
+  using iterator = value_type*;
+  using const_iterator = const value_type*;
+
+  BinarySearchArray() = default;
+  BinarySearchArray(std::nullptr_t) {}  // NOLINT
+
+  size_t size() const { return array_.size(); }
+
+  bool empty() const { return array_.empty(); }
+
+  void clear() {
+    // We should also free memory so `array_.clear()` is not feasible.
+    array_.clear_and_shrink();
+  }
+
+  bool reserve(size_t count) { return array_.reserve(count); }
+
+  iterator begin() { return reinterpret_cast<iterator>(array_.begin()); }
+
+  const_iterator begin() const {
+    return reinterpret_cast<const_iterator>(array_.begin());
+  }
+
+  const_iterator cbegin() const {
+    return reinterpret_cast<const_iterator>(array_.cbegin());
+  }
+
+  iterator end() { return reinterpret_cast<iterator>(array_.end()); }
+
+  const_iterator cend() const {
+    return reinterpret_cast<const_iterator>(array_.cend());
+  }
+
+  const_iterator end() const {
+    return reinterpret_cast<const_iterator>(array_.end());
+  }
+
+  std::pair<iterator, bool> insert(const value_type& value) {
+    auto pos = lower_bound(*reinterpret_cast<const K*>(&value));
+    if (pos != end() && *reinterpret_cast<const K*>(pos) ==
+                            *reinterpret_cast<const K*>(&value)) {
+      return {pos, false};  // duplicate
+    } else {
+      return {reinterpret_cast<iterator>(array_.insert(
+                  reinterpret_cast<store_iterator>(pos),
+                  *reinterpret_cast<const store_value_type*>(&value))),
+              true};
+    }
+  }
+
+  std::pair<iterator, bool> insert(value_type&& value) {
+    auto pos = lower_bound(*reinterpret_cast<const K*>(&value));
+    if (pos != end() && *reinterpret_cast<const K*>(pos) ==
+                            *reinterpret_cast<const K*>(&value)) {
+      return {pos, false};  // duplicate
+    } else {
+      return {reinterpret_cast<iterator>(array_.insert(
+                  reinterpret_cast<store_iterator>(pos),
+                  std::move(*reinterpret_cast<store_value_type*>(&value)))),
+              true};
+    }
+  }
+
+  iterator erase(iterator pos) {
+    return reinterpret_cast<iterator>(
+        array_.erase(reinterpret_cast<store_iterator>(pos)));
+  }
+
+  size_t erase(const K& key) {
+    auto pos = lower_bound(key);
+    if (pos != end() && *reinterpret_cast<const K*>(pos) == key) {
+      array_.erase(reinterpret_cast<store_iterator>(pos));
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  iterator find(const K& key) {
+    auto pos = lower_bound(key);
+    if (pos != end() && *reinterpret_cast<const K*>(pos) == key) {
+      return pos;
+    } else {
+      return end();
+    }
+  }
+
+  const_iterator find(const K& key) const {
+    auto pos = lower_bound(key);
+    if (pos != end() && *reinterpret_cast<const K*>(pos) == key) {
+      return pos;
+    } else {
+      return end();
+    }
+  }
+
+  bool contains(const K& key) const { return find(key) != end(); }
+
+  template <typename Q = T>
+  std::enable_if_t<is_map, Q&> operator[](const K& key) {
+    return try_insert(key)->second;
+  }
+
+  template <typename Q = T>
+  std::enable_if_t<is_map, Q&> operator[](K&& key) {
+    return try_insert(std::move(key))->second;
+  }
+
+ private:
+  BASE_VECTOR_NEVER_INLINE iterator lower_bound(const K& value) const {
+    return const_cast<iterator>(std::lower_bound(
+        begin(), end(), value, [](const value_type& item, const K& value) {
+          return Compare()(*reinterpret_cast<const K*>(&item), value);
+        }));
+  }
+
+  iterator try_insert(const K& key) {
+    auto pos = lower_bound(key);
+    if (pos != end() && *reinterpret_cast<const K*>(pos) == key) {
+      return pos;
+    } else {
+      return reinterpret_cast<iterator>(array_.insert(
+          reinterpret_cast<store_iterator>(pos), StoredPair{key, T()}));
+    }
+  }
+
+  iterator try_insert(K&& key) {
+    auto pos = lower_bound(key);
+    if (pos != end() && *reinterpret_cast<const K*>(pos) == key) {
+      return pos;
+    } else {
+      return reinterpret_cast<iterator>(
+          array_.insert(reinterpret_cast<store_iterator>(pos),
+                        StoredPair{std::move(key), T()}));
+    }
+  }
+
+  container_type array_;
+};
+
+template <class Key, class T>
+using OrderedFlatMap = BinarySearchArray<Key, T, 0>;
+
+template <class Key, class T, size_t N>
+using InlineOrderedFlatMap = BinarySearchArray<Key, T, N>;
+
+template <class Key>
+using OrderedFlatSet = BinarySearchArray<Key, void, 0>;
+
+template <class Key, size_t N>
+using InlineOrderedFlatSet = BinarySearchArray<Key, void, N>;
+
 }  // namespace base
 }  // namespace lynx
 

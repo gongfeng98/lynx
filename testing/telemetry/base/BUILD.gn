@@ -17,7 +17,10 @@ benchmark_test("base_benchmark") {
 # in CI to prevent misreport on the benchmark platform.
 benchmark_test("vector_benchmark") {
   testonly = true
-  sources = [ "./vector_benchmark.cc" ]
+  sources = [
+    "./ordered_flat_benchmark.cc",
+    "./vector_benchmark.cc",
+  ]
   deps = [ "//lynx/base/src:base" ]
 }
 
