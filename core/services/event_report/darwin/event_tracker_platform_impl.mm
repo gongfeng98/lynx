@@ -57,6 +57,15 @@ void EventTrackerPlatformImpl::UpdateGenericInfo(
   }
 }
 
+void EventTrackerPlatformImpl::UpdateGenericInfo(
+    int32_t instance_id, std::unordered_map<std::string, float> generic_info) {
+  for (auto const& item : generic_info) {
+    NSString* key = [NSString stringWithUTF8String:item.first.c_str()];
+    NSNumber* value = [[NSNumber alloc] initWithFloat:item.second];
+    [LynxEventReporter updateGenericInfo:value key:key instanceId:instance_id];
+  }
+}
+
 void EventTrackerPlatformImpl::UpdateGenericInfo(int32_t instance_id, const std::string& key,
                                                  const std::string& value) {
   NSString* keyNSStr = [NSString stringWithUTF8String:key.c_str()];

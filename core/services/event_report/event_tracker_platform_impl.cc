@@ -26,6 +26,9 @@ void EventTrackerPlatformImpl::UpdateGenericInfo(
   // TODO(limeng.amer): Add Darwin、Android、Win platform layer implementation.
 }
 
+void EventTrackerPlatformImpl::UpdateGenericInfo(
+    int32_t instance_id, std::unordered_map<std::string, float> generic_info) {}
+
 void EventTrackerPlatformImpl::UpdateGenericInfo(int32_t instance_id,
                                                  const std::string& key,
                                                  const std::string& value) {}

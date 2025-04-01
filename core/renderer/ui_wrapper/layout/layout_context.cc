@@ -847,10 +847,10 @@ void LayoutContext::Layout(const PipelineOptions& options) {
     delegate_->OnCalculatedViewportChanged(viewport, root_id());
 
     // update LynxView's size info for EventReporter
-    report::EventTracker::UpdateGenericInfo(instance_id_, "lynxview_height",
-                                            calculated_viewport_.height);
-    report::EventTracker::UpdateGenericInfo(instance_id_, "lynxview_width",
-                                            calculated_viewport_.width);
+    std::unordered_map<std::string, float> prop_map = {
+        {"lynxview_height", calculated_viewport_.height},
+        {"lynxview_width", calculated_viewport_.width}};
+    report::EventTracker::UpdateGenericInfo(instance_id_, std::move(prop_map));
   }
 
   TRACE_EVENT_INSTANT(

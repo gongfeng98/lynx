@@ -39,6 +39,8 @@ class EventTrackerPlatformImpl {
   static void UpdateGenericInfo(
       int32_t instance_id,
       std::unordered_map<std::string, std::string> generic_info);
+  static void UpdateGenericInfo(
+      int32_t instance_id, std::unordered_map<std::string, float> generic_info);
 
   /// Update the generic info of template instance to platform.
   /// @param instance_id The unique id of template instance.

@@ -169,6 +169,12 @@ class EventTracker {
   // template instance id.
   static void Flush(int32_t instance_id);
 
+  /// Update the generic info of template instance by a pair of size.
+  /// @param instance_id The unique id of template instance.
+  /// @param prop_map The property map
+  static void UpdateGenericInfo(
+      int32_t instance_id, std::unordered_map<std::string, float>&& prop_map);
+
  private:
   static EventTracker* Instance();
 

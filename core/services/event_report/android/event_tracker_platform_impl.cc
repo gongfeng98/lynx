@@ -81,6 +81,17 @@ void EventTrackerPlatformImpl::UpdateGenericInfo(
                                            java_config.jni_object());
 }
 
+void EventTrackerPlatformImpl::UpdateGenericInfo(
+    int32_t instance_id, std::unordered_map<std::string, float> generic_info) {
+  JNIEnv* env = base::android::AttachCurrentThread();
+  base::android::JavaOnlyMap java_config;
+  for (auto const& item : generic_info) {
+    java_config.PushDouble(item.first, item.second);
+  }
+  Java_LynxEventReporter_updateGenericInfo(env, instance_id,
+                                           java_config.jni_object());
+}
+
 void EventTrackerPlatformImpl::UpdateGenericInfo(int32_t instance_id,
                                                  const std::string& key,
                                                  const std::string& value) {

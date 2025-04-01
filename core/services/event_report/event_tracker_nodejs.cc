@@ -32,6 +32,9 @@ void EventTracker::UpdateGenericInfo(int32_t instance_id, std::string key,
 
 void EventTracker::Flush(int32_t instance_id) {}
 
+void EventTracker::UpdateGenericInfo(
+    int32_t instance_id, std::unordered_map<std::string, float>&& prop_map) {}
+
 }  // namespace report
 }  // namespace tasm
 }  // namespace lynx

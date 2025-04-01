@@ -51,6 +51,13 @@ void EventTrackerPlatformImpl::UpdateGenericInfo(
   EventTrackerWaitableEvent::Await()->Signal();
 }
 
+void EventTrackerPlatformImpl::UpdateGenericInfo(
+    int32_t instance_id, std::unordered_map<std::string, float> generic_info) {
+  EventTrackerWaitableEvent::instance_id_ = instance_id;
+  EventTrackerWaitableEvent::generic_float_info_ = std::move(generic_info);
+  EventTrackerWaitableEvent::Await()->Signal();
+}
+
 void EventTrackerPlatformImpl::UpdateGenericInfo(int32_t instance_id,
                                                  const std::string& key,
                                                  const std::string& value) {
