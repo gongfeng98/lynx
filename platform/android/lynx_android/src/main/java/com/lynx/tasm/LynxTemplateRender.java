@@ -1705,6 +1705,8 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
   private void maybeSyncLayoutResultDuringLayoutOnBackgroundThread(
       int widthMeasureSpec, int heightMeasureSpec) {
     if (!mWillContentSizeChange) {
+      updateViewport(widthMeasureSpec, heightMeasureSpec);
+
       if (getEnableVsyncAlignedFlush()) {
         nativeFlush(mNativePtr, mNativeLifecycle);
       }
