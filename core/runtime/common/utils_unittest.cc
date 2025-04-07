@@ -363,6 +363,7 @@ function make() {
     EXPECT_TRUE(lepus_value_opt.has_value());
     EXPECT_TRUE(lepus_value_opt->IsNil());
   }
+  jsi_object_wrapper_manager->DestroyOnJSThread();
 }
 
 TEST_P(UtilTests, ParseObjectJSValueTest) {

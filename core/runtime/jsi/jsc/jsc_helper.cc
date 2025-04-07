@@ -24,113 +24,40 @@ namespace lynx {
 namespace piper {
 namespace detail {
 
-JSCSymbolValue::JSCSymbolValue(JSGlobalContextRef ctx,
-                               const std::atomic<bool>& ctxInvalid,
+JSCSymbolValue::JSCSymbolValue(JSGlobalContextRef ctx, JSCRuntime* jsc_runtime,
                                std::atomic<intptr_t>& counter, JSValueRef sym)
-    : ctx_(ctx),
-      ctxInvalid_(ctxInvalid),
-      sym_(sym)
-#ifdef DEBUG
-      ,
-      counter_(counter)
-#endif
-{
+    : JSCObjectBase(ctx, jsc_runtime, sym, counter) {
   DCHECK(JSCHelper::smellsLikeES6Symbol(ctx_, sym_));
-  if (ctx_) {
-    JSValueProtect(ctx_, sym_);
-  }
-#ifdef DEBUG
-  counter_ += 1;
-#endif
-}
-
-void JSCSymbolValue::invalidate() {
-#ifdef DEBUG
-  counter_ -= 1;
-#endif
-  // When shutting down the VM, if there is a HostObject which
-  // contains or otherwise owns a jsi::Object, then the final GC will
-  // finalize the HostObject, leading to a call to invalidate().  But
-  // at that point, making calls to JSValueUnprotect will crash.
-  // It is up to the application to make sure that any other calls to
-  // invalidate() happen before VM destruction; see the comment on
-  // jsi::Runtime.
-  //
-  // Another potential concern here is that in the non-shutdown case,
-  // if a HostObject is GCd, JSValueUnprotect will be called from the
-  // JSC finalizer.  The documentation warns against this: "You must
-  // not call any function that may cause a garbage collection or an
-  // allocation of a garbage collected object from within a
-  // JSObjectFinalizeCallback. This includes all functions that have a
-  // JSContextRef parameter." However, an audit of the source code for
-  // JSValueUnprotect in late 2018 shows that it cannot cause
-  // allocation or a GC, and further, this code has not changed in
-  // about two years.  In the future, we may choose to reintroduce the
-  // mechanism previously used here which uses a separate thread for
-  // JSValueUnprotect, in order to conform to the documented API, but
-  // use the "unsafe" synchronous version on iOS 11 and earlier.
-
-  if (!ctxInvalid_ && ctx_) {
-    JSValueUnprotect(ctx_, sym_);
-  }
-  delete this;
 }
 
 JSCStringValue::JSCStringValue(std::atomic<intptr_t>& counter, JSStringRef str)
     : str_(JSStringRetain(str))
-#ifdef DEBUG
+#if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
       ,
       counter_(counter)
 #endif
 {
-#ifdef DEBUG
+#if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
   counter_ += 1;
 #endif
 }
 
 void JSCStringValue::invalidate() {
-#ifdef DEBUG
+#if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
   counter_ -= 1;
 #endif
   JSStringRelease(str_);
   delete this;
 }
 
-JSCObjectValue::JSCObjectValue(JSGlobalContextRef ctx,
-                               const std::atomic<bool>& ctxInvalid,
+JSCObjectValue::JSCObjectValue(JSGlobalContextRef ctx, JSCRuntime* jsc_runtime,
                                std::atomic<intptr_t>& counter, JSObjectRef obj)
-    : ctx_(ctx),
-      ctxInvalid_(ctxInvalid),
-      obj_(obj)
-#ifdef DEBUG
-      ,
-      counter_(counter)
-#endif
-{
-  if (ctx_) {
-    JSValueProtect(ctx_, obj_);
-  }
-#ifdef DEBUG
-  counter_ += 1;
-#endif
-}
-
-JSObjectRef JSCObjectValue::Get() const { return obj_; }
-
-void JSCObjectValue::invalidate() {
-#ifdef DEBUG
-  counter_ -= 1;
-#endif
-  if (!ctxInvalid_ && ctx_) {
-    JSValueUnprotect(ctx_, obj_);
-  }
-  delete this;
-}
+    : JSCObjectBase(ctx, jsc_runtime, obj, counter) {}
 
 Runtime::PointerValue* JSCHelper::makeSymbolValue(
-    JSGlobalContextRef ctx, const std::atomic<bool>& ctxInvalid,
+    JSGlobalContextRef ctx, JSCRuntime* jsc_runtime,
     std::atomic<intptr_t>& counter, JSValueRef sym) {
-  return new JSCSymbolValue(ctx, ctxInvalid, counter, sym);
+  return new JSCSymbolValue(ctx, jsc_runtime, counter, sym);
 }
 
 Runtime::PointerValue* JSCHelper::makeStringValue(
@@ -142,17 +69,16 @@ Runtime::PointerValue* JSCHelper::makeStringValue(
 }
 
 Runtime::PointerValue* JSCHelper::makeObjectValue(
-    JSGlobalContextRef ctx, const std::atomic<bool>& ctxInvalid,
+    JSGlobalContextRef ctx, JSCRuntime* jsc_runtime,
     std::atomic<intptr_t>& counter, JSObjectRef obj) {
   if (!obj) {
     obj = JSObjectMake(ctx, nullptr, nullptr);
   }
-  return new JSCObjectValue(ctx, ctxInvalid, counter, obj);
+  return new JSCObjectValue(ctx, jsc_runtime, counter, obj);
 }
 
 Value JSCHelper::createValue(JSCRuntime& rt, JSValueRef value) {
   JSGlobalContextRef ctx = rt.getContext();
-  const std::atomic<bool>& ctx_invalid = rt.getCtxInvalid();
   std::atomic<intptr_t>& counter = rt.objectCounter();
   if (!ctx) {
     return Value::null();
@@ -172,9 +98,9 @@ Value JSCHelper::createValue(JSCRuntime& rt, JSValueRef value) {
     return result;
   } else if (JSValueIsObject(ctx, value)) {
     JSObjectRef objRef = JSValueToObject(ctx, value, nullptr);
-    return Value(JSCHelper::createObject(ctx, ctx_invalid, counter, objRef));
+    return Value(JSCHelper::createObject(ctx, &rt, counter, objRef));
   } else if (JSCHelper::smellsLikeES6Symbol(ctx, value)) {
-    return Value(JSCHelper::createSymbol(ctx, ctx_invalid, counter, value));
+    return Value(JSCHelper::createSymbol(ctx, &rt, counter, value));
   } else {
     int tag = JSValueGetType(ctx, value);
     LOGE("createValue failed type is unknown:" << tag);
@@ -185,10 +111,9 @@ Value JSCHelper::createValue(JSCRuntime& rt, JSValueRef value) {
   }
 }
 
-Symbol JSCHelper::createSymbol(JSGlobalContextRef ctx,
-                               const std::atomic<bool>& ctxInvalid,
+Symbol JSCHelper::createSymbol(JSGlobalContextRef ctx, JSCRuntime* jsc_runtime,
                                std::atomic<intptr_t>& counter, JSValueRef sym) {
-  return Runtime::make<Symbol>(makeSymbolValue(ctx, ctxInvalid, counter, sym));
+  return Runtime::make<Symbol>(makeSymbolValue(ctx, jsc_runtime, counter, sym));
 }
 
 piper::String JSCHelper::createString(std::atomic<intptr_t>& counter,
@@ -201,11 +126,10 @@ PropNameID JSCHelper::createPropNameID(std::atomic<intptr_t>& counter,
   return Runtime::make<PropNameID>(makeStringValue(counter, str));
 }
 
-Object JSCHelper::createObject(JSGlobalContextRef ctx,
-                               const std::atomic<bool>& ctxInvalid,
+Object JSCHelper::createObject(JSGlobalContextRef ctx, JSCRuntime* jsc_runtime,
                                std::atomic<intptr_t>& counter,
                                JSObjectRef obj) {
-  return Runtime::make<Object>(makeObjectValue(ctx, ctxInvalid, counter, obj));
+  return Runtime::make<Object>(makeObjectValue(ctx, jsc_runtime, counter, obj));
 }
 
 JSObjectRef JSCHelper::createArrayBufferFromJS(JSCRuntime& rt,
@@ -283,7 +207,7 @@ JSStringRef JSCHelper::stringRef(const PropNameID& str) {
 
 JSObjectRef JSCHelper::objectRef(const Object& obj) {
   return static_cast<const JSCObjectValue*>(Runtime::getPointerValue(obj))
-      ->obj_;
+      ->Get();
 }
 
 std::string JSCHelper::JSStringToSTLString(JSStringRef str) {

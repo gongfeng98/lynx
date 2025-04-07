@@ -35,32 +35,19 @@ void JSCContextWrapper::init() {
 }
 
 JSCContextWrapper::~JSCContextWrapper() {
-  // remove all global object
-  JSObjectRef global = JSContextGetGlobalObject(ctx_);
-  JSPropertyNameArrayRef names = JSObjectCopyPropertyNames(ctx_, global);
-  size_t count = JSPropertyNameArrayGetCount(names);
-  for (size_t i = 0; i < count; i++) {
-    JSStringRef name = JSPropertyNameArrayGetNameAtIndex(names, i);
-    JSObjectDeleteProperty(ctx_, global, name, nullptr);
-  }
   ctx_invalid_ = true;
   JSGlobalContextRelease(ctx_);
 
-#ifdef DEBUG
-  // assert(objectCounter_ == 0 &&
-  //       "JSCRuntime destroyed with a dangling API object");
+#if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
   if (objectCounter_ != 0) {
-    LOGE("Error: " << __FILE__ << ":" << __LINE__ << ":"
-                   << "JSCRuntime destroyed with a dangling API object");
+    LOGF("Error: " << __FILE__ << ":" << __LINE__ << ":"
+                   << "JSCRuntime destroyed with a dangling API object, count:"
+                   << objectCounter_);
   }
 
 #endif
 
   LOGI("~JSCContextWrapper " << this);
-}
-
-const std::atomic<bool>& JSCContextWrapper::contextInvalid() const {
-  return ctx_invalid_;
 }
 
 std::atomic<intptr_t>& JSCContextWrapper::objectCounter() const {

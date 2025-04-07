@@ -1579,6 +1579,16 @@ TEST_P(JSITest, JSINativeExceptionCollector) {
               std::string::npos);
 }
 
+TEST_P(JSITest, JSIObjectLeakCheck) {
+  piper::Object foo(rt);
+  piper::Object foo_bar(rt);
+  piper::Object foo_bar_x(rt);
+  foo_bar.setProperty(rt, "x", foo_bar_x);
+  foo_bar.setProperty(rt, "foo", foo);
+  foo.setProperty(rt, "fooBar", foo_bar);
+  rt.global().setProperty(rt, "Foo", foo);
+}
+
 inline std::vector<RuntimeFactory> runtimeGeneratorsFull() {
   std::vector<RuntimeFactory> runtime_factories{};
 

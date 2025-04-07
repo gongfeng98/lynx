@@ -76,14 +76,15 @@ class JSCRuntime : public Runtime {
 
   void setDescription(const std::string& desc) { description_ = desc; }
 
-  const std::atomic<bool>& getCtxInvalid() {
-    return ctx_ == nullptr ? temp_ctx_invalid_ : ctx_->contextInvalid();
+  void AddObjectObserver(base::Observer* obs) {
+    jsc_object_observers_.AddObserver(obs);
   }
 
-  std::atomic<intptr_t>& objectCounter() {
-    return ctx_ == nullptr ? temp_obj_counter_ : ctx_->objectCounter();
+  void RemoveObjectObserver(base::Observer* obs) {
+    jsc_object_observers_.RemoveObserver(obs);
   }
-  bool Valid() const override;
+
+  std::atomic<intptr_t>& objectCounter() { return ctx_->objectCounter(); }
 
  protected:
   PointerValue* cloneSymbol(const PointerValue* pv) override;
@@ -204,8 +205,7 @@ class JSCRuntime : public Runtime {
   std::shared_ptr<JSCContextGroupWrapper> ctx_group_;
   std::shared_ptr<JSCContextWrapper> ctx_;
   std::string description_;
-  std::atomic<bool> temp_ctx_invalid_;
-  std::atomic<intptr_t> temp_obj_counter_;
+  base::ObserverList jsc_object_observers_;
 };
 
 }  // namespace piper

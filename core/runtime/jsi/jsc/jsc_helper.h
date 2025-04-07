@@ -16,6 +16,8 @@
 #include <string>
 
 #include "base/include/string/string_utils.h"
+#include "core/base/observer/observer.h"
+#include "core/base/observer/observer_list.h"
 #include "core/runtime/jsi/jsi.h"
 
 namespace lynx {
@@ -23,21 +25,76 @@ namespace piper {
 class JSCRuntime;
 namespace detail {
 
-class JSCSymbolValue final : public Runtime::PointerValue {
+template <typename T, typename RuntimeType>
+class JSCObjectBase : public Runtime::PointerValue, public base::Observer {
  public:
-  JSCSymbolValue(JSGlobalContextRef ctx, const std::atomic<bool>& ctxInvalid,
-                 std::atomic<intptr_t>& counter, JSValueRef sym);
-  void invalidate() override;
-  virtual std::string Name() override { return "JSCSymbolValue"; }
-  JSGlobalContextRef ctx_;
-  const std::atomic<bool>& ctxInvalid_;
-  JSValueRef sym_;
-#ifdef DEBUG
-  std::atomic<intptr_t>& counter_;
+  JSCObjectBase(JSGlobalContextRef ctx, RuntimeType* jsc_runtime, T sym,
+                std::atomic<intptr_t>& counter)
+      : ctx_(ctx),
+        sym_(sym),
+        jsc_runtime_(jsc_runtime)
+#if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
+        ,
+        counter_(counter)
 #endif
+  {
+    if (ctx_) {
+      JSValueProtect(ctx_, sym_);
+    }
+#if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
+    counter_ += 1;
+#endif
+    jsc_runtime_->AddObjectObserver(this);
+  }
+
+  ~JSCObjectBase() {
+    if (jsc_runtime_) {
+      jsc_runtime_->RemoveObjectObserver(this);
+      jsc_runtime_ = nullptr;
+    }
+  }
+
+  // delete by jsc_runtime destroy
+  void Update() {
+    if (ctx_) {
+      JSValueUnprotect(ctx_, sym_);
+      ctx_ = nullptr;
+      jsc_runtime_ = nullptr;
+    }
+  }
+
+  // delete by user code
+  void invalidate() {
+#if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
+    counter_ -= 1;
+#endif
+    if (ctx_) {
+      JSValueUnprotect(ctx_, sym_);
+      ctx_ = nullptr;
+    }
+    delete this;
+  }
+
+  T Get() const { return ctx_ == nullptr ? nullptr : sym_; }
+
  protected:
+  JSGlobalContextRef ctx_;
+  T sym_;
   friend class JSCRuntime;
   friend class JSCHelper;
+
+ private:
+  RuntimeType* jsc_runtime_;
+#if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
+  std::atomic<intptr_t>& counter_;
+#endif
+};
+
+class JSCSymbolValue final : public JSCObjectBase<JSValueRef, JSCRuntime> {
+ public:
+  JSCSymbolValue(JSGlobalContextRef ctx, JSCRuntime* jsc_runtime,
+                 std::atomic<intptr_t>& counter, JSValueRef sym);
+  virtual std::string Name() override { return "JSCSymbolValue"; }
 };
 
 class JSCStringValue final : public Runtime::PointerValue {
@@ -46,52 +103,39 @@ class JSCStringValue final : public Runtime::PointerValue {
   void invalidate() override;
   virtual std::string Name() override { return "JSCStringValue"; }
   JSStringRef str_;
-#ifdef DEBUG
+#if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
   std::atomic<intptr_t>& counter_;
 #endif
- protected:
-  friend class JSCRuntime;
-  friend class JSCHelper;
 };
 
-class JSCObjectValue final : public Runtime::PointerValue {
+class JSCObjectValue final : public JSCObjectBase<JSObjectRef, JSCRuntime> {
  public:
-  JSCObjectValue(JSGlobalContextRef ctx, const std::atomic<bool>& ctxInvalid,
+  JSCObjectValue(JSGlobalContextRef ctx, JSCRuntime* jsc_runtime,
                  std::atomic<intptr_t>& counter, JSObjectRef obj);
-  void invalidate() override;
   virtual std::string Name() override { return "JSCObjectValue"; }
-  JSObjectRef Get() const;
-  JSGlobalContextRef ctx_;
-  const std::atomic<bool>& ctxInvalid_;
-  JSObjectRef obj_;
-#ifdef DEBUG
-  std::atomic<intptr_t>& counter_;
-#endif
- protected:
-  friend class JSCRuntime;
-  friend class JSCHelper;
 };
 
 class JSCHelper {
  public:
-  static Runtime::PointerValue* makeSymbolValue(
-      JSGlobalContextRef, const std::atomic<bool>& ctxInvalid,
-      std::atomic<intptr_t>& counter, JSValueRef);
+  static Runtime::PointerValue* makeSymbolValue(JSGlobalContextRef,
+                                                JSCRuntime* jsc_runtime,
+                                                std::atomic<intptr_t>& counter,
+                                                JSValueRef);
   static Runtime::PointerValue* makeStringValue(std::atomic<intptr_t>& counter,
                                                 JSStringRef);
-  static Runtime::PointerValue* makeObjectValue(
-      JSGlobalContextRef, const std::atomic<bool>& ctxInvalid,
-      std::atomic<intptr_t>& counter, JSObjectRef);
+  static Runtime::PointerValue* makeObjectValue(JSGlobalContextRef,
+                                                JSCRuntime* jsc_runtime,
+                                                std::atomic<intptr_t>& counter,
+                                                JSObjectRef);
 
   static Value createValue(JSCRuntime&, JSValueRef);
-  static Symbol createSymbol(JSGlobalContextRef, const std::atomic<bool>&,
+  static Symbol createSymbol(JSGlobalContextRef, JSCRuntime* jsc_runtime,
                              std::atomic<intptr_t>& counter, JSValueRef);
   static piper::String createString(std::atomic<intptr_t>& counter,
                                     JSStringRef);
   static PropNameID createPropNameID(std::atomic<intptr_t>& counter,
                                      JSStringRef);
-  static Object createObject(JSGlobalContextRef,
-                             const std::atomic<bool>& ctxInvalid,
+  static Object createObject(JSGlobalContextRef, JSCRuntime* jsc_runtime,
                              std::atomic<intptr_t>& counter, JSObjectRef);
 
   static JSObjectRef createArrayBufferFromJS(JSCRuntime&, JSGlobalContextRef,

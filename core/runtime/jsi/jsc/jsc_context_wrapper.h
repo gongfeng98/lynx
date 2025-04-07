@@ -23,7 +23,6 @@ class JSCContextWrapper : public JSIContext {
   ~JSCContextWrapper() override;
   void init();
 
-  const std::atomic<bool>& contextInvalid() const;
   std::atomic<intptr_t>& objectCounter() const;
 
   JSGlobalContextRef getContext() const;
@@ -34,6 +33,7 @@ class JSCContextWrapper : public JSIContext {
 
  private:
   JSGlobalContextRef ctx_;
+  // only use for wasm
   std::atomic<bool> ctx_invalid_;
   mutable std::atomic<intptr_t> objectCounter_;
 };

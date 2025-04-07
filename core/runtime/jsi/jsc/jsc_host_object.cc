@@ -93,8 +93,7 @@ Object JSCHostObjectProxy::createObject(JSCRuntime& rt, JSGlobalContextRef ctx,
 
   JSObjectRef obj =
       JSObjectMake(ctx, hostObjectClass, new JSCHostObjectProxy(&rt, ho));
-  return JSCHelper::createObject(ctx, rt.getCtxInvalid(), rt.objectCounter(),
-                                 obj);
+  return JSCHelper::createObject(ctx, &rt, rt.objectCounter(), obj);
 }
 
 JSClassRef JSCHostObjectProxy::getHostObjectClass() { return hostObjectClass; }

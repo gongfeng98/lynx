@@ -42,8 +42,7 @@ Function HostFunctionMetadata::createFunctionFromHostFunction(
       JSObjectMake(ctx, hostFunctionClass,
                    new HostFunctionMetadata(&rt, std::move(func), paramCount,
                                             JSCHelper::stringRef(name)));
-  return JSCHelper::createObject(ctx, rt.getCtxInvalid(), rt.objectCounter(),
-                                 funcRef)
+  return JSCHelper::createObject(ctx, &rt, rt.objectCounter(), funcRef)
       .getFunction(rt);
 }
 
@@ -120,7 +119,7 @@ JSValueRef HostFunctionMetadata::call(JSContextRef ctx, JSObjectRef function,
         return JSCHelper::createValue(*jsc_rt, value);
       });
   JSValueRef res;
-  Value thisVal(JSCHelper::createObject(global_ctx, jsc_rt->getCtxInvalid(),
+  Value thisVal(JSCHelper::createObject(global_ctx, jsc_rt,
                                         jsc_rt->objectCounter(), thisObject));
   JSINativeExceptionCollector::Scope scope;
   auto ret = (*host_func)(*jsc_rt, thisVal, converter, argumentCount);

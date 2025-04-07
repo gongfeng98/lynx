@@ -41,18 +41,16 @@ using detail::JSCSymbolValue;
 #endif
 #endif
 
-JSCRuntime::JSCRuntime()
-    : ctx_group_(nullptr), ctx_(nullptr), temp_ctx_invalid_(true) {}
+JSCRuntime::JSCRuntime() : ctx_group_(nullptr), ctx_(nullptr) {}
 
 JSCRuntime::~JSCRuntime() {
   *is_runtime_destroyed_ = true;
   ClearHostContainers();
+  jsc_object_observers_.ForEachObserver();
   ctx_->Release();
   ctx_.reset();
   LOGI("lynx ~JSCRuntime " << ctx_.use_count());
 }
-
-bool JSCRuntime::Valid() const { return ctx_ && !(ctx_->contextInvalid()); }
 
 void JSCRuntime::InitRuntime(std::shared_ptr<JSIContext> sharedContext,
                              std::shared_ptr<JSIExceptionHandler> handler) {
@@ -127,8 +125,7 @@ base::expected<Value, JSINativeException> JSCRuntime::evaluateJavaScript(
 }
 
 Object JSCRuntime::global() {
-  return JSCHelper::createObject(getContext(), ctx_->contextInvalid(),
-                                 objectCounter(),
+  return JSCHelper::createObject(getContext(), this, objectCounter(),
                                  JSContextGetGlobalObject(ctx_->getContext()));
 }
 
@@ -146,8 +143,8 @@ Runtime::PointerValue* JSCRuntime::cloneSymbol(const PointerValue* pv) {
     return nullptr;
   }
   const JSCSymbolValue* symbol = static_cast<const JSCSymbolValue*>(pv);
-  return JSCHelper::makeSymbolValue(ctx_->getContext(), ctx_->contextInvalid(),
-                                    objectCounter(), symbol->sym_);
+  return JSCHelper::makeSymbolValue(ctx_->getContext(), this, objectCounter(),
+                                    symbol->Get());
 }
 
 Runtime::PointerValue* JSCRuntime::cloneString(const PointerValue* pv) {
@@ -163,8 +160,8 @@ Runtime::PointerValue* JSCRuntime::cloneObject(const PointerValue* pv) {
     return nullptr;
   }
   const JSCObjectValue* object = static_cast<const JSCObjectValue*>(pv);
-  return JSCHelper::makeObjectValue(ctx_->getContext(), ctx_->contextInvalid(),
-                                    objectCounter(), object->obj_);
+  return JSCHelper::makeObjectValue(ctx_->getContext(), this, objectCounter(),
+                                    object->Get());
 }
 
 Runtime::PointerValue* JSCRuntime::clonePropNameID(const PointerValue* pv) {
@@ -233,8 +230,7 @@ std::string JSCRuntime::utf8(const piper::String& str) {
 }
 
 Object JSCRuntime::createObject() {
-  return JSCHelper::createObject(ctx_->getContext(), ctx_->contextInvalid(),
-                                 objectCounter(),
+  return JSCHelper::createObject(ctx_->getContext(), this, objectCounter(),
                                  static_cast<JSObjectRef>(nullptr));
 }
 
@@ -381,8 +377,7 @@ std::optional<BigInt> JSCRuntime::createBigInt(const std::string& value,
     return std::optional<BigInt>();
   }
 
-  return JSCHelper::createObject(ctx_->getContext(), ctx_->contextInvalid(),
-                                 objectCounter(), obj)
+  return JSCHelper::createObject(ctx_->getContext(), this, objectCounter(), obj)
       .getBigInt(*this);
 }
 
@@ -562,8 +557,7 @@ std::optional<Array> JSCRuntime::createArray(size_t length) {
   if (!JSCException::ReportExceptionIfNeeded(ctx_->getContext(), *this, exc)) {
     return std::optional<Array>();
   }
-  return JSCHelper::createObject(ctx_->getContext(), ctx_->contextInvalid(),
-                                 objectCounter(), obj)
+  return JSCHelper::createObject(ctx_->getContext(), this, objectCounter(), obj)
       .getArray(*this);
 }
 
@@ -590,8 +584,7 @@ ArrayBuffer JSCRuntime::createEmptyArrayBuffer() {
       !obj) {
     return ArrayBuffer(*this);
   }
-  return JSCHelper::createObject(ctx_->getContext(), ctx_->contextInvalid(),
-                                 objectCounter(), obj)
+  return JSCHelper::createObject(ctx_->getContext(), this, objectCounter(), obj)
       .getArrayBuffer(*this);
 }
 
@@ -624,8 +617,8 @@ ArrayBuffer JSCRuntime::createArrayBufferCopy(const uint8_t* bytes,
         !obj) {
       return ArrayBuffer(*this);
     }
-    return JSCHelper::createObject(ctx_->getContext(), ctx_->contextInvalid(),
-                                   objectCounter(), obj)
+    return JSCHelper::createObject(ctx_->getContext(), this, objectCounter(),
+                                   obj)
         .getArrayBuffer(*this);
   } else {
     JSObjectRef array_buffer = JSCHelper::createArrayBufferFromJS(
@@ -633,8 +626,8 @@ ArrayBuffer JSCRuntime::createArrayBufferCopy(const uint8_t* bytes,
     if (!array_buffer) {
       return ArrayBuffer(*this);
     }
-    return JSCHelper::createObject(ctx_->getContext(), ctx_->contextInvalid(),
-                                   objectCounter(), array_buffer)
+    return JSCHelper::createObject(ctx_->getContext(), this, objectCounter(),
+                                   array_buffer)
         .getArrayBuffer(*this);
   }
 }
@@ -664,8 +657,8 @@ ArrayBuffer JSCRuntime::createArrayBufferNoCopy(
         !obj) {
       return ArrayBuffer(*this);
     }
-    return JSCHelper::createObject(ctx_->getContext(), ctx_->contextInvalid(),
-                                   objectCounter(), obj)
+    return JSCHelper::createObject(ctx_->getContext(), this, objectCounter(),
+                                   obj)
         .getArrayBuffer(*this);
   } else {
     JSObjectRef array_buffer = JSCHelper::createArrayBufferFromJS(
@@ -673,8 +666,8 @@ ArrayBuffer JSCRuntime::createArrayBufferNoCopy(
     if (!array_buffer) {
       return ArrayBuffer(*this);
     }
-    return JSCHelper::createObject(ctx_->getContext(), ctx_->contextInvalid(),
-                                   objectCounter(), array_buffer)
+    return JSCHelper::createObject(ctx_->getContext(), this, objectCounter(),
+                                   array_buffer)
         .getArrayBuffer(*this);
   }
 }
