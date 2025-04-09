@@ -107,16 +107,6 @@
   [manager onNewLog:message withLevel:level withProxy:proxy];
 }
 
-- (void)onNewConsole:(NSDictionary *)message withProxy:(LynxLogBoxProxy *)proxy {
-  LynxLogBoxManager *manager = [self getLogBoxManagerWithProxy:proxy];
-  [manager onNewConsole:message withProxy:proxy];
-}
-
-- (void)showConsoleMsgsWithProxy:(LynxLogBoxProxy *)proxy {
-  LynxLogBoxManager *manager = [self getLogBoxManagerWithProxy:proxy];
-  [manager showConsoleMsgsWithProxy:proxy];
-}
-
 - (void)updateTemplateUrl:(NSString *)url withProxy:(LynxLogBoxProxy *)proxy {
   LynxLogBoxManager *manager = [self getLogBoxManagerWithProxy:proxy];
   [manager updateTemplateUrl:url withProxy:proxy];

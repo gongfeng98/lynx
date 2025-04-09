@@ -10,19 +10,13 @@ NS_ASSUME_NONNULL_BEGIN
 @interface LynxLogBoxProxy : NSObject <LynxBaseLogBoxProxy>
 
 @property(nonatomic, readwrite, nullable)
-    NSMutableDictionary<NSNumber *, NSMutableArray *> *logMessages;         // level -> msg
-@property(nonatomic, readwrite, nullable) NSMutableArray *consoleMessages;  // js console log
+    NSMutableDictionary<NSNumber *, NSMutableArray *> *logMessages;  // level -> msg
 @property(nullable, copy, nonatomic, readonly) NSDictionary *allJsSource;
 @property(nullable, copy, nonatomic, readonly) NSString *templateUrl;
 
 - (instancetype)initWithLynxView:(nullable LynxView *)view;
-- (void)setReloadHelper:(nullable LynxPageReloadHelper *)reloadHelper;
-- (void)reloadLynxViewFromLogBox;  // click reload btn on logbox
-- (void)setRuntimeId:(NSInteger)runtimeId;
 - (nullable NSMutableArray *)logMessagesWithLevel:(LynxLogBoxLevel)level;
 - (void)removeLogMessagesWithLevel:(LynxLogBoxLevel)level;
-// Get instance id of LynxContext
-- (int32_t)getInstanceId;
 
 @end
 

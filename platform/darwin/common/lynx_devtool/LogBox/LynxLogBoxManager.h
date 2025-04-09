@@ -15,15 +15,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)onNewLog:(nullable NSString *)message
        withLevel:(LynxLogBoxLevel)level
        withProxy:(LynxLogBoxProxy *)proxy;
-- (void)onNewConsole:(nullable NSDictionary *)message withProxy:(LynxLogBoxProxy *)proxy;
 - (void)updateTemplateUrl:(nullable NSString *)url withProxy:(LynxLogBoxProxy *)proxy;
 - (void)showLogBoxWithLevel:(LynxLogBoxLevel)level;
 - (void)removeCurrentLogsWithLevel:(LynxLogBoxLevel)level;
 - (void)removeLogsWithLevel:(LynxLogBoxLevel)level;
 - (void)changeView:(nullable NSNumber *)indexNum withLevel:(LynxLogBoxLevel)level;
-- (void)reloadFromLogBox:(LynxLogBoxProxy *)proxy;
-- (void)reloadWithProxy:(LynxLogBoxProxy *)proxy;           // long press or Page.reload
-- (void)showConsoleMsgsWithProxy:(LynxLogBoxProxy *)proxy;  // long press menu
+- (void)reloadWithProxy:(LynxLogBoxProxy *)proxy;  // long press or Page.reload
 - (void)showNotification;
 - (void)hideNotification;
 

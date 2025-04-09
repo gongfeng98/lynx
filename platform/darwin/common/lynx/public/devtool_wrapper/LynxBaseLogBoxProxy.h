@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)attachLynxView:(nonnull LynxView *)lynxView;
 
-- (void)reloadLynxView;  // long press, Page.reload, etc
+- (void)onLynxViewReload;  // long press, Page.reload, etc
 
 - (void)setRuntimeId:(NSInteger)runtimeId;
 

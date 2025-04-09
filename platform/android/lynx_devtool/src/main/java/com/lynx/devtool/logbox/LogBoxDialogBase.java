@@ -133,22 +133,6 @@ abstract public class LogBoxDialogBase extends Dialog {
       });
     }
 
-    public String getCoreJs() {
-      if (mJsSource == null) {
-        return "";
-      }
-      Object src = mJsSource.get("core.js");
-      return (src instanceof String) ? (String) src : "";
-    }
-
-    public String getTemplateJs(String name) {
-      if (mJsSource == null) {
-        return "";
-      }
-      Object src = mJsSource.get(name);
-      return (src instanceof String) ? (String) src : "";
-    }
-
     public void getResource(final int callbackId, final String name) {
       if (TextUtils.isEmpty(name)) {
         sendResult(callbackId, "");
@@ -194,26 +178,6 @@ abstract public class LogBoxDialogBase extends Dialog {
     public void download(String url, DownloadCallback callback) {
       if (callback != null && !TextUtils.isEmpty(url) && url.startsWith("http")) {
         LynxDevToolDownloader downloader = new LynxDevToolDownloader(url, callback);
-      }
-    }
-
-    public void download(final int callbackId, String url) {
-      if (url != null) {
-        LynxDevToolDownloader downloader = new LynxDevToolDownloader(url, new DownloadCallback() {
-          @Override
-          public void onData(byte[] bytes, int length) {
-            String content = new String(bytes, Charset.defaultCharset());
-            sendResult(callbackId, content);
-          }
-
-          @Override
-          public void onFailure(String reason) {
-            sendResult(callbackId, "Download failed");
-            LLog.w(TAG, "Download failed: " + reason + ", and the url is " + url);
-          }
-        });
-      } else {
-        sendResult(callbackId, "no url in params");
       }
     }
 
@@ -279,7 +243,7 @@ abstract public class LogBoxDialogBase extends Dialog {
     }
   }
 
-  public void initWebView(final String query, Callback callbacks) {
+  public void initWebView(Callback callbacks) {
     mWebView.getSettings().setJavaScriptEnabled(true);
     mWebView.getSettings().setUserAgentString(
         mWebView.getSettings().getUserAgentString() + " Lynx LogBox");
@@ -318,7 +282,7 @@ abstract public class LogBoxDialogBase extends Dialog {
     if (Build.VERSION.SDK_INT >= 19) {
       WebView.setWebContentsDebuggingEnabled(true);
     }
-    mWebView.loadUrl(LOCAL_URL + query);
+    mWebView.loadUrl(LOCAL_URL);
   }
 
   public void setJSSource(Map<String, Object> jsSource) {

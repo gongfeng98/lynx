@@ -145,11 +145,6 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
     /// Frame
     [self setUpFrame:builder.frame];
 
-    // get runtime id from jsproxy
-    if (_enableJSRuntime) {
-      [_devTool setRuntimeId:[[self getLynxRuntimeId] integerValue]];
-    }
-
     /// Timing
     _initEndTiming = [[NSDate date] timeIntervalSince1970] * 1000 * 1000;
     [self setUpTiming];

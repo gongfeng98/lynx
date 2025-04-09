@@ -33,13 +33,6 @@ public class LynxLogBoxOwner {
     }
   }
 
-  public void showConsoleLog(Context activity, LynxLogBoxProxy logBoxProxy) {
-    LynxLogBoxManager manager = findManagerByActivity(activity);
-    if (manager != null) {
-      manager.showConsoleLog(logBoxProxy);
-    }
-  }
-
   public void onLoadTemplate(Context activity, LynxLogBoxProxy logBoxProxy) {
     LynxLogBoxManager manager = findManagerByActivityIfExist(activity);
     // if the template is loaded for the first time, manager must be null

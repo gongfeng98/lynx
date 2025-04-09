@@ -23,23 +23,16 @@ function addEventListener(event: string, handler: (...args: unknown[]) => unknow
   bridge.on(event, handler);
 }
 
-function onNewLog(log: any) {
-  console.log('onNewLog: ', log);
-  if (receiveErrorCount < maxImmediateHandleErrorNumber) {
-    add(log);
-    receiveErrorCount += 1;
-  } else {
-    getAppStore().dispatch(pushErrorCache(log));
-  }
-}
-
 export const ImmBridgeImpl: ILogBoxBridge = {
   addEventListeners(): void {
-    addEventListener('receiveNewError', (error: any) => {
-      onNewLog(error);
-    });
-    addEventListener('receiveNewWarning', (warning: any) => {
-      onNewLog(warning);
+    addEventListener('receiveNewLog', (log: any) => {
+      console.log('onNewLog: ', log);
+      if (receiveErrorCount < maxImmediateHandleErrorNumber) {
+        add(log);
+        receiveErrorCount += 1;
+      } else {
+        getAppStore().dispatch(pushErrorCache(log));
+      }
     });
     addEventListener('receiveViewInfo', (groupsInfo) => {
       console.log('receiveViewInfo', groupsInfo);

@@ -12,39 +12,8 @@ import { CloseOutlined, DeleteOutlined, InfoCircleOutlined } from '@ant-design/i
 import { clearErrors, clearErrorCache } from '@/models/errorReducer';
 import { useDispatch, useSelector } from 'react-redux';
 
-export interface IDisplayViewsInfoProps {
-  viewsInfo: IViewsInfoState;
-}
-
-const _navButtonStyle = {
-  border: 'none',
-  borderRadius: '4px',
-  padding: '3px 6px',
-  cursor: 'pointer',
-};
-
-const leftButtonStyle = (type) => ({
-  ..._navButtonStyle,
-  backgroundColor: type === 'redbox' ? '#CD5C5C' : '#F0E68C',
-  color: 'black',
-  borderTopRightRadius: '0px',
-  borderBottomRightRadius: '0px',
-  marginRight: '1px',
-  flex: 1,
-});
-
-const rightButtonStyle = (type) => ({
-  ..._navButtonStyle,
-  backgroundColor: type === 'redbox' ? '#CD5C5C' : '#F0E68C',
-  color: 'black',
-  borderTopLeftRadius: '0px',
-  borderBottomLeftRadius: '0px',
-  right: 0,
-  flex: 1,
-});
-
-function HeaderImpl(props: IDisplayViewsInfoProps): JSX.Element {
-  const { currentView, viewsCount, type, templateUrl } = useSelector((state) => state.viewsInfo);
+function HeaderImpl(): JSX.Element {
+  const { currentView, viewsCount, level, templateUrl } = useSelector((state) => state.viewsInfo);
   const [clickedTimes, updateClickedTimes] = useState(0);
   const dispatch = useDispatch();
 
@@ -72,24 +41,28 @@ function HeaderImpl(props: IDisplayViewsInfoProps): JSX.Element {
     clearErrorAndEntry();
     getBridge().changeView(number);
   };
-  const urlParams = new URLSearchParams(window.location.search);
-  const url = templateUrl ?? urlParams.get('url');
 
   return (
-    <div className={styles.container} style={{ height: viewsCount > 1 ? '90px' : '50px' }}>
+    <div className={styles.container}>
       <div
-        className={styles.container}
-        style={{ height: '40px', display: viewsCount > 1 ? 'flex' : 'none', backgroundColor: type === 'redbox' ? '#CD5C5C' : '#F0E68C' }}
+        className={`${styles.navigation} ${level === 'error' ? styles.error : styles.warning}`}
+        style={{ height: '40px', display: viewsCount > 1 ? 'flex' : 'none' }}
       >
-        <button onClick={previous} style={leftButtonStyle(type)}>
+        <button
+          onClick={previous}
+          className={`${styles.navButton} ${styles.navButtonLeft} ${level === 'error' ? styles.navButtonError : styles.navButtonWarning}`}
+        >
           PREVIOUS
         </button>
-        <span>{`${currentView} / ${viewsCount} `}</span>
-        <button onClick={next} style={rightButtonStyle(type)}>
+        <span className={styles.counter}>{`${currentView} / ${viewsCount} `}</span>
+        <button
+          onClick={next}
+          className={`${styles.navButton} ${styles.navButtonRight} ${level === 'error' ? styles.navButtonError : styles.navButtonWarning}`}
+        >
           NEXT
         </button>
       </div>
-      <div className={styles.container} style={{ height: '50px', top: viewsCount > 1 ? 40 : 0 }}>
+      <div className={styles.header}>
         <img
           className={styles.icon}
           src="./LynxIcon.svg"
@@ -99,9 +72,9 @@ function HeaderImpl(props: IDisplayViewsInfoProps): JSX.Element {
         ></img>
         <span className={styles.title}>Lynx </span>
         <span className={styles.expand}></span>
-        {!!url && (
+        {!!templateUrl && (
           <InfoCircleOutlined
-            className={styles['button-icon']}
+            className={styles.buttonIcon}
             onClick={() => {
               dispatch(toggleURLDisplay());
             }}
@@ -109,7 +82,7 @@ function HeaderImpl(props: IDisplayViewsInfoProps): JSX.Element {
         )}
         <span className={styles.gap}></span>
         <DeleteOutlined
-          className={styles['button-icon']}
+          className={styles.buttonIcon}
           onClick={() => {
             clearErrorAndEntry();
             getBridge().deleteCurrentView(currentView);
@@ -117,10 +90,7 @@ function HeaderImpl(props: IDisplayViewsInfoProps): JSX.Element {
         />
         <span className={styles.gap}></span>
         <CloseOutlined
-          className={styles['button-icon']}
-          style={{
-            marginRight: '8px',
-          }}
+          className={styles.buttonIcon}
           onClick={() => {
             clearErrorAndEntry();
             getBridge().dismissError();

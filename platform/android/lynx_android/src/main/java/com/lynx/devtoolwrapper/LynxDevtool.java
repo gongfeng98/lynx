@@ -327,12 +327,6 @@ public class LynxDevtool {
     return render == null ? null : render.getLynxContext();
   }
 
-  public void reloadView() {
-    if (mReloader != null) {
-      mReloader.reload(false);
-    }
-  }
-
   public void attachLynxUIOwner(LynxUIOwner uiOwner) {
     if (mOwner != null) {
       mOwner.attachLynxUIOwnerToAgent(uiOwner);

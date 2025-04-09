@@ -63,8 +63,6 @@
     _reloader = nil;
   }
 
-  [_logBoxProxy setReloadHelper:_reloader];
-
   return self;
 }
 
@@ -100,7 +98,7 @@
   if (_reloader != nil) {
     [_reloader loadFromLocalFile:tem withURL:url initData:data];
   }
-  [_logBoxProxy reloadLynxView];
+  [_logBoxProxy onLynxViewReload];
 }
 
 - (void)onLoadFromURL:(NSString *)url
@@ -110,7 +108,7 @@
   if (_reloader != nil) {
     [_reloader loadFromURL:url initData:data];
   }
-  [_logBoxProxy reloadLynxView];
+  [_logBoxProxy onLynxViewReload];
 }
 
 - (void)attachDebugBridge:(NSString *)url {
@@ -124,7 +122,7 @@
   if (_reloader != nil) {
     [_reloader loadFromBundle:bundle withURL:url initData:data];
   }
-  [_logBoxProxy reloadLynxView];
+  [_logBoxProxy onLynxViewReload];
 }
 
 - (void)onStandaloneRuntimeLoadFromURL:(NSString *)url {
@@ -201,10 +199,6 @@
     [_reloader attachLynxView:lynxView];
   }
   [_logBoxProxy attachLynxView:lynxView];
-}
-
-- (void)setRuntimeId:(NSInteger)runtimeId {
-  [_logBoxProxy setRuntimeId:runtimeId];
 }
 
 - (void)dealloc {

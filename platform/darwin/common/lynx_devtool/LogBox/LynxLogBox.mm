@@ -12,16 +12,6 @@
 #import <TargetConditionals.h>
 #import <WebKit/WebKit.h>
 
-static NSString *const kLogBoxEventReportFeedback = @"lynxsdk_redbox_feedback";
-
-typedef NS_ENUM(NSInteger, LynxLogBoxErrorType) {
-  LogBoxErrorTypeUnknown = -1,
-  LogBoxErrorTypeJS = 1,
-  LogBoxErrorTypeLepus = 2,
-  LogBoxErrorTypeLepusNG = 3,
-  LogBoxErrorTypeNative = 4,
-};
-
 #if OS_OSX
 #define LynxLogBoxBaseWindow NSView
 #else
@@ -80,7 +70,6 @@ NSString *const BRIDGE_JS =
 @interface LynxLogBoxCache : NSObject
 
 @property(nonatomic, readwrite) NSMutableArray *errorMessages;
-@property(nonatomic, readwrite) NSMutableArray *logMessages;
 @property(nonatomic, readwrite) NSDictionary *jsSource;
 
 - (instancetype)init;
@@ -92,7 +81,6 @@ NSString *const BRIDGE_JS =
 - (instancetype)init {
   if (self = [super init]) {
     self.errorMessages = nil;
-    self.logMessages = nil;
     self.jsSource = nil;
   }
   return self;
@@ -109,10 +97,7 @@ NSString *const BRIDGE_JS =
 - (void)changeView:(NSDictionary *)params;
 @optional
 - (void)dismiss;
-- (void)reloadFromLogBoxWindow:(LynxLogBoxWindow *)logBoxWindow;
 - (NSDictionary *)getAllJsSource;
-// Get instance id of LynxContext
-- (int32_t)getInstanceId;
 @end
 
 #pragma mark - LynxLogBoxWindow
@@ -140,9 +125,7 @@ NSString *const BRIDGE_JS =
 #endif
 }
 
-- (instancetype)initWithFrame:(CGRect)frame
-                          URL:(NSString *)templateUrl
-             supportYellowBox:(BOOL)support {
+- (instancetype)initWithFrame:(CGRect)frame URL:(NSString *)templateUrl {
   if (self = [super initWithFrame:frame]) {
 #if OS_IOS
     self.windowLevel = UIWindowLevelStatusBar - 1;
@@ -156,41 +139,18 @@ NSString *const BRIDGE_JS =
     // clang-format off
     // clang-format cannot format correctly here
     _jsAPI = @{
-        @"getCoreJs" : ^(NSDictionary *params, NSNumber *callbackId) {
-            NSDictionary *msg = [NSDictionary
-                dictionaryWithObjectsAndKeys:callbackId, @"callbackId",
-                                             [weakSelf getJsSource:@"core.js"], @"data", nil];
-            [weakSelf sendJsResult:msg];
-        },
-        @"getTemplateJs": ^(NSDictionary *params, NSNumber *callbackId) {
-          NSString *key = params ? params[@"name"] : nil;
-          NSDictionary *msg = [NSDictionary
-              dictionaryWithObjectsAndKeys:callbackId, @"callbackId",
-                                           [weakSelf getJsSource:key], @"data", nil];
-           [weakSelf sendJsResult:msg];
-        },
         @"deleteLynxview": ^(NSDictionary *params, NSNumber *callbackId) {
             [weakSelf clearCurrentLogs];
         },
         @"changeView": ^(NSDictionary *params, NSNumber *callbackId) {
           [weakSelf changeView:params];
         },
-        @"reload": ^(NSDictionary *params, NSNumber *callbackId) {
-          [weakSelf reload];
-        },
         @"dismiss": ^(NSDictionary *params, NSNumber *callbackId) {
           [weakSelf dismiss];
-        },
-        @"download": ^(NSDictionary *params, NSNumber *callbackId) {
-            NSString *url = params ? params[@"url"] : nil;
-            [weakSelf download:url withCallbackId:callbackId];
         },
         @"toast": ^(NSDictionary *params, NSNumber *callbackId) {
             NSString *message = params ? params[@"message"] : nil;
             [LynxDevToolToast showToast:message];
-        },
-        @"reportEvent": ^(NSDictionary *params, NSNumber *callbackId) {
-            [weakSelf handleReporting:params];
         },
         @"queryResource": ^(NSDictionary *params, NSNumber *callbackId) {
             NSString *name = params ? params[@"name"] : nil;
@@ -231,7 +191,7 @@ NSString *const BRIDGE_JS =
 #else
     [rootView addSubview:_stackTraceWebView];
 #endif
-      NSURL *url = [self getLogBoxPageUrlWithSupportYellowBox:support];
+      NSURL *url = [self getLogBoxPageUrl];
       if (url) {
           [_stackTraceWebView loadFileURL:url allowingReadAccessToURL:url];
           [self resizeWindow];
@@ -304,7 +264,7 @@ NSString *const BRIDGE_JS =
 #endif
 }
 
-- (NSURL *)getLogBoxPageUrlWithSupportYellowBox:(BOOL)supportYellowBox {
+- (NSURL *)getLogBoxPageUrl {
   NSURL *url;
   NSURL *debugBundleUrl = [[NSBundle mainBundle] URLForResource:@"LynxDebugResources"
                                                   withExtension:@"bundle"];
@@ -314,32 +274,8 @@ NSString *const BRIDGE_JS =
     if (!url) {
       return nil;
     }
-    NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url
-                                               resolvingAgainstBaseURL:NO];
-    NSMutableArray<NSURLQueryItem *> *queryItems = [[NSMutableArray alloc] init];
-    [queryItems addObject:[[NSURLQueryItem alloc] initWithName:@"url" value:_templateUrl]];
-    [queryItems addObject:[[NSURLQueryItem alloc] initWithName:@"downloadapi" value:@"true"]];
-    if (supportYellowBox) {
-      [queryItems addObject:[[NSURLQueryItem alloc] initWithName:@"supportyellowbox"
-                                                           value:@"true"]];
-    }
-    [components setQueryItems:queryItems];
-    url = [components URL];
   }
   return url;
-}
-
-- (NSString *)getJsSource:(NSString *)key {
-  if (!key) {
-    return nil;
-  }
-  NSDictionary *jsSource = nil;
-  if (!_isLogBoxDestroyed) {
-    jsSource = [_actionDelegate getAllJsSource];
-  } else {
-    jsSource = _logBoxCache.jsSource;
-  }
-  return jsSource != nil ? jsSource[key] : nil;
 }
 
 - (void)userContentController:(WKUserContentController *)userContentController
@@ -408,17 +344,8 @@ NSString *const BRIDGE_JS =
 
 #pragma mark - Public Method
 
-- (void)showLogMessage:(NSDictionary *)message {
-  [self sendJsEvent:@{@"event" : @"receiveNewLog", @"data" : [self normalizeMessage:message]}];
-}
-
-- (void)showErrorMessage:(NSString *)message {
-  [self sendJsEvent:@{@"event" : @"receiveNewError", @"data" : message}];
-}
-
-- (void)showWarnMessage:(NSString *)message {
-  NSString *validMessage = [message substringToIndex:MIN((NSUInteger)10000, message.length)];
-  [self sendJsEvent:@{@"event" : @"receiveNewWarning", @"data" : validMessage}];
+- (void)showLogMessage:(NSString *)message {
+  [self sendJsEvent:@{@"event" : @"receiveNewLog", @"data" : message}];
 }
 
 - (void)updateViewInfo:(NSDictionary *)viewInfo {
@@ -518,12 +445,6 @@ NSString *const BRIDGE_JS =
   }
 }
 
-- (void)reload {
-  if (_actionDelegate) {
-    [_actionDelegate reloadFromLogBoxWindow:self];
-  }
-}
-
 - (void)download:(NSString *)url withCallbackId:(NSNumber *)callbackId {
   if (url) {
     [LynxDevToolDownloader
@@ -580,114 +501,6 @@ NSString *const BRIDGE_JS =
   [self sendJsResult:emptyData];
 }
 
-- (void)reportEvent:(NSString *)eventName
-    withPropsBuilder:(NSDictionary<NSString *, NSObject *> * (^)(void))propsBuilder {
-  int32_t instance_id = [_actionDelegate getInstanceId];
-  [LynxEventReporter onEvent:eventName instanceId:instance_id propsBuilder:propsBuilder];
-}
-
-/**
- * Handle events that need to be reported
- * @param data event data containing the event name and props
- */
-- (void)handleReporting:(NSDictionary *)data {
-  if (!data) {
-    return;
-  }
-  NSString *eventName = data[@"eventName"];
-  NSDictionary *eventProps = data[@"eventProps"];
-  if (!eventName || eventName.length == 0 || !eventProps) {
-    LLogInfo(@"receive invalid event");
-    return;
-  }
-  if ([eventName isEqual:@"feedback"]) {
-    [self reportFeedback:eventProps];
-  }
-}
-
-/**
- * Handle feedback reporting
- * @param eventProps
- * {
- *     "error": object,
- *     "sourceMapTypes": string,
- *     "isParseStackSuccess": boolean,
- *     "isSatisfied": boolean
- * }
- */
-- (void)reportFeedback:(NSDictionary *)eventProps {
-  NSDictionary *errorInfo = eventProps[@"error"];
-  if (!errorInfo) {
-    return;
-  }
-
-  [self reportEvent:kLogBoxEventReportFeedback
-      withPropsBuilder:^NSDictionary<NSString *, NSObject *> * {
-        NSMutableDictionary *props = [NSMutableDictionary dictionary];
-        NSNumber *errorType =
-            [LynxLogBoxWindow getObject:@"errorType"
-                               fromDict:errorInfo
-                            withDefault:[NSNumber numberWithInteger:LogBoxErrorTypeUnknown]];
-        // put data of event props
-        [props setObject:[LynxLogBoxWindow getObject:@"isSatisfied"
-                                            fromDict:eventProps
-                                         withDefault:@NO]
-                  forKey:@"is_satisfied"];
-        [props setObject:[LynxLogBoxWindow getObject:@"sourceMapTypes"
-                                            fromDict:eventProps
-                                         withDefault:@""]
-                  forKey:@"source_map_types"];
-        [props setObject:[LynxLogBoxWindow getObject:@"isParseStackSuccess"
-                                            fromDict:eventProps
-                                         withDefault:@NO]
-                  forKey:@"is_stack_parse_success"];
-        // put data of error info
-        [props setObject:[LynxLogBoxWindow getObject:@"message" fromDict:errorInfo withDefault:@""]
-                  forKey:@"error_message"];
-        [props setObject:[LynxLogBoxWindow getObject:@"stack" fromDict:errorInfo withDefault:@""]
-                  forKey:@"original_stack"];
-        switch ([errorType integerValue]) {
-          case LogBoxErrorTypeNative:
-            [props setObject:[LynxLogBoxWindow getObject:@"code" fromDict:errorInfo withDefault:@-1]
-                      forKey:@"code"];
-            [props setObject:[LynxLogBoxWindow getObject:@"fixSuggestion"
-                                                fromDict:errorInfo
-                                             withDefault:@""]
-                      forKey:@"fix_suggestion"];
-            [props setObject:[LynxLogBoxWindow getObject:@"context"
-                                                fromDict:errorInfo
-                                             withDefault:@""]
-                      forKey:@"context"];
-            [props setObject:[LynxLogBoxWindow getObject:@"nativeStack"
-                                                fromDict:errorInfo
-                                             withDefault:@""]
-                      forKey:@"native_stack"];
-            break;
-          case LogBoxErrorTypeJS:
-          case LogBoxErrorTypeLepus:
-          case LogBoxErrorTypeLepusNG:
-            [props setObject:[LynxLogBoxWindow getObject:@"debugUrl"
-                                                fromDict:errorInfo
-                                             withDefault:@""]
-                      forKey:@"debug_info_url"];
-            break;
-          default:
-            break;
-        }
-        return props;
-      }];
-}
-
-+ (nonnull id)getObject:(NSString *)key
-               fromDict:(NSDictionary *)dict
-            withDefault:(nonnull id)defaultValue {
-  if (!dict || !key || key.length == 0) {
-    return defaultValue;
-  }
-  id value = [dict objectForKey:key];
-  return value != nil ? value : defaultValue;
-}
-
 - (BOOL)isShowing {
   return !self.isHidden;
 }
@@ -705,15 +518,10 @@ NSString *const BRIDGE_JS =
       self.loadingFinishCallback();
     }
   } else {
-    [self.logBoxCache.logMessages
-        enumerateObjectsUsingBlock:^(NSDictionary *_Nonnull message, NSUInteger idx,
-                                     BOOL *_Nonnull stop) {
-          [self showLogMessage:message];
-        }];
     [self.logBoxCache.errorMessages
         enumerateObjectsUsingBlock:^(NSString *_Nonnull message, NSUInteger idx,
                                      BOOL *_Nonnull stop) {
-          [self showErrorMessage:message];
+          [self showLogMessage:message];
         }];
   }
 }
@@ -781,7 +589,6 @@ NSString *const BRIDGE_JS =
   NSInteger _index;
   NSInteger _count;
   bool _isLoadingFinished;
-  bool _isConsoleOnly;
 }
 
 - (instancetype)initWithLogBoxManager:(LynxLogBoxManager *)manager {
@@ -792,7 +599,6 @@ NSString *const BRIDGE_JS =
   _index = -1;
   _count = -1;
   _isLoadingFinished = false;
-  _isConsoleOnly = false;
   return self;
 }
 
@@ -841,7 +647,7 @@ NSString *const BRIDGE_JS =
   [self->_window updateViewInfo:@{
     @"currentView" : [NSNumber numberWithInteger:_index],
     @"viewsCount" : [NSNumber numberWithInteger:_count],
-    @"type" : _currentLevel == LynxLogBoxLevelWarning ? @"yellowbox" : @"redbox",
+    @"level" : _currentLevel == LynxLogBoxLevelWarning ? @"warn" : @"error",
     @"templateUrl" : _templateUrl != nil ? _templateUrl : @""
   }];
 }
@@ -861,19 +667,6 @@ NSString *const BRIDGE_JS =
   return _isLoadingFinished;
 }
 
-- (BOOL)onNewConsole:(NSDictionary *)message withProxy:(LynxLogBoxProxy *)proxy isOnly:(BOOL)only {
-  if ([NSThread isMainThread]) {
-    [self showConsoleMessageOnMainThread:message withProxy:proxy isOnly:only];
-  } else {
-    __weak __typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-      __strong __typeof(weakSelf) strongSelf = weakSelf;
-      [strongSelf showConsoleMessageOnMainThread:message withProxy:proxy isOnly:only];
-    });
-  }
-  return _isLoadingFinished;
-}
-
 - (void)showLogMessageOnMainThread:(NSString *)message
                          withLevel:(LynxLogBoxLevel)level
                          withProxy:(LynxLogBoxProxy *)proxy {
@@ -881,7 +674,6 @@ NSString *const BRIDGE_JS =
   _currentLevel = level;
   NSString *url = [proxy templateUrl];
   _templateUrl = url != nil ? url : @"";
-  _isConsoleOnly = false;
   if (_isLoadingFinished) {
     [self showLogMessageOnWindow:message];
   }
@@ -889,26 +681,7 @@ NSString *const BRIDGE_JS =
 }
 
 - (void)showLogMessageOnWindow:(NSString *)message {
-  if (_currentLevel == LynxLogBoxLevelWarning) {
-    [_window showWarnMessage:message];
-  } else {
-    [_window showErrorMessage:message];
-  }
-}
-
-- (void)showConsoleMessageOnMainThread:(NSDictionary *)message
-                             withProxy:(LynxLogBoxProxy *)proxy
-                                isOnly:(BOOL)only {
-  _currentProxy = proxy;
-  NSString *url = [proxy templateUrl];
-  _templateUrl = url != nil ? url : @"";
-  _isConsoleOnly = only;
-  if (_isLoadingFinished) {
-    [_window showLogMessage:message];
-  }
-  if (_isConsoleOnly) {
-    [self showOnMainThread];
-  }
+  [_window showLogMessage:message];
 }
 
 - (void)showOnMainThread {
@@ -919,9 +692,7 @@ NSString *const BRIDGE_JS =
 #else
     windowFrame = [UIScreen mainScreen].bounds;
 #endif
-    self->_window = [[LynxLogBoxWindow alloc] initWithFrame:windowFrame
-                                                        URL:_templateUrl
-                                           supportYellowBox:YES];
+    self->_window = [[LynxLogBoxWindow alloc] initWithFrame:windowFrame URL:_templateUrl];
     self->_window.actionDelegate = self;
     __weak __typeof(self) weakSelf = self;
     [self->_window setLoadingFinishCallback:^{
@@ -929,17 +700,10 @@ NSString *const BRIDGE_JS =
       if (strongSelf) {
         strongSelf->_isLoadingFinished = true;
         [strongSelf updateViewInfoOnWindow];
-        if (!strongSelf->_isConsoleOnly) {
-          [[strongSelf getCurrentLogMsgs]
-              enumerateObjectsUsingBlock:^(NSString *_Nonnull message, NSUInteger idx,
-                                           BOOL *_Nonnull stop) {
-                [strongSelf showLogMessageOnWindow:message];
-              }];
-        }
-        [[strongSelf getCurrentConsoleMsgs]
-            enumerateObjectsUsingBlock:^(NSDictionary *_Nonnull message, NSUInteger idx,
+        [[strongSelf getCurrentLogMsgs]
+            enumerateObjectsUsingBlock:^(NSString *_Nonnull message, NSUInteger idx,
                                          BOOL *_Nonnull stop) {
-              [strongSelf->_window showLogMessage:message];
+              [strongSelf showLogMessageOnWindow:message];
             }];
       }
     }];
@@ -952,17 +716,8 @@ NSString *const BRIDGE_JS =
   return [currentProxy logMessagesWithLevel:_currentLevel];
 }
 
-- (NSMutableArray *)getCurrentConsoleMsgs {
-  __strong typeof(_currentProxy) currentProxy = _currentProxy;
-  return [currentProxy consoleMessages];
-}
-
 - (BOOL)isShowing {
   return [_window isShowing];
-}
-
-- (BOOL)isConsoleOnly {
-  return _isConsoleOnly;
 }
 
 - (LynxLogBoxLevel)getCurrentLevel {
@@ -990,12 +745,6 @@ NSString *const BRIDGE_JS =
   _templateUrl = @"";
 }
 
-- (void)reloadFromLogBoxWindow:(LynxLogBoxWindow *)logBoxWindow {
-  [self->_window dismiss];
-  __strong typeof(_manager) manager = _manager;
-  [manager reloadFromLogBox:_currentProxy];
-}
-
 - (void)changeView:(NSDictionary *)params {
   NSNumber *indexNum = [params objectForKey:@"viewNumber"];
   if (indexNum != nil) {
@@ -1009,15 +758,9 @@ NSString *const BRIDGE_JS =
   return [currentProxy allJsSource];
 }
 
-- (int32_t)getInstanceId {
-  __strong typeof(_currentProxy) currentProxy = _currentProxy;
-  return [currentProxy getInstanceId];
-}
-
 - (void)copySnapShotToWindow {
   LynxLogBoxCache *cache = [[LynxLogBoxCache alloc] init];
   cache.errorMessages = [self getCurrentLogMsgs];
-  cache.logMessages = [self getCurrentConsoleMsgs];
   cache.jsSource = [self getAllJsSource];
   _window.logBoxCache = cache;
 }

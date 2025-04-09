@@ -15,11 +15,7 @@
 @implementation LynxLogBoxProxy {
   __weak LynxView* _lynxView;
   __weak UIViewController* _pageViewController;
-  LynxPageReloadHelper* _reloadHelper;
-  NSInteger _runtimeId;
-  __weak LynxLogObserver* _consoleObserver;
   __weak LynxDevtool* _lynxDevtool;
-  NSInteger _observerId;
   BOOL _needFlush;
   NSString* _url;
 }
@@ -30,37 +26,12 @@
   if (self) {
     _lynxView = view;
     _logMessages = [NSMutableDictionary dictionary];
-    _consoleMessages = [NSMutableArray new];
     // See LynxLog.h, -1 for all logs.
     // When using shared js context, global js runtime does not have runtimeId, so we need to get
     // all console logs and filter out the logs belonging to current lynxview in showConsoleMessage.
-    _runtimeId = -1;
-    [self addConsoleObserver];
     _needFlush = NO;
   }
   return self;
-}
-
-- (void)addConsoleObserver {
-  LynxLogObserver* observer = [[LynxLogObserver alloc] init];
-  observer.minLogLevel = LynxLogLevelInfo;
-  observer.shouldFormatMessage = NO;
-  observer.acceptSource = LynxLogSourceJS;
-  __weak __typeof(self) weakSelf = self;
-  observer.logFunction = ^(LynxLogLevel level, NSString* message) {
-    __strong __typeof(weakSelf) strongSelf = weakSelf;
-    [strongSelf
-        showConsoleMessage:@{@"level" : @(level), @"text" : message != nil ? message : @""}];
-  };
-  observer.acceptRuntimeId = _runtimeId;
-  _observerId = AddLoggingDelegate(observer);
-  _consoleObserver = observer;
-}
-
-- (void)removeConsoleObserver {
-  if (_observerId) {
-    RemoveLoggingDelegate(_observerId);
-  };
 }
 
 - (UIViewController*)pageViewController {
@@ -99,10 +70,6 @@
         }
       }];
   _needFlush = NO;
-}
-
-- (void)setReloadHelper:(LynxPageReloadHelper*)reloadHelper {
-  _reloadHelper = reloadHelper;
 }
 
 - (void)showLogMessage:(LynxError*)error {
@@ -155,44 +122,6 @@
   [[LynxLogBoxOwner getInstance] insertLogBoxProxy:self withController:controller];
 }
 
-- (void)showConsoleMessage:(NSDictionary*)message {
-  NSString* msgText = [message objectForKey:@"text"];
-  NSRange range = [msgText rangeOfString:@"||"];
-  if (range.location != NSNotFound) {
-    NSString* msgPart1 = [msgText substringToIndex:range.location];
-    NSString* msgPart2 = [msgText substringFromIndex:range.location + 2];
-    while (msgPart2 != nil && [msgPart2 characterAtIndex:0] == ' ') {
-      msgPart2 = [msgPart2 substringFromIndex:1];
-    }
-    if ([msgPart1 containsString:@"groupId:"]) {
-      msgText = msgPart2;
-    } else if ([msgPart1 containsString:@"runtimeId:"] ||
-               [msgPart1 containsString:@"lepusRuntimeId:"]) {
-      msgPart1 = [msgPart1 substringFromIndex:[msgPart1 rangeOfString:@":"].location + 1];
-      msgPart1 = [msgPart1 substringToIndex:[msgPart1 rangeOfString:@"\""].location];
-      NSInteger msgRuntimeId = [msgPart1 integerValue];
-      if (msgRuntimeId != _runtimeId) return;
-      msgText = msgPart2;
-    }
-  }
-  NSDictionary* resultMsg =
-      @{@"level" : [message objectForKey:@"level"], @"text" : msgText != nil ? msgText : @""};
-  if ([NSThread isMainThread]) {
-    [self showConsoleMessageOnMainThread:resultMsg];
-  } else {
-    __weak __typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-      __strong __typeof(weakSelf) strongSelf = weakSelf;
-      [strongSelf showConsoleMessageOnMainThread:resultMsg];
-    });
-  }
-}
-
-- (void)showConsoleMessageOnMainThread:(NSDictionary*)message {
-  [_consoleMessages addObject:message];
-  [[LynxLogBoxOwner getInstance] onNewConsole:message withProxy:self];
-}
-
 - (void)attachLynxView:(nonnull LynxView*)lynxView {
   LLogInfo(@"logbox: attachLynxView, self: %p, lynxview: %p", self, lynxView);
   _lynxView = lynxView;
@@ -208,23 +137,13 @@
   }
 }
 
-- (void)reloadLynxView {
+- (void)onLynxViewReload {
   [[LynxLogBoxOwner getInstance] reloadLynxViewWithProxy:self];
   [self clearMsg];
 }
 
-- (void)reloadLynxViewFromLogBox {
-  [self clearMsg];
-  [_reloadHelper reloadLynxView:false];
-}
-
 - (void)clearMsg {
   [_logMessages removeAllObjects];
-  [_consoleMessages removeAllObjects];
-}
-
-- (void)setRuntimeId:(NSInteger)runtimeId {
-  _runtimeId = runtimeId;
 }
 
 - (NSMutableArray*)logMessagesWithLevel:(LynxLogBoxLevel)level {
@@ -248,11 +167,6 @@
   return _url ? _url : [lynxView url];
 }
 
-- (void)showConsole {
-  [self prepareOwner];
-  [[LynxLogBoxOwner getInstance] showConsoleMsgsWithProxy:self];
-}
-
 - (void)sendErrorEventToPerf:(NSString*)message {
   __strong typeof(_lynxView) lynxView = _lynxView;
   if (!lynxView) {
@@ -260,11 +174,6 @@
   }
   NSDictionary* eventData = @{@"error" : message};
   [[[lynxView templateRender] devTool] onPerfMetricsEvent:@"lynx_error_event" withData:eventData];
-}
-
-- (int32_t)getInstanceId {
-  __strong typeof(_lynxView) lynxView = _lynxView;
-  return lynxView ? [[lynxView getLynxContext] instanceId] : kUnknownInstanceId;
 }
 
 - (void)destroy {
@@ -287,10 +196,6 @@
     [self flushLogMessages];
   }
 #endif
-}
-
-- (void)dealloc {
-  [self removeConsoleObserver];
 }
 
 - (void)setLynxDevtool:(LynxDevtool*)devtool {

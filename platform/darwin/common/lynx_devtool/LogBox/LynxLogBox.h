@@ -20,11 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)onNewLog:(nullable NSString *)message
        withLevel:(LynxLogBoxLevel)level
        withProxy:(LynxLogBoxProxy *)proxy;
-- (BOOL)onNewConsole:(nullable NSDictionary *)message
-           withProxy:(LynxLogBoxProxy *)proxy
-              isOnly:(BOOL)only;
 - (BOOL)isShowing;
-- (BOOL)isConsoleOnly;
 - (LynxLogBoxLevel)getCurrentLevel;
 - (nullable LynxLogBoxProxy *)getCurrentProxy;
 - (void)dismissIfNeeded;

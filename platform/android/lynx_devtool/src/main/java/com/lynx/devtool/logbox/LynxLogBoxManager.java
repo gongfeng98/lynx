@@ -106,7 +106,6 @@ public class LynxLogBoxManager {
         @Override
         public void run() {
           requestLogsOfCurrentView(level);
-          requestLogsOfCurrentView(LogBoxLogLevel.Info);
           if (mLogBox != null) {
             mLogBox.onLoadingFinished();
           }
@@ -114,7 +113,6 @@ public class LynxLogBoxManager {
       });
     } else {
       requestLogsOfCurrentView(level);
-      requestLogsOfCurrentView(LogBoxLogLevel.Info);
     }
     if (context instanceof Activity) {
       if (!((Activity) context).isFinishing()) {
@@ -170,34 +168,6 @@ public class LynxLogBoxManager {
     }
   }
 
-  public void showConsoleLog(final LynxLogBoxProxy proxy) {
-    Context context = mContext.get();
-    if (context == null || proxy == null) {
-      return;
-    }
-    if (mLogBox == null) {
-      mLogBox = new LogBoxDialog(context, this, new Runnable() {
-        @Override
-        public void run() {
-          if (mLogBox == null) {
-            return;
-          }
-          mLogBox.updateViewInfo(1, 1, LogBoxLogLevel.Info, proxy.getTemplateUrl());
-          mLogBox.showLogMessages(LogBoxLogLevel.Info, proxy.getLogMessages(LogBoxLogLevel.Info));
-          mLogBox.onLoadingFinished();
-        }
-      });
-    } else {
-      mLogBox.updateViewInfo(1, 1, LogBoxLogLevel.Info, proxy.getTemplateUrl());
-      mLogBox.showLogMessages(LogBoxLogLevel.Info, proxy.getLogMessages(LogBoxLogLevel.Info));
-    }
-    if (context instanceof Activity) {
-      if (!((Activity) context).isFinishing()) {
-        mLogBox.showWithLevel(LogBoxLogLevel.Info);
-      }
-    }
-  }
-
   static protected String extractBriefMessage(String message) {
     if (TextUtils.isEmpty(message)) {
       return "";
@@ -248,17 +218,6 @@ public class LynxLogBoxManager {
     return proxy == null ? null : proxy.getAllJsSource();
   }
 
-  public void reloadCurrentView(LogBoxLogLevel level) {
-    LogProxyList proxyList = mLogProxyListMap.get(level);
-    if (proxyList == null) {
-      return;
-    }
-    LynxLogBoxProxy proxy = proxyList.currentProxy();
-    if (proxy != null) {
-      proxy.reloadView();
-    }
-  }
-
   public void onLynxViewReload(LynxLogBoxProxy proxy) {
     if (proxy == null) {
       return;
@@ -303,16 +262,6 @@ public class LynxLogBoxManager {
         mNotification.updateInfo(entry.getKey(), briefMsg, proxyList.getLogCount());
       }
     }
-  }
-
-  public int getInstanceIdOfCurrentView(LogBoxLogLevel level) {
-    LogProxyList proxyList = mLogProxyListMap.get(level);
-    if (proxyList == null) {
-      return LynxEventReporter.INSTANCE_ID_UNKNOWN;
-    }
-    LynxLogBoxProxy proxy = proxyList.currentProxy();
-    return proxy == null ? LynxEventReporter.INSTANCE_ID_UNKNOWN
-                         : proxy.getInstanceIdOfCurrentView();
   }
 
   public void destroy() {

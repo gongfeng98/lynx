@@ -47,12 +47,6 @@ static int const kMaxBriefMsgSize = 50;
   [self updateLogMsgInLogBox:message withLevel:level withProxy:proxy isNewProxy:isNew];
 }
 
-- (void)onNewConsole:(NSDictionary*)message withProxy:(LynxLogBoxProxy*)proxy {
-  if ([_logBox isShowing] && [_logBox getCurrentProxy] == proxy) {
-    [_logBox onNewConsole:message withProxy:proxy isOnly:[_logBox isConsoleOnly]];
-  }
-}
-
 - (void)updateTemplateUrl:(NSString*)url withProxy:(LynxLogBoxProxy*)proxy {
   if ([_logBox isShowing] && [_logBox getCurrentProxy] == proxy) {
     [_logBox updateTemplateUrl:url];
@@ -69,15 +63,9 @@ static int const kMaxBriefMsgSize = 50;
   NSMutableArray* proxyArr = [_proxyDic objectForKey:levelNum];
   LynxLogBoxProxy* proxy = [proxyArr objectAtIndex:index];
   NSMutableArray* msg = [proxy logMessagesWithLevel:level];
-  NSMutableArray* console = [proxy consoleMessages];
   [_logBox updateViewInfo:[proxy templateUrl] currentIndex:index + 1 totalCount:[proxyArr count]];
   for (NSString* item in msg) {
     if (![_logBox onNewLog:item withLevel:level withProxy:proxy]) {
-      break;
-    }
-  }
-  for (NSDictionary* item in console) {
-    if (![_logBox onNewConsole:item withProxy:proxy isOnly:NO]) {
       break;
     }
   }
@@ -159,11 +147,6 @@ static int const kMaxBriefMsgSize = 50;
   [self showLogBoxWithLevel:level];
 }
 
-- (void)reloadFromLogBox:(LynxLogBoxProxy*)proxy {
-  [self reloadWithProxy:proxy];
-  [proxy reloadLynxViewFromLogBox];
-}
-
 - (void)reloadWithProxy:(LynxLogBoxProxy*)proxy {
   [_logBox dismissIfNeeded];
   [_proxyDic enumerateKeysAndObjectsUsingBlock:^(
@@ -196,16 +179,6 @@ static int const kMaxBriefMsgSize = 50;
       }
     }
   }];
-}
-
-- (void)showConsoleMsgsWithProxy:(LynxLogBoxProxy*)proxy {
-  NSMutableArray* msg = [proxy consoleMessages];
-  [_logBox updateViewInfo:[proxy templateUrl] currentIndex:1 totalCount:1];
-  for (NSDictionary* item in msg) {
-    if (![_logBox onNewConsole:item withProxy:proxy isOnly:YES]) {
-      break;
-    }
-  }
 }
 
 - (void)showNotification {

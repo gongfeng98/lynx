@@ -7,7 +7,7 @@ import { createSlice } from '@reduxjs/toolkit';
 export interface IViewsInfoState {
   currentView: number;
   viewsCount: number;
-  type: string;
+  level: string;
   templateUrl: string | undefined;
   showURL: boolean;
 }
@@ -18,7 +18,7 @@ export const viewsSlice = createSlice({
     currentView: 0,
     viewsCount: 0,
     templateUrl: null,
-    type: 'redbox',
+    level: 'error',
     showURL: false,
   } as IViewsInfoState,
 
@@ -27,7 +27,7 @@ export const viewsSlice = createSlice({
       state.currentView = action.payload.currentView;
       state.viewsCount = action.payload.viewsCount;
       state.templateUrl = action.payload.templateUrl;
-      state.type = action.payload.type;
+      state.level = action.payload.level;
     },
     toggleURLDisplay: (state) => {
       state.showURL = !state?.showURL;

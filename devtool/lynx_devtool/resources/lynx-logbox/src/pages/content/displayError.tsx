@@ -147,11 +147,9 @@ function DisplayErrorImpl(): JSX.Element {
   };
 
   const errors = showURL ? (errorsOnDisplay ? [URLInfo, ...errorsOnDisplay] : [URLInfo]) : errorsOnDisplay;
-  const viewsCount = viewInfo?.viewsCount ?? 0;
-  const hasMoreViews = viewsCount > 1 ? true : false;
   if (errorsOnDisplay && errorsOnDisplay.length > 0) {
     return (
-      <div className={styles['container']} style={{ marginTop: hasMoreViews ? '90px' : '50px' }}>
+      <div className={styles['container']}>
         <div style={{ display: 'flex' }}>
           <div style={{ flexGrow: 1, textAlign: 'center', margin: 0, padding: 10 }} />
         </div>

@@ -60,8 +60,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)attachLynxUIOwner:(nullable LynxUIOwner *)uiOwner;
 #endif
 
-- (void)setRuntimeId:(NSInteger)runtimeId;
-
 - (void)onMovedToWindow;
 
 - (void)onPageUpdate;

@@ -16,10 +16,6 @@ public interface LynxBaseLogBoxProxy {
    * @param error The error object containing details about the log message.
    */
   void showLogMessage(final LynxError error);
-  /**
-   * Displays the console.
-   */
-  void showConsole();
 
   /**
    * Called when the template is loaded.

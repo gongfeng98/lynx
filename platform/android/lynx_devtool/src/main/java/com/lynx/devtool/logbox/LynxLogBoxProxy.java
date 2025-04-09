@@ -37,7 +37,6 @@ public class LynxLogBoxProxy implements LynxBaseLogBoxProxy {
     mLogs = new HashMap<>();
     mLogs.put(LogBoxLogLevel.Error, new ArrayList<String>());
     mLogs.put(LogBoxLogLevel.Warn, new ArrayList<String>());
-    mLogs.put(LogBoxLogLevel.Info, new ArrayList<String>());
     Context context = devtool.getLynxContext();
     attachContext(context);
   }
@@ -153,43 +152,8 @@ public class LynxLogBoxProxy implements LynxBaseLogBoxProxy {
     return logs == null ? 0 : logs.size();
   }
 
-  public void reloadView() {
-    LynxDevtool devtool = mDevtool.get();
-    if (devtool != null) {
-      devtool.reloadView();
-    }
-  }
-
   public void onLoadTemplate() {
     LynxLogBoxOwner.getInstance().onLoadTemplate(mActivity.get(), this);
-  }
-
-  public void showConsole() {
-    if (UIThreadUtils.isOnUiThread()) {
-      showConsoleSync();
-    } else {
-      UIThreadUtils.runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          showConsoleSync();
-        }
-      });
-    }
-  }
-
-  protected int getInstanceIdOfCurrentView() {
-    LynxDevtool devtool = mDevtool.get();
-    if (devtool != null) {
-      LynxContext lynxContext = devtool.getLynxContext();
-      if (lynxContext != null) {
-        return lynxContext.getInstanceId();
-      }
-    }
-    return LynxEventReporter.INSTANCE_ID_UNKNOWN;
-  }
-
-  private void showConsoleSync() {
-    LynxLogBoxOwner.getInstance().showConsoleLog(mActivity.get(), this);
   }
 
   private Context findActivityByContext(Context context) {

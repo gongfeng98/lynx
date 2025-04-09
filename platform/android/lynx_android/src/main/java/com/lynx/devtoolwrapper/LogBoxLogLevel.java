@@ -3,4 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 package com.lynx.devtoolwrapper;
 
-public enum LogBoxLogLevel { Info, Warn, Error }
+public enum LogBoxLogLevel {
+  Info("info"),
+  Warn("warn"),
+  Error("error");
+
+  public final String value;
+
+  LogBoxLogLevel(String value) {
+    this.value = value;
+  }
+}
