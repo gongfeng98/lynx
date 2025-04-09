@@ -21,10 +21,21 @@ namespace tasm {
 
 void PropBundleStyleWriter::PushStyleToBundle(
     PropBundle* bundle, CSSPropertyID id, starlight::ComputedCSSStyle* style) {
+  // Add settings here. Decide whether to use DefaultWriterFunc or
+  // SpecificWriter based on the setting, and also perform a performance
+  // comparison through the setting.
+
+  static bool kUseSpecificWriter = LynxEnv::GetInstance().GetBoolEnv(
+      lynx::tasm::LynxEnv::Key::OPT_PUSH_STYLE_TO_BUNDLE, false);
+
   if (id > kPropertyStart && id < kPropertyEnd) {
-    if (void (*const writer)(PropBundle*, CSSPropertyID,
-                             starlight::ComputedCSSStyle*) = GetWriter()[id]) {
-      (*writer)(bundle, id, style);
+    if (void (*const writer)(PropBundle*, starlight::ComputedCSSStyle*) =
+            GetWriter()[id]) {
+      if (kUseSpecificWriter) {
+        (*writer)(bundle, style);
+      } else {
+        DefaultWriterFunc(bundle, id, style);
+      }
       return;
     }
   }
@@ -616,28 +627,15 @@ void PropBundleStyleWriter::WriteXHandleColor(
 
 const std::array<PropBundleStyleWriter::WriterFunc, kPropertyEnd>&
 PropBundleStyleWriter::GetWriter() {
-  static constexpr std::array<WriterFunc, kPropertyEnd> kDefaultWriter = [] {
+  static constexpr std::array<WriterFunc, kPropertyEnd> kSpecificWriter = [] {
     std::array<WriterFunc, kPropertyEnd> writer = {nullptr};
-#define SET_STYLE_WRITER(name) writer[kPropertyID##name] = &DefaultWriterFunc;
+#define SET_STYLE_WRITER(name) writer[kPropertyID##name] = &Write##name;
     FOREACH_PLATFORM_PROPERTY(SET_STYLE_WRITER);
 #undef SET_STYLE_WRITER
     return writer;
   }();
 
-  //  static constexpr std::array<WriterFunc, kPropertyEnd> kSpecificWriter = []
-  //  {
-  //    std::array<WriterFunc, kPropertyEnd> writer = {nullptr};
-  // #define SET_STYLE_WRITER(name) writer[kPropertyID##name] =
-  // &DefaultWriterFunc;
-  //    FOREACH_PLATFORM_PROPERTY(SET_STYLE_WRITER);
-  // #undef SET_STYLE_WRITER
-  //    return writer;
-  //  }();
-
-  // TODO(songshourui.null): Add settings here. Decide whether to use
-  // `kDefaultWriter` or `kSpecificWriter` based on the setting, and also
-  // perform a performance comparison through the setting.
-  return kDefaultWriter;
+  return kSpecificWriter;
 }
 
 void PropBundleStyleWriter::DefaultWriterFunc(

@@ -12,8 +12,7 @@
 namespace lynx {
 namespace tasm {
 class PropBundleStyleWriter {
-  using WriterFunc = void (*)(PropBundle*, CSSPropertyID,
-                              starlight::ComputedCSSStyle*);
+  using WriterFunc = void (*)(PropBundle*, starlight::ComputedCSSStyle*);
 
  public:
   static void PushStyleToBundle(PropBundle* bundle, CSSPropertyID id,

@@ -88,6 +88,7 @@ class BASE_EXPORT_FOR_DEVTOOL LynxEnv {
     ENABLE_NEW_INTERSECTION_OBSERVER,
     MULTI_JS_THREAD_COUNT,
     FIX_FIBER_REMOVE_TWICE_BUG,
+    OPT_PUSH_STYLE_TO_BUNDLE,
     // Please add new enum values above
     END_MARK,  // Keep this as the last enum value, and do not use
   };
@@ -182,6 +183,7 @@ class BASE_EXPORT_FOR_DEVTOOL LynxEnv {
              "enable_new_intersection_observer"},
             {Key::MULTI_JS_THREAD_COUNT, "multi_js_thread_count"},
             {Key::FIX_FIBER_REMOVE_TWICE_BUG, "fix_fiber_remove_twice_bug"},
+            {Key::OPT_PUSH_STYLE_TO_BUNDLE, "opt_push_style_to_bundle"},
         });
     auto it = (*env_key_to_string_map).find(key);
     DCHECK(it != (*env_key_to_string_map).end());
