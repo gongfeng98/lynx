@@ -251,7 +251,7 @@ public class LynxView extends UIBodyView {
    */
   @Deprecated
   public void setExtraTiming(Map<String, Long> extraTiming) {
-    if (extraTiming == null) {
+    if (extraTiming == null || mLynxTemplateRender == null) {
       return;
     }
     TimingHandler.ExtraTimingInfo info = new TimingHandler.ExtraTimingInfo();
