@@ -557,7 +557,7 @@ class ElementManager {
   bool GetEnableNativeListFromShell() const { return enable_native_list_; }
 
   bool GetEnableNativeListFromPageConfig() const {
-    return config_ && config_->GetEnableNativeList();
+    return config_ && config_->GetEnableNativeList() == TernaryBool::TRUE_VALUE;
   }
 
   bool GetEnableNewGesture() {
