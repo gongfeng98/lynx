@@ -15,7 +15,6 @@
 #include "core/build/gen/CallbackImpl_jni.h"
 #include "core/runtime/bindings/jsi/interceptor/android/request_interceptor_android.h"
 #include "core/runtime/bindings/jsi/interceptor/network_monitor.h"
-#include "core/runtime/bindings/jsi/modules/android/lynx_module_android.h"
 #include "core/runtime/bindings/jsi/modules/android/method_invoker.h"
 #include "core/services/recorder/recorder_controller.h"
 
@@ -32,14 +31,13 @@ void Invoke(JNIEnv* env, jobject jcaller, jlong nativePtr, jobject array) {
   }
   callbackImpl->setArguments(
       lynx::base::android::ScopedGlobalJavaRef<jobject>(env, array));
-  std::shared_ptr<lynx::piper::LynxModuleAndroid> callback_invoker =
-      callbackImpl->callback_invoker_.lock();
-  if (callback_invoker != nullptr) {
-    callback_invoker->InvokeCallback(callbackImpl);
+  auto methodInvoker = callbackImpl->methodInvoker.lock();
+  if (methodInvoker != nullptr) {
+    methodInvoker->InvokeCallback(callbackImpl);
   } else {
     LOGE(
         "LynxModule, callback_impl, nativeInvoke, "
-        "callbackImpl->callback_invoker_.lock() is a nullptr");
+        "callbackImpl->methodInvoker.lock() is a nullptr");
   }
 }
 void ReleaseNativePtr(JNIEnv* env, jobject jcaller, jlong nativePtr) {
@@ -64,7 +62,7 @@ bool ModuleCallbackAndroid::RegisterJNI(JNIEnv* env) {
 }
 
 ModuleCallbackAndroid::CallbackPair ModuleCallbackAndroid::createCallbackImpl(
-    int64_t callback_id, std::shared_ptr<LynxModuleAndroid> invoker,
+    int64_t callback_id, std::shared_ptr<MethodInvoker> invoker,
     ModuleCallbackType type) {
   std::shared_ptr<ModuleCallbackAndroid> callback;
   // TODO(huzhanbo.luc): move this into request_interceptor
@@ -183,7 +181,7 @@ void ModuleCallbackAndroid::Invoke(Runtime* runtime,
 }
 
 ModuleCallbackAndroid::ModuleCallbackAndroid(
-    int64_t callback_id, std::shared_ptr<LynxModuleAndroid> callback_invoker)
-    : ModuleCallback(callback_id), callback_invoker_(callback_invoker) {}
+    int64_t callback_id, std::shared_ptr<MethodInvoker> invoker)
+    : ModuleCallback(callback_id), methodInvoker(invoker) {}
 }  // namespace piper
 }  // namespace lynx

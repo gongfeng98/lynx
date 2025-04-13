@@ -19,7 +19,7 @@
 namespace lynx {
 namespace piper {
 
-class LynxModuleAndroid;
+class MethodInvoker;
 class LynxPromiseImpl;
 
 class ModuleCallbackAndroid : public ModuleCallback {
@@ -28,15 +28,14 @@ class ModuleCallbackAndroid : public ModuleCallback {
                                  base::android::ScopedGlobalJavaRef<jobject>>;
   static bool RegisterJNI(JNIEnv* env);
   static CallbackPair createCallbackImpl(
-      int64_t callback_id, std::shared_ptr<LynxModuleAndroid> invoker,
+      int64_t callback_id, std::shared_ptr<MethodInvoker> invoker,
       ModuleCallbackType type = ModuleCallbackType::Base);
 
   ModuleCallbackAndroid(int64_t callback_id,
-                        std::shared_ptr<LynxModuleAndroid> invoker);
-
+                        std::shared_ptr<MethodInvoker> invoker);
   ~ModuleCallbackAndroid() = default;
 
-  std::weak_ptr<LynxModuleAndroid> callback_invoker_;
+  std::weak_ptr<MethodInvoker> methodInvoker;
   std::weak_ptr<LynxPromiseImpl> promise;
 
   inline void setArguments(base::android::ScopedGlobalJavaRef<jobject> obj) {

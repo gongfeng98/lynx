@@ -26,7 +26,7 @@ namespace lynx {
 namespace base {
 namespace android {
 
-// TODO(zhangqun.29) remove convert function in callback_invoker_.cc
+// TODO(zhangqun.29) remove convert function in methodInvoker.cc
 namespace converter {
 template <typename T>
 static jobject valueOf(JNIEnv* env, jclass c, const char* signature,
@@ -75,6 +75,7 @@ class JavaValue {
 
   JavaValue(std::shared_ptr<base::android::JavaOnlyMap>&& value)
       : type_(JavaValueType::Map), j_variant_value_(std::move(value)) {}
+
   JavaValue(ScopedGlobalJavaRef<jobject>&& value, JavaValueType type)
       : type_(type), j_variant_value_(std::move(value)) {}
 
@@ -164,8 +165,6 @@ class JavaValue {
   jvalue JDouble() const;
   jvalue WrapperJDouble() const;
   jvalue JNull() const;
-
-  int Length() const;
 
  private:
   JavaValueType type_{JavaValueType::Null};
