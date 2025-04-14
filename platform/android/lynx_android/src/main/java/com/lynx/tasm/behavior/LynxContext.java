@@ -193,6 +193,8 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
   private Map<String, LynxExtensionModule> mExtensionModules = new HashMap<>();
   private LynxImageFetcher mImageFetcher;
 
+  private boolean mEnableVSyncAligned;
+
   public LynxContext(Context base, DisplayMetrics screenMetrics) {
     super(base);
     mVirtualScreenMetrics = new DisplayMetrics();
@@ -1194,5 +1196,14 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
   @RestrictTo({RestrictTo.Scope.LIBRARY})
   public Map<String, LynxExtensionModule> getExtensionModules() {
     return mExtensionModules;
+  }
+
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public void setEnableVSyncAligned(boolean enable) {
+    mEnableVSyncAligned = enable;
+  }
+  @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+  public boolean getEnableVSyncAligned() {
+    return mEnableVSyncAligned;
   }
 }
