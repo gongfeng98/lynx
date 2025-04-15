@@ -4,6 +4,7 @@
 
 #include "core/services/timing_handler/timing_utils.h"
 
+#include <list>
 #include <string>
 #include <unordered_map>
 
@@ -38,27 +39,31 @@ std::string camelToSnake(const std::string& camelStr) {
  * This function checks if the provided timing key exists in the predefined
  * key map and returns the corresponding polyfill key. If the key is not
  * found, it falls back to converting the timing key from camel case style to
- * snake case style using the GetSnakeStyleKey function.
+ * snake case style using the camelToSnake function.
  *
  * The predefined key map contains keys that will be used by the
- * PerformanceObserver. The corresponding polyfill keys are designed to be
+ * Performance API. The corresponding polyfill keys are designed to be
  * compatible with the classic onSetup/onUpdate API.
  *
  * @param timing_key The input timing key to be converted.
- * @return The corresponding polyfill timing key.
+ * @param polyfill_key The output timing key that is populated with the
+ * corresponding polyfill key.
+ * @return True if a corresponding polyfill timing key was found or created;
+ * false if polyfill is not allowed for the given timing key.
  */
-TimestampKey GetPolyfillTimingKey(const TimestampKey& timing_key) {
+bool TryUpdatePolyfillTimingKey(const TimestampKey& timing_key,
+                                std::string& polyfill_key) {
   static const lynx::base::NoDestructor<
       std::unordered_map<TimestampKey, TimestampKey>>
-      keyMap{
+      keysAllowedForPolyfill{
           {{kLoadBundleStart, kLoadBundleStartPolyfill},
            {kLoadBundleEnd, kLoadBundleEndPolyfill},
            {kParseStart, kParseStartPolyfill},
            {kParseEnd, kParseEndPolyfill},
            {kResolveStart, kResolveStartPolyfill},
            {kResolveEnd, kResolveEndPolyfill},
-           {kMtsRenderStart, kMtsRenderStartPolyfill},
-           {kMtsRenderEnd, kMtsRenderEndPolyfill},
+           {kCreateVdomStart, kCreateVdomStart},
+           {kCreateVdomEnd, kCreateVdomEnd},
            {kVmExecuteStart, kVmExecuteStartPolyfill},
            {kVmExecuteEnd, kVmExecuteEndPolyfill},
            {kPaintEnd, kPaintEndPolyfill},
@@ -96,11 +101,29 @@ TimestampKey GetPolyfillTimingKey(const TimestampKey& timing_key) {
            {kOpenTime, kOpenTimePolyfill},
            {kContainerInitStart, kContainerInitStartPolyfill},
            {kContainerInitEnd, kContainerInitEndPolyfill}}};
-  auto it = keyMap->find(timing_key);
-  if (it != keyMap->end()) {
-    return it->second;
+  static const lynx::base::NoDestructor<std::list<TimestampKey>>
+      keysNotAllowedForPolyfill{
+          std::initializer_list<TimestampKey>{kMtsRenderStart, kMtsRenderEnd}};
+
+  auto it_allowedPolyfill = keysAllowedForPolyfill->find(timing_key);
+  if (it_allowedPolyfill != keysAllowedForPolyfill->end()) {
+    polyfill_key = it_allowedPolyfill->second;
+    return true;
   }
-  return camelToSnake(timing_key);
+
+  auto it_notAllowedPolyfill =
+      std::find(keysNotAllowedForPolyfill->begin(),
+                keysNotAllowedForPolyfill->end(), timing_key);
+  if (it_notAllowedPolyfill != keysNotAllowedForPolyfill->end()) {
+    // Polyfill conversion not allowed for these keys - no modification.
+    return false;
+  }
+  // Convert unrecognized camel case keys to snake case to maintain
+  // compatibility with TimingAPI callbacks. This approach helps in handling new
+  // parameters sent by frontend frameworks that might use camel case by
+  // default.
+  polyfill_key = camelToSnake(timing_key);
+  return true;
 }
 }  // namespace timing
 }  // namespace tasm

@@ -71,6 +71,8 @@
 #include "core/runtime/vm/lepus/lepus_value.h"
 #include "core/runtime/vm/lepus/tasks/lepus_callback_manager.h"
 #include "core/runtime/vm/lepus/tasks/lepus_raf_manager.h"
+#include "core/services/timing_handler/timing_constants.h"
+#include "core/services/timing_handler/timing_constants_deprecated.h"
 #include "core/shared_data/white_board_delegate.h"
 #include "core/value_wrapper/value_impl_lepus.h"
 #include "third_party/modp_b64/modp_b64.h"
@@ -4491,6 +4493,7 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
   tasm::TimingCollector::Scope<TemplateAssembler::Delegate> scope(
       &self->GetDelegate(), options);
   if (options.is_reload_template) {
+    tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomEnd);
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderEnd);
   }
   self->page_proxy()->element_manager()->OnPatchFinish(options, element);

@@ -225,10 +225,10 @@ void TimingMediator::ReportSetupEvent(const TimingInfo& timing_info) const {
       CalculateDuration(
           setup_timing, BASE_STATIC_STRING(kSetInitDataStartPolyfill),
           setup_timing, BASE_STATIC_STRING(kSetInitDataEndPolyfill)));
-  event.SetProps(kSetupCreateVDom,
-                 CalculateDuration(
-                     setup_timing, BASE_STATIC_STRING(kMtsRenderStartPolyfill),
-                     setup_timing, BASE_STATIC_STRING(kMtsRenderEndPolyfill)));
+  event.SetProps(
+      kSetupCreateVDom,
+      CalculateDuration(setup_timing, BASE_STATIC_STRING(kCreateVdomStart),
+                        setup_timing, BASE_STATIC_STRING(kCreateVdomEnd)));
   event.SetProps(
       kSetupDispatch,
       CalculateDuration(setup_timing, BASE_STATIC_STRING(kResolveStartPolyfill),
@@ -413,9 +413,9 @@ void TimingMediator::ReportUpdateEvent(const TimingInfo& timing_info,
       });
   event.SetProps(kUpdateCreateVDom,
                  CalculateDuration(update_lepus_timing_dict,
-                                   BASE_STATIC_STRING(kMtsRenderStartPolyfill),
+                                   BASE_STATIC_STRING(kCreateVdomStart),
                                    update_lepus_timing_dict,
-                                   BASE_STATIC_STRING(kMtsRenderEndPolyfill)));
+                                   BASE_STATIC_STRING(kCreateVdomEnd)));
   event.SetProps(kUpdateDispatch,
                  CalculateDuration(update_lepus_timing_dict,
                                    BASE_STATIC_STRING(kResolveStartPolyfill),
@@ -458,11 +458,10 @@ void TimingMediator::ReportUpdateEvent(const TimingInfo& timing_info,
           .Number() > 0) {
     update_start_key = kPipelineStartPolyfill;
   }
-  event.SetProps(
-      kUpdateTriggerWaiting,
-      CalculateDuration(update_lepus_timing_dict, update_start_key,
-                        update_lepus_timing_dict,
-                        BASE_STATIC_STRING(kMtsRenderStartPolyfill)));
+  event.SetProps(kUpdateTriggerWaiting,
+                 CalculateDuration(update_lepus_timing_dict, update_start_key,
+                                   update_lepus_timing_dict,
+                                   BASE_STATIC_STRING(kCreateVdomStart)));
   event.SetProps(
       kUpdateWaiting,
       CalculateDuration(setup_timing, BASE_STATIC_STRING(kPaintEndPolyfill),
