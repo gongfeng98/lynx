@@ -62,11 +62,6 @@ Element::Element(const base::String& tag, ElementManager* manager,
                  uint32_t node_index)
     : tag_(tag),
       css_patching_(this, manager),
-      styles_manager_(
-          this,
-          manager ? manager->GetDynamicCSSConfigs()
-                  : DynamicCSSConfigs::GetDefaultDynamicCSSConfigs(),
-          manager ? manager->GetLynxEnvConfig().DefaultFontSize() : 0),
       id_(manager ? manager->GenerateElementID() : -1),
       node_index_(node_index),
       element_manager_(manager) {
@@ -95,7 +90,6 @@ Element::Element(const base::String& tag, ElementManager* manager,
       env_config.FontScaleSpOnly());
   platform_css_style_->SetFontSize(env_config.DefaultFontSize(),
                                    env_config.DefaultFontSize());
-  styles_manager_.SetViewportSizeWhenInitialize(env_config);
   if (IsRadonArch()) {
     enable_extended_layout_only_opt_ =
         manager->GetEnableExtendedLayoutOnlyOpt();
@@ -147,11 +141,6 @@ Element::Element(const Element& element, bool clone_resolved_props)
       overflow_(element.overflow_),
       has_placeholder_(element.has_placeholder_),
       trigger_global_event_(element.trigger_global_event_),
-      styles_manager_(
-          this, DynamicCSSConfigs::GetDefaultDynamicCSSConfigs(),
-          element.element_manager()
-              ? element.element_manager()->GetLynxEnvConfig().DefaultFontSize()
-              : 0),
       id_(element.id_),
       node_index_(element.node_index_),
       enable_new_animator_(element.enable_new_animator_),
@@ -159,10 +148,6 @@ Element::Element(const Element& element, bool clone_resolved_props)
       animation_previous_styles_(element.animation_previous_styles_) {
   platform_css_style_ = std::make_unique<starlight::ComputedCSSStyle>(
       *(element.computed_css_style()));
-  if (element.element_manager()) {
-    styles_manager_.SetViewportSizeWhenInitialize(
-        element.element_manager()->GetLynxEnvConfig());
-  }
 }
 
 void Element::AttachToElementManager(
@@ -192,7 +177,6 @@ void Element::AttachToElementManager(
 
   css_patching_.SetElementManager(manager);
   css_patching_.SetEnableFiberArch(is_fiber_element());
-  styles_manager_.SetViewportSizeWhenInitialize(manager->GetLynxEnvConfig());
   if (IsRadonArch()) {
     enable_extended_layout_only_opt_ =
         manager->GetEnableExtendedLayoutOnlyOpt();
@@ -488,10 +472,8 @@ void Element::ResetStyle(const base::Vector<CSSPropertyID>& css_names) {
   for (auto& css_id : css_names) {
     // TODO: zhixuan
     if (css_id == kPropertyIDFontSize) {
-      ResetFontSize();
+      element_manager()->SetNeedsLayout();
       continue;
-    } else if (css_id == kPropertyIDDirection) {
-      styles_manager_.UpdateDirectionStyle(CSSValue::Empty());
     } else if (css_id == kPropertyIDPosition) {
       is_fixed_ = false;
       // #2. If these transition styles have been reset beforehand, skip them
@@ -510,7 +492,12 @@ void Element::ResetStyle(const base::Vector<CSSPropertyID>& css_names) {
     // need to record some necessary styles which New Animator transition needs,
     // and it needs to be saved before rtl converted logic.
     ResetElementPreviousStyle(css_id);
-    StylesManager().AdoptStyle(css_id, CSSValue::Empty());
+    if (element_manager() && (LayoutNode::IsLayoutOnly(css_id) ||
+                              LayoutNode::IsLayoutWanted(css_id))) {
+      element_manager()->SetNeedsLayout();
+    }
+    ResetStyleInternal(DynamicCSSStylesManager::ResolveDirectionAwarePropertyID(
+        css_id, Direction()));
   }
 }
 
@@ -880,10 +867,6 @@ double Element::GetCurrentRootFontSize() {
   return element_manager()->root()->GetFontSize();
 }
 
-void Element::SetFontSize(const tasm::CSSValue* value) {
-  styles_manager_.UpdateFontSizeStyle(value);
-}
-
 void Element::SetComputedFontSize(const tasm::CSSValue& value, double font_size,
                                   double root_font_size, bool force_update) {
   if (font_size != GetFontSize()) {
@@ -899,11 +882,6 @@ void Element::SetComputedFontSize(const tasm::CSSValue& value, double font_size,
   if (!value.IsEmpty() || force_update) {
     ResolveStyleValue(kPropertyIDFontSize, value, force_update);
   }
-}
-
-void Element::ResetFontSize() {
-  auto empty = CSSValue::Empty();
-  styles_manager_.UpdateFontSizeStyle(&empty);
 }
 
 void Element::CheckFlattenRelatedProp(const base::String& key,
@@ -1211,15 +1189,6 @@ PropertiesResolvingStatus Element::GenerateRootPropertyStatus() const {
   return status;
 }
 
-void Element::PreparePropsBundleForDynamicCSS() {
-  if (!styles_manager_.UpdateWithParentStatus(parent())) {
-    return;
-  }
-  for (auto& child : children_) {
-    child->PreparePropsBundleForDynamicCSS();
-  }
-}
-
 void Element::MarkSubtreeNeedUpdate() {
   if (!subtree_need_update_) {
     subtree_need_update_ = true;
@@ -1279,13 +1248,6 @@ void Element::NotifyUnitValuesUpdatedToAnimation(uint32_t style) {
       }
     }
   }
-}
-
-void Element::SetPlaceHolderStyles(const PseudoPlaceHolderStyles& styles) {
-  report::GlobalFeatureCounter::Count(
-      report::LynxFeature::CPP_ENABLE_PLACE_HOLDER_STYLE,
-      element_manager_->GetInstanceId());
-  styles_manager_.SetPlaceHolderStyle(styles);
 }
 
 void Element::SetPlaceHolderStylesInternal(

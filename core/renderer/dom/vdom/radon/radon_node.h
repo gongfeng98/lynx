@@ -140,7 +140,7 @@ class RadonNode : public RadonBase {
 
   virtual int ImplId() const override;
 
-  void ApplyDynamicCSSWhenParentIsReady(const Element* parent);
+  void ApplyDynamicCSSWhenParentIsReady(const RadonElement* parent);
 
   bool GetDevToolFlag() override;
 

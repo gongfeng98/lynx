@@ -168,6 +168,23 @@ class RadonElement : public Element {
   virtual Element* first_child() const override;
   virtual Element* last_child() const override;
 
+  DynamicCSSStylesManager& StylesManager() { return styles_manager_; }
+  const DynamicCSSStylesManager& StylesManager() const {
+    return styles_manager_;
+  }
+
+  void SetDirection(const tasm::CSSValue& value) {
+    styles_manager_.UpdateDirectionStyle(value);
+  }
+
+  void SetFontSize(const tasm::CSSValue* value) {
+    styles_manager_.UpdateFontSizeStyle(value);
+  }
+
+  void SetPlaceHolderStyles(const PseudoPlaceHolderStyles& styles);
+
+  void PreparePropsBundleForDynamicCSS();
+
  private:
   void RemoveNode(RadonElement* child, int32_t index, bool destroy);
 
@@ -191,6 +208,7 @@ class RadonElement : public Element {
 
   StyleMap styles_;
   AttrMap attributes_;
+  DynamicCSSStylesManager styles_manager_;
 };
 
 }  // namespace tasm

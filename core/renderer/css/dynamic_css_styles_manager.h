@@ -34,6 +34,7 @@ struct PseudoPlaceHolderStyles {
 };
 
 class Element;
+class RadonElement;
 class LayoutNode;
 
 struct PropertiesResolvingStatus {
@@ -71,7 +72,8 @@ class DynamicCSSStylesManager {
   };
 
  public:
-  DynamicCSSStylesManager(Element* element, const DynamicCSSConfigs& configs,
+  DynamicCSSStylesManager(RadonElement* element,
+                          const DynamicCSSConfigs& configs,
                           float default_font_size);
 
   enum StyleUpdateFlag : uint32_t {
@@ -128,8 +130,8 @@ class DynamicCSSStylesManager {
   void UpdateFontSizeStyle(const tasm::CSSValue* value);
   void UpdateDirectionStyle(const tasm::CSSValue& value);
 
-  bool UpdateWithParentStatus(const Element* parent);
-  void UpdateWithParentStatusForOnceInheritance(const Element* parent) {
+  bool UpdateWithParentStatus(const RadonElement* parent);
+  void UpdateWithParentStatusForOnceInheritance(const RadonElement* parent) {
     if (!DynamicCSSConfigs::GetDefaultDynamicCSSConfigs()
              .OnceInheritanceDisabled()) {
       UpdateWithParentStatus(parent);
@@ -139,17 +141,6 @@ class DynamicCSSStylesManager {
   void MarkNewlyInserted();
 
   void ClearChildrenStatus() { status_for_child_.Clear(); }
-
-  // Weird function to keep old buggy behvior;
-  void SetViewportSizeWhenInitialize(const LynxEnvConfig& config);
-  const starlight::LayoutUnit& vwbase_for_font_size_to_align_with_legacy_bug()
-      const {
-    return vwbase_for_font_size_to_align_with_legacy_bug_;
-  }
-  const starlight::LayoutUnit& vhbase_for_font_size_to_align_with_legacy_bug()
-      const {
-    return vhbase_for_font_size_to_align_with_legacy_bug_;
-  }
 
  private:
   void MarkDirtyRecursively();
@@ -239,7 +230,7 @@ class DynamicCSSStylesManager {
   std::array<ValueStorage, kDynamicTypeCount> value_storage_;
   std::map<CSSPropertyID, InheritablePropsState> inheritable_props_;
   PropertiesResolvingStatus resolving_data_;
-  Element* element_;
+  RadonElement* element_;
   CSSValue font_size_ = CSSValue::Empty();
   StyleUpdateFlags font_size_flags_ = kNoUpdate;
   bool font_size_need_update_ = false;
@@ -251,10 +242,6 @@ class DynamicCSSStylesManager {
   CSSValue direction_ = CSSValue::Empty();
   PseudoPlaceHolderStyles placeholder_styles_;
   bool force_reapply_inheritance_ = true;
-
-  // The code is ugly. Make all the buggy behavior we have to keep!!!!!!
-  starlight::LayoutUnit vwbase_for_font_size_to_align_with_legacy_bug_;
-  starlight::LayoutUnit vhbase_for_font_size_to_align_with_legacy_bug_;
 
   StatusForChild status_for_child_;
 };

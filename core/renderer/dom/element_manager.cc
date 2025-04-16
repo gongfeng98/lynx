@@ -604,8 +604,10 @@ void ElementManager::OnFinishUpdateProps(Element *node,
                                          PipelineOptions &options) {
   if (node->is_radon_element()) {
     SetNeedsLayout();
-    node->StylesManager().UpdateWithParentStatusForOnceInheritance(
-        node->parent());
+    static_cast<RadonElement *>(node)
+        ->StylesManager()
+        .UpdateWithParentStatusForOnceInheritance(
+            static_cast<RadonElement *>(node->parent()));
     node->FlushProps();
   } else if (node->is_fiber_element()) {
     static_cast<FiberElement *>(node)->MarkPropsDirty();

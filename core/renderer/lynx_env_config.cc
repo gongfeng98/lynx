@@ -17,6 +17,12 @@ LynxEnvConfig::LynxEnvConfig(float width, float height,
   screen_height_ = height;
   layouts_unit_per_px_ = layouts_unit_per_px;
   physical_pixels_per_layout_unit_ = physical_pixels_per_layout_unit;
+  vwbase_for_font_size_to_align_with_legacy_bug_ =
+      viewport_width_.IsDefinite() ? viewport_width_
+                                   : starlight::LayoutUnit(screen_width_);
+  vhbase_for_font_size_to_align_with_legacy_bug_ =
+      viewport_height_.IsDefinite() ? viewport_height_
+                                    : starlight::LayoutUnit(screen_height_);
 }
 
 void LynxEnvConfig::UpdateScreenSize(float width, float height) {
@@ -29,6 +35,12 @@ void LynxEnvConfig::UpdateScreenSize(float width, float height) {
                 ctx.event()->add_debug_annotations("screen_height",
                                                    std::to_string(height));
               });
+  vwbase_for_font_size_to_align_with_legacy_bug_ =
+      viewport_width_.IsDefinite() ? viewport_width_
+                                   : starlight::LayoutUnit(screen_width_);
+  vhbase_for_font_size_to_align_with_legacy_bug_ =
+      viewport_height_.IsDefinite() ? viewport_height_
+                                    : starlight::LayoutUnit(screen_height_);
 }
 
 }  // namespace tasm

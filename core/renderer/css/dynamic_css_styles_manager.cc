@@ -14,6 +14,7 @@
 #include "core/renderer/css/measure_context.h"
 #include "core/renderer/dom/element.h"
 #include "core/renderer/dom/element_manager.h"
+#include "core/renderer/dom/vdom/radon/radon_element.h"
 #include "core/renderer/starlight/style/default_layout_style.h"
 #include "core/renderer/ui_wrapper/layout/layout_node.h"
 
@@ -169,7 +170,8 @@ DynamicCSSStylesManager::StyleUpdateFlags GetStatusChanges(
 }  // namespace
 
 DynamicCSSStylesManager::DynamicCSSStylesManager(
-    Element* element, const DynamicCSSConfigs& configs, float default_font_size)
+    RadonElement* element, const DynamicCSSConfigs& configs,
+    float default_font_size)
     : element_(element), configs_(configs) {
   // To keep the default value behaviour after removing the global values used
   // in PropertiesResolvingStatus.
@@ -288,7 +290,9 @@ void DynamicCSSStylesManager::MarkNewlyInserted() {
   dirty_ = true;
   if (element_->parent() && DynamicCSSConfigs::GetDefaultDynamicCSSConfigs()
                                 .OnceInheritanceDisabled()) {
-    element_->parent()->StylesManager().MarkDirtyRecursively();
+    static_cast<RadonElement*>(element_->parent())
+        ->StylesManager()
+        .MarkDirtyRecursively();
   }
 }
 
@@ -298,7 +302,9 @@ void DynamicCSSStylesManager::MarkDirtyRecursively() {
   if (!dirty_) {
     dirty_ = true;
     if (element_->parent()) {
-      element_->parent()->StylesManager().MarkDirtyRecursively();
+      static_cast<RadonElement*>(element_->parent())
+          ->StylesManager()
+          .MarkDirtyRecursively();
     }
   }
 }
@@ -345,11 +351,11 @@ void DynamicCSSStylesManager::ApplyFontSizeUpdateResolvingData(
       const auto& vw_base =
           configs_.unify_vw_vh_behavior_
               ? lynx_env.ViewportWidth()
-              : vwbase_for_font_size_to_align_with_legacy_bug_;
+              : lynx_env.vwbase_for_font_size_to_align_with_legacy_bug();
       const auto& vh_base =
           configs_.unify_vw_vh_behavior_
               ? lynx_env.ViewportHeight()
-              : vhbase_for_font_size_to_align_with_legacy_bug_;
+              : lynx_env.vhbase_for_font_size_to_align_with_legacy_bug();
 
       resolved_font_size = starlight::CSSStyleUtils::ResolveFontSize(
           font_size_, lynx_env, vw_base, vh_base, status.computed_font_size_,
@@ -767,19 +773,8 @@ void DynamicCSSStylesManager::UpdatePlaceHolderStyle(
   }
 }
 
-void DynamicCSSStylesManager::SetViewportSizeWhenInitialize(
-    const LynxEnvConfig& config) {
-  vwbase_for_font_size_to_align_with_legacy_bug_ =
-      config.ViewportWidth().IsDefinite()
-          ? config.ViewportWidth()
-          : starlight::LayoutUnit(config.ScreenWidth());
-  vhbase_for_font_size_to_align_with_legacy_bug_ =
-      config.ViewportHeight().IsDefinite()
-          ? config.ViewportHeight()
-          : starlight::LayoutUnit(config.ScreenHeight());
-}
-
-bool DynamicCSSStylesManager::UpdateWithParentStatus(const Element* parent) {
+bool DynamicCSSStylesManager::UpdateWithParentStatus(
+    const RadonElement* parent) {
   // ATTENSION: The element_->parent() does not necessarily return the actual
   // parent of element because UpdateWithParentStatus Maybe called while the
   // element tree is being constructed. Always use the passed in parent to get

@@ -36,6 +36,12 @@ class LynxEnvConfig {
     viewport_height_ = height_mode == SLMeasureModeDefinite
                            ? starlight::LayoutUnit(height)
                            : starlight::LayoutUnit();
+    vwbase_for_font_size_to_align_with_legacy_bug_ =
+        viewport_width_.IsDefinite() ? viewport_width_
+                                     : starlight::LayoutUnit(screen_width_);
+    vhbase_for_font_size_to_align_with_legacy_bug_ =
+        viewport_height_.IsDefinite() ? viewport_height_
+                                      : starlight::LayoutUnit(screen_height_);
   }
   void UpdateScreenSize(float width, float height);
   float DefaultFontSize() const {
@@ -58,6 +64,15 @@ class LynxEnvConfig {
 
   float LayoutsUnitPerPx() const { return layouts_unit_per_px_; }
 
+  const starlight::LayoutUnit& vwbase_for_font_size_to_align_with_legacy_bug()
+      const {
+    return vwbase_for_font_size_to_align_with_legacy_bug_;
+  }
+  const starlight::LayoutUnit& vhbase_for_font_size_to_align_with_legacy_bug()
+      const {
+    return vhbase_for_font_size_to_align_with_legacy_bug_;
+  }
+
  private:
   // The unit of this two values is layout unit.
   float screen_width_;
@@ -71,6 +86,8 @@ class LynxEnvConfig {
   // On Android one layout unit equals to one physical pixel
   float layouts_unit_per_px_;
   double physical_pixels_per_layout_unit_;
+  starlight::LayoutUnit vwbase_for_font_size_to_align_with_legacy_bug_;
+  starlight::LayoutUnit vhbase_for_font_size_to_align_with_legacy_bug_;
 };
 
 }  // namespace tasm

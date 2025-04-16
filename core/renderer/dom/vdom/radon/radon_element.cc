@@ -25,7 +25,12 @@ namespace tasm {
 RadonElement::RadonElement(const base::String& tag,
                            const std::shared_ptr<AttributeHolder>& node,
                            ElementManager* manager, uint32_t node_index)
-    : Element(tag, manager, node_index) {
+    : Element(tag, manager, node_index),
+      styles_manager_(
+          this,
+          manager ? manager->GetDynamicCSSConfigs()
+                  : DynamicCSSConfigs::GetDefaultDynamicCSSConfigs(),
+          manager ? manager->GetLynxEnvConfig().DefaultFontSize() : 0) {
   css_patching_.SetEnableFiberArch(false);
 
   if (node) {
@@ -332,7 +337,45 @@ void RadonElement::ResetAttribute(const base::String& key) {
 }
 
 void RadonElement::ResetStyle(const base::Vector<CSSPropertyID>& style_names) {
-  Element::ResetStyle(style_names);
+  if (style_names.empty()) {
+    return;
+  }
+
+  bool should_consume_trans_styles_in_advance =
+      ShouldConsumeTransitionStylesInAdvance();
+  // #1. Check whether we need to reset transition styles in advance.
+  if (should_consume_trans_styles_in_advance) {
+    ResetTransitionStylesInAdvance(style_names);
+  }
+
+  for (auto& css_id : style_names) {
+    // TODO: zhixuan
+    if (css_id == kPropertyIDFontSize) {
+      auto empty = CSSValue::Empty();
+      styles_manager_.UpdateFontSizeStyle(&empty);
+      continue;
+    } else if (css_id == kPropertyIDDirection) {
+      styles_manager_.UpdateDirectionStyle(CSSValue::Empty());
+    } else if (css_id == kPropertyIDPosition) {
+      is_fixed_ = false;
+      // #2. If these transition styles have been reset beforehand, skip them
+      // here.
+    } else if (should_consume_trans_styles_in_advance &&
+               CSSProperty::IsTransitionProps(css_id)) {
+      continue;
+    }
+    // #3. Review each property to determine whether the reset should be
+    // intercepted.
+    if (css_transition_manager_ && css_transition_manager_->ConsumeCSSProperty(
+                                       css_id, CSSValue::Empty())) {
+      continue;
+    }
+    // Since the previous element styles cannot be accessed in element, we
+    // need to record some necessary styles which New Animator transition needs,
+    // and it needs to be saved before rtl converted logic.
+    ResetElementPreviousStyle(css_id);
+    styles_manager_.AdoptStyle(css_id, CSSValue::Empty());
+  }
   for (auto& css_id : style_names) {
     // record styles, used for worklet
     styles_.erase(css_id);
@@ -868,6 +911,23 @@ bool RadonElement::CanBeLayoutOnly() const {
   return element_manager()->GetEnableLayoutOnly() && has_layout_only_props_ &&
          overflow_ == OVERFLOW_XY &&
          (!is_component() || enable_component_layout_only_);
+}
+
+void RadonElement::SetPlaceHolderStyles(const PseudoPlaceHolderStyles& styles) {
+  report::GlobalFeatureCounter::Count(
+      report::LynxFeature::CPP_ENABLE_PLACE_HOLDER_STYLE,
+      element_manager_->GetInstanceId());
+  styles_manager_.SetPlaceHolderStyle(styles);
+}
+
+void RadonElement::PreparePropsBundleForDynamicCSS() {
+  if (!styles_manager_.UpdateWithParentStatus(
+          static_cast<RadonElement*>(parent()))) {
+    return;
+  }
+  for (auto& child : children_) {
+    static_cast<RadonElement*>(child)->PreparePropsBundleForDynamicCSS();
+  }
 }
 
 }  // namespace tasm

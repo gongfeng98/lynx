@@ -155,7 +155,6 @@ class Element : public lepus::RefCounted {
 
   virtual void SetStyleInternal(CSSPropertyID id, const tasm::CSSValue& value,
                                 bool force_update = false);
-  void SetPlaceHolderStyles(const PseudoPlaceHolderStyles& styles);
   BASE_EXPORT_FOR_DEVTOOL virtual void ResetStyle(
       const base::Vector<CSSPropertyID>& style_names);
 
@@ -296,8 +295,6 @@ class Element : public lepus::RefCounted {
    */
   double GetCurrentRootFontSize();
 
-  void SetFontSize(const tasm::CSSValue* value);
-
   starlight::DirectionType Direction() { return direction_; }
 
   virtual void OnPseudoStatusChanged(PseudoState prev_status,
@@ -343,11 +340,6 @@ class Element : public lepus::RefCounted {
     operation();
   }
 
-  DynamicCSSStylesManager& StylesManager() { return styles_manager_; }
-  const DynamicCSSStylesManager& StylesManager() const {
-    return styles_manager_;
-  }
-
   void set_parent(Element* parent) { parent_ = parent; }
   bool EnableTriggerGlobalEvent() const { return trigger_global_event_; }
 
@@ -383,10 +375,6 @@ class Element : public lepus::RefCounted {
   bool enable_new_animator() { return enable_new_animator_; }
 
   PropertiesResolvingStatus GenerateRootPropertyStatus() const;
-
-  void SetDirection(const tasm::CSSValue& value) {
-    styles_manager_.UpdateDirectionStyle(value);
-  }
 
   void SetComputedFontSize(const tasm::CSSValue& value, double font_size,
                            double root_font_size, bool force_update = false);
@@ -447,9 +435,7 @@ class Element : public lepus::RefCounted {
 
   bool HasPaintingNode() { return has_painting_node_; }
   void ResetPropBundle();
-  void ResetFontSize();
 
-  void PreparePropsBundleForDynamicCSS();
   void CheckFlattenRelatedProp(const base::String& key,
                                const lepus::Value& value = lepus::Value(true));
 
@@ -789,8 +775,6 @@ class Element : public lepus::RefCounted {
   bool has_placeholder_{false};
   bool has_text_selection_{false};
   bool trigger_global_event_{false};
-
-  DynamicCSSStylesManager styles_manager_;
 
   int32_t id_;
   uint32_t node_index_{0};

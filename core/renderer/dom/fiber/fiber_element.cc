@@ -2669,11 +2669,11 @@ void FiberElement::SetFontSize() {
     const auto &vw_base =
         unify_vw_vh_behavior
             ? env_config.ViewportWidth()
-            : styles_manager_.vwbase_for_font_size_to_align_with_legacy_bug();
+            : env_config.vwbase_for_font_size_to_align_with_legacy_bug();
     const auto &vh_base =
         unify_vw_vh_behavior
             ? env_config.ViewportHeight()
-            : styles_manager_.vhbase_for_font_size_to_align_with_legacy_bug();
+            : env_config.vhbase_for_font_size_to_align_with_legacy_bug();
     result = starlight::CSSStyleUtils::ResolveFontSize(
         it->second, env_config, vw_base, vh_base, GetParentFontSize(),
         GetRecordedRootFontSize(), element_manager()->GetCSSParserConfigs());

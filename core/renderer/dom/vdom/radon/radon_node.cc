@@ -271,7 +271,8 @@ void RadonNode::DispatchFirstTime() {
     // get parent in advance, we need know whether the node is native inline
     // view
     auto parent_element = GetParentWithFixed(ParentElement());
-    ApplyDynamicCSSWhenParentIsReady(parent_element);
+    ApplyDynamicCSSWhenParentIsReady(
+        static_cast<RadonElement*>(parent_element));
     radon_element()->FlushPropsFirstTimeWithParentElement(parent_element);
   }
 
@@ -471,7 +472,11 @@ void RadonNode::SwapElement(const std::unique_ptr<RadonBase>& old_radon_base,
             EXEC_EXPR_FOR_INSPECTOR(NotifyElementNodeAdded());
           }
           // Re-apply inheritance when fixed is changed.
-          ApplyDynamicCSSWhenParentIsReady(element()->parent());
+          if (!page_proxy_->element_manager()
+                   ->GetEnableFiberElementForRadonDiff()) {
+            ApplyDynamicCSSWhenParentIsReady(
+                static_cast<RadonElement*>(element()->parent()));
+          }
         }
       }
       if (element()->is_radon_element()) {
@@ -824,7 +829,10 @@ bool RadonNode::ShouldFlushStyle(RadonNode* old_radon_node,
     }
     class_transmit_option_.added_classes().clear();
   }
-  ApplyDynamicCSSWhenParentIsReady(element_->parent());
+  if (!page_proxy_->element_manager()->GetEnableFiberElementForRadonDiff()) {
+    ApplyDynamicCSSWhenParentIsReady(
+        static_cast<RadonElement*>(element_->parent()));
+  }
   style_updated |= element_->HasPropsToBeFlush();
 
   return style_updated;
@@ -1312,8 +1320,9 @@ RadonNodeIndexType RadonNode::GetOriginalNodeIndex() {
   }
 }
 
-void RadonNode::ApplyDynamicCSSWhenParentIsReady(const Element* parent) {
-  element()->StylesManager().UpdateWithParentStatusForOnceInheritance(parent);
+void RadonNode::ApplyDynamicCSSWhenParentIsReady(const RadonElement* parent) {
+  radon_element()->StylesManager().UpdateWithParentStatusForOnceInheritance(
+      parent);
 }
 
 }  // namespace tasm
