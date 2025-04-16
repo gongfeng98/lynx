@@ -15,6 +15,9 @@ public class UnicodeFontUtils {
     if (unicodeStr == null) {
       return null;
     }
+    if (decodeProperty == DECODE_DEFAULT && unicodeStr.indexOf('\\') < 0) {
+      return unicodeStr;
+    }
     int length = unicodeStr.length();
     StringBuilder stringBuffer = new StringBuilder(length);
     InsertCharContext insert = null;
@@ -54,6 +57,9 @@ public class UnicodeFontUtils {
   public static String decode(String unicodeStr, int decodeProperty) {
     if (unicodeStr == null) {
       return null;
+    }
+    if (decodeProperty == DECODE_DEFAULT && unicodeStr.indexOf('&') < 0) {
+      return unicodeStr;
     }
     int length = unicodeStr.length();
     StringBuilder stringBuffer = new StringBuilder(length);
