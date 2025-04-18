@@ -15,7 +15,7 @@ using lynx::base::StringToFloat;
 
 namespace {
 // auto unit percentage vw vh
-std::string NumericLengthToString(const BaseLength& length) {
+std::string NumericLengthToString(const NLength::BaseLength& length) {
   constexpr const char* kUnit = "unit";
   constexpr const char* kPercentageMark = "%";
   if (!length.HasValue()) {
@@ -69,12 +69,12 @@ NLength NLength::MakeCalcNLength(float fixed, float percentage) {
 
 // TODO(zhixuan): Remove this constructor
 NLength::NLength(float value, NLengthType type)
-    : type_(type),
-      numeric_length_(type == kNLengthPercentage ? BaseLength(0, value)
-                                                 : BaseLength(value)) {}
+    : numeric_length_(type == kNLengthPercentage ? BaseLength(0, value)
+                                                 : BaseLength(value)),
+      type_(type) {}
 
 NLength::NLength(const BaseLength& base_length, NLengthType type)
-    : type_(type), numeric_length_(base_length) {}
+    : numeric_length_(base_length), type_(type) {}
 
 std::string NLength::ToString() const {
   std::string result;

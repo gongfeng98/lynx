@@ -16,7 +16,7 @@
 namespace lynx {
 namespace starlight {
 
-enum NLengthType {
+enum NLengthType : uint8_t {
   kNLengthAuto,
   kNLengthUnit,
   kNLengthPercentage,
@@ -26,51 +26,61 @@ enum NLengthType {
   kNLengthFr,
 };
 
-// Numeric length is made of two parts
-// 1. The fixed length in px unit
-// 2. Percentage that relative to percentage base.
-// To resolve length, add the fixed part with the percentage part multipled by
-// percantage base and divided by 100.f.
-class BaseLength {
+class __attribute__((packed, aligned(4))) NLength {
  public:
-  BaseLength(float fixed_part) : has_value_(true), fixed_(fixed_part) {}
-  BaseLength(float fixed_part, float percentage_part)
-      : has_value_(true),
-        fixed_(fixed_part),
-        percentage_(percentage_part),
-        has_percentage_(true) {}
-  BaseLength() = default;
-  bool operator==(const BaseLength& o) const {
-    return has_value_ == o.has_value_ && fixed_ == o.fixed_ &&
-           has_percentage_ == o.has_percentage_ && percentage_ == o.percentage_;
-  }
-  bool operator!=(const BaseLength& o) const { return !(*this == o); }
+  /// @Note
+  /// To optimize memory of NLength, BaseLength is aligned to 1 byte
+  /// and sizeof(BaseLength)==10. There is no space between the type_
+  /// and numeric_length_ members of the NLength class.
+  ///
+  /// !!!DO NOT!!! declare variables of type BaseLength in other classes,
+  /// because the float member in BaseLength may not be four-byte aligned,
+  /// causing floating-point instructions to fail on some architectures.
+  ///
+  /// Numeric length is made of two parts
+  /// 1. The fixed length in px unit
+  /// 2. Percentage that relative to percentage base.
+  /// To resolve length, add the fixed part with the percentage part multipled
+  /// by percantage base and divided by 100.f.
+  class __attribute__((packed, aligned(1))) BaseLength {
+   public:
+    BaseLength(float fixed_part) : fixed_(fixed_part), has_value_(true) {}
+    BaseLength(float fixed_part, float percentage_part)
+        : fixed_(fixed_part),
+          percentage_(percentage_part),
+          has_value_(true),
+          has_percentage_(true) {}
+    BaseLength() = default;
+    bool operator==(const BaseLength& o) const {
+      return has_value_ == o.has_value_ && fixed_ == o.fixed_ &&
+             has_percentage_ == o.has_percentage_ &&
+             percentage_ == o.percentage_;
+    }
+    bool operator!=(const BaseLength& o) const { return !(*this == o); }
 
-  bool HasValue() const { return has_value_; }
+    bool HasValue() const { return has_value_; }
 
-  // That the percentage part of a length is 0 semantically different from
-  // that a length does not contains the percentage part.
-  bool ContainsPercentage() const { return has_percentage_ && has_value_; }
+    // That the percentage part of a length is 0 semantically different from
+    // that a length does not contains the percentage part.
+    bool ContainsPercentage() const { return has_percentage_ && has_value_; }
 
-  // When a length has percentage part and fixed part is zero,
-  // treat the length as a percentage only length.
-  // When a length do has value but does not contains percent part and fixed
-  // part is 0, treat the length as a fixed 0.
-  bool ContainsFixedValue() const {
-    return (fixed_ != 0 || !has_percentage_) && has_value_;
-  }
+    // When a length has percentage part and fixed part is zero,
+    // treat the length as a percentage only length.
+    // When a length do has value but does not contains percent part and fixed
+    // part is 0, treat the length as a fixed 0.
+    bool ContainsFixedValue() const {
+      return (fixed_ != 0 || !has_percentage_) && has_value_;
+    }
 
-  float GetFixedPart() const { return fixed_; }
-  float GetPercentagePart() const { return percentage_; }
+    float GetFixedPart() const { return fixed_; }
+    float GetPercentagePart() const { return percentage_; }
 
- private:
-  bool has_value_ = false;
-  float fixed_ = 0, percentage_ = 0;
-  bool has_percentage_ = false;
-};
+   private:
+    float fixed_ = 0, percentage_ = 0;
+    bool has_value_ = false;
+    bool has_percentage_ = false;
+  };
 
-class NLength {
- public:
   static NLength MakeAutoNLength();
   static NLength MakeMaxContentNLength();
   static NLength MakeFitContentNLength() { return NLength(kNLengthFitContent); }
@@ -131,9 +141,8 @@ class NLength {
   // Combined
   NLength(const BaseLength& base_length, NLengthType type);
 
-  NLengthType type_;
-
   BaseLength numeric_length_;
+  NLengthType type_;
 };
 
 // WARNING!!! Don't use this method
