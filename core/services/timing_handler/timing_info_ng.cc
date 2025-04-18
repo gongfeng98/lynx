@@ -28,6 +28,11 @@ void TimingInfoNg::ClearAllTimingInfo() {
   // calculation metric like totalFcp, we will get a larger result.
 }
 
+void TimingInfoNg::ReleaseTiming(const PipelineID& pipeline_id) {
+  pipeline_timing_info_.erase(pipeline_id);
+  framework_timing_info_.erase(pipeline_id);
+}
+
 bool TimingInfoNg::SetFrameworkTiming(
     const lynx::tasm::timing::TimestampKey& timing_key,
     lynx::tasm::timing::TimestampUs us_timestamp,

@@ -115,6 +115,8 @@ class TimingHandlerNg {
   bool IsLoadBundlePipeline(const PipelineID &pipeline_id) const;
   bool ReadyToDispatch() const;
   void SendPerformanceEntry(std::unique_ptr<lynx::pub::Value> entry);
+
+  void ReleaseTiming(const PipelineID &pipeline_id);
 };
 }  // namespace timing
 }  // namespace tasm

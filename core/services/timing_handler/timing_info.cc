@@ -316,7 +316,7 @@ void TimingInfo::PrepareBeforeDispatchSetupForSSR() {
   }
 }
 
-// Reset
+// Release
 void TimingInfo::ClearAllTiming() {
   setup_timing_infos_.Clear();
   update_timing_infos_.clear();
@@ -324,6 +324,10 @@ void TimingInfo::ClearAllTiming() {
   ssr_setup_timing_infos_.Clear();
   ssr_metrics_.Clear();
   timing_infos_with_timing_flag_.clear();
+}
+
+void TimingInfo::ReleaseTiming(const PipelineID& pipeline_id) {
+  pipeline_timing_infos_.erase(pipeline_id);
 }
 
 }  // namespace timing

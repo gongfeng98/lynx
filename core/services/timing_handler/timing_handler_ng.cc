@@ -260,11 +260,29 @@ void TimingHandlerNg::DispatchPipelineEntryIfNeeded(
     return;
   }
   const auto& name = pipeline_id_to_origin_map_.find(pipeline_id);
-  // pipeline
-  // Iterate over the vector of TimingFlags for the specific ID
+  /* A PipelineID may correspond to multiple flags. The rule for releasing a
+   * PipelineID is that all flags corresponding to this PipelineID have been
+   * dispatched.
+   *
+   * Based on the principle that each TimingFlag can only send performance
+   * events once, the following two release methods are defined:
+   *
+   * anyTimingFlagHasDispatched: If a TimingFlag corresponding to this
+   * pipelineId has sent performance events in this dispatch, then the
+   * corresponding timing data for this pipelineId no longer holds value and can
+   * be released.
+   *
+   * allTimingFlagHasDispatched: If all TimingFlags corresponding to this
+   * pipelineId have been dispatched, then all timing data corresponding to this
+   * pipelineId is useless and can be released.
+   */
+  bool anyTimingFlagHasDispatched = false;
+  bool allTimingFlagHasDispatched = true;
   for (const TimingFlag& flag : timing_flag_iter->second) {
     if (has_dispatched_timing_flags_.count(flag)) {
       continue;
+    } else {
+      allTimingFlagHasDispatched = false;
     }
     auto pipeline_entry =
         timing_info_.GetPipelineEntry(current_key, pipeline_id, flag);
@@ -281,6 +299,10 @@ void TimingHandlerNg::DispatchPipelineEntryIfNeeded(
     pipeline_entry->PushStringToMap(kIdentifier, flag);
     SendPerformanceEntry(std::move(pipeline_entry));
     has_dispatched_timing_flags_.emplace(flag);
+    anyTimingFlagHasDispatched = true;
+  }
+  if (anyTimingFlagHasDispatched || allTimingFlagHasDispatched) {
+    ReleaseTiming(pipeline_id);
   }
 }
 
@@ -317,6 +339,12 @@ void TimingHandlerNg::SendPerformanceEntry(
 bool TimingHandlerNg::ReadyToDispatch() const {
   return is_background_runtime_ready_ ||
          !timing_info_.GetEnableBackgroundRuntime();
+}
+
+void TimingHandlerNg::ReleaseTiming(const PipelineID& pipeline_id) {
+  pipeline_id_to_timing_flags_map_.erase(pipeline_id);
+  pipeline_id_to_origin_map_.erase(pipeline_id);
+  timing_info_.ReleaseTiming(pipeline_id);
 }
 
 }  // namespace timing

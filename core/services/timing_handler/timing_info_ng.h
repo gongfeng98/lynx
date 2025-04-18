@@ -116,6 +116,7 @@ class TimingInfoNg {
       const tasm::timing::TimingFlag& timing_flag = "");
 
   void ClearAllTimingInfo();
+  void ReleaseTiming(const PipelineID& pipeline_id);
 
  private:
   bool UpdateMetrics(const std::string& name, const std::string& start_name,

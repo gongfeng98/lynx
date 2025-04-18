@@ -115,6 +115,8 @@ class TimingInfo {
   // finished pre-created. We don't need reset anymore.
   void ClearAllTiming();
 
+  void ReleaseTiming(const PipelineID& pipeline_id);
+
  private:
   // TODO(kechenglong): Currently we re-use TimingMap as TimingDurationMap.
   // Consider refactoring for clearer distinction if possible.

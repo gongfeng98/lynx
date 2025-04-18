@@ -211,6 +211,10 @@ void TimingHandler::DispatchUpdateTiming(const PipelineID& pipeline_id) {
       delegate_->OnTimingUpdate(timing_info_, flag);
     }
   }
+  // No matter whether sending is triggered or not, the timing data
+  // corresponding to this pipelineId will no longer be consumed. Therefore,
+  // release them.
+  ReleaseTiming(pipeline_id);
 }
 
 void TimingHandler::DispatchPendingPipelineIDIfNeeded() {
@@ -237,6 +241,12 @@ void TimingHandler::ClearAllTimingInfo() {
   has_dispatched_timing_flags_.clear();
 
   handler_ng_.ClearAllTimingInfo();
+}
+
+void TimingHandler::ReleaseTiming(const PipelineID& pipeline_id) {
+  pipeline_id_to_timing_flags_map_.erase(pipeline_id);
+  pipeline_id_to_origin_map_.erase(pipeline_id);
+  timing_info_.ReleaseTiming(pipeline_id);
 }
 
 }  // namespace timing

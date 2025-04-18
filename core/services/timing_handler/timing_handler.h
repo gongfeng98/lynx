@@ -163,6 +163,8 @@ class TimingHandler {
   void DispatchSetupTiming(const PipelineID& pipeline_id);
   void DispatchUpdateTiming(const PipelineID& pipeline_id);
   void DispatchPendingPipelineIDIfNeeded();
+
+  void ReleaseTiming(const PipelineID& pipeline_id);
 };
 
 }  // namespace timing
