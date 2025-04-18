@@ -1505,7 +1505,7 @@ LYNX_PROP_DEFINE("async-display", setAsyncDisplay, BOOL) {
                                         }];
   } else {
     if (!CATransform3DEqualToTransform(_view.layer.transform, transform3D) ||
-        [_lastTransformRotation isEqualToTransformRotation:newTransformRotation]) {
+        ![_lastTransformRotation isEqualToTransformRotation:newTransformRotation]) {
       // Transform will be apply on background manager
       _view.layer.transform = transform3D;
       _backgroundManager.transform = transform3D;
