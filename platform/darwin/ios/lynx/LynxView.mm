@@ -18,6 +18,7 @@
 #import <Lynx/LynxTemplateRenderDelegate.h>
 #import <Lynx/LynxThreadManager.h>
 #import <Lynx/LynxTraceEvent.h>
+#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxUIKitAPIAdapter.h>
 #import <Lynx/LynxView.h>
 #import <Lynx/LynxWeakProxy.h>
@@ -69,7 +70,7 @@
 }
 
 - (instancetype)initWithBuilderBlock:(void (^)(NS_NOESCAPE LynxViewBuilder*))block {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxView::initWithBuilderBlock");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_INIT_WITH_BUILDER_BLOCK);
   [LynxLazyRegister loadLynxInitTask];
   self = [super initWithFrame:CGRectZero];
   self.accessibilityLabel = @"lynxview";
@@ -83,7 +84,7 @@
 }
 
 - (instancetype)initWithoutRender {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxView::initWithoutRender");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_INIT_WITHOUT_RENDER);
   [LynxLazyRegister loadLynxInitTask];
   self = [super initWithFrame:CGRectZero];
   self.accessibilityLabel = @"lynxview";
@@ -93,7 +94,7 @@
 }
 
 - (void)initLifecycleDispatcher {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxView::initLifecycleDispatcher");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_INIT_LIFECYCLE_DISPATCHER);
   _lifecycleDispatcher = [[LynxLifecycleDispatcher alloc] init];
   [_lifecycleDispatcher addLifecycleClient:[LynxEnv sharedInstance].lifecycleDispatcher];
 }
@@ -131,7 +132,7 @@
   }
 
   if (_templateRender) {
-    TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::didReportComponentInfo");
+    TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_REPORT_COMPONENT_INFO);
   }
   // need set nil here, else call _templateRender after clearForDestroy
   // will cause crash in LynxShell
@@ -157,7 +158,7 @@
 
 // This method can only be accessed from main thread
 - (void)loadTemplate:(LynxLoadMeta*)meta {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxView::loadTemplateWithLynxLoadMeta");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LOAD_TEMPLATE_WITH_LOAD_META);
   [self setUpModuleGlobalProps];
   if (_dispatchingIntrinsicContentSizeChange) {
     _LogI(@"Warning!!!! you possibly call loadTemplateBundle inside of layoutDidFinish call stack");
@@ -170,7 +171,7 @@
 }
 
 - (void)loadTemplateFromURL:(NSString*)url initData:(LynxTemplateData*)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxView::loadTemplateFromURL", "url", [url UTF8String]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LOAD_TEMPLATE_FROM_URL, "url", [url UTF8String]);
   [self setUpModuleGlobalProps];
   if (_dispatchingIntrinsicContentSizeChange) {
     _LogI(
@@ -184,7 +185,7 @@
 }
 
 - (void)loadTemplate:(NSData*)tem withURL:(NSString*)url initData:(LynxTemplateData*)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxView::loadTemplateWithURL", "url", [url UTF8String]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LOAD_TEMPLATE_WITH_URL, "url", [url UTF8String]);
   [self setUpModuleGlobalProps];
   if (_dispatchingIntrinsicContentSizeChange) {
     _LogI(@"Warning!!!! you possibly call loadTemplate inside of layoutDidFinish call stack");
@@ -195,7 +196,7 @@
 - (void)loadTemplateBundle:(LynxTemplateBundle*)bundle
                    withURL:(NSString*)url
                   initData:(LynxTemplateData*)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxView::loadTemplateBundle", "url", [url UTF8String]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LOAD_TEMPLATE_BUNDLE, "url", [url UTF8String]);
   [self setUpModuleGlobalProps];
   if (_dispatchingIntrinsicContentSizeChange) {
     _LogI(@"Warning!!!! you possibly call loadTemplateBundle inside of layoutDidFinish call stack");
@@ -304,7 +305,7 @@
 #pragma mark - Override
 
 - (void)layoutSubviews {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxView::layoutSubviews", "instanceId",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LAYOUT_SUBVIEWS, "instanceId",
               [_templateRender instanceId]);
   if (_enableSyncFlush && [self.subviews count] > 0) {
     [self syncFlush];
@@ -657,7 +658,7 @@
   _intrinsicContentSize = size;
 
   _dispatchingIntrinsicContentSizeChange = YES;
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::DidChangeIntrinsicContentSize");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_CHANGE_CONTENT_SIZE);
   [_lifecycleDispatcher lynxViewDidChangeIntrinsicContentSize:self];
   _dispatchingIntrinsicContentSizeChange = NO;
 }
@@ -732,7 +733,7 @@
     [_lifecycleDispatcher lynxView:self didLoadFailedWithUrl:self.url error:error];
 #pragma clang diagnostic pop
   }
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::didRecieveError");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_RECIEVE_ERROR);
   [_lifecycleDispatcher lynxView:self didRecieveError:error];
 }
 
@@ -1006,10 +1007,10 @@
     __strong typeof(weakSelf) strongSelf = weakSelf;
     if (strongSelf) {
       if (isFirstScreen) {
-        TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::lynxViewDidFirstScreen");
+        TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_FIRST_SCREEN);
         [strongSelf->_lifecycleDispatcher lynxViewDidFirstScreen:strongSelf];
       } else {
-        TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::lynxViewDidPageUpdate");
+        TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_PAGE_UPDATE);
         [strongSelf->_lifecycleDispatcher lynxViewDidPageUpdate:strongSelf];
       }
     }
@@ -1022,7 +1023,7 @@
 
 - (void)templateRender:(LynxTemplateRender*)templateRender onTemplateLoaded:(NSString*)url {
   [[LynxHeroTransition sharedInstance] executeEnterTransition:self];
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::didLoadFinishedWithUrl", "url",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_LOAD_FINISHED_WITH_URL, "url",
               [url UTF8String]);
   [_lifecycleDispatcher lynxView:self didLoadFinishedWithUrl:url];
 }
@@ -1033,18 +1034,18 @@
 
 - (void)templateRender:(LynxTemplateRender*)templateRender
     onReceiveFirstLoadPerf:(LynxPerformance*)perf {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::didReceiveFirstLoadPerf");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_RECEIVE_FIRST_LOAD_PERF);
   [_lifecycleDispatcher lynxView:self didReceiveFirstLoadPerf:perf];
 }
 
 - (void)templateRender:(LynxTemplateRender*)templateRender onUpdatePerf:(LynxPerformance*)perf {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::didReceiveUpdatePerf");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_RECEIVE_UPDATE_PERF);
   [_lifecycleDispatcher lynxView:self didReceiveUpdatePerf:perf];
 }
 
 - (void)templateRender:(LynxTemplateRender*)templateRender
     onReceiveDynamicComponentPerf:(NSDictionary*)perf {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::didReceiveLazyBundlePerf");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_RECEIVE_LAZY_BUNDLE_PERF);
   [_lifecycleDispatcher lynxView:self didReceiveDynamicComponentPerf:perf];
 }
 
@@ -1065,8 +1066,8 @@
        didInvokeMethod:(NSString*)method
               inModule:(NSString*)module
              errorCode:(int)code {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::didInvokeMethod", "module",
-              [module UTF8String], "method", [method UTF8String]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_INVOKE_METHOD, "module", [module UTF8String],
+              "method", [method UTF8String]);
   [_lifecycleDispatcher lynxView:self didInvokeMethod:method inModule:module errorCode:code];
 }
 
@@ -1077,7 +1078,7 @@
     [_lifecycleDispatcher lynxView:self didLoadFailedWithUrl:self.url error:error];
 #pragma clang diagnostic pop
   }
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::didRecieveError");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_RECIEVE_ERROR);
   [_lifecycleDispatcher lynxView:self didRecieveError:error];
 }
 
@@ -1096,7 +1097,7 @@
                    withPipelineInfo:(LynxPipelineInfo*)pipelineInfo {
   _LogI(@"LynxView %p: OnPageStart %@, stage: %ld ", self, templateRender.url ?: @"",
         (long)[pipelineInfo pipelineOrigin]);
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::onPageStartedWithLynxView");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_STARTED_WITH_LYNX_VIEW);
   if ([pipelineInfo pipelineOrigin] & LynxFirstScreen) {
     [_lifecycleDispatcher lynxViewDidStartLoading:self];
   }
@@ -1108,7 +1109,7 @@
   dispatch_async(dispatch_get_main_queue(), ^{
     __strong typeof(weakSelf) strongSelf = weakSelf;
     if (strongSelf) {
-      TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::lynxViewDidFirstScreen");
+      TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_FIRST_SCREEN);
       [strongSelf->_lifecycleDispatcher lynxViewDidFirstScreen:strongSelf];
     }
   });
@@ -1119,7 +1120,7 @@
   dispatch_async(dispatch_get_main_queue(), ^{
     __strong typeof(weakSelf) strongSelf = weakSelf;
     if (strongSelf) {
-      TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifecycle::lynxViewDidPageUpdate");
+      TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_PAGE_UPDATE);
       [strongSelf->_lifecycleDispatcher lynxViewDidPageUpdate:strongSelf];
     }
   });

@@ -7,6 +7,7 @@
 #import <Lynx/LynxLazyRegister.h>
 #import <Lynx/LynxLog.h>
 #import <Lynx/LynxTraceEvent.h>
+#import <Lynx/LynxTraceEventDef.h>
 #import "LynxUIRenderer.h"
 #import "LynxViewBuilder+Internal.h"
 
@@ -16,7 +17,7 @@
 }
 
 - (id)init {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewBuilder::init");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_BUILDER_INIT);
   self = [super init];
   if (self) {
     [LynxLazyRegister loadLynxInitTask];

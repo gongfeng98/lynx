@@ -14,6 +14,7 @@
 #import <Lynx/LynxLog.h>
 #import <Lynx/LynxPageReloadHelper+Internal.h>
 #import <Lynx/LynxPageReloadHelper.h>
+#import <Lynx/LynxTraceEventDef.h>
 
 #import <Lynx/LynxError.h>
 
@@ -33,7 +34,7 @@
 }
 
 - (nonnull instancetype)initWithLynxView:(LynxView *)view debuggable:(BOOL)debuggable {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxDevtool::initWithLynxView");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, DEVTOOL_INIT_WITH_LYNX_VIEW);
   _lynxView = view;
 
   if (LynxEnv.sharedInstance.lynxDebugEnabled) {
@@ -94,7 +95,7 @@
 - (void)onLoadFromLocalFile:(NSData *)tem
                     withURL:(NSString *)url
                    initData:(LynxTemplateData *)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxDevtool::onLoadFromLocalFile", "url", [url UTF8String]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, DEVTOOL_ON_LOAD_FROM_LOCAL_FILE, "url", [url UTF8String]);
   if (_reloader != nil) {
     [_reloader loadFromLocalFile:tem withURL:url initData:data];
   }
@@ -104,7 +105,7 @@
 - (void)onLoadFromURL:(NSString *)url
              initData:(LynxTemplateData *)data
               postURL:(NSString *)postUrl {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxDevtool::onLoadFromURL", "url", [url UTF8String]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, DEVTOOL_ON_LOAD_FROM_URL, "url", [url UTF8String]);
   if (_reloader != nil) {
     [_reloader loadFromURL:url initData:data];
   }
@@ -118,7 +119,7 @@
 - (void)onLoadFromBundle:(LynxTemplateBundle *)bundle
                  withURL:(NSString *)url
                 initData:(LynxTemplateData *)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxDevtool::onLoadFromBundle", "url", [url UTF8String]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, DEVTOOL_ON_LOAD_FROM_BUNDLE, "url", [url UTF8String]);
   if (_reloader != nil) {
     [_reloader loadFromBundle:bundle withURL:url initData:data];
   }

@@ -10,6 +10,7 @@
 #import <Lynx/LynxNinePatchImageProcessor.h>
 #import <Lynx/LynxService.h>
 #import <Lynx/LynxTraceEvent.h>
+#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxUI.h>
 
 #include "base/trace/native/trace_event.h"
@@ -100,7 +101,7 @@ BOOL LynxImageFetchherSupportsProcessor(id<LynxImageFetcher> fetcher) {
         });
       };
   if ([imageFetcher respondsToSelector:@selector(loadImageWithURL:size:contextInfo:completion:)]) {
-    TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxImageFetcher::loadImageWithURL", "url",
+    TRACE_EVENT(LYNX_TRACE_CATEGORY, IMAGE_FETCHER_LOAD_IMAGE, "url",
                 [url.absoluteString UTF8String]);
     return [imageFetcher loadImageWithURL:url
                                      size:targetSize

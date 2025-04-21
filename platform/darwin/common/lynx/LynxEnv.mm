@@ -16,6 +16,7 @@
 #import <Lynx/LynxService.h>
 #import <Lynx/LynxSubErrorCode.h>
 #import <Lynx/LynxTraceEvent.h>
+#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxTraceEventWrapper.h>
 #import <Lynx/LynxViewClient.h>
 #import "LynxEnv+Internal.h"
@@ -343,7 +344,7 @@
     NSArray *arr = @[ paramStr ];
     [info setObject:arr forKey:@"params"];
   }
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifeCycle::onPiperInvoked", "module",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_ON_PIPER_INVOKED, "module",
               [module UTF8String], "method", [method UTF8String], "url", [url UTF8String]);
 
   [_lifecycleDispatcher onPiperInvoked:info];
@@ -360,7 +361,7 @@
   [info setObject:sessionID ?: @"" forKey:@"session-id"];
   [info setObject:url ?: @"" forKey:@"url"];
   [info setObject:response ?: @{} forKey:@"response"];
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxViewLifeCycle::onPiperResponsed", "module",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LIFECYCLE_ON_PIPER_RESPONSE, "module",
               [module UTF8String], "method", [method UTF8String], "url", [url UTF8String]);
   [_lifecycleDispatcher onPiperResponsed:info];
 }

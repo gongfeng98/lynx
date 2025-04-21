@@ -5,6 +5,7 @@
 #import <Lynx/LynxEventReporter.h>
 #import <Lynx/LynxService.h>
 #import <Lynx/LynxServiceEventReporterProtocol.h>
+#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxVersion.h>
 #include "base/trace/native/trace_event.h"
 #include "core/base/lynx_trace_categories.h"
@@ -51,19 +52,18 @@ NSString *const kLynxSDKErrorEvent = @"lynxsdk_error_event";
     // If instance id is unknown, props of event must be not null.
     return;
   }
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxEventReporter::onEvent",
-              [&](lynx::perfetto::EventContext ctx) {
-                {
-                  auto *debug = ctx.event()->add_debug_annotations();
-                  debug->set_name("instanceId");
-                  debug->set_string_value(std::to_string(instanceId));
-                }
-                {
-                  auto *debug = ctx.event()->add_debug_annotations();
-                  debug->set_name("eventName");
-                  debug->set_string_value([eventName UTF8String]);
-                }
-              });
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, EVENT_REPORTER_ON_EVENT, [&](lynx::perfetto::EventContext ctx) {
+    {
+      auto *debug = ctx.event()->add_debug_annotations();
+      debug->set_name("instanceId");
+      debug->set_string_value(std::to_string(instanceId));
+    }
+    {
+      auto *debug = ctx.event()->add_debug_annotations();
+      debug->set_name("eventName");
+      debug->set_string_value([eventName UTF8String]);
+    }
+  });
   [self runOnReportThread:^{
     [[self sharedInstance] handleEvent:eventName props:props instanceId:instanceId];
   }];
@@ -76,19 +76,18 @@ NSString *const kLynxSDKErrorEvent = @"lynxsdk_error_event";
     // If instance id is unknown, props of event must be not null.
     return;
   }
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxEventReporter::onEvent",
-              [&](lynx::perfetto::EventContext ctx) {
-                {
-                  auto *debug = ctx.event()->add_debug_annotations();
-                  debug->set_name("instanceId");
-                  debug->set_string_value(std::to_string(instanceId));
-                }
-                {
-                  auto *debug = ctx.event()->add_debug_annotations();
-                  debug->set_name("eventName");
-                  debug->set_string_value([eventName UTF8String]);
-                }
-              });
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, EVENT_REPORTER_ON_EVENT, [&](lynx::perfetto::EventContext ctx) {
+    {
+      auto *debug = ctx.event()->add_debug_annotations();
+      debug->set_name("instanceId");
+      debug->set_string_value(std::to_string(instanceId));
+    }
+    {
+      auto *debug = ctx.event()->add_debug_annotations();
+      debug->set_name("eventName");
+      debug->set_string_value([eventName UTF8String]);
+    }
+  });
   [self runOnReportThread:^{
     NSDictionary<NSString *, NSObject *> *props = nil;
     if (propsBuilder) {
@@ -106,7 +105,7 @@ NSString *const kLynxSDKErrorEvent = @"lynxsdk_error_event";
   if (!value || !key || instanceId < 0) {
     return;
   }
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxEventReporter::updateGenericInfo",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, EVENT_REPORTER_UPDATE_GENERIC_INFO,
               [&](lynx::perfetto::EventContext ctx) {
                 {
                   auto *debug = ctx.event()->add_debug_annotations();
@@ -120,7 +119,7 @@ NSString *const kLynxSDKErrorEvent = @"lynxsdk_error_event";
                 }
               });
   [self runOnReportThread:^{
-    TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxEventReporter::updateGenericInfo.run",
+    TRACE_EVENT(LYNX_TRACE_CATEGORY, EVENT_REPORTER_UPDATE_GENERIC_INFO_RUN,
                 [&](lynx::perfetto::EventContext ctx) {
                   {
                     auto *debug = ctx.event()->add_debug_annotations();
@@ -150,14 +149,14 @@ NSString *const kLynxSDKErrorEvent = @"lynxsdk_error_event";
   if (instanceId < 0) {
     return;
   }
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxEventReporter::removeGenericInfo",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, EVENT_REPORTER_REMOVE_GENERIC_INFO,
               [&](lynx::perfetto::EventContext ctx) {
                 auto *debug = ctx.event()->add_debug_annotations();
                 debug->set_name("instanceId");
                 debug->set_string_value(std::to_string(instanceId));
               });
   [self runOnReportThread:^{
-    TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxEventReporter::removeGenericInfo.run",
+    TRACE_EVENT(LYNX_TRACE_CATEGORY, EVENT_REPORTER_REMOVE_GENERIC_INFO_RUN,
                 [&](lynx::perfetto::EventContext ctx) {
                   auto *debug = ctx.event()->add_debug_annotations();
                   debug->set_name("instanceId");
@@ -191,7 +190,7 @@ NSString *const kLynxSDKErrorEvent = @"lynxsdk_error_event";
 
 + (void)putExtraParams:(NSDictionary<NSString *, NSObject *> *)params
          forInstanceId:(int32_t)instanceId {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxEventReporter::setExtraParams",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, EVENT_REPORTER_SET_EXTRA_PARAMS,
               [instanceId](lynx::perfetto::EventContext ctx) {
                 {
                   auto *debug = ctx.event()->add_debug_annotations();
@@ -216,7 +215,7 @@ NSString *const kLynxSDKErrorEvent = @"lynxsdk_error_event";
 }
 
 + (void)clearCacheForInstanceId:(int32_t)instanceId {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxEventReporter::clearCacheByInstanceId",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, EVENT_REPORTER_CLEAR_CACHE_BY_INSTANCE_ID,
               [instanceId](lynx::perfetto::EventContext ctx) {
                 {
                   auto *debug = ctx.event()->add_debug_annotations();
@@ -285,7 +284,7 @@ NSString *const kLynxSDKErrorEvent = @"lynxsdk_error_event";
     // If instance id is unknown, props of event must be not null.
     return;
   }
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxEventReporter::handleEvent",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, EVENT_REPORTER_HANDLE_EVENT,
               [&](lynx::perfetto::EventContext ctx) {
                 {
                   auto *debug = ctx.event()->add_debug_annotations();

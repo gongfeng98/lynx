@@ -6,6 +6,7 @@
 
 #import <Lynx/LynxError.h>
 #import <Lynx/LynxSubErrorCode.h>
+#import <Lynx/LynxTraceEventDef.h>
 
 #include "base/include/log/logging.h"
 #include "base/trace/native/trace_event.h"
@@ -30,7 +31,7 @@
 - (void)fetchResource:(NSString*)url withLoadedBlock:(LoadedBlock)callback {
   // firstly, try lynx resource service via enableLynxService set by front-end
   if ([self enableLynxService]) {
-    TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxResourceServiceFetcher::fetchResource", "url",
+    TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_RESOURCE_SERVICE_FETCHER_FETCH_RESOURCE, "url",
                 [url UTF8String]);
     // if lynx resource service fetcher exists, use it, otherwise, try other fetchers
     if (_lynx_service_fetcher) {
@@ -49,7 +50,7 @@
 
   // secondly, try dynamic component fetcher registered by host
   if (_component_fetcher) {
-    TRACE_EVENT(LYNX_TRACE_CATEGORY, "DynamicComponentFetcher::loadDynamicComponent", "url",
+    TRACE_EVENT(LYNX_TRACE_CATEGORY, DYNAMIC_COMPONENT_FETCHER_LOAD_COMPONENT, "url",
                 [url UTF8String]);
     [_component_fetcher loadDynamicComponent:url withLoadedBlock:callback];
     return;

@@ -90,6 +90,95 @@ static NSString* const MEDIA_FETCHER_SHOULD_REDIRECT = @"MediaFetcher.shouldRedi
 static NSString* const FLUENCY_MONITOR_START_FLUENCY_TRACE = @"StartFluencyTrace";
 static NSString* const FLUENCY_MONITOR_STOP_FLUENCY_TRACE = @"StopFluencyTrace";
 
+static const char* const LYNX_VIEW_LIFECYCLE_ON_PIPER_INVOKED = "LynxViewLifeCycle::onPiperInvoked";
+static const char* const LYNX_VIEW_LIFECYCLE_ON_PIPER_RESPONSE =
+    "LynxViewLifeCycle::onPiperResponsed";
+static const char* const LYNX_RESOURCE_SERVICE_FETCHER_FETCH_RESOURCE =
+    "LynxResourceServiceFetcher::fetchResource";
+static const char* const DYNAMIC_COMPONENT_FETCHER_LOAD_COMPONENT =
+    "DynamicComponentFetcher::loadDynamicComponent";
+
+static const char* const LYNX_LOG_INTERNAL = "_LynxLogInternal";
+
+static const char* const DEVTOOL_INIT_WITH_LYNX_VIEW = "LynxDevtool::initWithLynxView";
+static const char* const DEVTOOL_ON_LOAD_FROM_LOCAL_FILE = "LynxDevtool::onLoadFromLocalFile";
+static const char* const DEVTOOL_ON_LOAD_FROM_URL = "LynxDevtool::onLoadFromURL";
+static const char* const DEVTOOL_ON_LOAD_FROM_BUNDLE = "LynxDevtool::onLoadFromBundle";
+static const char* const EVENT_REPORTER_ON_EVENT = "LynxEventReporter::onEvent";
+static const char* const EVENT_REPORTER_UPDATE_GENERIC_INFO =
+    "LynxEventReporter::updateGenericInfo";
+static const char* const EVENT_REPORTER_UPDATE_GENERIC_INFO_RUN =
+    "LynxEventReporter::updateGenericInfo.run";
+static const char* const EVENT_REPORTER_REMOVE_GENERIC_INFO =
+    "LynxEventReporter::removeGenericInfo";
+static const char* const EVENT_REPORTER_REMOVE_GENERIC_INFO_RUN =
+    "LynxEventReporter::removeGenericInfo.run";
+static const char* const EVENT_REPORTER_SET_EXTRA_PARAMS = "LynxEventReporter::setExtraParams";
+static const char* const EVENT_REPORTER_CLEAR_CACHE_BY_INSTANCE_ID =
+    "LynxEventReporter::clearCacheByInstanceId";
+static const char* const EVENT_REPORTER_HANDLE_EVENT = "LynxEventReporter::handleEvent";
+
+static const char* const TEMPLATE_RENDER_INIT_WITH_BUILDER_BLOCK =
+    "LynxTemplateRender::initWithBuilderBlock";
+static const char* const TEMPLATE_RENDER_CUSTOM_BUILDER = "LynxTemplateRender::customBuilder";
+static const char* const TEMPLATE_RENDER_SETUP_SCREEN_SIZE =
+    "LynxTemplateRender::setUpEnvWidthScreenSize";
+static const char* const TEMPLATE_RENDER_SETUP_EVENT_HANDLER =
+    "LynxTemplateRender::setUpEventHandler";
+static const char* const TEMPLATE_RENDER_SETUP_SHELL = "LynxTemplateRender::setUpLynxShell";
+static const char* const TEMPLATE_RENDER_SETUP_RUNTIME = "LynxTemplateRender::setUpRuntime";
+static const char* const TEMPLATE_RENDER_INIT_RUNTIME =
+    "LynxTemplateRender::setUpRuntime:InitRuntime";
+static const char* const MODULE_MANAGER_ADD_WRAPPERS = "ModuleManager::addWrappers";
+static const char* const TEMPLATE_RENDER_LOAD_TEMPLATE_BUNDLE =
+    "LynxTemplateRender::loadTemplateBundle";
+static const char* const TEMPLATE_RENDER_INTERNAL_LOAD_TEMPLATE =
+    "LynxTemplateRender::internalLoadTemplate";
+static const char* const TEMPLATE_RENDER_CREATE_TEMPLATE_DATA = "CreateTemplateData";
+static const char* const SERVICE_REPORT_ERROR_GLOBAL_CONTEXT_TAG = "reportErrorGlobalContextTag";
+static const char* const TEMPLATE_RENDER_START_LOAD = "StartLoad";
+static const char* const TEMPLATE_RENDER_PREPARE_SHELL = "LynxTemplateRender::prepareShell";
+static const char* const TEMPLATE_RENDER_DID_START_LOADING =
+    "LynxTemplateRender::dispatchViewDidStartLoading";
+static const char* const TEMPLATE_RENDER_UPDATE_VIEWPORT = "LynxTemplateRender::updateViewport";
+static const char* const TEMPLATE_RENDER_SET_EXTRA_TIMING = "LynxTemplateRender::setExtraTiming";
+static const char* const TEMPLATE_RENDER_ATTACH_LYNX_VIEW = "LynxTemplateRender::attachLynxView";
+static const char* const TEMPLATE_RENDER_PROCESS_RENDER = "LynxTemplateRender::processRender";
+static const char* const TEMPLATE_RENDER_PROCESS_LAYOUT = "LynxTemplateRender::processLayout";
+static const char* const TEMPLATE_RENDER_PROCESS_LAYOUT_WITH_TEMPLATE_BUNDLE =
+    "LynxTemplateRender::processLayoutWithTemplateBundle";
+static const char* const LYNX_VIEW_INIT_WITH_BUILDER_BLOCK = "LynxView::initWithBuilderBlock";
+static const char* const LYNX_VIEW_INIT_WITHOUT_RENDER = "LynxView::initWithoutRender";
+static const char* const LYNX_VIEW_INIT_LIFECYCLE_DISPATCHER = "LynxView::initLifecycleDispatcher";
+static const char* const LYNX_VIEW_LIFECYCLE_REPORT_COMPONENT_INFO =
+    "LynxViewLifeCycle::didReportComponentInfo";
+static const char* const LYNX_VIEW_LOAD_TEMPLATE_WITH_LOAD_META =
+    "LynxView::loadTemplateWithLynxLoadMeta";
+static const char* const LYNX_VIEW_LOAD_TEMPLATE_FROM_URL = "LynxView::loadTemplateFromURL";
+static const char* const LYNX_VIEW_LOAD_TEMPLATE_WITH_URL = "LynxView::loadTemplateWithURL";
+static const char* const LYNX_VIEW_LOAD_TEMPLATE_BUNDLE = "LynxView::loadTemplateBundle";
+static const char* const LYNX_VIEW_LAYOUT_SUBVIEWS = "LynxView::layoutSubviews";
+static const char* const LYNX_VIEW_LIFECYCLE_CHANGE_CONTENT_SIZE =
+    "LynxViewLifeCycle::DidChangeIntrinsicContentSize";
+static const char* const LYNX_VIEW_LIFECYCLE_RECIEVE_ERROR = "LynxViewLifeCycle::didRecieveError";
+static const char* const LYNX_VIEW_LIFECYCLE_FIRST_SCREEN =
+    "LynxViewLifeCycle::lynxViewDidFirstScreen";
+static const char* const LYNX_VIEW_LIFECYCLE_PAGE_UPDATE =
+    "LynxViewLifeCycle::lynxViewDidPageUpdate";
+static const char* const LYNX_VIEW_LIFECYCLE_LOAD_FINISHED_WITH_URL =
+    "LynxViewLifecycle::didLoadFinishedWithUrl";
+static const char* const LYNX_VIEW_LIFECYCLE_RECEIVE_FIRST_LOAD_PERF =
+    "LynxViewLifecycle::didReceiveFirstLoadPerf";
+static const char* const LYNX_VIEW_LIFECYCLE_RECEIVE_UPDATE_PERF =
+    "LynxViewLifecycle::didReceiveUpdatePerf";
+static const char* const LYNX_VIEW_LIFECYCLE_RECEIVE_LAZY_BUNDLE_PERF =
+    "LynxViewLifecycle::didReceiveLazyBundlePerf";
+static const char* const LYNX_VIEW_LIFECYCLE_INVOKE_METHOD = "LynxViewLifecycle::didInvokeMethod";
+static const char* const LYNX_VIEW_LIFECYCLE_STARTED_WITH_LYNX_VIEW =
+    "LynxViewLifecycle::onPageStartedWithLynxView";
+static const char* const LYNX_VIEW_BUILDER_INIT = "LynxViewBuilder::init";
+static const char* const LAYOUT_NODE_MEASURE = "LynxLayoutNode::measure";
+static const char* const IMAGE_FETCHER_LOAD_IMAGE = "LynxImageFetcher::loadImageWithURL";
 #endif
 
 NS_ASSUME_NONNULL_END

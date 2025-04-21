@@ -5,6 +5,7 @@
 #import <Lynx/LynxEnv.h>
 #import <Lynx/LynxLog.h>
 #import <Lynx/LynxTraceEvent.h>
+#import <Lynx/LynxTraceEventDef.h>
 #include <map>
 
 #include "base/include/debug/lynx_assert.h"
@@ -216,7 +217,7 @@ LynxLogFunction LynxDefaultLogFunction = ^(LynxLogLevel level, NSString *message
 };
 
 void _LynxLogInternal(const char *file, int32_t line, LynxLogLevel level, NSString *format, ...) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "_LynxLogInternal");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_LOG_INTERNAL);
   @autoreleasepool {
     va_list args;
     va_start(args, format);

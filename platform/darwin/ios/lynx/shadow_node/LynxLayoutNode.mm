@@ -5,6 +5,7 @@
 #import <Lynx/LynxCustomMeasureDelegate+Internal.h>
 #import <Lynx/LynxLayoutNode.h>
 #import <Lynx/LynxTraceEvent.h>
+#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxTraceEventWrapper.h>
 #import "LynxMeasureFuncDarwin.h"
 #include "core/public/layout_node_manager.h"
@@ -87,7 +88,7 @@ using namespace lynx::tasm;
                            height:(float)height
                        heightMode:(LynxMeasureMode)heightMode
                      finalMeasure:(bool)finalMeasure {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxLayoutNode::measure");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LAYOUT_NODE_MEASURE);
   MeasureResult result;
   if ([self measureDelegate] != nil) {
     CGSize resultSize = [[self measureDelegate] measureNode:self

@@ -92,14 +92,14 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 - (instancetype)initWithBuilderBlock:(void (^)(__attribute__((noescape))
                                                LynxViewBuilder* _Nonnull))block
                             lynxView:(LynxView*)lynxView {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::initWithBuilderBlock");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_INIT_WITH_BUILDER_BLOCK);
   if (self = [super init]) {
     _initStartTiming = [[NSDate date] timeIntervalSince1970] * 1000 * 1000;
 
     /// Builder
     LynxViewBuilder* builder = [self setUpBuilder];
     if (block) {
-      TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::customBuilder");
+      TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_CUSTOM_BUILDER);
       block(builder);
       [LynxViewConfigProcessor processorMap:builder.lynxViewConfig lynxViewBuilder:builder];
     }
@@ -223,7 +223,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 }
 
 - (void)setUpEnvWidthScreenSize:(CGSize)screenSize {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::setUpEnvWidthScreenSize");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_SETUP_SCREEN_SIZE);
   [[LynxEnv sharedInstance] initLayoutConfig:screenSize];
 }
 
@@ -295,7 +295,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 }
 
 - (void)setUpEventHandler {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::setUpEventHandler");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_SETUP_EVENT_HANDLER);
   [_lynxUIRenderer setupEventHandler:self
                          engineProxy:_lynxEngineProxy
                             lynxView:_lynxView
@@ -310,7 +310,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 }
 
 - (void)setUpLynxShellWithLastInstanceId:(int32_t)lastInstanceId {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::setUpLynxShell");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_SETUP_SHELL);
 
   // Env
   lynx::tasm::LynxEnvDarwin::initNativeUIThread();
@@ -412,7 +412,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 }
 
 - (void)setUpRuntimeWithLastInstanceId:(int32_t)lastInstanceId {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::setUpRuntime");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_SETUP_RUNTIME);
 
   [self setUpLynxContextWithLastInstanceId:lastInstanceId];
 
@@ -454,7 +454,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
       };
 
   // Init Runtime
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::setUpRuntime:InitRuntime");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_INIT_RUNTIME);
   // TODO(liyanbo): refactor this interface.
   shell_->InitRuntime([_runtimeOptions groupID], resource_loader, module_manager,
                       std::move(on_runtime_actor_created), [_runtimeOptions preloadJSPath], false,
@@ -505,7 +505,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
     module_factory = factory.get();
     module_manager->SetPlatformModuleFactory(std::move(factory));
     if (_config) {
-      TRACE_EVENT(LYNX_TRACE_CATEGORY, "ModuleManager::addWrappers");
+      TRACE_EVENT(LYNX_TRACE_CATEGORY, MODULE_MANAGER_ADD_WRAPPERS);
       module_factory->addWrappers(_config.moduleFactoryPtr->moduleWrappers());
     }
   }
@@ -784,8 +784,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 - (void)loadTemplateBundle:(LynxTemplateBundle*)bundle
                    withURL:(NSString*)url
                   initData:(LynxTemplateData*)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::loadTemplateBundle", "url",
-              [url UTF8String]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_LOAD_TEMPLATE_BUNDLE, "url", [url UTF8String]);
   [self updateUrl:url];
   [self dispatchViewDidStartLoading];
   if ([bundle errorMsg]) {
@@ -821,7 +820,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
         lynx::lepus::Value value;
         std::shared_ptr<lynx::tasm::TemplateData> ptr(nullptr);
         if (data != nil) {
-          TRACE_EVENT(LYNX_TRACE_CATEGORY, "CreateTemplateData");
+          TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_CREATE_TEMPLATE_DATA);
           value = *LynxGetLepusValueFromTemplateData(data);
           ptr = std::make_shared<lynx::tasm::TemplateData>(
               value, data.isReadOnly, data.processorName ? data.processorName.UTF8String : "");
@@ -848,8 +847,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 }
 
 - (void)internalLoadTemplate:(NSData*)tem withUrl:(NSString*)url initData:(LynxTemplateData*)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::internalLoadTemplate", "url",
-              [url UTF8String]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_INTERNAL_LOAD_TEMPLATE, "url", [url UTF8String]);
   __weak LynxTemplateRender* weakSelf = self;
   [self
       executeNativeOpSafely:^() {
@@ -857,7 +855,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
         lynx::lepus::Value value;
         std::shared_ptr<lynx::tasm::TemplateData> ptr(nullptr);
         if (data != nil) {
-          TRACE_EVENT(LYNX_TRACE_CATEGORY, "CreateTemplateData");
+          TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_CREATE_TEMPLATE_DATA);
           value = *LynxGetLepusValueFromTemplateData(data);
           ptr = std::make_shared<lynx::tasm::TemplateData>(
               value, data.isReadOnly, data.processorName ? data.processorName.UTF8String : "");
@@ -898,7 +896,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
     LOGE("LoadTemplate on other thread:" << [NSThread currentThread] << ", url:" << url);
   }
   {
-    TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxService::reportErrorGlobalContextTag");
+    TRACE_EVENT(LYNX_TRACE_CATEGORY, SERVICE_REPORT_ERROR_GLOBAL_CONTEXT_TAG);
     NSString* finalSchema = [self formatLynxSchema:url];
     [LynxService(LynxServiceMonitorProtocol) reportErrorGlobalContextTag:LynxContextTagLastLynxURL
                                                                     data:finalSchema];
@@ -912,7 +910,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   // Update the url info to generic info after the shell is rebuilt, because the rebuilt shell
   // generates a new instance ID.
   [self updateGenericInfoURL:url];
-  TRACE_EVENT_INSTANT(LYNX_TRACE_CATEGORY_VITALS, "StartLoad");
+  TRACE_EVENT_INSTANT(LYNX_TRACE_CATEGORY_VITALS, TEMPLATE_RENDER_START_LOAD);
 }
 
 - (void)onLoadFromURL:(NSString*)url initData:(LynxTemplateData*)data {
@@ -1199,7 +1197,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 }
 
 - (void)updateGlobalPropsWithTemplateData:(LynxTemplateData*)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::updateGlobalProps");
+  LYNX_TRACE_SECTION(LYNX_TRACE_CATEGORY_WRAPPER, TEMPLATE_RENDER_UPDATE_GLOBAL_PROPS);
   if (data) {
     if (!_globalProps) {
       _globalProps = [[LynxTemplateData alloc] initWithDictionary:[NSDictionary new]];
@@ -1207,6 +1205,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
     [_globalProps updateWithTemplateData:data];
     [self updateNativeGlobalProps];
   }
+  LYNX_TRACE_END_SECTION(LYNX_TRACE_CATEGORY_WRAPPER);
 }
 
 - (void)updateNativeGlobalProps {
@@ -1360,7 +1359,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 #pragma mark - Life Cycle
 
 - (void)dispatchViewDidStartLoading {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::dispatchViewDidStartLoading");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_DID_START_LOADING);
   if (_delegate) {
     [_delegate templateRenderOnTemplateStartLoading:self];
   }
@@ -1427,7 +1426,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 }
 
 - (void)updateViewport {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::updateViewport");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_UPDATE_VIEWPORT);
   [self updateViewport:true];
 }
 
@@ -2008,7 +2007,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 #pragma mark - Timing & Report
 
 - (void)setExtraTiming:(LynxExtraTiming*)timing {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::setExtraTiming");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_SET_EXTRA_TIMING);
   if (timing.openTime > 0) {
     [self setTiming:timing.openTime * 1000 key:kTimingOpenTime pipelineID:nil];
   }
@@ -2132,7 +2131,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 #pragma mark - Preload
 
 - (void)attachLynxView:(LynxView* _Nonnull)lynxView {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::attachLynxView");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_ATTACH_LYNX_VIEW);
   _lynxView = lynxView;
   _delegate = (id<LynxTemplateRenderDelegate>)lynxView;
 
@@ -2158,8 +2157,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 }
 
 - (BOOL)processRender:(LynxView* _Nonnull)lynxView {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::processRender", "instanceId",
-              [self instanceId]);
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_PROCESS_RENDER, "instanceId", [self instanceId]);
   if (shell_ == nullptr || shell_->IsDestroyed()) {
     return NO;
   }
@@ -2181,7 +2179,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 - (void)processLayout:(nonnull NSData*)tem
               withURL:(nonnull NSString*)url
              initData:(nullable LynxTemplateData*)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::processLayout");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_PROCESS_LAYOUT);
   [self setNeedPendingUIOperation:YES];
   [self loadTemplate:tem withURL:url initData:data];
 }
@@ -2189,7 +2187,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 - (void)processLayoutWithTemplateBundle:(LynxTemplateBundle*)bundle
                                 withURL:(NSString*)url
                                initData:(LynxTemplateData*)data {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LynxTemplateRender::processLayoutWithTemplateBundle");
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_PROCESS_LAYOUT_WITH_TEMPLATE_BUNDLE);
   [self setNeedPendingUIOperation:YES];
   [self loadTemplateBundle:bundle withURL:url initData:data];
 }
