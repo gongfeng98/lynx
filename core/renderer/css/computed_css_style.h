@@ -47,6 +47,24 @@ namespace starlight {
  * including px, %, auto, and various enumerated properties. All CSS properties
  * are grouped. */
 
+class ComputedCSSStyleUtilsMethod {
+ public:
+  static lepus::Value BackgroundOrMaskClipToLepus(
+      const std::optional<starlight::BackgroundData>& data);
+  static lepus::Value BackgroundOrMaskImageToLepus(
+      const std::optional<BackgroundData>& data,
+      const tasm::CssMeasureContext& context,
+      const tasm::CSSParserConfigs& configs);
+  static lepus::Value BackgroundOrMaskOriginToLepus(
+      const std::optional<BackgroundData>& data);
+  static lepus::Value BackgroundOrMaskPositionToLepus(
+      const std::optional<BackgroundData>& data);
+  static lepus::Value BackgroundOrMaskRepeatToLepus(
+      const std::optional<BackgroundData>& data);
+  static lepus::Value BackgroundOrMaskSizeToLepus(
+      const std::optional<BackgroundData>& data);
+};
+
 class ComputedCSSStyle {
  public:
   BASE_EXPORT ComputedCSSStyle(float layouts_unit_per_px,
@@ -113,8 +131,6 @@ class ComputedCSSStyle {
   lepus_value GetValue(tasm::CSSPropertyID id);
   bool InheritValue(tasm::CSSPropertyID id, const ComputedCSSStyle& from);
 
-  OverflowType GetOverflow() const { return overflow_; }
-
   bool HasAnimation() const { return animation_data_.has_value(); }
 
   std::vector<AnimationData>& animation_data() {
@@ -161,7 +177,93 @@ class ComputedCSSStyle {
     parser_configs_ = configs;
   }
 
+  tasm::CSSParserConfigs& GetCSSParserConfigs() { return parser_configs_; }
+
   int GetZIndex() const { return z_index_; }
+
+  ImageRenderingType GetImageRendering() { return image_rendering_; }
+
+  float GetOpacity() const { return opacity_; }
+
+  PositionType GetPosition() const { return layout_computed_style_.position_; }
+
+  OverflowType GetOverflow() const { return overflow_; }
+
+  OverflowType GetOverflowX() const { return overflow_x_; }
+
+  OverflowType GetOverflowY() const { return overflow_y_; }
+
+  std::optional<TextAttributes>& GetTextAttributes() {
+    return text_attributes_;
+  }
+
+  std::optional<BackgroundData>& GetBackgroundData() {
+    return background_data_;
+  }
+
+  std::optional<FilterData>& GetFilterData() { return filter_; }
+
+  std::optional<BackgroundData>& GetMaskData() { return mask_data_; }
+
+  std::optional<std::vector<TransformRawData>>& GetTransformData() {
+    return transform_raw_;
+  }
+
+  std::optional<TransformOriginData>& GetTransformOriginData() {
+    return transform_origin_;
+  }
+
+  std::optional<std::vector<AnimationData>>& GetAnimationData() {
+    return animation_data_;
+  }
+
+  std::optional<LayoutAnimationData>& GetLayoutAnimationData() {
+    return layout_animation_data_;
+  }
+
+  std::optional<std::vector<TransitionData>>& GetTransitionData() {
+    return transition_data_;
+  }
+
+  std::optional<AnimationData>& GetEnterTransitionData() {
+    return enter_transition_data_;
+  }
+
+  std::optional<AnimationData>& GetExitTransitionData() {
+    return exit_transition_data_;
+  }
+
+  std::optional<AnimationData>& GetPauseTransitionData() {
+    return pause_transition_data_;
+  }
+
+  std::optional<AnimationData>& GetResumeTransitionData() {
+    return resume_transition_data_;
+  }
+
+  VisibilityType GetVisibilityData() { return visibility_; }
+
+  std::optional<OutLineData>& GetOutLineData() { return outline_; }
+
+  std::optional<std::vector<ShadowData>>& GetBoxShadowData() {
+    return box_shadow_;
+  }
+
+  base::String& GetCaretColor() { return caret_color_; }
+
+  std::optional<PerspectiveData>& GetPerspectiveData() {
+    return perspective_data_;
+  }
+
+  std::optional<lepus::Value>& GetCursor() { return cursor_; }
+
+  fml::RefPtr<lepus::CArray>& GetClipPath() { return clip_path_; }
+
+  XAppRegionType GetAppRegion() { return app_region_; }
+
+  float GetHandleSize() { return handle_size_; }
+
+  uint32_t GetHandleColor() { return handle_color_; }
 
   bool HasOpacity() const { return base::FloatsNotEqual(opacity_, 1.0f); }
 

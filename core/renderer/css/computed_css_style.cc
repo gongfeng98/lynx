@@ -380,7 +380,22 @@ bool SetBackgroundOrMaskRepeat(std::optional<BackgroundData>& data,
   return old_value != data->repeat;
 }
 
-lepus_value BackgroundOrMaskImageToLepus(
+}  // namespace
+
+lepus::Value ComputedCSSStyleUtilsMethod::BackgroundOrMaskClipToLepus(
+    const std::optional<BackgroundData>& data) {
+  if (data && !data->clip.empty()) {
+    auto array = lepus::CArray::Create();
+    for (const auto& clip : data->clip) {
+      array->emplace_back(static_cast<int32_t>(clip));
+    }
+    return lepus::Value{std::move(array)};
+  } else {
+    return lepus::Value{lepus::CArray::Create()};
+  }
+}
+
+lepus::Value ComputedCSSStyleUtilsMethod::BackgroundOrMaskImageToLepus(
     const std::optional<BackgroundData>& data,
     const tasm::CssMeasureContext& context,
     const tasm::CSSParserConfigs& configs) {
@@ -405,33 +420,7 @@ lepus_value BackgroundOrMaskImageToLepus(
   }
 }
 
-lepus_value BackgroundOrMaskSizeToLepus(
-    const std::optional<BackgroundData>& data) {
-  if (data && !data->size.empty()) {
-    auto array = lepus::CArray::Create();
-    for (const auto& size : data->size) {
-      CSSStyleUtils::AddLengthToArray(array, size);
-    }
-    return lepus::Value{std::move(array)};
-  } else {
-    return lepus::Value{lepus::CArray::Create()};
-  }
-}
-
-lepus_value BackgroundOrMaskClipToLepus(
-    const std::optional<BackgroundData>& data) {
-  if (data && !data->clip.empty()) {
-    auto array = lepus::CArray::Create();
-    for (const auto& clip : data->clip) {
-      array->emplace_back(static_cast<int32_t>(clip));
-    }
-    return lepus::Value{std::move(array)};
-  } else {
-    return lepus::Value{lepus::CArray::Create()};
-  }
-}
-
-lepus_value BackgroundOrMaskOriginToLepus(
+lepus::Value ComputedCSSStyleUtilsMethod::BackgroundOrMaskOriginToLepus(
     const std::optional<BackgroundData>& data) {
   if (data && !data->origin.empty()) {
     auto array = lepus::CArray::Create();
@@ -444,7 +433,7 @@ lepus_value BackgroundOrMaskOriginToLepus(
   }
 }
 
-lepus_value BackgroundOrMaskPositionToLepus(
+lepus::Value ComputedCSSStyleUtilsMethod::BackgroundOrMaskPositionToLepus(
     const std::optional<BackgroundData>& data) {
   if (data && !data->position.empty()) {
     auto array = lepus::CArray::Create();
@@ -456,7 +445,7 @@ lepus_value BackgroundOrMaskPositionToLepus(
   return lepus::Value{lepus::CArray::Create()};
 }
 
-lepus_value BackgroundOrMaskRepeatToLepus(
+lepus::Value ComputedCSSStyleUtilsMethod::BackgroundOrMaskRepeatToLepus(
     const std::optional<BackgroundData>& data) {
   if (data && !data->repeat.empty()) {
     auto array = lepus::CArray::Create();
@@ -469,7 +458,18 @@ lepus_value BackgroundOrMaskRepeatToLepus(
   }
 }
 
-}  // namespace
+lepus::Value ComputedCSSStyleUtilsMethod::BackgroundOrMaskSizeToLepus(
+    const std::optional<BackgroundData>& data) {
+  if (data && !data->size.empty()) {
+    auto array = lepus::CArray::Create();
+    for (const auto& size : data->size) {
+      CSSStyleUtils::AddLengthToArray(array, size);
+    }
+    return lepus::Value{std::move(array)};
+  } else {
+    return lepus::Value{lepus::CArray::Create()};
+  }
+}
 
 float ComputedCSSStyle::SAFE_AREA_INSET_TOP_ = 0;
 float ComputedCSSStyle::SAFE_AREA_INSET_BOTTOM_ = 0;
@@ -2932,28 +2932,33 @@ lepus_value ComputedCSSStyle::BackgroundColorToLepus() {
 }
 
 lepus_value ComputedCSSStyle::BackgroundImageToLepus() {
-  return BackgroundOrMaskImageToLepus(background_data_, length_context_,
-                                      parser_configs_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskImageToLepus(
+      background_data_, length_context_, parser_configs_);
 }
 
 lepus_value ComputedCSSStyle::BackgroundSizeToLepus() {
-  return BackgroundOrMaskSizeToLepus(background_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskSizeToLepus(
+      background_data_);
 }
 
 lepus_value ComputedCSSStyle::BackgroundClipToLepus() {
-  return BackgroundOrMaskClipToLepus(background_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskClipToLepus(
+      background_data_);
 }
 
 lepus_value ComputedCSSStyle::BackgroundOriginToLepus() {
-  return BackgroundOrMaskOriginToLepus(background_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskOriginToLepus(
+      background_data_);
 }
 
 lepus_value ComputedCSSStyle::BackgroundPositionToLepus() {
-  return BackgroundOrMaskPositionToLepus(background_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskPositionToLepus(
+      background_data_);
 }
 
 lepus_value ComputedCSSStyle::BackgroundRepeatToLepus() {
-  return BackgroundOrMaskRepeatToLepus(background_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskRepeatToLepus(
+      background_data_);
 }
 
 lepus_value ComputedCSSStyle::FilterToLepus() {
@@ -3652,28 +3657,29 @@ bool ComputedCSSStyle::SetMask(const tasm::CSSValue& value, const bool reset) {
 }
 
 lepus_value ComputedCSSStyle::MaskImageToLepus() {
-  return BackgroundOrMaskImageToLepus(mask_data_, length_context_,
-                                      parser_configs_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskImageToLepus(
+      mask_data_, length_context_, parser_configs_);
 }
 
 lepus_value ComputedCSSStyle::MaskSizeToLepus() {
-  return BackgroundOrMaskSizeToLepus(mask_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskSizeToLepus(mask_data_);
 }
 
 lepus_value ComputedCSSStyle::MaskClipToLepus() {
-  return BackgroundOrMaskClipToLepus(mask_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskClipToLepus(mask_data_);
 }
 
 lepus_value ComputedCSSStyle::MaskOriginToLepus() {
-  return BackgroundOrMaskOriginToLepus(mask_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskOriginToLepus(mask_data_);
 }
 
 lepus_value ComputedCSSStyle::MaskPositionToLepus() {
-  return BackgroundOrMaskPositionToLepus(mask_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskPositionToLepus(
+      mask_data_);
 }
 
 lepus_value ComputedCSSStyle::MaskRepeatToLepus() {
-  return BackgroundOrMaskRepeatToLepus(mask_data_);
+  return ComputedCSSStyleUtilsMethod::BackgroundOrMaskRepeatToLepus(mask_data_);
 }
 
 bool ComputedCSSStyle::SetImageRendering(const tasm::CSSValue& value,
