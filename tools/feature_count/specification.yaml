@@ -59,6 +59,7 @@ objc:
   - get_theme_ios
   - ui_owner_release_on_child_thread
   - enable_async_list
+  - use_legacy_elements
 java:
   - hardware_layer
   - new_swiper_not_enabled
@@ -77,3 +78,4 @@ java:
   - set_theme_android
   - get_theme_android
   - enable_async_list
+  - use_legacy_elements
