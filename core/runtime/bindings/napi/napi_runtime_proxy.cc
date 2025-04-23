@@ -4,6 +4,8 @@
 
 #include "core/runtime/bindings/napi/napi_runtime_proxy.h"
 
+#include <unordered_map>
+
 #include "core/runtime/bindings/napi/napi_runtime_proxy_jsvm_factory.h"
 #include "core/runtime/bindings/napi/napi_runtime_proxy_quickjs_factory.h"
 #include "core/runtime/bindings/napi/napi_runtime_proxy_v8_factory.h"
@@ -192,6 +194,143 @@ NapiRuntimeProxyJSVMFactory *NapiRuntimeProxy::s_jsvm_factory = nullptr;
 void NapiRuntimeProxy::SetJSVMRuntimeProxyFactory(
     NapiRuntimeProxyJSVMFactory *factory) {
   s_jsvm_factory = factory;
+}
+
+namespace {
+static const uint64_t kRestrictedModuleRegistryKey =
+    reinterpret_cast<uint64_t>(&kRestrictedModuleRegistryKey);
+class RestrictedModuleRegistry {
+ public:
+  std::unordered_map<std::string, Napi::ObjectReference> loaded_modules;
+};
+
+Napi::Value LoadRestrictedModule(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  Napi::Value modname = info[0];
+
+  if (!modname.IsString()) {
+    Napi::TypeError::New(env, "Expect 1st argument to be string")
+        .ThrowAsJavaScriptException();
+    return Napi::Value();
+  }
+
+  std::string modname_str = info[0].As<Napi::String>().Utf8Value();
+
+  auto *registry = env.GetInstanceData<RestrictedModuleRegistry>(
+      kRestrictedModuleRegistryKey);
+  auto it = registry->loaded_modules.find(modname_str);
+  if (it != registry->loaded_modules.end() && !it->second.IsEmpty()) {
+    LOGI("Load restricted napi module succeed from cache: " << modname_str);
+    return it->second.Value();
+  }
+
+  const napi_module *module = napi_find_module(modname_str.c_str());
+
+  if (!module) {
+    Napi::Error::New(env,
+                     ("NAPI Module [" + modname_str + "] not found").c_str())
+        .ThrowAsJavaScriptException();
+    return Napi::Value();
+  }
+
+  // module_env is a copy of napi_env.
+  // The napi_run_script and napi_get_global functions of module_env are hooked
+  // to prevent users from calling napi_run_script and napi_get_global functions
+  // in the lynx module, which could affect the stability of the lynx script
+  // runtime.
+  napi_env module_env = info.Env();
+  napi_value result =
+      module->nm_register_func(module_env, Napi::Object::New(env));
+  Napi::Object exports = Napi::Object(env, result);
+  if (!exports.IsEmpty() && exports.IsObject()) {
+    registry->loaded_modules[modname_str].Reset(exports, 1);
+    LOGI("Load restricted napi module succeed: " << modname_str);
+    return exports;
+  } else {
+    // error happened
+    Napi::Error::New(env, ("NAPI Module [" + modname_str +
+                           "] load failed, the exports is not an object.")
+                              .c_str())
+        .ThrowAsJavaScriptException();
+    return Napi::Value();
+  }
+}
+
+// These two functions are used to hook the napi_run_script and napi_get_global
+// functions of the napi env. To ensure the stability of the lynx script
+// runtime, these two functions are not allowed to be called in the lynx module.
+napi_status LynxHookedNapiRunScript(napi_env env, const char *script,
+                                    size_t length, const char *filename,
+                                    napi_value *result) {
+  env->napi_throw_error(env, "lynx module runtime exception",
+                        "napi_run_script is not allowed in lynx module.");
+  return napi_generic_failure;
+}
+
+napi_status LynxHookedNapiGetGlobal(napi_env env, napi_value *result) {
+  env->napi_throw_error(env, "lynx module runtime exception",
+                        "napi_get_global is not allowed in lynx module.");
+  return napi_generic_failure;
+}
+
+}  // namespace
+
+// Setup restricted napi loader. This loader is used for users to load
+// their own injected modules. For the modules loaded by this loader, the
+// abilities of running scripts and getting the global object are disabled.
+void RestrictedNapiRuntimeProxyDecorator::SetupLoader() {
+  auto runtime = GetJSRuntime().lock();
+  Napi::Env env = Env();
+  napi_env raw_env = env;
+
+  // The napi_run_script and napi_get_global functions of restricted napi_env
+  // are hooked to prevent users from calling napi_run_script and
+  // napi_get_global functions in the lynx module, which could affect the
+  // stability of the lynx script runtime.
+  get_global_func_ = raw_env->napi_get_global;
+  raw_env->napi_run_script = LynxHookedNapiRunScript;
+  raw_env->napi_get_global = LynxHookedNapiGetGlobal;
+
+  if (runtime && raw_env && raw_env->ctx) {
+    Napi::ContextScope context_scope(env);
+    Napi::HandleScope handle_scope(env);
+    loader_ = "napiRestrictedLoader" + std::to_string(runtime->getRuntimeId());
+    LOGI("NAPI Setup Restricted Loader: " << loader_);
+    auto *registry = env.GetInstanceData<RestrictedModuleRegistry>(
+        kRestrictedModuleRegistryKey);
+    if (registry) {
+      return;
+    }
+    registry = new RestrictedModuleRegistry();
+    env.SetInstanceData(kRestrictedModuleRegistryKey, registry);
+
+    Napi::Object exports = Napi::Object::New(env);
+    exports["load"] = Napi::Function::New(env, &LoadRestrictedModule, "load");
+    GetGlobal().Set(loader_.c_str(), exports);
+    return;
+  }
+}
+
+void RestrictedNapiRuntimeProxyDecorator::RemoveLoader() {
+  Napi::Env env = Env();
+  napi_env raw_env = env;
+  if (raw_env && raw_env->ctx && !loader_.empty()) {
+    Napi::HandleScope handle_scope(env);
+    Napi::Object global = GetGlobal();
+    if (global.Has(loader_.c_str()).FromMaybe(false)) {
+      LOGI("NAPI Remove Restricted Loader: " << loader_);
+      global.Delete(loader_.c_str());
+    }
+  }
+}
+
+Napi::Object RestrictedNapiRuntimeProxyDecorator::GetGlobal() {
+  if (!get_global_func_) {
+    return Napi::Object();
+  }
+  napi_value raw_global;
+  get_global_func_(proxy_->Env(), &raw_global);
+  return Napi::Object(proxy_->Env(), raw_global);
 }
 
 }  // namespace piper

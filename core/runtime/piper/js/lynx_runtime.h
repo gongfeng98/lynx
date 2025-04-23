@@ -184,6 +184,7 @@ class LynxRuntime final {
 
 #if ENABLE_NAPI_BINDING
   void PrepareNapiEnvironment();
+  void PrepareRestrictedNapiEnvironment();
   void RegisterNapiModules();
 #endif
 
@@ -196,6 +197,7 @@ class LynxRuntime final {
   std::shared_ptr<piper::App> app_;
 #if ENABLE_NAPI_BINDING
   std::unique_ptr<piper::NapiEnvironment> napi_environment_;
+  std::unique_ptr<piper::NapiEnvironment> napi_restricted_environment_;
 #else
   std::unique_ptr<bool> napi_environment_placeholder_;
 #endif

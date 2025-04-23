@@ -136,6 +136,7 @@ void LynxRuntime::Init(
 #if ENABLE_NAPI_BINDING
   TRACE_EVENT_BEGIN(LYNX_TRACE_CATEGORY_VITALS, PREPARE_NAPI_ENV);
   PrepareNapiEnvironment();
+  PrepareRestrictedNapiEnvironment();
   TRACE_EVENT_END(LYNX_TRACE_CATEGORY_VITALS);
 #endif
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kLoadCoreEnd);
@@ -215,6 +216,29 @@ void LynxRuntime::PrepareNapiEnvironment() {
   }
 
   RegisterNapiModules();
+}
+
+// What is a restricted napi environment?
+// A restricted napi environment refers to a NAPI environment where some
+// interfaces are not allowed to be called (e.g., napi_run_script,
+// napi_get_global). The purpose of this is to prevent users from
+// inappropriately using these interfaces in their custom modules, which could
+// lead to instability in the Lynx script runtime (especially in the case of
+// multiple pages sharing a js context). These disabled APIs are not essential
+// for users to implement custom modules. Therefore, users can still provide
+// complete native capabilities to JS in their custom modules.
+void LynxRuntime::PrepareRestrictedNapiEnvironment() {
+  // Create a restricted environment with an dummy delegate.
+  napi_restricted_environment_ = std::make_unique<piper::NapiEnvironment>(
+      std::make_unique<piper::NapiEnvironment::Delegate>());
+  auto proxy = std::make_unique<piper::RestrictedNapiRuntimeProxyDecorator>(
+      piper::NapiRuntimeProxy::Create(GetJSRuntime(), delegate_.get()));
+  LOGI("napi attaching with restricted proxy: " << proxy.get()
+                                                << ", id: " << instance_id_);
+  if (proxy) {
+    napi_restricted_environment_->SetRuntimeProxy(std::move(proxy));
+    napi_restricted_environment_->Attach();
+  }
 }
 
 void LynxRuntime::RegisterNapiModules() {
@@ -596,6 +620,12 @@ void LynxRuntime::Destroy() {
   if (napi_environment_) {
     LOGI("napi detaching runtime, id: " << instance_id_);
     napi_environment_->Detach();
+    napi_environment_.reset();
+  }
+  if (napi_restricted_environment_) {
+    LOGI("restricted napi detaching runtime, id: " << instance_id_);
+    napi_restricted_environment_->Detach();
+    napi_restricted_environment_.reset();
   }
 #endif
   lifecycle_observer_->OnRuntimeDetach();

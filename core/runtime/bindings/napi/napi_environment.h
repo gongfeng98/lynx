@@ -71,9 +71,9 @@ class NapiEnvironment {
 
   Delegate* delegate() { return delegate_.get(); }
 
-  NapiRuntimeProxy* proxy() { return proxy_.get(); }
+  NapiRuntimeProxyInterface* proxy() { return proxy_.get(); }
 
-  void SetRuntimeProxy(std::unique_ptr<NapiRuntimeProxy> proxy) {
+  void SetRuntimeProxy(std::unique_ptr<NapiRuntimeProxyInterface> proxy) {
     proxy_ = std::move(proxy);
   }
 
@@ -85,7 +85,7 @@ class NapiEnvironment {
 
  private:
   std::unique_ptr<Delegate> delegate_;
-  std::unique_ptr<NapiRuntimeProxy> proxy_;
+  std::unique_ptr<NapiRuntimeProxyInterface> proxy_;
   bool attached_ = false;
 };
 

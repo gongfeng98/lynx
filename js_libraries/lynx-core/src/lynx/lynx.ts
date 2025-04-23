@@ -27,6 +27,10 @@ import { MessageEventType, MessageEvent } from './interface';
 import Performance from '../modules/performance';
 import SelectorQuery from '../modules/selectorQuery/SelectorQuery';
 
+interface LynxModuleLoader {
+  load(moduleName: string): any;
+}
+
 export class Lynx {
   static __registerSharedDataCounter: number = 0;
   __globalProps: GlobalProps;
@@ -450,5 +454,9 @@ export class Lynx {
 
   __addReporterCustomInfo = (info: Record<string, string>): void => {
     this.getNativeApp().__addReporterCustomInfo(info);
+  };
+
+  getModuleLoader = (): LynxModuleLoader => {
+    return nativeGlobal['napiRestrictedLoader' + this.getApp().nativeAppId];
   };
 }
