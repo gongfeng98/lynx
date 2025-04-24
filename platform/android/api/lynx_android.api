@@ -8345,7 +8345,7 @@ public class com::lynx::tasm::TimingHandler :  {
 public class com::lynx::tasm::behavior::TouchEventDispatcher :  {
   public final String com.lynx.tasm.behavior.TouchEventDispatcher.mTapSlopDefault mTapSlopDefault;
   public final float com.lynx.tasm.behavior.TouchEventDispatcher.mTapSlopFloatDefault mTapSlopFloatDefault;
-  public com.lynx.tasm.behavior.TouchEventDispatcher.TouchEventDispatcher(LynxUIOwner owner);
+  public com.lynx.tasm.behavior.TouchEventDispatcher.TouchEventDispatcher(@NonNull LynxUIOwner owner);
   public void com.lynx.tasm.behavior.TouchEventDispatcher.attachContext(Context context);
   public void com.lynx.tasm.behavior.TouchEventDispatcher.onGestureRecognized();
   public void com.lynx.tasm.behavior.TouchEventDispatcher.setGestureArenaManager(GestureArenaManager manager);

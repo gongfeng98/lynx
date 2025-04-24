@@ -113,9 +113,6 @@ public class LynxUIRenderer implements ILynxUIRenderer {
       mLynxUIOwner.setContextFree(true);
     }
     lynxContext.setLynxUIOwner(mLynxUIOwner);
-    mEventDispatcher = new TouchEventDispatcher(mLynxUIOwner);
-    lynxContext.setTouchEventDispatcher(mEventDispatcher);
-
     mLynxContext = new WeakReference<>(lynxContext);
 
     // Check if the handler thread is required and start it if it hasn't been started already.
@@ -358,6 +355,13 @@ public class LynxUIRenderer implements ILynxUIRenderer {
 
   @Override
   public boolean onTouchEvent(MotionEvent ev, UIGroup rootUi) {
+    if (mEventDispatcher == null && mLynxUIOwner != null) {
+      mEventDispatcher = new TouchEventDispatcher(mLynxUIOwner);
+    }
+    // TODO(hexionghui): delete TouchEventDispatcher from LynxContext.
+    if (mLynxContext != null && mLynxContext.get().getTouchEventDispatcher() == null) {
+      mLynxContext.get().setTouchEventDispatcher(mEventDispatcher);
+    }
     return (mEventDispatcher != null) ? mEventDispatcher.onTouchEvent(ev, rootUi) : false;
   }
 
