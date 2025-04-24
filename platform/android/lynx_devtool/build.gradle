@@ -230,7 +230,7 @@ task copyResources() {
     doLast {
         exec {
             workingDir '../../../'
-            commandLine 'bash', '-c', 'source tools/envsetup.sh && ./devtool/lynx_devtool/resources/copy_resources.sh'
+            commandLine 'python3', './devtool/lynx_devtool/resources/copy_resources.py'
         }
     }
 }

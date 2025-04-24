@@ -29,12 +29,12 @@ build_card_resources() {
 
     if [[ "$SKIP_CARD_BUILD" == "false" ]]; then
         # build showcase cards
-        $root_dir/explorer/showcase/build_and_copy.sh
+        python3 $root_dir/explorer/showcase/build_and_copy.py
     fi
 
     if [[ "$INTEGRATION_TEST" == "true" ]]; then
         # build integration test demo pages
-        $root_dir/testing/integration_test/demo_pages/build_and_copy.sh
+        python3 $root_dir/testing/integration_test/demo_pages/build_and_copy.py
     fi
 }
 

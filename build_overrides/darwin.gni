@@ -95,8 +95,8 @@ js_debug_dependency = [
 ]
 
 build_devtool_resources_command = [
-  "if [ -f \"./lynx/devtool/lynx_devtool/resources/copy_resources.sh\" ]; then",
-  "  ./lynx/devtool/lynx_devtool/resources/copy_resources.sh",
+  "if [ -f \"./lynx/devtool/lynx_devtool/resources/copy_resources.py\" ]; then",
+  "  python3 ./lynx/devtool/lynx_devtool/resources/copy_resources.py",
   "fi",
   "if [ -f \"./lynx/tools/js_tools/build.sh\" ]; then",
   "  lynx/tools/js_tools/build.sh ios platform/darwin/ios/JSAssets/release/lynx_core.js platform/darwin/ios/lynx_devtool/assets/lynx_core_dev.js",
