@@ -719,7 +719,7 @@ EncoderOptions MetaFactory::GetEncoderOptions(rapidjson::Document& document) {
       enable_css_parser = true;
       if (!encoder_options.generator_options_.template_info_.IsObject()) {
         encoder_options.generator_options_.template_info_ =
-            lepus::Value::CreateObject();
+            lepus::Value(lepus::Dictionary::Create());
       }
 
       encoder_options.generator_options_.template_info_.SetProperty(

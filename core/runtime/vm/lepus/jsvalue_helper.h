@@ -182,9 +182,6 @@ class LEPUSValueHelper {
     return reinterpret_cast<lepus::RefCounted*>(LEPUS_GetLepusRefPoint(val));
   }
 
-  static LEPUSClassID GetRefCountedClassID(LEPUSContext* ctx,
-                                           const LEPUSValue& val);
-
   static inline bool IsJsObject(const LEPUSValue& val) {
     return LEPUS_IsObject(val);
   }

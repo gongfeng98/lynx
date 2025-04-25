@@ -6,6 +6,7 @@
 
 #include "core/runtime/bindings/common/event/message_event.h"
 #include "core/runtime/bindings/common/event/runtime_constants.h"
+#include "core/runtime/vm/lepus/jsvalue_helper.h"
 
 namespace lynx {
 namespace tasm {
@@ -35,7 +36,7 @@ bool LepusClosureEventListener::Matches(event::EventListener* listener) {
 
 lepus::Value LepusClosureEventListener::ConvertEventToLepusValue(
     event::Event* event) {
-  lepus::Value value = lepus::Value::CreateObject(context_);
+  lepus::Value value = lepus::LEPUSValueHelper::CreateObject(context_);
   if (event->event_type() == event::Event::EventType::kMessageEvent) {
     runtime::MessageEvent* message_event =
         static_cast<runtime::MessageEvent*>(event);

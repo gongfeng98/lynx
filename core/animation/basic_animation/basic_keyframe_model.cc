@@ -9,6 +9,7 @@
 #include "core/animation/basic_animation/basic_keyframe_model.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <tuple>
 #include <utility>

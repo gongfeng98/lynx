@@ -121,7 +121,7 @@ jlong Clone(JNIEnv* env, jclass jcaller, jlong nativePtr) {
     *new_value = lynx::lepus::Value::Clone(*base_value);
   } else {
     LOGW("LynxViewDataManagerAndroid Clone failed since input is nullptr.")
-    *new_value = lynx::lepus::Value::CreateObject();
+    *new_value = lynx::lepus::Value(lynx::lepus::Dictionary::Create());
   }
   return reinterpret_cast<int64_t>(new_value);
 }
@@ -134,14 +134,14 @@ jlong ShallowCopy(JNIEnv* env, jclass jcaller, jlong nativePtr) {
   } else {
     LOGW(
         "LynxViewDataManagerAndroid ShallowCopy failed since input is nullptr.")
-    *new_value = lynx::lepus::Value::CreateObject();
+    *new_value = lynx::lepus::Value(lynx::lepus::Dictionary::Create());
   }
   return reinterpret_cast<int64_t>(new_value);
 }
 
 jlong CreateObject(JNIEnv* env, jclass jcaller) {
   auto new_value = new lynx::lepus::Value;
-  *new_value = lynx::lepus::Value::CreateObject();
+  *new_value = lynx::lepus::Value(lynx::lepus::Dictionary::Create());
   return reinterpret_cast<int64_t>(new_value);
 }
 

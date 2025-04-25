@@ -106,7 +106,7 @@ void Utils::RegisterNGMethodToLynx(lepus::Context* context, lepus::Value& lynx,
 void Utils::RegisterNGMethodToLynxPerformance(lepus::Context* context,
                                               lepus::Value& lynx) {
   if (lynx.IsJSValue()) {
-    lepus::Value perf_obj(lepus::Value::CreateObject(context));
+    lepus::Value perf_obj(lepus::LEPUSValueHelper::CreateObject(context));
     lynx.SetProperty(BASE_STATIC_STRING(runtime::kPerformanceObject), perf_obj);
     static const lepus::RenderBindingFunction funcs[] = {
         {runtime::kGeneratePipelineOptions,

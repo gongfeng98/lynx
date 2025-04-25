@@ -415,15 +415,6 @@ void LEPUSValueHelper::Print(LEPUSContext* ctx, const LEPUSValue& val) {
 #endif
 }
 
-LEPUSClassID LEPUSValueHelper::GetRefCountedClassID(LEPUSContext* ctx,
-                                                    const LEPUSValue& val) {
-  auto ref_counted_class_id = RefCounted::GetClassID();
-  if (LEPUS_GetClassID(ctx, val) == ref_counted_class_id) {
-    return ref_counted_class_id;
-  }
-  return 0;
-}
-
 lynx_value LEPUSValueHelper::ConstructLepusRefToLynxValue(
     LEPUSContext* ctx, const LEPUSValue& val) {
   ValueType old_type = static_cast<ValueType>(LEPUS_GetLepusRefTag(val));

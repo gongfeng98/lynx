@@ -11,21 +11,10 @@
 #include "core/runtime/vm/lepus/lepus_value.h"
 #include "core/runtime/vm/lepus/ref_type.h"
 
-extern "C" {
-#include "quickjs/include/quickjs.h"
-}
-
 namespace lynx {
 namespace lepus {
 class RefCounted : public fml::RefCountedThreadSafeStorage {
  public:
-  static LEPUSClassExoticMethods exotic_methods_;
-  constexpr static const char* class_name = "__lepus_RefCounted__";
-  static LEPUSClassDef ref_counted_class_def_;
-
-  static void InitRefCountedClass(LEPUSRuntime*);
-  static LEPUSClassID GetClassID() { return class_id; }
-
   void ReleaseSelf() const override { delete this; }
   ~RefCounted() override = default;
 
@@ -43,7 +32,6 @@ class RefCounted : public fml::RefCountedThreadSafeStorage {
 
  protected:
   RefCounted() = default;
-  static inline LEPUSClassID class_id = 0;
 };
 
 }  // namespace lepus

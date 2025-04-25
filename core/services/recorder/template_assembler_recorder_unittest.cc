@@ -62,7 +62,7 @@ lepus::Value convertLepusValue(rapidjson::Value& value) {
       return arr;
     }
     case rapidjson::kObjectType: {
-      lepus::Value object = lepus::Value::CreateObject();
+      lepus::Value object(lepus::Dictionary::Create());
       for (auto p = value.GetObject().begin(); p != value.GetObject().end();
            p++) {
         const char* key = (*p).name.GetString();

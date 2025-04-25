@@ -12,18 +12,14 @@
 #include "base/include/string/string_number_convert.h"
 #include "base/include/string/string_utils.h"
 #include "base/trace/native/trace_event.h"
-#include "core/renderer/utils/value_utils.h"
 #include "core/runtime/trace/runtime_trace_event_def.h"
 #include "core/runtime/vm/lepus/array.h"
 #include "core/runtime/vm/lepus/byte_array.h"
-#include "core/runtime/vm/lepus/context.h"
 #include "core/runtime/vm/lepus/function.h"
 #include "core/runtime/vm/lepus/js_object.h"
-#include "core/runtime/vm/lepus/jsvalue_helper.h"
 #include "core/runtime/vm/lepus/lepus_date.h"
 #include "core/runtime/vm/lepus/lynx_value_extended.h"
 #include "core/runtime/vm/lepus/path_parser.h"
-#include "core/runtime/vm/lepus/quick_context.h"
 #include "core/runtime/vm/lepus/ref_counted_class.h"
 #include "core/runtime/vm/lepus/regexp.h"
 #include "core/runtime/vm/lepus/table.h"
@@ -757,14 +753,13 @@ bool Value::Contains(const base::String& key) const {
 
 void Value::MergeValue(lepus::Value& target, const lepus::Value& update) {
   if (update.IsJSTable()) {
-    tasm::ForEachLepusValue(
-        update, [&target](const Value& key, const Value& val) {
-          // the update key may be a path
-          auto path = lepus::ParseValuePath(key.StdString());
-          if (!path.empty()) {
-            UpdateValueByPath(target, val.ToLepusValue(), path);
-          }
-        });
+    ForEachLepusValue(update, [&target](const Value& key, const Value& val) {
+      // the update key may be a path
+      auto path = lepus::ParseValuePath(key.StdString());
+      if (!path.empty()) {
+        UpdateValueByPath(target, val.ToLepusValue(), path);
+      }
+    });
     return;
   }
   // check target's first level variable.
@@ -996,22 +991,6 @@ Value Value::ShallowCopy(const Value& src, bool clone_as_jsvalue) {
       break;
   }
   return Value::Clone(src);
-}
-
-Value Value::CreateObject(Context* ctx) {
-  if (ctx && ctx->IsLepusNGContext()) {
-    LEPUSContext* lctx = ctx->context();
-    return MK_JS_LEPUS_VALUE(lctx, LEPUS_NewObject(lctx));
-  }
-  return Value(lepus::Dictionary::Create());
-}
-
-Value Value::CreateArray(Context* ctx) {
-  if (ctx && ctx->IsLepusNGContext()) {
-    LEPUSContext* lctx = ctx->context();
-    return MK_JS_LEPUS_VALUE(lctx, LEPUS_NewArray(lctx));
-  }
-  return Value(lepus::CArray::Create());
 }
 
 bool operator==(const Value& left, const Value& right) {
@@ -1683,6 +1662,36 @@ bool Value::IsLepusDictEqualToExtendedDict(lynx_api_env env,
     if (it.second != dst_property) return false;
   }
   return true;
+}
+
+// TODO(frendy): Remove lynx::tasm:ForEachLepusValue
+void Value::ForEachLepusValue(const lepus::Value& value,
+                              LepusValueIterator func) {
+  if (value.IsJSValue()) {
+    value.IteratorJSValue(std::move(func));
+    return;
+  }
+
+  switch (value.value_.type) {
+    case lynx_value_map: {
+      auto value_scope_ref_ptr = value.Table();
+      auto& table = *value_scope_ref_ptr;
+      for (auto& pair : table) {
+        auto key = lepus::Value(pair.first);
+        func(key, pair.second);
+      }
+    } break;
+    case lynx_value_array: {
+      auto value_scope_ref_ptr = value.Array();
+      auto& array = *value_scope_ref_ptr;
+      for (auto i = decltype(array.size()){}; i < array.size(); ++i) {
+        func(lepus::Value{static_cast<int64_t>(i)}, array.get(i));
+      }
+    } break;
+    default: {
+      func(lepus::Value{}, value);
+    } break;
+  }
 }
 
 // #endif

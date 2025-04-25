@@ -16,7 +16,8 @@
 #include "base/include/fml/memory/ref_counted.h"
 #include "base/include/log/logging.h"
 #include "base/include/value/base_string.h"
-#include "core/runtime/vm/lepus/lepus_context_cell.h"
+#include "base/include/vector.h"
+#include "core/runtime/vm/lepus/lynx_value_extended.h"
 #include "core/runtime/vm/lepus/marco.h"
 #include "core/runtime/vm/lepus/ref_type.h"
 
@@ -88,7 +89,6 @@ class Dictionary;
 class Closure;
 class RegExp;
 class ByteArray;
-class QuickContext;
 class RefCounted;
 class LEPUSObject;
 
@@ -409,9 +409,6 @@ class BASE_EXPORT_FOR_DEVTOOL Value {
                                 const lepus::Value& update,
                                 const base::Vector<std::string>& path);
 
-  static lepus::Value CreateObject(Context* ctx = nullptr);
-  static lepus::Value CreateArray(Context* ctx = nullptr);
-
   bool MarkConst() const;
 
   BASE_EXPORT bool IsJSValue() const;
@@ -667,10 +664,10 @@ class BASE_EXPORT_FOR_DEVTOOL Value {
                                                const lepus::Value& src,
                                                const lynx_value& dst);
 
+  static void ForEachLepusValue(const Value& value, LepusValueIterator func);
+
  private:
   void Copy(const Value& value);
-
-  void ConstructValueFromLepusRef(LEPUSContext* ctx, const LEPUSValue& val);
 
   Value GetPropertyFromTableOrArray(const std::string& key) const;
   bool SetPropertyToTableOrArray(const std::string& key, const Value& update);

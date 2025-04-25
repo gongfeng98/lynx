@@ -470,7 +470,7 @@ TemplateData TemplateAssembler::ProcessInitData(
   }
 
   bool handle_template_data = false;
-  TemplateData result{lepus::Value::CreateObject(), true};
+  TemplateData result{lepus::Value(lepus::Dictionary::Create()), true};
 
   /**
    * data with the same processor will be merged firstly, and then processed by
@@ -558,7 +558,7 @@ TemplateData TemplateAssembler::OnRenderTemplate(
       card->SetInitData(GenerateTemplateDataPostedToJs(data));
     }
   } else {
-    data.SetValue(lepus::Value::CreateObject());
+    data.SetValue(lepus::Value(lepus::Dictionary::Create()));
   }
   tasm::TimingCollector::Instance()->MarkFrameworkTiming(
       tasm::timing::kSetInitDataEnd);
@@ -660,7 +660,7 @@ void TemplateAssembler::RenderTemplateForFiber(
     PipelineOptions& pipeline_options) {
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderStart);
 
-  lepus::Value render_options = lepus::Value::CreateObject();
+  lepus::Value render_options(lepus::Dictionary::Create());
   if (EnableDataProcessorOnJs()) {
     auto kProcessorName_str = BASE_STATIC_STRING(kProcessorName);
     render_options.SetProperty(kProcessorName_str,
@@ -670,7 +670,7 @@ void TemplateAssembler::RenderTemplateForFiber(
       auto kCacheData_str = BASE_STATIC_STRING(kCacheData);
       auto cache_data = lepus::CArray::Create();
       for (const auto& data : cache_data_) {
-        lepus::Value data_obj = lepus::Value::CreateObject();
+        lepus::Value data_obj(lepus::Dictionary::Create());
         data_obj.SetProperty(kData_str, data->GetValue());
         data_obj.SetProperty(kProcessorName_str,
                              lepus::Value(data->PreprocessorName()));
@@ -2267,7 +2267,7 @@ void TemplateAssembler::OnScreenMetricsSet(float width, float height) {
   auto kWidth_str = BASE_STATIC_STRING(kWidth);
   auto kHeight_str = BASE_STATIC_STRING(kHeight);
 
-  auto input = lepus::Value::CreateObject();
+  auto input = lepus::Value(lepus::Dictionary::Create());
   input.SetProperty(
       kWidth_str,
       lepus::Value(width *
@@ -2934,12 +2934,12 @@ TemplateData TemplateAssembler::ProcessTemplateDataForRadon(
       data.SetPreprocessorName(template_data->PreprocessorName());
       data.SetReadOnly(template_data->IsReadOnly());
     } else {
-      data.SetValue(lepus::Value::CreateObject());
+      data.SetValue(lepus::Value(lepus::Dictionary::Create()));
     }
 
     if (!page_proxy_.GetDefaultPageData().IsEmpty()) {
       if (data.GetValue().IsEmpty()) {
-        data.SetValue(lepus::Value::CreateObject());
+        data.SetValue(lepus::Value(lepus::Dictionary::Create()));
       }
       ForEachLepusValue(
           page_proxy_.GetDefaultPageData(),

@@ -97,7 +97,7 @@ void Utils::RegisterMethodToLynx(lepus::Context* context, lepus::Value& lynx) {
 void Utils::RegisterMethodToLynxPerformance(lepus::Context* context,
                                             lepus::Value& lynx) {
   if (lynx.IsTable()) {
-    lepus::Value perf_obj(lepus::Value::CreateObject(context));
+    lepus::Value perf_obj(lepus::LEPUSValueHelper::CreateObject(context));
     lynx.SetProperty(BASE_STATIC_STRING(runtime::kPerformanceObject), perf_obj);
 
     auto perf_table = perf_obj.Table();

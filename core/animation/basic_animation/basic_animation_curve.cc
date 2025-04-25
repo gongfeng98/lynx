@@ -8,6 +8,7 @@
 
 #include "core/animation/basic_animation/basic_animation_curve.h"
 
+#include <cmath>
 #include <limits>
 #include <string>
 #include <utility>

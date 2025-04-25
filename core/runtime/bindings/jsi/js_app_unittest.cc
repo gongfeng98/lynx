@@ -438,15 +438,15 @@ TEST_P(AppTest, LoadAppTest) {
   runtime->global().setProperty(*runtime, "loadCard", std::move(function));
 
   // set init data & cache data
-  lepus::Value data1 = lepus::Value::CreateObject();
+  lepus::Value data1(lepus::Dictionary::Create());
   data1.SetProperty("1", lepus::Value(1));
   std::string processor_name_1 = "processor_name_1";
 
-  lepus::Value data2 = lepus::Value::CreateObject();
+  lepus::Value data2(lepus::Dictionary::Create());
   data2.SetProperty("2", lepus::Value(2));
   std::string processor_name_2 = "processor_name_2";
 
-  lepus::Value data3 = lepus::Value::CreateObject();
+  lepus::Value data3(lepus::Dictionary::Create());
   data3.SetProperty("3", lepus::Value(3));
   std::string processor_name_3 = "processor_name_3";
 
@@ -502,7 +502,7 @@ TEST_P(AppTest, OnAppReloadTest) {
   EXPECT_TRUE(app);
 
   // prepare TemplateData
-  lepus::Value data1 = lepus::Value::CreateObject();
+  lepus::Value data1(lepus::Dictionary::Create());
   data1.SetProperty("1", lepus::Value(1));
   std::string processor_name_1 = "processor_name_1";
   tasm::TemplateData template_data_1(data1, false, processor_name_1);
@@ -530,21 +530,21 @@ TEST_P(AppTest, NotifyUpdatePageData) {
   // Generate OP
   std::vector<shell::CacheDataOp> op_vec;
 
-  lepus::Value data1 = lepus::Value::CreateObject();
+  lepus::Value data1(lepus::Dictionary::Create());
   data1.SetProperty("1", lepus::Value(1));
   std::string processor_name_1 = "processor_name_1";
   shell::CacheDataType type1 = shell::CacheDataType::UPDATE;
   op_vec.emplace_back(shell::CacheDataOp(
       tasm::TemplateData(data1, false, processor_name_1), type1));
 
-  lepus::Value data2 = lepus::Value::CreateObject();
+  lepus::Value data2(lepus::Dictionary::Create());
   data2.SetProperty("2", lepus::Value(2));
   std::string processor_name_2 = "processor_name_2";
   shell::CacheDataType type2 = shell::CacheDataType::UPDATE;
   op_vec.emplace_back(shell::CacheDataOp(
       tasm::TemplateData(data2, false, processor_name_2), type2));
 
-  lepus::Value data3 = lepus::Value::CreateObject();
+  lepus::Value data3(lepus::Dictionary::Create());
   data3.SetProperty("3", lepus::Value(3));
   std::string processor_name_3 = "processor_name_3";
   shell::CacheDataType type3 = shell::CacheDataType::UPDATE;

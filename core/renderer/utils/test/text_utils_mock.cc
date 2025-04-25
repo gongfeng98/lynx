@@ -16,7 +16,7 @@ namespace tasm {
 // types. The unit of fontSize can be px or rpx.
 std::unique_ptr<pub::Value> TextUtils::GetTextInfo(const std::string& content,
                                                    const pub::Value& info) {
-  lepus::Value result = lepus::Value::CreateObject();
+  lepus::Value result(lepus::Dictionary::Create());
   // TODO(wangyanyi): impl this later
   result.SetProperty(kWidth,
                      lepus::Value(static_cast<int32_t>(content.size())));

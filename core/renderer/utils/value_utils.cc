@@ -182,7 +182,7 @@ lepus::Value ConvertJSValueToLepusValue(const lepus::Value& value) {
 // TODO(kechenglong): impl ToLepusValue in PipelineOptions.
 lepus::Value PipelineOptionsToLepusValue(
     const PipelineOptions& pipeline_options) {
-  lepus::Value pipeline_options_obj = lepus::Value::CreateObject();
+  lepus::Value pipeline_options_obj(lepus::Dictionary::Create());
   pipeline_options_obj.SetProperty(BASE_STATIC_STRING(kPipelineID),
                                    lepus::Value(pipeline_options.pipeline_id));
   pipeline_options_obj.SetProperty(

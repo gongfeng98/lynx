@@ -70,7 +70,7 @@ void PropBundleMock::ResetEventHandler() {}
 
 void PropBundleMock::SetPropsByID(CSSPropertyID id,
                                   const std::vector<uint32_t>& value) {
-  auto array = lepus::Value::CreateArray();
+  auto array = lepus::Value(lepus::CArray::Create());
   for (size_t i = 0; i < value.size(); ++i) {
     array.SetProperty(i, lepus::Value(value[i]));
   }

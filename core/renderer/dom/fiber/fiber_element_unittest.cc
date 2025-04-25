@@ -82,10 +82,10 @@ TEST_P(FiberElementTest, TestRefType) {
 
   EXPECT_EQ(fiber_element->GetRefType(), lepus::RefType::kElement);
 
-  auto table = lepus::Value::CreateObject();
+  auto table = lepus::Value(lepus::Dictionary::Create());
   EXPECT_EQ(table.Table()->GetRefType(), lepus::RefType::kLepusTable);
 
-  auto ary = lepus::Value::CreateArray();
+  auto ary = lepus::Value(lepus::CArray::Create());
   EXPECT_EQ(ary.Array()->GetRefType(), lepus::RefType::kLepusArray);
 
   auto byte_ary = lepus::ByteArray::Create();

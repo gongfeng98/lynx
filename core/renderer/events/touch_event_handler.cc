@@ -20,6 +20,7 @@
 #include "core/runtime/piper/js/runtime_constant.h"
 #include "core/runtime/vm/lepus/array.h"
 #include "core/runtime/vm/lepus/json_parser.h"
+#include "core/runtime/vm/lepus/jsvalue_helper.h"
 #include "core/services/feature_count/feature_counter.h"
 #include "core/services/replay/replay_controller.h"
 #include "third_party/rapidjson/document.h"
@@ -1255,7 +1256,7 @@ void TouchEventHandler::EnsureGestureManager(lepus::Context *context) {
   // Ensure that the context is valid and the gesture_manager_ is empty
   if (context && gesture_manager_.IsEmpty()) {
     // Create a new object for gesture_manager_ using the provided context
-    gesture_manager_ = lepus::Value::CreateObject(context);
+    gesture_manager_ = lepus::LEPUSValueHelper::CreateObject(context);
 
     // Register method to the gesture manager using utility function
     tasm::Utils::RegisterNGMethodToGestureManager(context, gesture_manager_);

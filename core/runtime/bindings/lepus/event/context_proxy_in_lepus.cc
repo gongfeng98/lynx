@@ -9,6 +9,7 @@
 #include "core/runtime/bindings/common/event/runtime_constants.h"
 #include "core/runtime/bindings/lepus/event/lepus_event_listener.h"
 #include "core/runtime/bindings/lepus/renderer.h"
+#include "core/runtime/vm/lepus/jsvalue_helper.h"
 #include "core/runtime/vm/lepus/lepus_value.h"
 
 namespace lynx {
@@ -49,7 +50,7 @@ ContextProxyInLepus* ContextProxyInLepus::GetContextProxyFromLepusValue(
 
 lepus::Value ContextProxyInLepus::GetBinding(lepus::Context* context) {
   if (proxy_binding_.IsEmpty()) {
-    proxy_binding_ = lepus::Value::CreateObject(context);
+    proxy_binding_ = lepus::LEPUSValueHelper::CreateObject(context);
     proxy_binding_.SetProperty(BASE_STATIC_STRING(runtime::kInnerRuntimeProxy),
                                lepus::Value(this));
     if (context->IsVMContext()) {

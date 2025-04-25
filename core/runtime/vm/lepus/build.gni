@@ -133,7 +133,6 @@ lynx_lepus_ng_sources = [
   "jsvalue_helper.h",
   "quick_context.cc",
   "quick_context.h",
-  "ref_counted_class.cc",
   "ref_counted_class.h",
 ]
 

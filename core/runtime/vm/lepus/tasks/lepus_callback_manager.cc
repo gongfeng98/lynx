@@ -59,7 +59,7 @@ uint32_t LepusCallbackManager::SetTimeTask(
   EnsureTimerTaskInvokerInited(context);
   auto task = [func =
                    std::make_unique<FuncTask>(context, std::move(closure))]() {
-    func->Execute({lepus::Value::CreateObject()});
+    func->Execute({lepus::Value(lepus::Dictionary::Create())});
   };
   if (is_interval) {
     return timer_task_manager_->SetInterval(std::move(task), delay_time);

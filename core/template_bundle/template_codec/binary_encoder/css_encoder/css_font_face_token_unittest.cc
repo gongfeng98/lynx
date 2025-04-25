@@ -9,6 +9,7 @@
 
 #include "core/base/json/json_util.h"
 #include "core/runtime/vm/lepus/lepus_value.h"
+#include "core/runtime/vm/lepus/table.h"
 #include "third_party/googletest/googletest/include/gtest/gtest.h"
 #include "third_party/rapidjson/document.h"
 
@@ -27,7 +28,7 @@ class CSSFontFaceRuleForEncode : public ::testing::Test {
 };
 
 TEST_F(CSSFontFaceRuleForEncode, CSSFontFaceTokenConstruct) {
-  lepus::Value obj = lepus::Value::CreateObject();
+  lepus::Value obj(lepus::Dictionary::Create());
   obj.SetProperty("key1", lepus::Value("value1"));
   obj.SetProperty("key2", lepus::Value("value2"));
   obj.SetProperty("key3", lepus::Value("value3"));

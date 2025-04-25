@@ -65,7 +65,7 @@ TEST_F(TouchEventHandlerTest, TestGetCustomEventParamName) {
   base::String tag("view");
   auto element =
       tasm_->page_proxy()->element_manager()->CreateFiberElement(tag);
-  lepus::Value params = lepus::Value::CreateObject();
+  lepus::Value params(lepus::Dictionary::Create());
   lepus::Value res1 = touch_event_handler_->GetCustomEventParam(
       "xxx", "detail", option, element.get(), element.get(), params, false);
   EXPECT_EQ(res1.IsObject(), true);
@@ -86,12 +86,12 @@ TEST_F(TouchEventHandlerTest, TestHandleTriggerComponentEvent0) {
 
 TEST_F(TouchEventHandlerTest, TestHandleTriggerComponentEvent1) {
   touch_event_handler_->HandleTriggerComponentEvent(
-      tasm_.get(), "xxxx", lepus::Value::CreateObject());
+      tasm_.get(), "xxxx", lepus::Value(lepus::Dictionary::Create()));
   EXPECT_EQ(delegate_->DumpDelegate(), "");
 }
 
 TEST_F(TouchEventHandlerTest, TestHandleTriggerComponentEvent2) {
-  lepus::Value obj = lepus::Value::CreateObject();
+  lepus::Value obj(lepus::Dictionary::Create());
   obj.SetProperty("componentId", lepus::Value("1"));
   touch_event_handler_->HandleTriggerComponentEvent(tasm_.get(), "xxxx", obj);
   EXPECT_EQ(delegate_->DumpDelegate(), "");
@@ -119,7 +119,7 @@ TEST_F(TouchEventHandlerTest, TestHandleTriggerComponentEvent2) {
 }
 
 TEST_F(TouchEventHandlerTest, TestHandleTriggerComponentEvent3) {
-  lepus::Value obj = lepus::Value::CreateObject();
+  lepus::Value obj(lepus::Dictionary::Create());
   obj.SetProperty("componentId", lepus::Value("1"));
   touch_event_handler_->HandleTriggerComponentEvent(tasm_.get(), "xxxx", obj);
   EXPECT_EQ(delegate_->DumpDelegate(), "");
@@ -154,7 +154,7 @@ TEST_F(TouchEventHandlerTest, TestHandleTriggerComponentEvent3) {
 }
 
 TEST_F(TouchEventHandlerTest, TestHandlerTriggerGestureEvent) {
-  lepus::Value obj = lepus::Value::CreateObject();
+  lepus::Value obj(lepus::Dictionary::Create());
   obj.SetProperty("componentId", lepus::Value("1"));
   touch_event_handler_->HandleGestureEvent(tasm_.get(), "xxxx", 1, 1, obj);
   EXPECT_EQ(delegate_->DumpDelegate(), "");

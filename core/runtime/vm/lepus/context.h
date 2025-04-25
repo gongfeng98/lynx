@@ -19,6 +19,7 @@
 #include "core/inspector/lepus_inspector_manager.h"
 #include "core/inspector/observer/inspector_lepus_observer.h"
 #include "core/runtime/bindings/lepus/renderer.h"
+#include "core/runtime/vm/lepus/lepus_context_cell.h"
 #include "core/runtime/vm/lepus/lepus_global.h"
 #include "core/runtime/vm/lepus/lepus_value.h"
 #include "core/runtime/vm/lepus/path_parser.h"

@@ -17,7 +17,7 @@ namespace tasm {
 // fontSize can be px or rpx.
 std::unique_ptr<pub::Value> TextUtilsDarwinHelper::GetTextInfo(const std::string& string,
                                                                const pub::Value& info) {
-  lepus::Value result = lepus::Value::CreateObject();
+  lepus::Value result(lepus::Dictionary::Create());
   float width = 0.f;
   if (!string.empty() && info.IsMap()) {
     const std::string font_size = info.GetValueForKey(kFontSize)->str();
