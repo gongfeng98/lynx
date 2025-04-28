@@ -61,6 +61,9 @@ typedef NS_ENUM(NSInteger, LynxBackgroundJsRuntimeType) {
 @property(nonatomic, nonnull) id<LynxMediaResourceFetcher> mediaResourceFetcher;
 @property(nonatomic, nonnull) id<LynxTemplateResourceFetcher> templateResourceFetcher;
 
+// Pending lynx_core.js load
+@property(nonatomic, assign) BOOL pendingCoreJsLoad;
+
 - (instancetype)init;
 // @deprecated use LynxGenericResourceFetcher/LynxMediaResourceFetcher/LynxTemplateResourceFetcher
 // instead
@@ -151,6 +154,11 @@ typedef NS_ENUM(NSInteger, LynxBackgroundJsRuntimeType) {
  * @param callbackId listener with id to be erased
  */
 - (void)unSubscribeSessionStorage:(nonnull NSString *)key withId:(double)callbackId;
+
+/**
+ * When setting pendingCoreJsLoad, this can load lynx_core.js when the user calls it.
+ */
+- (void)transitionToFullRuntime;
 
 @end
 

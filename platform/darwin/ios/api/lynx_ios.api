@@ -409,6 +409,7 @@ public class LynxBackgroundRuntime : NSObject {
   public void LynxBackgroundRuntime::getSessionStorageItem:withCallback:(nonnull NSString *key,[withCallback] void(^_Nullable callback)(id< NSObject > _Nullable));
   public double LynxBackgroundRuntime::subscribeSessionStorage:withCallback:(nonnull NSString *key,[withCallback] void(^_Nullable callback)(id< NSObject > _Nullable));
   public void LynxBackgroundRuntime::unSubscribeSessionStorage:withId:(nonnull NSString *key,[withId] double callbackId);
+  public void LynxBackgroundRuntime::transitionToFullRuntime();
   public std::weak_ptr< lynx::piper::LynxModuleManager > LynxBackgroundRuntime()::moduleManagerPtr();
   public LynxBackgroundRuntimeOptions * LynxBackgroundRuntime()::options();
   public std::shared_ptr< lynx::shell::LynxActor< lynx::runtime::LynxRuntime > > LynxBackgroundRuntime()::runtimeActor();
@@ -431,6 +432,7 @@ public class LynxBackgroundRuntimeOptions : NSObject {
   public id<LynxGenericResourceFetcher> LynxBackgroundRuntimeOptions::genericResourceFetcher genericResourceFetcher;
   public id<LynxMediaResourceFetcher> LynxBackgroundRuntimeOptions::mediaResourceFetcher mediaResourceFetcher;
   public id<LynxTemplateResourceFetcher> LynxBackgroundRuntimeOptions::templateResourceFetcher templateResourceFetcher;
+  public BOOL LynxBackgroundRuntimeOptions::pendingCoreJsLoad pendingCoreJsLoad;
   public instancetype LynxBackgroundRuntimeOptions::init();
   public void LynxBackgroundRuntimeOptions::addLynxResourceProvider:provider:(NSString *resType,[provider] id< LynxResourceProvider > provider);
   public void LynxBackgroundRuntimeOptions::registerModule:(Class< LynxModule > module);

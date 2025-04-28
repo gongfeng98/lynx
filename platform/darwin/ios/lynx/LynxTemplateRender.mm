@@ -117,6 +117,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 
       // If user uses LynxBackgroundRuntime to create LynxView, we should merge
       // the LynxBackgroundRuntimeOptions.
+      _runtime.options.pendingCoreJsLoad = NO;
       [_runtimeOptions merge:_runtime.options];
     }
 

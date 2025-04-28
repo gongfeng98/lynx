@@ -74,6 +74,7 @@
   _backgroundJsRuntimeType = other.backgroundJsRuntimeType;
   _enableBytecode = other.enableBytecode;
   _bytecodeUrl = other.bytecodeUrl;
+  _pendingCoreJsLoad = other.pendingCoreJsLoad;
 
   // Merge these Fetchers only if they are unset:
   // This part of configurations are shared between runtime and platform-level of LynxView.
@@ -250,7 +251,7 @@ typedef NS_ENUM(NSInteger, LynxBackgroundRuntimeState) {
         std::move(on_runtime_actor_created), [_options preloadJSPath],
         [_options enableJSGroupThread], false,
         _options.backgroundJsRuntimeType == LynxBackgroundJsRuntimeTypeQuickjs, false,
-        _options.enableBytecode, [_options bytecodeUrlString]);
+        _options.enableBytecode, [_options bytecodeUrlString], [_options pendingCoreJsLoad]);
 
     const auto& runtime_actor = _runtime_standalone_bundle.runtime_actor_;
     _js_proxy = lynx::shell::JSProxyDarwin::Create(
@@ -396,6 +397,11 @@ typedef NS_ENUM(NSInteger, LynxBackgroundRuntimeState) {
 
 - (void)addRuntimeLifecycleListener:(nonnull id<LynxRuntimeLifecycleListener>)listener {
   _js_proxy->AddLifecycleListener(listener);
+}
+
+- (void)transitionToFullRuntime {
+  _runtime_standalone_bundle.runtime_actor_->Act(
+      [](auto& runtime) { runtime->TransitionToFullRuntime(); });
 }
 
 - (void)dealloc {
