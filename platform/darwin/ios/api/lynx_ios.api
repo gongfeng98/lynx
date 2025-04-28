@@ -3915,6 +3915,7 @@ public class LynxUIListContainer : LynxUIScroller, <LynxUIComponentLayoutObserve
   public NSMutableDictionary<NSString *, NSMutableSet<NSString *> *>* LynxUIListContainer::initialFlushPropCache initialFlushPropCache;
   public void LynxUIListContainer::updateScrollInfoWithEstimatedOffset:smooth:scrolling:(CGFloat estimatedOffset,[smooth] BOOL smooth,[scrolling] BOOL scrolling);
   public void LynxUIListContainer::insertListComponent:(LynxUIComponent *component);
+  public void LynxUIListContainer::removeListComponent:(LynxUIComponent *component);
   public void LynxUIListContainer::detachedFromWindow();
 }
 
