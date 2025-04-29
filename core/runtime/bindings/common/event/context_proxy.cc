@@ -9,6 +9,7 @@
 #include "core/event/event.h"
 #include "core/runtime/bindings/common/event/message_event.h"
 #include "core/runtime/bindings/common/event/runtime_constants.h"
+#include "core/value_wrapper/value_impl_lepus.h"
 
 namespace lynx {
 namespace runtime {
@@ -45,7 +46,8 @@ ContextProxy::Type ContextProxy::ConvertStringToContextType(
 }
 
 void ContextProxy::PostMessage(const lepus::Value& message) {
-  MessageEvent event(origin_type_, target_type_, message);
+  MessageEvent event(origin_type_, target_type_,
+                     std::make_unique<pub::ValueImplLepus>(message));
   DispatchEvent(event);
 }
 

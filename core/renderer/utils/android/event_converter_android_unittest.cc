@@ -9,6 +9,7 @@
 #include "core/base/android/android_jni.h"
 #include "core/renderer/utils/base/tasm_constants.h"
 #include "core/runtime/bindings/common/event/runtime_constants.h"
+#include "core/value_wrapper/value_impl_lepus.h"
 #include "third_party/googletest/googletest/include/gtest/gtest.h"
 
 namespace lynx {
@@ -16,9 +17,10 @@ namespace tasm {
 namespace android {
 
 TEST(EventConverterAndroidTest, TestConvertFunctions) {
-  runtime::MessageEvent event("xxx", 1, runtime::ContextProxy::Type::kJSContext,
-                              runtime::ContextProxy::Type::kDevTool,
-                              lepus::Value("zzz"));
+  runtime::MessageEvent event(
+      "xxx", 1, runtime::ContextProxy::Type::kJSContext,
+      runtime::ContextProxy::Type::kDevTool,
+      std::make_unique<pub::ValueImplLepus>(lepus::Value("zzz")));
 
   JNIEnv* env = base::android::AttachCurrentThread();
   auto map = EventConverterAndroid::ConvertMessageEventToJavaOnlyMap(event);
@@ -37,8 +39,10 @@ TEST(EventConverterAndroidTest, TestConvertFunctions) {
   EXPECT_EQ(event.GetTargetType(), result.GetTargetType());
   EXPECT_EQ(result.GetTargetString(), std::string(runtime::kDevTool));
   EXPECT_EQ(event.GetTargetString(), result.GetTargetString());
-  EXPECT_EQ(result.message(), lepus::Value("zzz"));
-  EXPECT_EQ(event.message(), result.message());
+  EXPECT_EQ(pub::ValueUtils::ConvertValueToLepusValue(*result.message()),
+            lepus::Value("zzz"));
+  EXPECT_EQ(pub::ValueUtils::ConvertValueToLepusValue(*event.message()),
+            pub::ValueUtils::ConvertValueToLepusValue(*result.message()));
 }
 
 }  // namespace android

@@ -37,8 +37,8 @@
 #include <string>
 
 #include "core/event/event.h"
+#include "core/public/pub_value.h"
 #include "core/runtime/bindings/common/event/context_proxy.h"
-#include "core/runtime/vm/lepus/lepus_value.h"
 
 namespace lynx {
 namespace runtime {
@@ -46,12 +46,12 @@ namespace runtime {
 class MessageEvent : public event::Event {
  public:
   MessageEvent(ContextProxy::Type origin, ContextProxy::Type target,
-               const lepus::Value& message);
+               std::unique_ptr<pub::Value> message);
   MessageEvent(const std::string& type, ContextProxy::Type origin,
-               ContextProxy::Type target, const lepus::Value& message);
+               ContextProxy::Type target, std::unique_ptr<pub::Value> message);
   MessageEvent(const std::string& type, int64_t time_stamp,
                ContextProxy::Type origin, ContextProxy::Type target,
-               const lepus::Value& message);
+               std::unique_ptr<pub::Value> message);
   virtual ~MessageEvent() override = default;
 
   static MessageEvent ShallowCopy(const MessageEvent&);
@@ -68,7 +68,7 @@ class MessageEvent : public event::Event {
   std::string GetTargetString() const;
   std::string GetOriginString() const;
 
-  lepus::Value message() const { return message_; }
+  const pub::Value* message() const { return message_.get(); }
 
   bool IsSendingToUIThread() {
     return target_ == ContextProxy::Type::kUIContext ||
@@ -88,7 +88,7 @@ class MessageEvent : public event::Event {
  private:
   ContextProxy::Type origin_;
   ContextProxy::Type target_;
-  lepus::Value message_;
+  std::unique_ptr<pub::Value> message_;
 };
 
 }  // namespace runtime

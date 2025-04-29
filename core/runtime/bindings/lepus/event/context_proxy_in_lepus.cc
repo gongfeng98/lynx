@@ -10,6 +10,7 @@
 #include "core/runtime/bindings/lepus/event/lepus_event_listener.h"
 #include "core/runtime/bindings/lepus/renderer.h"
 #include "core/runtime/vm/lepus/lepus_value.h"
+#include "core/value_wrapper/value_impl_lepus.h"
 
 namespace lynx {
 namespace tasm {
@@ -27,7 +28,8 @@ runtime::MessageEvent ContextProxyInLepus::CreateMessageEvent(
   return runtime::MessageEvent(
       event.GetProperty(BASE_STATIC_STRING(runtime::kType)).StdString(),
       GetOriginType(), GetTargetType(),
-      event.GetProperty(BASE_STATIC_STRING(runtime::kData)));
+      std::make_unique<pub::ValueImplLepus>(
+          event.GetProperty(BASE_STATIC_STRING(runtime::kData))));
 }
 
 ContextProxyInLepus* ContextProxyInLepus::GetContextProxyFromLepusValue(

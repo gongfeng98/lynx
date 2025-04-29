@@ -32,44 +32,67 @@
 #include "core/runtime/bindings/common/event/message_event.h"
 
 #include <chrono>
+#include <utility>
 
 #include "core/runtime/bindings/common/event/context_proxy.h"
 #include "core/runtime/bindings/common/event/runtime_constants.h"
+#include "core/value_wrapper/value_impl_lepus.h"
+#include "core/value_wrapper/value_wrapper_utils.h"
 
 namespace lynx {
 namespace runtime {
 
 MessageEvent::MessageEvent(ContextProxy::Type origin, ContextProxy::Type target,
-                           const lepus::Value& message)
-    : MessageEvent(kMessage, origin, target, message) {}
+                           std::unique_ptr<pub::Value> message)
+    : MessageEvent(kMessage, origin, target, std::move(message)) {}
 
 MessageEvent::MessageEvent(const std::string& type, ContextProxy::Type origin,
                            ContextProxy::Type target,
-                           const lepus::Value& message)
+                           std::unique_ptr<pub::Value> message)
     : MessageEvent(type,
                    std::chrono::duration_cast<std::chrono::milliseconds>(
                        std::chrono::system_clock::now().time_since_epoch())
                        .count(),
-                   origin, target, message) {}
+                   origin, target, std::move(message)) {}
 
 MessageEvent::MessageEvent(const std::string& type, int64_t time_stamp,
                            ContextProxy::Type origin, ContextProxy::Type target,
-                           const lepus::Value& message)
+                           std::unique_ptr<pub::Value> message)
     : event::Event(type, time_stamp, event::Event::EventType::kMessageEvent,
                    Bubbles::kNo, Cancelable::kNo, ComposedMode::kScoped,
                    PhaseType::kAtTarget),
       origin_(origin),
       target_(target),
-      message_(message) {}
+      message_(std::move(message)) {}
 
 MessageEvent MessageEvent::ShallowCopy(const MessageEvent& event) {
-  return MessageEvent(event.type(), event.time_stamp(), event.origin_,
-                      event.target_, lepus::Value::ShallowCopy(event.message_));
+  if (event.message_ != nullptr &&
+      event.message_->backend_type() ==
+          pub::ValueBackendType::ValueBackendTypeLepus) {
+    return MessageEvent(
+        event.type(), event.time_stamp(), event.origin_, event.target_,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value::ShallowCopy(
+            pub::ValueUtils::ConvertValueToLepusValue(*event.message_))));
+  }
+  return MessageEvent(
+      event.type(), event.time_stamp(), event.origin_, event.target_,
+      std::make_unique<pub::ValueImplLepus>(
+          pub::ValueUtils::ConvertValueToLepusValue(*event.message_)));
 }
 
 MessageEvent MessageEvent::ShallowCopy(MessageEvent& event) {
-  return MessageEvent(event.type(), event.time_stamp(), event.origin_,
-                      event.target_, lepus::Value::ShallowCopy(event.message_));
+  if (event.message_ != nullptr &&
+      event.message_->backend_type() ==
+          pub::ValueBackendType::ValueBackendTypeLepus) {
+    return MessageEvent(
+        event.type(), event.time_stamp(), event.origin_, event.target_,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value::ShallowCopy(
+            pub::ValueUtils::ConvertValueToLepusValue(*event.message_))));
+  }
+  return MessageEvent(
+      event.type(), event.time_stamp(), event.origin_, event.target_,
+      std::make_unique<pub::ValueImplLepus>(
+          pub::ValueUtils::ConvertValueToLepusValue(*event.message_)));
 }
 
 std::string MessageEvent::GetTargetString() const {

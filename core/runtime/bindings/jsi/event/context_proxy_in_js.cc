@@ -15,7 +15,7 @@
 #include "core/runtime/bindings/jsi/event/js_event_listener.h"
 #include "core/runtime/bindings/jsi/js_app.h"
 #include "core/runtime/common/utils.h"
-#include "core/value_wrapper/value_impl_lepus.h"
+#include "core/value_wrapper/value_impl_piper.h"
 
 namespace lynx {
 namespace piper {
@@ -67,9 +67,8 @@ runtime::MessageEvent ContextProxyInJS::CreateMessageEvent(
           ->asString(rt)
           ->utf8(rt),
       GetOriginType(), GetTargetType(),
-      *(native_app->ParseJSValueToLepusValue(
-          *(event.getObject(rt).getProperty(rt, runtime::kData)),
-          PAGE_GROUP_ID)));
+      std::make_unique<pub::ValueImplPiper>(
+          rt, *(event.getObject(rt).getProperty(rt, runtime::kData))));
 }
 
 Value ContextProxyInJS::get(Runtime *rt, const PropNameID &name) {

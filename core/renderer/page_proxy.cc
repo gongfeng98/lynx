@@ -527,7 +527,8 @@ void PageProxy::OnComponentPropertyChanged(RadonComponent *node) {
     runtime::MessageEvent event(
         runtime::kMessageEventTypeOnComponentPropertiesChanged,
         runtime::ContextProxy::Type::kCoreContext,
-        runtime::ContextProxy::Type::kJSContext, lepus::Value(args));
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value(std::move(args))));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -544,7 +545,8 @@ void PageProxy::OnComponentDataSetChanged(RadonComponent *node,
     runtime::MessageEvent event(
         runtime::kMessageEventTypeOnComponentDataSetChanged,
         runtime::ContextProxy::Type::kCoreContext,
-        runtime::ContextProxy::Type::kJSContext, lepus::Value(std::move(args)));
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value(std::move(args))));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -561,7 +563,8 @@ void PageProxy::OnComponentSelectorChanged(RadonComponent *node,
     runtime::MessageEvent event(
         runtime::kMessageEventTypeOnComponentSelectorChanged,
         runtime::ContextProxy::Type::kCoreContext,
-        runtime::ContextProxy::Type::kJSContext, lepus::Value(std::move(args)));
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value(std::move(args))));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -653,7 +656,8 @@ void PageProxy::OnReactComponentCreated(RadonComponent *component,
     runtime::MessageEvent event(
         runtime::kMessageEventTypeOnReactComponentCreated,
         runtime::ContextProxy::Type::kCoreContext,
-        runtime::ContextProxy::Type::kJSContext, lepus::Value(std::move(args)));
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value(std::move(args))));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -676,7 +680,8 @@ void PageProxy::OnReactComponentRender(RadonComponent *component,
     runtime::MessageEvent event(
         runtime::kMessageEventTypeOnReactComponentRender,
         runtime::ContextProxy::Type::kCoreContext,
-        runtime::ContextProxy::Type::kJSContext, lepus::Value(std::move(args)));
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value(std::move(args))));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -691,7 +696,8 @@ void PageProxy::OnReactComponentDidUpdate(RadonComponent *component) {
         runtime::kMessageEventTypeOnReactComponentDidUpdate,
         runtime::ContextProxy::Type::kCoreContext,
         runtime::ContextProxy::Type::kJSContext,
-        lepus::Value(component->ComponentStrId()));
+        std::make_unique<pub::ValueImplLepus>(
+            lepus::Value(component->ComponentStrId())));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -710,7 +716,8 @@ void PageProxy::OnReactComponentDidCatch(RadonComponent *component,
     runtime::MessageEvent event(
         runtime::kMessageEventTypeOnReactComponentDidCatch,
         runtime::ContextProxy::Type::kCoreContext,
-        runtime::ContextProxy::Type::kJSContext, lepus::Value(std::move(args)));
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value(std::move(args))));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -725,7 +732,8 @@ void PageProxy::OnReactComponentUnmount(RadonComponent *component) {
         runtime::kMessageEventTypeOnReactComponentUnmount,
         runtime::ContextProxy::Type::kCoreContext,
         runtime::ContextProxy::Type::kJSContext,
-        lepus::Value(component->ComponentStrId()));
+        std::make_unique<pub::ValueImplLepus>(
+            lepus::Value(component->ComponentStrId())));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -744,10 +752,11 @@ void PageProxy::OnReactCardRender(const lepus::Value &data,
     args->emplace_back(lepus_value::ShallowCopy(data));
     args->emplace_back(should_component_update);
     args->emplace_back(HasSSRRadonPage());
-    runtime::MessageEvent event(runtime::kMessageEventTypeOnReactCardRender,
-                                runtime::ContextProxy::Type::kCoreContext,
-                                runtime::ContextProxy::Type::kJSContext,
-                                lepus::Value(std::move(args)));
+    runtime::MessageEvent event(
+        runtime::kMessageEventTypeOnReactCardRender,
+        runtime::ContextProxy::Type::kCoreContext,
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value(std::move(args))));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -756,10 +765,11 @@ void PageProxy::OnReactCardDidUpdate() {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, PAGE_PROXY_ON_REACT_CARD_DID_UPDATE);
   if (pre_painting_stage_ == PrePaintingStage::kPrePaintingOFF &&
       context_proxy_delegate_ && tasm_delegate_->SupportComponentJS()) {
-    runtime::MessageEvent event(runtime::KMessageEventTypeOnReactCardDidUpdate,
-                                runtime::ContextProxy::Type::kCoreContext,
-                                runtime::ContextProxy::Type::kJSContext,
-                                lepus::Value());
+    runtime::MessageEvent event(
+        runtime::KMessageEventTypeOnReactCardDidUpdate,
+        runtime::ContextProxy::Type::kCoreContext,
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value()));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -834,10 +844,11 @@ void PageProxy::FireComponentLifecycleEvent(const std::string name,
       args->emplace_back(lepus_value::ShallowCopy(data));
     }
 
-    runtime::MessageEvent event(runtime::kMessageEventTypeOnComponentActivity,
-                                runtime::ContextProxy::Type::kCoreContext,
-                                runtime::ContextProxy::Type::kJSContext,
-                                lepus::Value(std::move(args)));
+    runtime::MessageEvent event(
+        runtime::kMessageEventTypeOnComponentActivity,
+        runtime::ContextProxy::Type::kCoreContext,
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value(std::move(args))));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
@@ -1338,10 +1349,11 @@ void PageProxy::ResetSSRPage() {
 
 void PageProxy::OnSsrScriptReady(std::string script) {
   if (context_proxy_delegate_) {
-    runtime::MessageEvent event(runtime::kMessageEventTypeOnSsrScriptReady,
-                                runtime::ContextProxy::Type::kCoreContext,
-                                runtime::ContextProxy::Type::kJSContext,
-                                lepus::Value(std::move(script)));
+    runtime::MessageEvent event(
+        runtime::kMessageEventTypeOnSsrScriptReady,
+        runtime::ContextProxy::Type::kCoreContext,
+        runtime::ContextProxy::Type::kJSContext,
+        std::make_unique<pub::ValueImplLepus>(lepus::Value(std::move(script))));
     context_proxy_delegate_->DispatchMessageEvent(std::move(event));
   }
 }
