@@ -10,24 +10,25 @@
 
 #include "base/include/platform/android/scoped_java_ref.h"
 #include "core/shell/lynx_shell.h"
-#include "lynx/core/shell/lynx_runtime_proxy_impl.h"
+#include "lynx/core/runtime/piper/js/runtime_lifecycle_listener_delegate.h"
 
 namespace lynx {
 namespace shell {
 
 // call by platform android
-class JSProxyAndroid : public LynxRuntimeProxyImpl {
+class JSProxyAndroid {
  public:
   JSProxyAndroid(const std::shared_ptr<LynxActor<runtime::LynxRuntime>>& actor,
                  int64_t id, JNIEnv* env, jobject jni_object,
                  const std::string& js_group_thread_name,
                  bool runtime_standalone_mode)
-      : LynxRuntimeProxyImpl(actor, runtime_standalone_mode),
+      : actor_(actor),
         id_(id),
         jni_object_(
             std::make_shared<base::android::ScopedWeakGlobalJavaRef<jobject>>(
                 env, jni_object)),
-        js_group_thread_name_(js_group_thread_name) {}
+        js_group_thread_name_(js_group_thread_name),
+        runtime_standalone_mode_(runtime_standalone_mode) {}
   ~JSProxyAndroid() = default;
 
   JSProxyAndroid(const JSProxyAndroid&) = delete;
@@ -43,25 +44,33 @@ class JSProxyAndroid : public LynxRuntimeProxyImpl {
     return jni_object_ ? jni_object_->Get() : nullptr;
   }
 
-  void CallJSFunctionByArgsId(std::string module_id, std::string method_id,
-                              long args_id);
+  void CallJSFunction(std::string module_id, std::string method_id,
+                      long args_id);
 
-  void CallJSIntersectionObserverByArgsId(int32_t observer_id,
-                                          int32_t callback_id, long args_id);
+  void CallJSIntersectionObserver(int32_t observer_id, int32_t callback_id,
+                                  long args_id);
 
-  void CallJSApiCallbackWithValueByArgsId(int32_t callback_id, long args_id);
+  void CallJSApiCallbackWithValue(int32_t callback_id, long args_id);
+
+  void EvaluateScript(const std::string& url, std::string script,
+                      int32_t callback_id);
+
+  void RejectDynamicComponentLoad(const std::string& url, int32_t callback_id,
+                                  int32_t err_code, const std::string& err_msg);
 
   void RunOnJSThread(base::MoveOnlyClosure<> task);
 
+  void AddLifecycleListener(
+      std::unique_ptr<runtime::RuntimeLifecycleListenerDelegate> delegate);
+
  private:
-  static std::unique_ptr<pub::Value> GetArgs(
-      std::shared_ptr<piper::Runtime>& runtime,
-      std::shared_ptr<base::android::ScopedWeakGlobalJavaRef<jobject>> jobject,
-      long args_id);
+  std::shared_ptr<LynxActor<runtime::LynxRuntime>> actor_;
+
   const int64_t id_;
 
   std::shared_ptr<base::android::ScopedWeakGlobalJavaRef<jobject>> jni_object_;
   std::string js_group_thread_name_;
+  bool runtime_standalone_mode_;
 };
 
 }  // namespace shell
