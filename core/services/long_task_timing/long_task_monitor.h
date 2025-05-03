@@ -187,9 +187,6 @@ class LongTaskMonitor {
   LongTaskMonitor(LongTaskMonitor&&) = delete;
   LongTaskMonitor& operator=(LongTaskMonitor&&) = delete;
 
-  bool enable_ __attribute__((
-      unused));  // TODO(kazec.liu): for ssr compilation, delete later
-
   static inline bool g_enabled = false;
   static inline bool IsEnabledForInstance(const PageOptions& page_options) {
     if (!g_enabled || page_options.GetInstanceID() < 0) {
