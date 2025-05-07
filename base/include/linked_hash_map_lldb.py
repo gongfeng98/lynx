@@ -119,6 +119,6 @@ def __lldb_init_module(debugger, dict):
         'type synthetic add -x "^lynx::base::LinkedHashMap<.*>$" -l linked_hash_map_lldb.linked_hash_map_SynthProvider -w liblynx'
     )
     debugger.HandleCommand(
-        'type summary add -x "^lynx::base::LinkedHashMap<.*>$" -s "size=${var.count_}, pool_size=${var.pool_size_}, pool_cursor=${var.pool_cursor_}, is_perfect=${var.is_perfect_}, map=${var.map_}" -w liblynx'
+        'type summary add -x "^lynx::base::LinkedHashMap<.*>$" -s "size=${var.count_}, pool_size=${var.pool_size_}, pool_cursor=${var.pool_cursor_}, is_imperfect=${var.is_imperfect_}, map=${var.map_}" -w liblynx'
     )
     debugger.HandleCommand('type category enable liblynx')
