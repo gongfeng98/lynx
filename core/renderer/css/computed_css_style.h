@@ -513,7 +513,6 @@ class ComputedCSSStyle {
   // Write methods, at which point all ##nameToLepus methods of ComputedCSSStyle
   // can be deleted, and this friend class will also be removed.
   friend class tasm::PropBundleStyleWriter;
-
 };  // ComputedCSSStyle
 
 }  // namespace starlight

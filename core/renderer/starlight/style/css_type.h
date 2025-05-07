@@ -251,12 +251,13 @@ enum class CursorType {
   kKeyword,
 };
 
-enum class BackgroundOriginType : unsigned {
+enum class BackgroundOriginType : uint32_t {
   kPaddingBox = 0,  // version:1.0
   kBorderBox = 1,   // version:1.0
   kContentBox = 2,  // version:1.0
 };
-enum class BackgroundRepeatType : unsigned {
+
+enum class BackgroundRepeatType : uint32_t {
   kRepeat = 0,    // version:1.0
   kNoRepeat = 1,  // version:1.0
   kRepeatX = 2,   // version:1.0
@@ -279,7 +280,7 @@ enum class BackgroundSizeType : unsigned {
   kContain,
 };
 
-enum class BackgroundClipType : unsigned {
+enum class BackgroundClipType : uint32_t {
   kPaddingBox = 0,  // version:1.0
   kBorderBox = 1,   // version:1.0
   kContentBox = 2,  // version:1.0
