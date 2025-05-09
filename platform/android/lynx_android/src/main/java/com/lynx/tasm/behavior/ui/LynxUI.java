@@ -16,12 +16,13 @@ import static com.lynx.tasm.behavior.StyleConstants.DIRECTION_RTL;
 import static com.lynx.tasm.behavior.StyleConstants.FILTER_TYPE_BLUR;
 import static com.lynx.tasm.behavior.StyleConstants.FILTER_TYPE_GRAYSCALE;
 import static com.lynx.tasm.behavior.StyleConstants.FILTER_TYPE_NONE;
+import static com.lynx.tasm.behavior.StyleConstants.PLATFORM_LENGTH_UNIT_NUMBER;
 import static com.lynx.tasm.behavior.StyleConstants.PLATFORM_PERSPECTIVE_UNIT_DEFAULT;
 import static com.lynx.tasm.behavior.StyleConstants.PLATFORM_PERSPECTIVE_UNIT_NUMBER;
 import static com.lynx.tasm.behavior.StyleConstants.PLATFORM_PERSPECTIVE_UNIT_VH;
 import static com.lynx.tasm.behavior.StyleConstants.PLATFORM_PERSPECTIVE_UNIT_VW;
-import static com.lynx.tasm.behavior.StyleConstants.TRANSFORM_TRANSLATE_X;
-import static com.lynx.tasm.behavior.StyleConstants.TRANSFORM_TRANSLATE_Y;
+import static com.lynx.tasm.behavior.StyleConstants.TRANSFORM_ROTATE;
+import static com.lynx.tasm.behavior.StyleConstants.TRANSFORM_TRANSLATE;
 import static com.lynx.tasm.behavior.StyleConstants.VISIBILITY_VISIBLE;
 import static com.lynx.tasm.behavior.ui.accessibility.LynxAccessibilityWrapper.ACCESSIBILITY_ELEMENT_DEFAULT;
 import static com.lynx.tasm.behavior.ui.accessibility.LynxAccessibilityWrapper.ACCESSIBILITY_ELEMENT_TRUE;
@@ -71,8 +72,10 @@ import com.lynx.tasm.behavior.herotransition.HeroTransitionManager;
 import com.lynx.tasm.behavior.ui.accessibility.LynxAccessibilityWrapper;
 import com.lynx.tasm.behavior.ui.list.UIList;
 import com.lynx.tasm.behavior.ui.shapes.BasicShape;
+import com.lynx.tasm.behavior.ui.shapes.LynxOffsetCalculator;
 import com.lynx.tasm.behavior.ui.text.AndroidText;
 import com.lynx.tasm.behavior.ui.utils.BackgroundManager;
+import com.lynx.tasm.behavior.ui.utils.PlatformLength;
 import com.lynx.tasm.behavior.ui.utils.TransformRaw;
 import com.lynx.tasm.behavior.ui.view.AndroidView;
 import com.lynx.tasm.featurecount.LynxFeatureCounter;
@@ -82,6 +85,7 @@ import com.lynx.tasm.utils.BitmapUtils;
 import com.lynx.tasm.utils.DeviceUtils;
 import com.lynx.tasm.utils.FloatUtils;
 import com.lynx.tasm.utils.UnitUtils;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -92,6 +96,7 @@ public abstract class LynxUI<T extends View> extends LynxBaseUI {
   protected T mView;
 
   private float mGrayscaleAmount = 1.0f;
+  private static final float OFFSET_ROTATE_AUTO = -1024.0f;
 
   private BackgroundManager mBackgroundManager;
   private boolean mSetVisibleByCSS = true;
@@ -141,6 +146,12 @@ public abstract class LynxUI<T extends View> extends LynxBaseUI {
     }
   }
   protected BasicShape mClipPath;
+  protected ReadableArray mRawOffsetShape;
+  protected BasicShape mOffsetPath;
+  protected float mOffsetDistance;
+  protected float mOffsetRotate;
+  protected boolean mIsAutoOffsetRotate = true;
+  protected boolean mOffsetHasChanged = false;
 
   @Override
   public void onDrawingPositionChanged() {
@@ -717,7 +728,18 @@ public abstract class LynxUI<T extends View> extends LynxBaseUI {
         mBackgroundManager.setTransform(mTransformRaw);
       }
     }
-
+    if (mOffsetHasChanged) {
+      if (mOffsetPath != null) {
+        float[] result = LynxOffsetCalculator.pointAtProgress(
+            mOffsetPath.getPath(getWidth(), getHeight()), mOffsetDistance);
+        if (mIsAutoOffsetRotate) {
+          applyOffsetAndRotate(result[0], result[1], result[2]);
+        } else {
+          applyOffsetAndRotate(result[0], result[1], mOffsetRotate);
+        }
+      }
+      mOffsetHasChanged = false;
+    }
     // 3. Apply transition
     if (null != mTransitionAnimator) {
       mTransitionAnimator.startTransitions();
@@ -732,6 +754,18 @@ public abstract class LynxUI<T extends View> extends LynxBaseUI {
       // The front-end modify the animation properties, causing the UI to slide.
       mContext.onPropsChanged(this);
     }
+  }
+
+  public void applyOffsetAndRotate(float offsetX, float offsetY, float rotate) {
+    List<TransformRaw> offsetEffect = new ArrayList<>();
+    offsetEffect.add(TransformRaw.createTransformRaw(TRANSFORM_TRANSLATE,
+        new PlatformLength(offsetX, PLATFORM_LENGTH_UNIT_NUMBER), PLATFORM_LENGTH_UNIT_NUMBER,
+        new PlatformLength(offsetY, PLATFORM_LENGTH_UNIT_NUMBER), PLATFORM_LENGTH_UNIT_NUMBER,
+        new PlatformLength(0, PLATFORM_LENGTH_UNIT_NUMBER), PLATFORM_LENGTH_UNIT_NUMBER));
+    offsetEffect.add(
+        TransformRaw.createTransformRaw(TRANSFORM_ROTATE, rotate, PLATFORM_LENGTH_UNIT_NUMBER, 0,
+            PLATFORM_LENGTH_UNIT_NUMBER, 0, PLATFORM_LENGTH_UNIT_NUMBER));
+    mBackgroundManager.appendTransform(offsetEffect);
   }
 
   public int getBackgroundColor() {
@@ -1133,6 +1167,37 @@ public abstract class LynxUI<T extends View> extends LynxBaseUI {
   public void setClipPath(@Nullable ReadableArray basicShape) {
     mClipPath =
         BasicShape.CreateFromReadableArray(basicShape, mContext.getScreenMetrics().scaledDensity);
+  }
+
+  @LynxProp(name = PropsConstants.OFFSET_PATH)
+  public void setOffsetPath(@Nullable ReadableArray basicShape) {
+    if (mRawOffsetShape != basicShape) {
+      mRawOffsetShape = basicShape;
+      mOffsetPath =
+          BasicShape.CreateFromReadableArray(basicShape, mContext.getScreenMetrics().scaledDensity);
+      mOffsetHasChanged = true;
+    }
+  }
+
+  @LynxProp(name = PropsConstants.OFFSET_DISTANCE)
+  public void setOffsetDistance(float offsetDistance) {
+    if (mOffsetDistance != offsetDistance) {
+      mOffsetDistance = offsetDistance;
+      mOffsetHasChanged = true;
+    }
+  }
+
+  @LynxProp(name = PropsConstants.OFFSET_ROTATE)
+  public void setOffsetRotate(float offsetRotate) {
+    if (mOffsetRotate != offsetRotate) {
+      mOffsetRotate = offsetRotate;
+      mOffsetHasChanged = true;
+      if (mOffsetRotate != OFFSET_ROTATE_AUTO) {
+        mIsAutoOffsetRotate = false;
+      } else {
+        mIsAutoOffsetRotate = true;
+      }
+    }
   }
 
   protected void initAccessibilityDelegate() {}

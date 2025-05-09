@@ -8,6 +8,7 @@ import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
+import android.renderscript.Matrix4f;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 import com.lynx.tasm.behavior.LynxContext;
@@ -98,6 +99,39 @@ public class BackgroundManager extends LynxBackground {
     ui.getView().invalidate();
   }
 
+  public void appendTransform(@Nullable List<TransformRaw> styleProperty) {
+    LynxUI ui = mUI.get();
+    if (ui == null) {
+      return;
+    }
+    if (styleProperty == null) {
+      return;
+    }
+    TransformProps appendedTransform = TransformProps.processTransform(styleProperty,
+        mContext.getUIBody().getFontSize(), mFontSize, mContext.getUIBody().getLatestWidth(),
+        mContext.getUIBody().getLatestHeight(), ui.getLatestWidth(), ui.getLatestHeight());
+    Matrix4f composedTransformMatrix = mTransformProps.transformPropsToMatrix4f();
+    composedTransformMatrix.multiply(appendedTransform.transformPropsToMatrix4f());
+    TransformProps.matrix4fToTransformProps(composedTransformMatrix, mTransformProps);
+    updateViewTranslation();
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+      ui.getView().setOutlineProvider(null); // disable shadow
+      ViewCompat.setTranslationZ(ui.getView(), mTransformProps.getTranslationZ());
+    } else {
+      // prior to API 21, use zIndex instead
+      // TODO(linxiaosong): fix the translateZ
+      // mTranslateZ = mMatrixDecompositionContext.getTranslationZ();
+      // ui.setZIndex(Math.round(mTranslateZ));
+    }
+    ui.getView().setRotation(mTransformProps.getRotation());
+    ui.getView().setRotationX(mTransformProps.getRotationX());
+    ui.getView().setRotationY(mTransformProps.getRotationY());
+    ui.getView().setScaleX(mTransformProps.getScaleX());
+    ui.getView().setScaleY(mTransformProps.getScaleY());
+    ui.setSkewX(mTransformProps.getSkewX());
+    ui.setSkewY(mTransformProps.getSkewY());
+    ui.getView().invalidate();
+  }
   public void setTransform(@Nullable List<TransformRaw> styleProperty) {
     LynxUI ui = mUI.get();
     if (ui == null) {

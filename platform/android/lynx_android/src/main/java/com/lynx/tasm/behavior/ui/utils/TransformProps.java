@@ -428,4 +428,52 @@ public class TransformProps {
     }
     return output;
   }
+
+  /**
+   * @brief Convert the TransformProps instance to a Matrix4f matrix.
+   * @return The transformed Matrix4f matrix.
+   */
+  public Matrix4f transformPropsToMatrix4f() {
+    Matrix4f matrix = new Matrix4f();
+
+    // Apply translation transform
+    matrix.translate(getTranslationX(), getTranslationY(), getTranslationZ());
+
+    // Apply rotation transform
+    matrix.rotate(getRotationX(), 1, 0, 0);
+    matrix.rotate(getRotationY(), 0, 1, 0);
+    matrix.rotate(getRotation(), 0, 0, 1);
+
+    // Apply scale transform
+    matrix.scale(getScaleX(), getScaleY(), 1);
+
+    // Apply skew transform
+    float skewX = getSkewX();
+    float skewY = getSkewY();
+
+    // Construct the X-axis skew matrix.
+    Matrix4f skewXMatrix = new Matrix4f();
+    skewXMatrix.set(0, 1, skewX);
+
+    // Construct the Y-axis skew matrix.
+    Matrix4f skewYMatrix = new Matrix4f();
+    skewYMatrix.set(1, 0, skewY);
+
+    // X-axis tilt is applied first, followed by Y-axis tilt.
+    matrix.multiply(skewXMatrix);
+    matrix.multiply(skewYMatrix);
+
+    return matrix;
+  }
+
+  public static void matrix4fToTransformProps(
+      Matrix4f transformMatrix3D, TransformProps transformProps) {
+    MatrixMathUtils.MatrixDecompositionContext matrixDecompositionContext =
+        new MatrixMathUtils.MatrixDecompositionContext();
+    matrixDecompositionContext.reset();
+    MatrixMathUtils.decomposeMatrix(
+        TransformProps.convertFloatsToDoubles(transformMatrix3D.getArray()),
+        matrixDecompositionContext);
+    transformProps.setMatrixDecompositionContext(matrixDecompositionContext);
+  }
 }

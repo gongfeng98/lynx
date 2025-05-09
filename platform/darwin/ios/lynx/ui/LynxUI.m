@@ -61,6 +61,7 @@ static const short OVERFLOW_X_VAL = 0x01;
 static const short OVERFLOW_Y_VAL = 0x02;
 short const OVERFLOW_XY_VAL = 0x03;
 short const OVERFLOW_HIDDEN_VAL = 0x00;
+static const CGFloat OFFSET_ROTATE_AUTO = -1024.f;
 
 #define IS_ZERO(num) (fabs(num) < 0.0000000001)
 
@@ -3892,13 +3893,13 @@ LYNX_PROP_DEFINE("offset-distance", setOffsetDistance, CGFloat) {
 
 LYNX_PROP_DEFINE("offset-rotate", setOffsetRotate, CGFloat) {
   if (requestReset) {
-    value = -1024.0;
+    value = OFFSET_ROTATE_AUTO;
     _isAutoOffsetRotate = YES;
     _offsetHasChanged = YES;
   }
   if (_offsetRotate != value) {
     _offsetRotate = value;
-    if (_offsetRotate != -1024.0) {
+    if (_offsetRotate != OFFSET_ROTATE_AUTO) {
       _isAutoOffsetRotate = NO;
     }
     _offsetHasChanged = YES;
