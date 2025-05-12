@@ -637,29 +637,29 @@ void PaintingContextDarwin::UpdatePlatformExtraBundle(int32_t signature,
   });
 }
 
-void PaintingContextDarwin::FinishLayoutOperation(const PipelineOptions& options) {
+void PaintingContextDarwin::FinishLayoutOperation(const std::shared_ptr<PipelineOptions>& options) {
   is_layout_finish_ = true;
   __weak LynxUIOwner* uiOwner = uiOwner_;
   Enqueue([uiOwner, weak_queue = std::weak_ptr<shell::DynamicUIOperationQueue>(queue_), options]() {
     TRACE_EVENT(LYNX_TRACE_CATEGORY, UI_OPERATION_QUEUE_FINISH_LAYOUT_OPERATION);
 
     if (auto queue = weak_queue.lock()) {
-      [uiOwner finishLayoutOperation:options.operation_id componentID:options.list_comp_id_];
-      if (options.has_layout) {
+      [uiOwner finishLayoutOperation:options->operation_id componentID:options->list_comp_id_];
+      if (options->has_layout) {
         [uiOwner layoutDidFinish];
       }
-      if (options.native_update_data_order_ == queue->GetNativeUpdateDataOrder()) {
+      if (options->native_update_data_order_ == queue->GetNativeUpdateDataOrder()) {
         queue->UpdateStatus(shell::UIOperationStatus::ALL_FINISH);
       }
     }
   });
-  if (options.native_update_data_order_ == queue_->GetNativeUpdateDataOrder()) {
+  if (options->native_update_data_order_ == queue_->GetNativeUpdateDataOrder()) {
     queue_->UpdateStatus(shell::UIOperationStatus::LAYOUT_FINISH);
   }
 }
 
-void PaintingContextDarwin::FinishTasmOperation(const PipelineOptions& options) {
-  if (options.native_update_data_order_ == queue_->GetNativeUpdateDataOrder()) {
+void PaintingContextDarwin::FinishTasmOperation(const std::shared_ptr<PipelineOptions>& options) {
+  if (options->native_update_data_order_ == queue_->GetNativeUpdateDataOrder()) {
     queue_->UpdateStatus(shell::UIOperationStatus::TASM_FINISH);
   }
 }

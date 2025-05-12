@@ -77,9 +77,9 @@ const lepus::Value PageProxy::GetComponentContextDataByKey(
   return lepus::Value();
 }
 
-bool PageProxy::UpdateConfig(const lepus::Value &config, lepus::Value &out,
-                             bool to_refresh,
-                             PipelineOptions &pipeline_options) {
+bool PageProxy::UpdateConfig(
+    const lepus::Value &config, lepus::Value &out, bool to_refresh,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   if (!config.IsObject()) {
     LOGE("config not table");
     return false;
@@ -214,8 +214,9 @@ void PageProxy::RemoveOldComponentBeforeReload() {
   }
 }
 
-bool PageProxy::UpdateGlobalProps(const lepus::Value &table, bool should_render,
-                                  PipelineOptions &pipeline_options) {
+bool PageProxy::UpdateGlobalProps(
+    const lepus::Value &table, bool should_render,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   if (radon_page_) {
     global_props_ = table;
     return radon_page_->RefreshWithGlobalProps(table, should_render,
@@ -232,9 +233,9 @@ bool PageProxy::UpdateGlobalProps(const lepus::Value &table, bool should_render,
 
 lepus::Value PageProxy::GetGlobalPropsFromTasm() const { return global_props_; }
 
-void PageProxy::UpdateComponentData(const std::string &id,
-                                    const lepus::Value &table,
-                                    PipelineOptions &pipeline_options) {
+void PageProxy::UpdateComponentData(
+    const std::string &id, const lepus::Value &table,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   if (radon_page_) {
     radon_page_->UpdateComponentData(id, table, pipeline_options);
   }
@@ -329,9 +330,9 @@ LynxGetUIResult PageProxy::GetLynxUI(const NodeSelectRoot &root,
                          options.NodeIdentifierMessage());
 }
 
-void PageProxy::UpdateInLoadTemplate(const lepus::Value &data,
-                                     const UpdatePageOption &update_page_option,
-                                     PipelineOptions &pipeline_options) {
+void PageProxy::UpdateInLoadTemplate(
+    const lepus::Value &data, const UpdatePageOption &update_page_option,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, PAGE_PROXY_UPDATE_IN_LOAD_TEMPLATE);
   // TODO(huzhanbo.luc): check if we can remove this
   if (Page()) {
@@ -349,7 +350,7 @@ void PageProxy::UpdateInLoadTemplate(const lepus::Value &data,
 void PageProxy::ForceUpdate(const UpdatePageOption &update_page_option) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, PAGE_PROXY_FORCE_UPDATE);
   lepus::Value data = lepus::Value(lepus::Dictionary::Create());
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   UpdateInLoadTemplate(data, update_page_option, pipeline_options);
 }
 
@@ -367,9 +368,9 @@ bool PageProxy::OnLazyBundleLoadedFailed(uint32_t uid, int &impl_id) {
   return false;
 }
 
-void PageProxy::OnLazyBundleLoadedFromJS(const std::string &url,
-                                         const std::vector<std::string> &ids,
-                                         PipelineOptions &pipeline_options) {
+void PageProxy::OnLazyBundleLoadedFromJS(
+    const std::string &url, const std::vector<std::string> &ids,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   if (!HasRadonPage() || ids.empty()) {
     return;
   }
@@ -435,7 +436,7 @@ void PageProxy::SetRadonPage(RadonPage *page) {
     UpdateThemedTransMapsBeforePageUpdated();
   }
   if (radon_page_) {
-    PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
     radon_page_->UpdateConfig(config_, false, pipeline_options);
   }
 }
@@ -469,10 +470,10 @@ void PageProxy::UpdateComponentInComponentMap(RadonComponent *component) {
   AdoptComponent(component);
 }
 
-void PageProxy::SetCSSVariables(const std::string &component_id,
-                                const std::string &id_selector,
-                                const lepus::Value &properties,
-                                PipelineOptions &pipeline_options) {
+void PageProxy::SetCSSVariables(
+    const std::string &component_id, const std::string &id_selector,
+    const lepus::Value &properties,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   if (Page() && !element_manager()->GetEnableFiberElementForRadonDiff()) {
     Page()->SetCSSVariables(component_id, id_selector, properties,
                             pipeline_options);
@@ -503,7 +504,7 @@ void PageProxy::Destroy() {
 
 bool PageProxy::UpdateGlobalDataInternal(
     const lepus_value &value, const UpdatePageOption &update_page_option,
-    PipelineOptions &pipeline_options) {
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   if (Page()) {
     return Page()->UpdatePage(value, update_page_option, pipeline_options);
   }
@@ -1164,7 +1165,8 @@ lepus::Value &PageProxy::GetGlobalComponentPathMap(
 }
 
 void PageProxy::HydrateOnFirstScreenIfPossible(
-    TemplateAssembler *tasm, PipelineOptions &pipeline_options) {
+    TemplateAssembler *tasm,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   // radon ttml hydrate
   if (!IsReact() && HasSSRRadonPage() && HasRadonPage()) {
     radon_page_->Hydrate(pipeline_options);
@@ -1225,9 +1227,9 @@ bool PageProxy::IsServerSideRendering() {
 #endif
 }
 
-void PageProxy::UpdateDataForSsr(std::vector<base::String> &keys_updated,
-                                 const lepus::Value &dict,
-                                 PipelineOptions &pipeline_options) {
+void PageProxy::UpdateDataForSsr(
+    std::vector<base::String> &keys_updated, const lepus::Value &dict,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   if (ssr_data_update_manager_ == nullptr) {
     LOGE("ssr data update manager is nullptr");
     return;
@@ -1253,11 +1255,10 @@ void PageProxy::UpdateDataForSsr(std::vector<base::String> &keys_updated,
   TRACE_EVENT_END(LYNX_TRACE_CATEGORY);
 }
 
-void PageProxy::RenderWithSSRData(TemplateAssembler *tasm,
-                                  const lepus::Value &ssr_out_value,
-                                  const lepus::Value &injected_data,
-                                  int32_t instance_id,
-                                  PipelineOptions &pipeline_options) {
+void PageProxy::RenderWithSSRData(
+    TemplateAssembler *tasm, const lepus::Value &ssr_out_value,
+    const lepus::Value &injected_data, int32_t instance_id,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   DispatchOption option(this);
   // Reset the status of hydration.
   hydrate_info_ = SSRHydrateInfo{};
@@ -1294,7 +1295,7 @@ void PageProxy::RenderWithSSRData(TemplateAssembler *tasm,
 
   element_manager()->painting_context()->MarkUIOperationQueueFlushTiming(
       tasm::timing::kPaintingUiOperationExecuteStart,
-      pipeline_options.pipeline_id);
+      pipeline_options->pipeline_id);
 
   ssr_radon_page_->Dispatch(dispatch_option);
 
@@ -1302,7 +1303,7 @@ void PageProxy::RenderWithSSRData(TemplateAssembler *tasm,
 
   TRACE_EVENT_END(LYNX_TRACE_CATEGORY);
 
-  pipeline_options.is_first_screen = true;
+  pipeline_options->is_first_screen = true;
   // TODO(kechenglong): SetNeedsLayout if and only if needed.
   element_manager()->SetNeedsLayout();
   element_manager()->OnPatchFinish(pipeline_options);
@@ -1311,13 +1312,12 @@ void PageProxy::RenderWithSSRData(TemplateAssembler *tasm,
       ssr_out_value, this, injected_data, ssr_data_update_manager_.get());
 }
 
-void PageProxy::RenderWithSSRData(SSRHydrateInfo info,
-                                  std::string global_event_script,
-                                  int32_t instance_id,
-                                  PipelineOptions &pipeline_options) {
+void PageProxy::RenderWithSSRData(
+    SSRHydrateInfo info, std::string global_event_script, int32_t instance_id,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   hydrate_info_ = std::move(info);
 
-  pipeline_options.is_first_screen = true;
+  pipeline_options->is_first_screen = true;
   element_manager()->OnPatchFinish(pipeline_options);
 
   // script

@@ -87,12 +87,14 @@ class LynxRuntime final {
       tasm::TasmRuntimeBundle bundle, const lepus::Value& global_props,
       const std::string& page_name, tasm::PackageInstanceDSL dsl,
       tasm::PackageInstanceBundleModuleMode bundle_module_mode,
-      const std::string& url, const tasm::PipelineOptions& pipeline_options);
+      const std::string& url,
+      const std::shared_ptr<tasm::PipelineOptions>& pipeline_options);
   void OnGlobalPropsUpdated(const lepus::Value& props);
 
   void call(base::closure func);
-  void OnAppReload(tasm::TemplateData data,
-                   const tasm::PipelineOptions& pipeline_options);
+  void OnAppReload(
+      tasm::TemplateData data,
+      const std::shared_ptr<tasm::PipelineOptions>& pipeline_options);
   void EvaluateScript(const std::string& url, std::string script,
                       piper::ApiCallBack callback);
   void EvaluateScriptStandalone(std::string url, std::string script);

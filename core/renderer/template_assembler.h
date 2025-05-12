@@ -181,8 +181,9 @@ class TemplateAssembler final
                                 const lepus::Value& arguments) = 0;
     virtual void OnDataUpdatedByNative(tasm::TemplateData data,
                                        const bool reset) = 0;
-    virtual void OnJSAppReload(tasm::TemplateData data,
-                               const PipelineOptions& pipeline_options) = 0;
+    virtual void OnJSAppReload(
+        tasm::TemplateData data,
+        const std::shared_ptr<PipelineOptions>& pipeline_options) = 0;
     virtual void OnGlobalPropsUpdated(const lepus::Value& props) = 0;
     virtual void OnLifecycleEvent(const lepus::Value& args) = 0;
     virtual void OnI18nResourceChanged(const std::string& res) = 0;
@@ -209,7 +210,8 @@ class TemplateAssembler final
         tasm::TasmRuntimeBundle bundle, const lepus::Value& global_props,
         const std::string& page_name, tasm::PackageInstanceDSL dsl,
         tasm::PackageInstanceBundleModuleMode bundle_module_mode,
-        const std::string& url, const PipelineOptions& pipeline_options) = 0;
+        const std::string& url,
+        const std::shared_ptr<PipelineOptions>& pipeline_options) = 0;
     virtual void OnComponentDecoded(tasm::TasmRuntimeBundle bundle) = 0;
     virtual void OnCardConfigDataChanged(const lepus::Value& data) = 0;
 
@@ -245,14 +247,14 @@ class TemplateAssembler final
 
   void LoadTemplate(const std::string& url, std::vector<uint8_t> source,
                     const std::shared_ptr<TemplateData>& template_data,
-                    PipelineOptions& pipeline_options,
+                    std::shared_ptr<PipelineOptions>& pipeline_options,
                     const bool enable_pre_painting = false,
                     bool enable_recycle_template_bundle = false);
 
   void LoadTemplateBundle(const std::string& url,
                           LynxTemplateBundle template_bundle,
                           const std::shared_ptr<TemplateData>& template_data,
-                          PipelineOptions& pipeline_options,
+                          std::shared_ptr<PipelineOptions>& pipeline_options,
                           const bool enable_pre_painting = false,
                           bool enable_dump_element_tree = false);
 
@@ -261,28 +263,29 @@ class TemplateAssembler final
   // No need to decode and set page config.
   void ReloadTemplate(const std::shared_ptr<TemplateData>& template_data,
                       UpdatePageOption& update_page_option,
-                      PipelineOptions& pipeline_options);
+                      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void ReloadTemplate(const std::shared_ptr<TemplateData>& template_data,
                       const lepus::Value& global_props,
                       UpdatePageOption& update_page_option,
-                      PipelineOptions& pipeline_options);
+                      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   // used in lynx.reload() api for FE.
   void ReloadFromJS(const runtime::UpdateDataTask& task,
-                    PipelineOptions& pipeline_options);
+                    std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void AddFont(const lepus::Value& font);
 
   // Render page with page data that rendered on server side.
-  void RenderPageWithSSRData(std::vector<uint8_t> data,
-                             const std::shared_ptr<TemplateData>& template_data,
-                             PipelineOptions& pipeline_options);
+  void RenderPageWithSSRData(
+      std::vector<uint8_t> data,
+      const std::shared_ptr<TemplateData>& template_data,
+      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void DidPreloadComponent(LazyBundleLoader::CallBackInfo callback_info);
 
   void DidLoadComponent(LazyBundleLoader::CallBackInfo callback_info,
-                        PipelineOptions& pipeline_options);
+                        std::shared_ptr<PipelineOptions>& pipeline_options);
 
   /**
    * Receive bundle resource, only support frame bundle currently
@@ -292,7 +295,7 @@ class TemplateAssembler final
 
   void LoadComponentWithCallbackInfo(
       LazyBundleLoader::CallBackInfo callback_info,
-      PipelineOptions& pipeline_options);
+      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void ReportError(int32_t error_code, const std::string& msg,
                    base::LynxErrorLevel level = base::LynxErrorLevel::Error);
@@ -303,7 +306,7 @@ class TemplateAssembler final
   fml::RefPtr<fml::TaskRunner> GetLepusTimedTaskRunner() override;
 
   void UpdateGlobalProps(const lepus::Value& data, bool need_render,
-                         PipelineOptions& pipeline_options);
+                         std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void SendTouchEvent(const std::string& name, const EventInfo& info);
   void SendCustomEvent(const std::string& name, int tag,
@@ -359,16 +362,17 @@ class TemplateAssembler final
   void UpdateMetaData(const std::shared_ptr<TemplateData>& template_data,
                       const lepus::Value& global_props,
                       UpdatePageOption& update_page_option,
-                      PipelineOptions& pipeline_options);
+                      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   // Non-threadsafe
   void UpdateDataByPreParsedData(
       const std::shared_ptr<TemplateData>& template_data,
-      UpdatePageOption& update_page_option, PipelineOptions& pipeline_options);
+      UpdatePageOption& update_page_option,
+      std::shared_ptr<PipelineOptions>& pipeline_options);
   // Threadsafe
 
   void UpdateDataByJS(const runtime::UpdateDataTask& task,
-                      PipelineOptions& pipeline_options);
+                      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   const lepus::Value GetGlobalProps() const {
     return lepus::Value::ShallowCopy(global_props_);
@@ -410,7 +414,7 @@ class TemplateAssembler final
   lepus::Value GetPageDataByKey(const std::vector<std::string>& keys);
 
   void UpdateComponentData(const runtime::UpdateDataTask& task,
-                           PipelineOptions& pipeline_options);
+                           std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void SelectComponent(const std::string& component_id, const std::string&,
                        const bool single, piper::ApiCallBack callback);
@@ -460,7 +464,7 @@ class TemplateAssembler final
   void SendAirPageEvent(const std::string& event, const lepus::Value& value);
   void RenderTemplateForAir(const std::shared_ptr<TemplateEntry>& card,
                             const lepus::Value& data,
-                            PipelineOptions& pipeline_options);
+                            std::shared_ptr<PipelineOptions>& pipeline_options);
   void SendAirComponentEvent(const std::string& event_name,
                              const int component_id, const lepus::Value& params,
                              const std::string& param_name);
@@ -549,7 +553,7 @@ class TemplateAssembler final
   void SetLocale(const std::string& locale) { locale_ = locale; }
 
   bool UpdateConfig(const lepus::Value& config, bool noticeDelegate,
-                    PipelineOptions& pipeline_options);
+                    std::shared_ptr<PipelineOptions>& pipeline_options);
 
   std::string TranslateResourceForTheme(const std::string& res_id,
                                         const std::string& theme_key) {
@@ -634,12 +638,12 @@ class TemplateAssembler final
   void SetCSSVariables(const std::string& component_id,
                        const std::string& id_selector,
                        const lepus::Value& properties,
-                       PipelineOptions& pipeline_options);
+                       std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void SetNativeProps(const NodeSelectRoot& root,
                       const tasm::NodeSelectOptions& options,
                       const lepus::Value& native_props,
-                      PipelineOptions& pipeline_options);
+                      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void SetLepusEventListener(const std::string& name,
                              const lepus::Value& listener);
@@ -748,17 +752,18 @@ class TemplateAssembler final
   void LoadTemplateInternal(
       const std::string& url,
       const std::shared_ptr<TemplateData>& template_data,
-      PipelineOptions& pipeline_options,
+      std::shared_ptr<PipelineOptions>& pipeline_options,
       base::MoveOnlyClosure<bool, const std::shared_ptr<TemplateEntry>&>
           entry_initializer);
 
-  bool OnLoadTemplate(PipelineOptions& pipeline_options);
+  bool OnLoadTemplate(std::shared_ptr<PipelineOptions>& pipeline_options);
   void DidLoadTemplate();
 
   void OnDecodeTemplate();
-  void DidDecodeTemplate(const std::shared_ptr<TemplateData>& template_data,
-                         const std::shared_ptr<TemplateEntry>& entry,
-                         bool post_js, const PipelineOptions& pipeline_options);
+  void DidDecodeTemplate(
+      const std::shared_ptr<TemplateData>& template_data,
+      const std::shared_ptr<TemplateEntry>& entry, bool post_js,
+      const std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void OnVMExecute();
   void DidVMExecute();
@@ -766,22 +771,22 @@ class TemplateAssembler final
   TemplateData OnRenderTemplate(
       const std::shared_ptr<TemplateData>& template_data,
       const std::shared_ptr<TemplateEntry>& card, bool post_js,
-      PipelineOptions& pipeline_options);
+      std::shared_ptr<PipelineOptions>& pipeline_options);
   void RenderTemplate(const std::shared_ptr<TemplateEntry>& card,
                       const TemplateData& data,
-                      PipelineOptions& pipeline_options);
+                      std::shared_ptr<PipelineOptions>& pipeline_options);
   void UpdateTemplate(const TemplateData& data,
                       const UpdatePageOption& update_page_option,
-                      PipelineOptions& pipeline_options);
-  void DidRenderTemplate(PipelineOptions& pipeline_options);
-  void RenderTemplateForFiber(const std::shared_ptr<TemplateEntry>& card,
-                              const TemplateData& data,
-                              PipelineOptions& pipeline_options);
+                      std::shared_ptr<PipelineOptions>& pipeline_options);
+  void DidRenderTemplate(std::shared_ptr<PipelineOptions>& pipeline_options);
+  void RenderTemplateForFiber(
+      const std::shared_ptr<TemplateEntry>& card, const TemplateData& data,
+      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void OnDataUpdatedByNative(TemplateData value, const bool reset = false);
 
   void OnJSPrepared(const std::string& url,
-                    const PipelineOptions& pipeline_options);
+                    const std::shared_ptr<PipelineOptions>& pipeline_options);
   void NotifyGlobalPropsChanged(const lepus::Value& value);
 
   bool InnerTranslateResourceForTheme(std::string& ret,
@@ -791,9 +796,9 @@ class TemplateAssembler final
   bool FromBinary(const std::shared_ptr<TemplateEntry>& entry,
                   std::vector<uint8_t> source, bool is_card = true);
 
-  bool UpdateGlobalDataInternal(const lepus_value& value,
-                                const UpdatePageOption& update_page_option,
-                                PipelineOptions& pipeline_options);
+  bool UpdateGlobalDataInternal(
+      const lepus_value& value, const UpdatePageOption& update_page_option,
+      std::shared_ptr<PipelineOptions>& pipeline_options);
   void EnsureTouchEventHandler();
 
   void EnsureAirTouchEventHandler();
@@ -808,7 +813,8 @@ class TemplateAssembler final
       const std::shared_ptr<TemplateData>& template_data, bool first_screen);
 
   // SSR and Hydration related methods.
-  void UpdateGlobalPropsWithDefaultProps(PipelineOptions& pipeline_options);
+  void UpdateGlobalPropsWithDefaultProps(
+      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   // merge with preserved data if needed
   TemplateData ProcessInitData(

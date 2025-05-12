@@ -108,7 +108,7 @@ void LepusAnimationFrameTaskHandler::DoFrame(
   first_map_is_the_current_ = !(first_map_is_the_current_);
   doing_frame_ = false;
   // trigger patch finish when a worklet operation is completed
-  tasm::PipelineOptions options;
+  auto options = std::make_shared<tasm::PipelineOptions>();
   // TODO(kechenglong): SetNeedsLayout if and only if needed.
   tasm->page_proxy()->element_manager()->SetNeedsLayout();
   tasm->page_proxy()->element_manager()->OnPatchFinish(options);

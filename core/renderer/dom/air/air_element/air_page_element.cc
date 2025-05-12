@@ -22,9 +22,9 @@ namespace {
 constexpr static const char *kOnDataChanged = "onDataChanged";
 }  // namespace
 
-bool AirPageElement::UpdatePageData(const lepus::Value &table,
-                                    const UpdatePageOption &update_page_option,
-                                    PipelineOptions &pipeline_options) {
+bool AirPageElement::UpdatePageData(
+    const lepus::Value &table, const UpdatePageOption &update_page_option,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   auto array = lepus::CArray::Create();
   bool need_update = false;
   lepus::Value new_data;
@@ -94,10 +94,10 @@ bool AirPageElement::UpdatePageData(const lepus::Value &table,
   if (need_update) {
     const auto &timing_flag = tasm::GetTimingFlag(table);
     if (!timing_flag.empty()) {
-      pipeline_options.need_timestamps = true;
+      pipeline_options->need_timestamps = true;
       static_cast<TemplateAssembler *>(context_->GetDelegate())
           ->GetDelegate()
-          .BindPipelineIDWithTimingFlag(pipeline_options.pipeline_id,
+          .BindPipelineIDWithTimingFlag(pipeline_options->pipeline_id,
                                         timing_flag);
     }
     tasm::TimingCollector::Scope<TemplateAssembler::Delegate> scope(
@@ -106,19 +106,19 @@ bool AirPageElement::UpdatePageData(const lepus::Value &table,
         pipeline_options);
     // UpdatePage0 for first screen is called in
     // TemplateAssembler::RenderTemplateForAir
-    if (pipeline_options.need_timestamps) {
+    if (pipeline_options->need_timestamps) {
       element_manager()->painting_context()->MarkUIOperationQueueFlushTiming(
           timing::kPaintingUiOperationExecuteStart,
-          pipeline_options.pipeline_id);
+          pipeline_options->pipeline_id);
     }
 
     if (!update_page_option.update_first_time &&
         !update_page_option.from_native) {
-      if (pipeline_options.need_timestamps) {
+      if (pipeline_options->need_timestamps) {
         tasm::TimingCollector::Instance()->Mark(timing::kSetStateTrigger);
       }
     }
-    if (pipeline_options.need_timestamps) {
+    if (pipeline_options->need_timestamps) {
       tasm::TimingCollector::Instance()->Mark(timing::kRefreshPageStartAir);
     }
 
@@ -132,7 +132,7 @@ bool AirPageElement::UpdatePageData(const lepus::Value &table,
     if (!(ret.IsBool() && ret.Bool())) {
       return false;
     }
-    if (pipeline_options.need_timestamps) {
+    if (pipeline_options->need_timestamps) {
       tasm::TimingCollector::Instance()->Mark(timing::kRefreshPageEndAir);
     }
 

@@ -92,17 +92,20 @@ class ListElement : public FiberElement,
   void NotifyListReuseNode(const fml::RefPtr<FiberElement>& child,
                            const base::String& item_key);
 
-  void OnListItemBatchFinished(const PipelineOptions& options) override;
+  void OnListItemBatchFinished(
+      const std::shared_ptr<PipelineOptions>& options) override;
 
   // When the list element changes, this method will be invoked. For example, if
   // the list's width or height changes, or if the List itself has new diff
   // information.
-  void OnListElementUpdated(const PipelineOptions& options) override;
+  void OnListElementUpdated(
+      const std::shared_ptr<PipelineOptions>& options) override;
   // When the rendering of the list's child node is complete, this method will
   // be invoked. In this method, we can obtain the correct layout information
   // of the child node.
-  void OnComponentFinished(Element* component,
-                           const PipelineOptions& option) override;
+  void OnComponentFinished(
+      Element* component,
+      const std::shared_ptr<PipelineOptions>& option) override;
   // Receive drag distance from platform list container.
   void ScrollByListContainer(float content_offset_x, float content_offset_y,
                              float original_x, float original_y) override;

@@ -411,7 +411,8 @@ void ListElement::PropsUpdateFinish() {
  *example, if the list's width or height changes, or if the List itself has new
  *diff information.
  **/
-void ListElement::OnListElementUpdated(const PipelineOptions& options) {
+void ListElement::OnListElementUpdated(
+    const std::shared_ptr<PipelineOptions>& options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LIST_ON_ELEMENT_UPDATED);
   if (DisableListPlatformImplementation() && list_container_delegate()) {
     list_container_delegate()->OnLayoutChildren(options);
@@ -426,10 +427,10 @@ void ListElement::OnListElementUpdated(const PipelineOptions& options) {
  *operation.
  * @param component: child
  **/
-void ListElement::OnComponentFinished(Element* component,
-                                      const PipelineOptions& option) {
+void ListElement::OnComponentFinished(
+    Element* component, const std::shared_ptr<PipelineOptions>& option) {
   if (DisableListPlatformImplementation() && list_container_delegate() &&
-      component && option.operation_id != 0) {
+      component && option->operation_id != 0) {
     list_container_delegate()->FinishBindItemHolder(component, option);
   }
 }
@@ -440,10 +441,11 @@ void ListElement::OnListItemLayoutUpdated(Element* component) {
   }
 }
 
-void ListElement::OnListItemBatchFinished(const PipelineOptions& options) {
+void ListElement::OnListItemBatchFinished(
+    const std::shared_ptr<PipelineOptions>& options) {
   if (DisableListPlatformImplementation() && list_container_delegate()) {
     std::vector<Element*> list_items;
-    for (const auto& list_item_id : options.list_item_ids_) {
+    for (const auto& list_item_id : options->list_item_ids_) {
       list_items.emplace_back(
           element_manager()->node_manager()->Get(list_item_id));
     }
@@ -555,10 +557,10 @@ int32_t ListElementSSRHelper::ComponentAtIndexInSSR(uint32_t index,
   list_element_->InsertNode(std::move(ssr_element_[index]));
   ssr_element_[index] = nullptr;
 
-  tasm::PipelineOptions options;
-  options.trigger_layout_ = true;
-  options.operation_id = operationId;
-  options.list_comp_id_ = impl_id;
+  auto options = std::make_shared<PipelineOptions>();
+  options->trigger_layout_ = true;
+  options->operation_id = operationId;
+  options->list_comp_id_ = impl_id;
   element_manager->OnPatchFinish(options, item_element);
   EXEC_EXPR_FOR_INSPECTOR(
       element_manager->FiberAttachToInspectorRecursively(item_element));

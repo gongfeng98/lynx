@@ -98,12 +98,13 @@ class ListAdapter : public AdapterHelper::Delegate {
   virtual void BindItemHolders(const ItemHolderSet& item_holder_set) = 0;
 
   // Finish bind item holder with element.
-  virtual void OnFinishBindItemHolder(Element* component,
-                                      const PipelineOptions& option) = 0;
+  virtual void OnFinishBindItemHolder(
+      Element* component, const std::shared_ptr<PipelineOptions>& option) = 0;
 
   // Finish bind item holders with elements
-  virtual void OnFinishBindItemHolders(const std::vector<Element*>& list_items,
-                                       const PipelineOptions& options) = 0;
+  virtual void OnFinishBindItemHolders(
+      const std::vector<Element*>& list_items,
+      const std::shared_ptr<PipelineOptions>& options) = 0;
 
   // Recycle ItemHolder.
   virtual void RecycleItemHolder(ItemHolder* item_holder) = 0;

@@ -227,14 +227,14 @@ class RadonComponent : public RadonNode, public BaseComponent {
                             const lepus::Value& incoming_property,
                             const lepus::Value& incoming_data,
                             const DispatchOption& option,
-                            PipelineOptions& pipeline_options);
+                            std::shared_ptr<PipelineOptions>& pipeline_options);
 
   // TODO(songshourui.null): In the future, a utility class related to CSS will
   // be added, and the class is used to unify the CSS logic of RadonComponent
   // and ComponentElement. And this function will be moved to the utility.
   void SetCSSVariables(const std::string& id_selector,
                        const lepus::Value& properties,
-                       PipelineOptions& pipeline_options);
+                       std::shared_ptr<PipelineOptions>& pipeline_options);
 
   bool UpdateRadonComponentWithoutDispatch(
       RenderType render_type, const lepus::Value& incoming_property,
@@ -297,7 +297,7 @@ class RadonComponent : public RadonNode, public BaseComponent {
 
   // RadonPage will override this function
   virtual void Refresh(const DispatchOption&,
-                       PipelineOptions& pipeline_options);
+                       std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void GenerateAndSetComponentId();
   void SetComponentId();

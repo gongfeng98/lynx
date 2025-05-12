@@ -4224,7 +4224,7 @@ RENDERER_FUNCTION_CC(FiberSetCSSId) {
 // by invoking FiberFlushElementTree.
 RENDERER_FUNCTION_CC(GeneratePipelineOptions) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, GENERATE_PIPELINE_OPTIONS);
-  RETURN(PipelineOptionsToLepusValue(PipelineOptions()));
+  RETURN(PipelineOptionsToLepusValue(std::make_shared<PipelineOptions>()));
 }
 
 // OnPipelineStart method needs to be called at the very
@@ -4316,15 +4316,15 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
 
   bool trigger_data_updated = false;
   // If argc >= 2, get PipelineOptions from arg1.
-  // The options.triggerLayout's default value is true, set it to false if do
-  // need call DispatchLayoutUpdates. The options.operationID's default value is
-  // 0, if call __FiberFlushElementTree in componentAtIndex, please set
+  // The options->triggerLayout's default value is true, set it to false if do
+  // need call DispatchLayoutUpdates. The options->operationID's default value
+  // is 0, if call __FiberFlushElementTree in componentAtIndex, please set
   // operationID to the value passed in componentAtIndex.
-  tasm::PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   // TODO(kechenglong): get pipeline_id from lepus arg1
   auto top_pipeline_id = tasm::TimingCollector::Instance()->GetTopPipelineID();
   if (!top_pipeline_id.empty()) {
-    options.pipeline_id = top_pipeline_id;
+    options->pipeline_id = top_pipeline_id;
   }
   if (argc >= 2) {
     CONVERT_ARG(arg1, 1);
@@ -4333,30 +4333,30 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
       if (arg1->Contains(kPipelineOptions) &&
           arg1->GetProperty(kPipelineOptions).IsObject()) {
         const auto& table = arg1->GetProperty(kPipelineOptions);
-        options.pipeline_id =
+        options->pipeline_id =
             table.GetProperty(BASE_STATIC_STRING(kPipelineID)).StdString();
-        options.pipeline_origin =
+        options->pipeline_origin =
             table.GetProperty(BASE_STATIC_STRING(kPipelineOrigin)).StdString();
-        options.need_timestamps =
+        options->need_timestamps =
             table.GetProperty(BASE_STATIC_STRING(kPipelineNeedTimestamps))
                 .Bool();
       }
 
       BASE_STATIC_STRING_DECL(kTriggerLayout, "triggerLayout");
       if (arg1->Contains(kTriggerLayout)) {
-        options.trigger_layout_ = arg1->GetProperty(kTriggerLayout).Bool();
+        options->trigger_layout_ = arg1->GetProperty(kTriggerLayout).Bool();
       }
 
       BASE_STATIC_STRING_DECL(kOperationID, "operationID");
       if (arg1->Contains(kOperationID)) {
-        options.operation_id =
+        options->operation_id =
             static_cast<int64_t>(arg1->GetProperty(kOperationID).Number());
       }
 
       // the elementID is used for the list on multi-thread mode
       BASE_STATIC_STRING_DECL(kElementID, "elementID");
       if (arg1->Contains(kElementID)) {
-        options.list_comp_id_ =
+        options->list_comp_id_ =
             static_cast<int>(arg1->GetProperty(kElementID).Number());
       }
 
@@ -4368,7 +4368,7 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
               operationIDs,
               [&options](const lepus::Value& key, const lepus::Value& value) {
                 if (value.IsNumber()) {
-                  options.operation_ids_.emplace_back(
+                  options->operation_ids_.emplace_back(
                       static_cast<int64_t>(value.Number()));
                 }
               });
@@ -4382,7 +4382,7 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
           ForEachLepusValue(elementIDs, [&options](const lepus::Value& key,
                                                    const lepus::Value& value) {
             if (value.IsNumber()) {
-              options.list_item_ids_.emplace_back(
+              options->list_item_ids_.emplace_back(
                   static_cast<int>(value.Number()));
             }
           });
@@ -4391,7 +4391,7 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
 
       BASE_STATIC_STRING_DECL(kListID, "listID");
       if (arg1->Contains(kListID)) {
-        options.list_id_ =
+        options->list_id_ =
             static_cast<int>(arg1->GetProperty(kListID).Number());
       }
 
@@ -4400,7 +4400,7 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
       static bool enable_report =
           LynxEnv::GetInstance().EnableReportListItemLifeStatistic();
       if (enable_report) {
-        options.enable_report_list_item_life_statistic_ = true;
+        options->enable_report_list_item_life_statistic_ = true;
         BASE_STATIC_STRING_DECL(kListItemLifeOption, "listItemLifeOption");
         if (arg1->Contains(kListItemLifeOption)) {
           const auto& list_item_life_option =
@@ -4410,10 +4410,10 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
             BASE_STATIC_STRING_DECL(kEndRenderTime, "endRenderTime");
             if (list_item_life_option.Contains(kStartRenderTime) &&
                 list_item_life_option.Contains(kEndRenderTime)) {
-              options.list_item_life_option_
+              options->list_item_life_option_
                   .start_render_time_ = static_cast<uint64_t>(
                   list_item_life_option.GetProperty(kStartRenderTime).Number());
-              options.list_item_life_option_
+              options->list_item_life_option_
                   .end_render_time_ = static_cast<uint64_t>(
                   list_item_life_option.GetProperty(kEndRenderTime).Number());
             }
@@ -4425,23 +4425,23 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
       if (arg1->Contains(kTimingFlag)) {
         const auto& timing_flag = arg1->GetProperty(kTimingFlag).StdString();
         if (!timing_flag.empty()) {
-          options.need_timestamps = true;
+          options->need_timestamps = true;
           GET_TASM_POINTER()->GetDelegate().BindPipelineIDWithTimingFlag(
-              options.pipeline_id, timing_flag);
+              options->pipeline_id, timing_flag);
         }
       }
 
       BASE_STATIC_STRING_DECL(kReloadTemplate, "reloadTemplate");
       if (arg1->Contains(kReloadTemplate)) {
-        options.is_reload_template =
+        options->is_reload_template =
             (arg1->GetProperty(kReloadTemplate).Bool());
-        options.need_timestamps |= options.is_reload_template;
+        options->need_timestamps |= options->is_reload_template;
       }
 
       auto kNativeUpdateDataOrder_str =
           BASE_STATIC_STRING(kNativeUpdateDataOrder);
       if (arg1->Contains(kNativeUpdateDataOrder_str)) {
-        options.native_update_data_order_ =
+        options->native_update_data_order_ =
             (arg1->GetProperty(kNativeUpdateDataOrder_str).Number());
       }
 
@@ -4492,7 +4492,7 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
 
   tasm::TimingCollector::Scope<TemplateAssembler::Delegate> scope(
       &self->GetDelegate(), options);
-  if (options.is_reload_template) {
+  if (options->is_reload_template) {
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomEnd);
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderEnd);
   }
@@ -6363,7 +6363,7 @@ RENDERER_FUNCTION_CC(AirSetData) {
     UpdatePageOption update_option;
     update_option.update_first_time = false;
     update_option.from_native = false;
-    PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
     page->UpdatePageData(*arg1, update_option, pipeline_options);
   } else if (component && component->is_component()) {
     static_cast<AirComponentElement*>(component)->SetData(*arg1);

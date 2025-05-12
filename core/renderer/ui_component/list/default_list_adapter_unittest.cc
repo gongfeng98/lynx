@@ -151,8 +151,8 @@ TEST_F(DefaultListAdapterTest, DiffCase1) {
       EXPECT_FALSE(default_list_adapter->IsRecycled(item_holder));
       EXPECT_FALSE(default_list_adapter->IsFinishedBinding(item_holder));
       // Finish Bind
-      PipelineOptions pipeline;
-      pipeline.operation_id =
+      auto pipeline = std::make_shared<PipelineOptions>();
+      pipeline->operation_id =
           list::GenerateOperationId(list_element_ref->impl_id());
       auto list_item_ref = CreateComponentElement();
       default_list_adapter->OnFinishBindItemHolder(list_item_ref.get(),
@@ -195,8 +195,8 @@ TEST_F(DefaultListAdapterTest, DiffCase1) {
       } else {
         // Bind
         EXPECT_TRUE(default_list_adapter->BindItemHolder(item_holder, index));
-        PipelineOptions pipeline;
-        pipeline.operation_id =
+        auto pipeline = std::make_shared<PipelineOptions>();
+        pipeline->operation_id =
             list::GenerateOperationId(list_element_ref->impl_id());
         auto list_item_ref = CreateComponentElement();
         default_list_adapter->OnFinishBindItemHolder(list_item_ref.get(),

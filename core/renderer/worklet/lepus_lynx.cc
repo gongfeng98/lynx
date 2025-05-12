@@ -48,7 +48,7 @@ uint32_t LepusLynx::SetTimeout(std::unique_ptr<NapiFuncCallback> callback,
         task_handler_->InvokeWithTimedTaskID(callback_id,
                                              Napi::Object::New(env), tasm_);
         task_handler_->RemoveTimeTask(callback_id);
-        tasm::PipelineOptions options;
+        auto options = std::make_shared<tasm::PipelineOptions>();
         // TODO(kechenglong): SetNeedsLayout if and only if needed.
         tasm_->page_proxy()->element_manager()->SetNeedsLayout();
         tasm_->page_proxy()->element_manager()->OnPatchFinish(options);
@@ -73,7 +73,7 @@ uint32_t LepusLynx::SetInterval(std::unique_ptr<NapiFuncCallback> callback,
             tasm::timing::kTaskNameLepusLynxSetInterval);
         task_handler_->InvokeWithTimedTaskID(
             callback_id, Napi::Object::New(NapiEnv()), tasm_);
-        tasm::PipelineOptions options;
+        auto options = std::make_shared<tasm::PipelineOptions>();
         // TODO(kechenglong): SetNeedsLayout if and only if needed.
         tasm_->page_proxy()->element_manager()->SetNeedsLayout();
         tasm_->page_proxy()->element_manager()->OnPatchFinish(options);

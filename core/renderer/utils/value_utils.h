@@ -5,6 +5,7 @@
 #ifndef CORE_RENDERER_UTILS_VALUE_UTILS_H_
 #define CORE_RENDERER_UTILS_VALUE_UTILS_H_
 #include <functional>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -37,7 +38,7 @@ lepus::Value ConvertJSValueToLepusValue(const lepus::Value& value);
 
 // TODO(kechenglong): impl ToLepusValue in PipelineOptions.
 lepus::Value PipelineOptionsToLepusValue(
-    const PipelineOptions& pipeline_options);
+    const std::shared_ptr<PipelineOptions>& pipeline_options);
 
 }  // namespace tasm
 }  // namespace lynx

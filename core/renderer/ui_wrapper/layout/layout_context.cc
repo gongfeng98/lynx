@@ -44,14 +44,15 @@ namespace tasm {
 
 namespace {
 
-void CollectDirtyNodeForList(LayoutNode* node, const PipelineOptions& options) {
+void CollectDirtyNodeForList(LayoutNode* node,
+                             const std::shared_ptr<PipelineOptions>& options) {
   static bool enable_native_list_nested =
       LynxEnv::GetInstance().EnableNativeListNested();
-  if ((!enable_native_list_nested && options.operation_id == 0) ||
-      (enable_native_list_nested && node->id() != options.list_id_)) {
+  if ((!enable_native_list_nested && options->operation_id == 0) ||
+      (enable_native_list_nested && node->id() != options->list_id_)) {
     // Note: We should avoid adding the parent list node to
-    // options.updated_list_elements_ when rendering a list item.
-    options.updated_list_elements_.emplace_back(node->id());
+    // options->updated_list_elements_ when rendering a list item.
+    options->updated_list_elements_.emplace_back(node->id());
   }
 }
 
@@ -651,7 +652,8 @@ LayoutNode* LayoutContext::FindNodeById(int32_t id) {
   return nullptr;
 }
 
-void LayoutContext::DispatchLayoutUpdates(const PipelineOptions& options) {
+void LayoutContext::DispatchLayoutUpdates(
+    const std::shared_ptr<PipelineOptions>& options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LAYOUT_CONTEXT_DISPATCH_LAYOUT_UPDATES);
   tasm::timing::LongTaskMonitor::Scope longTaskScope(
       page_options_, tasm::timing::kNativeFuncTask,
@@ -698,35 +700,36 @@ void LayoutContext::SetFontFaces(const FontFacesMap& fontfaces) {
   platform_impl_->SetFontFaces(fontfaces);
 }
 
-void LayoutContext::SetLayoutEarlyExitTiming(const PipelineOptions& options) {
-  if (options.need_timestamps) {
+void LayoutContext::SetLayoutEarlyExitTiming(
+    const std::shared_ptr<PipelineOptions>& options) {
+  if (options->need_timestamps) {
     auto* timing_collector = tasm::TimingCollector::Instance();
     timing_collector->Mark(tasm::timing::kLayoutStart);
 
-    if (options.enable_report_list_item_life_statistic_ &&
-        options.IsRenderListItem()) {
-      options.list_item_life_option_.start_layout_time_ =
+    if (options->enable_report_list_item_life_statistic_ &&
+        options->IsRenderListItem()) {
+      options->list_item_life_option_.start_layout_time_ =
           base::CurrentTimeMicroseconds();
     }
 
     timing_collector->Mark(tasm::timing::kLayoutEnd);
 
-    if (options.enable_report_list_item_life_statistic_ &&
-        options.IsRenderListItem()) {
-      options.list_item_life_option_.end_layout_time_ =
+    if (options->enable_report_list_item_life_statistic_ &&
+        options->IsRenderListItem()) {
+      options->list_item_life_option_.end_layout_time_ =
           base::CurrentTimeMicroseconds();
     }
   }
 }
 
-void LayoutContext::Layout(const PipelineOptions& options) {
+void LayoutContext::Layout(const std::shared_ptr<PipelineOptions>& options) {
   std::string view_port_info_str = base::FormatString(
       " for viewport, size: %.1f, %.1f; mode: %d, %d", viewport_.width,
       viewport_.height, viewport_.width_mode, viewport_.height_mode);
 
   TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, LAYOUT_CONTEXT_LAYOUT,
               [&options](lynx::perfetto::EventContext ctx) {
-                options.UpdateTraceDebugInfo(ctx.event());
+                options->UpdateTraceDebugInfo(ctx.event());
               });
 
   if (layout_paused_) {
@@ -770,12 +773,12 @@ void LayoutContext::Layout(const PipelineOptions& options) {
     root()->MarkDirty();
   }
 
-  if (options.need_timestamps) {
+  if (options->need_timestamps) {
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kLayoutStart);
   }
-  if (options.enable_report_list_item_life_statistic_ &&
-      options.IsRenderListItem()) {
-    options.list_item_life_option_.start_layout_time_ =
+  if (options->enable_report_list_item_life_statistic_ &&
+      options->IsRenderListItem()) {
+    options->list_item_life_option_.start_layout_time_ =
         base::CurrentTimeMicroseconds();
   }
 
@@ -798,12 +801,12 @@ void LayoutContext::Layout(const PipelineOptions& options) {
   }
   LOGV("[Layout] Dispatch layout after" << view_port_info_str);
 
-  if (options.need_timestamps) {
+  if (options->need_timestamps) {
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kLayoutEnd);
   }
-  if (options.enable_report_list_item_life_statistic_ &&
-      options.IsRenderListItem()) {
-    options.list_item_life_option_.end_layout_time_ =
+  if (options->enable_report_list_item_life_statistic_ &&
+      options->IsRenderListItem()) {
+    options->list_item_life_option_.end_layout_time_ =
         base::CurrentTimeMicroseconds();
   }
 
@@ -937,8 +940,8 @@ void LayoutContext::UpdateLayoutInfo(LayoutNode* node) {
   }
 }
 
-void LayoutContext::LayoutRecursively(LayoutNode* node,
-                                      const PipelineOptions& options) {
+void LayoutContext::LayoutRecursively(
+    LayoutNode* node, const std::shared_ptr<PipelineOptions>& options) {
   if (!node->IsDirty() && !node->is_virtual()) {
     return;
   }
@@ -1097,10 +1100,11 @@ void LayoutContext::UpdateLynxEnvForLayoutThread(LynxEnvConfig env) {
   root()->UpdateLynxEnv(lynx_env_config_);
 }
 
-void LayoutContext::RequestLayout(const PipelineOptions& options) {
+void LayoutContext::RequestLayout(
+    const std::shared_ptr<PipelineOptions>& options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LAYOUT_CONTEXT_REQUEST_LAYOUT,
               [&options](lynx::perfetto::EventContext ctx) {
-                options.UpdateTraceDebugInfo(ctx.event());
+                options->UpdateTraceDebugInfo(ctx.event());
               });
   if (root() && root()->slnode()->IsDirty()) {
     if (layout_wanted_) {

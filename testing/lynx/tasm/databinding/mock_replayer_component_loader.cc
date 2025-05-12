@@ -42,7 +42,7 @@ void MockReplayerComponentLoader::RequireTemplate(
     auto tasm = tasm_.lock();
     EXPECT_TRUE(tasm != nullptr);
     std::vector<std::string> ids;
-    PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
     auto callback_info = tasm::LazyBundleLoader::CallBackInfo{
         url,  component->second.source_,      std::nullopt, std::nullopt,
         true, component->second.callback_id_, ids};

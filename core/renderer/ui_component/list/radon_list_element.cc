@@ -49,7 +49,8 @@ bool RadonListElement::OnAttributeSet(const base::String& key,
  *example, if the list's width or height changes, or if the List itself has new
  *diff information.
  **/
-void RadonListElement::OnListElementUpdated(const PipelineOptions& options) {
+void RadonListElement::OnListElementUpdated(
+    const std::shared_ptr<PipelineOptions>& options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, RADON_LIST_ELEMENT_UPDATED);
   if (list_container_delegate()) {
     list_container_delegate()->OnLayoutChildren(options);
@@ -64,9 +65,9 @@ void RadonListElement::OnListElementUpdated(const PipelineOptions& options) {
  *operation.
  * @param component: child
  **/
-void RadonListElement::OnComponentFinished(Element* component,
-                                           const PipelineOptions& option) {
-  if (list_container_delegate() && component && option.operation_id != 0) {
+void RadonListElement::OnComponentFinished(
+    Element* component, const std::shared_ptr<PipelineOptions>& option) {
+  if (list_container_delegate() && component && option->operation_id != 0) {
     list_container_delegate()->FinishBindItemHolder(component, option);
   }
 }

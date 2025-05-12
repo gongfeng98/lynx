@@ -25,9 +25,11 @@ class RadonListElement : public RadonElement, public ListContainer {
                          bool force_update) override;
   bool OnAttributeSet(const base::String& key,
                       const lepus::Value& value) override;
-  void OnListElementUpdated(const PipelineOptions& options) override;
-  void OnComponentFinished(Element* component,
-                           const PipelineOptions& option) override;
+  void OnListElementUpdated(
+      const std::shared_ptr<PipelineOptions>& options) override;
+  void OnComponentFinished(
+      Element* component,
+      const std::shared_ptr<PipelineOptions>& option) override;
   void OnListItemLayoutUpdated(Element* component) override;
   void ScrollByListContainer(float content_offset_x, float content_offset_y,
                              float original_x, float original_y) override;

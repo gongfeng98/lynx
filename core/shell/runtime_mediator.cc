@@ -326,10 +326,10 @@ void RuntimeMediator::RunOnJSThreadWhenIdle(base::closure closure) {
   return js_runner_->PostIdleTask(std::move(closure));
 }
 
-void RuntimeMediator::SetCSSVariables(const std::string& component_id,
-                                      const std::string& id_selector,
-                                      const lepus::Value& properties,
-                                      tasm::PipelineOptions pipeline_options) {
+void RuntimeMediator::SetCSSVariables(
+    const std::string& component_id, const std::string& id_selector,
+    const lepus::Value& properties,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   if (runtime_standalone_mode_) {
     REPORT_JSI_NATIVE_EXCEPTION(
         "SetCSSVariables not supported on runtime standalone mode");
@@ -343,10 +343,10 @@ void RuntimeMediator::SetCSSVariables(const std::string& component_id,
       });
 }
 
-void RuntimeMediator::SetNativeProps(tasm::NodeSelectRoot root,
-                                     const tasm::NodeSelectOptions& options,
-                                     const lepus::Value& native_props,
-                                     tasm::PipelineOptions pipeline_options) {
+void RuntimeMediator::SetNativeProps(
+    tasm::NodeSelectRoot root, const tasm::NodeSelectOptions& options,
+    const lepus::Value& native_props,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   if (runtime_standalone_mode_) {
     REPORT_JSI_NATIVE_EXCEPTION(
         "SetNativeProps not supported on runtime standalone mode");

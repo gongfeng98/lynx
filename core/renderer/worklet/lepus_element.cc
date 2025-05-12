@@ -442,7 +442,7 @@ void LepusElement::SetStyles(const Napi::Object& styles) {
       fiber_element->SetStyle(tasm::CSSProperty::GetPropertyID(pair.first),
                               pair.second);
     }
-    tasm::PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
     fiber_element->element_manager()->OnPatchFinish(pipeline_options,
                                                     fiber_element);
   }
@@ -482,7 +482,7 @@ void LepusElement::SetAttributes(const Napi::Object& attributes) {
   if (element->is_radon_element()) {
     element->FlushProps();
   } else {
-    tasm::PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
     element->element_manager()->OnPatchFinish(pipeline_options, element);
   }
 }

@@ -150,8 +150,8 @@ TEST_F(BatchListAdapterTest, DiffCase1) {
       EXPECT_FALSE(batch_list_adapter->IsRecycled(item_holder));
       EXPECT_FALSE(batch_list_adapter->IsFinishedBinding(item_holder));
       // Finish Bind
-      PipelineOptions pipeline;
-      pipeline.operation_id =
+      auto pipeline = std::make_shared<PipelineOptions>();
+      pipeline->operation_id =
           list::GenerateOperationId(list_element_ref->impl_id());
       auto list_item_ref = CreateListItemElement();
       batch_list_adapter->OnFinishBindItemHolder(list_item_ref.get(), pipeline);
@@ -221,8 +221,8 @@ TEST_F(BatchListAdapterTest, DiffCase1) {
       } else {
         // Bind
         EXPECT_TRUE(batch_list_adapter->BindItemHolder(item_holder, index));
-        PipelineOptions pipeline;
-        pipeline.operation_id =
+        auto pipeline = std::make_shared<PipelineOptions>();
+        pipeline->operation_id =
             list::GenerateOperationId(list_element_ref->impl_id());
         auto list_item_ref = CreateListItemElement();
         batch_list_adapter->OnFinishBindItemHolder(list_item_ref.get(),
@@ -267,8 +267,8 @@ TEST_F(BatchListAdapterTest, RecycleItemHolder) {
       // Bind
       EXPECT_TRUE(batch_list_adapter->BindItemHolder(item_holder, index));
       // Finish Bind
-      PipelineOptions pipeline;
-      pipeline.operation_id =
+      auto pipeline = std::make_shared<PipelineOptions>();
+      pipeline->operation_id =
           list::GenerateOperationId(list_element_ref->impl_id());
       auto list_item_ref = CreateListItemElement();
       batch_list_adapter->OnFinishBindItemHolder(list_item_ref.get(), pipeline);
@@ -305,13 +305,13 @@ TEST_F(BatchListAdapterTest, BindItemHolders) {
   batch_list_adapter->UpdateItemHolderToLatest(list_children_helper.get());
   // Test list batch render.
   ItemHolderSet item_holder_set;
-  PipelineOptions pipeline;
+  auto pipeline = std::make_shared<PipelineOptions>();
   std::vector<Element*> list_items;
   for (int index = 0;
        index < static_cast<int>(diff_result_0.GetItemCount() / 2); ++index) {
     item_holder_set.insert(batch_list_adapter->GetItemHolderForIndex(index));
     list_items.emplace_back(CreateListItemElement().get());
-    pipeline.operation_ids_.emplace_back(
+    pipeline->operation_ids_.emplace_back(
         list::GenerateOperationId(list_element_ref->impl_id()));
   }
   // Invoke batch render.

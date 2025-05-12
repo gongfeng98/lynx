@@ -421,8 +421,9 @@ class FiberElement : public Element, public SelectorItem {
    * Element API for setNativeProps
    *  @param native_props the props that updated from js.
    */
-  virtual void SetNativeProps(const lepus::Value& native_props,
-                              PipelineOptions& pipeline_options) override;
+  virtual void SetNativeProps(
+      const lepus::Value& native_props,
+      std::shared_ptr<PipelineOptions>& pipeline_options) override;
 
   /**
    * Element API for adding lepus event
@@ -728,7 +729,7 @@ class FiberElement : public Element, public SelectorItem {
   void OnClassChanged(const ClassList& old_classes,
                       const ClassList& new_classes);
 
-  void OnPatchFinish(PipelineOptions& option) override;
+  void OnPatchFinish(std::shared_ptr<PipelineOptions>& option) override;
 
   void FlushAnimatedStyleInternal(tasm::CSSPropertyID,
                                   const tasm::CSSValue&) override;

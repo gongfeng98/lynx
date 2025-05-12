@@ -112,7 +112,7 @@ void DataUpdateReplayer::DataUpdateReplay(const std::string& replay_data,
 
       EXPECT_TRUE(params_val[kParaUrl].IsString());
       const auto& url = params_val[kParaUrl].GetString();
-      PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<PipelineOptions>();
       tasm->LoadTemplate(url, input_source, template_data_ptr,
                          pipeline_options);
 
@@ -123,7 +123,7 @@ void DataUpdateReplayer::DataUpdateReplay(const std::string& replay_data,
       lepus::Value data_val =
           lepus::jsonValueTolepusValue(params_val[kParamData]);
       const std::string PAGE_GROUP_ID = "-1";
-      PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<PipelineOptions>();
       runtime::UpdateDataTask task(
           true, PAGE_GROUP_ID, std::move(data_val), piper::ApiCallBack(),
           runtime::UpdateDataType(), std::move(pipeline_options));
@@ -138,7 +138,7 @@ void DataUpdateReplayer::DataUpdateReplay(const std::string& replay_data,
 
       EXPECT_TRUE(params_val[kParamNoticeDelegate].IsBool());
       bool noticeDelegate_val = params_val[kParamNoticeDelegate].GetBool();
-      PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<PipelineOptions>();
       tasm->UpdateConfig(config_val, noticeDelegate_val, pipeline_options);
 
     } else if (CaseInsensitiveStringComparison(function_name,
@@ -147,7 +147,7 @@ void DataUpdateReplayer::DataUpdateReplay(const std::string& replay_data,
       EXPECT_TRUE(params_val[kParamGlobalProps].IsObject());
       lepus::Value global_props_val =
           lepus::jsonValueTolepusValue(params_val[kParamGlobalProps]);
-      PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<PipelineOptions>();
       tasm->UpdateGlobalProps(global_props_val, true, pipeline_options);
     } else if (CaseInsensitiveStringComparison(function_name,
                                                kFuncUpdateComponentData) &&
@@ -159,7 +159,7 @@ void DataUpdateReplayer::DataUpdateReplay(const std::string& replay_data,
 
       EXPECT_TRUE(params_val[kParamComponentId].IsString());
       std::string component_id = params_val[kParamComponentId].GetString();
-      PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<PipelineOptions>();
       tasm->page_proxy()->UpdateComponentData(component_id, data_val,
                                               pipeline_options);
 
@@ -180,7 +180,7 @@ void DataUpdateReplayer::DataUpdateReplay(const std::string& replay_data,
               TemplateData(value_val, false, preprocessorName_val));
       UpdatePageOption update_page_option;
       update_page_option.from_native = true;
-      PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<PipelineOptions>();
       tasm->UpdateDataByPreParsedData(template_data_ptr, update_page_option,
                                       pipeline_options);
 
@@ -352,7 +352,7 @@ void DataUpdateReplayer::DataUpdateReplay(const std::string& replay_data,
         auto callback_info = LazyBundleLoader::CallBackInfo(
             url, input_source, std::nullopt, std::nullopt, nullptr, -1);
         callback_info.sync = false;
-        PipelineOptions pipeline_options;
+        auto pipeline_options = std::make_shared<PipelineOptions>();
         tasm->DidLoadComponent(std::move(callback_info), pipeline_options);
       }
     }

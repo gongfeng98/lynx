@@ -96,7 +96,8 @@ class PaintingContextDarwin : public PaintingCtxPlatformImpl {
   void ConsumeGesture(int64_t id, int32_t gesture_id,
                       const pub::Value& params) override;
 
-  void FinishTasmOperation(const PipelineOptions& options) override;
+  void FinishTasmOperation(
+      const std::shared_ptr<PipelineOptions>& options) override;
   std::vector<float> getBoundingClientOrigin(int id) override;
   std::vector<float> getWindowSize(int id) override;
   std::vector<float> GetRectToWindow(int id) override;
@@ -114,7 +115,8 @@ class PaintingContextDarwin : public PaintingCtxPlatformImpl {
   // called before LayoutDidFinish
   // TODO(heshan):merge to FinishLayoutOperation...
   void LayoutDidFinish();
-  void FinishLayoutOperation(const PipelineOptions& options) override;
+  void FinishLayoutOperation(
+      const std::shared_ptr<PipelineOptions>& options) override;
 
   void SetEnableFlush(bool enable_flush);
   void ForceFlush();

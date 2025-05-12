@@ -236,7 +236,8 @@ void TasmMediator::OnJSSourcePrepared(
     tasm::TasmRuntimeBundle bundle, const lepus::Value& global_props,
     const std::string& page_name, tasm::PackageInstanceDSL dsl,
     tasm::PackageInstanceBundleModuleMode bundle_module_mode,
-    const std::string& url, const tasm::PipelineOptions& pipeline_options) {
+    const std::string& url,
+    const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) {
   runtime_actor_->ActAsync([bundle = std::move(bundle), global_props, page_name,
                             dsl, bundle_module_mode, url,
                             pipeline_options](auto& runtime) mutable {
@@ -294,7 +295,8 @@ void TasmMediator::CallJSFunction(const std::string& module_id,
 }
 
 void TasmMediator::OnJSAppReload(
-    tasm::TemplateData data, const tasm::PipelineOptions& pipeline_options) {
+    tasm::TemplateData data,
+    const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) {
   runtime_actor_->ActAsync(
       [data = std::move(data), pipeline_options](auto& runtime) mutable {
         runtime->OnAppReload(std::move(data), pipeline_options);
@@ -333,7 +335,8 @@ fml::RefPtr<fml::TaskRunner> TasmMediator::GetLepusTimedTaskRunner() {
 }
 
 // delegate for class element manager
-void TasmMediator::DispatchLayoutUpdates(const tasm::PipelineOptions& options) {
+void TasmMediator::DispatchLayoutUpdates(
+    const std::shared_ptr<tasm::PipelineOptions>& options) {
   layout_actor_->Act(
       [options](auto& layout) { layout->DispatchLayoutUpdates(options); });
 }

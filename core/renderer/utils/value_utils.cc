@@ -4,6 +4,8 @@
 
 #include "core/renderer/utils/value_utils.h"
 
+#include <memory>
+
 #include "core/renderer/utils/base/tasm_constants.h"
 #include "core/renderer/utils/lynx_env.h"
 
@@ -181,16 +183,16 @@ lepus::Value ConvertJSValueToLepusValue(const lepus::Value& value) {
 
 // TODO(kechenglong): impl ToLepusValue in PipelineOptions.
 lepus::Value PipelineOptionsToLepusValue(
-    const PipelineOptions& pipeline_options) {
+    const std::shared_ptr<PipelineOptions>& pipeline_options) {
   lepus::Value pipeline_options_obj(lepus::Dictionary::Create());
   pipeline_options_obj.SetProperty(BASE_STATIC_STRING(kPipelineID),
-                                   lepus::Value(pipeline_options.pipeline_id));
+                                   lepus::Value(pipeline_options->pipeline_id));
   pipeline_options_obj.SetProperty(
       BASE_STATIC_STRING(kPipelineOrigin),
-      lepus::Value(pipeline_options.pipeline_origin));
+      lepus::Value(pipeline_options->pipeline_origin));
   pipeline_options_obj.SetProperty(
       BASE_STATIC_STRING(kPipelineNeedTimestamps),
-      lepus::Value(pipeline_options.need_timestamps));
+      lepus::Value(pipeline_options->need_timestamps));
   return pipeline_options_obj;
 }
 

@@ -204,8 +204,9 @@ class Element : public lepus::RefCounted {
   void Animate(const lepus::Value& args);
 
   // For JS API setNativeProps
-  virtual void SetNativeProps(const lepus::Value& args,
-                              PipelineOptions& pipeline_options) = 0;
+  virtual void SetNativeProps(
+      const lepus::Value& args,
+      std::shared_ptr<PipelineOptions>& pipeline_options) = 0;
 
   // Get List Node
   virtual ListNode* GetListNode() = 0;
@@ -534,7 +535,8 @@ class Element : public lepus::RefCounted {
 
   virtual void TickElement(fml::TimePoint& time){};
 
-  bool TickAllAnimation(fml::TimePoint& time, PipelineOptions& options);
+  bool TickAllAnimation(fml::TimePoint& time,
+                        std::shared_ptr<PipelineOptions>& options);
 
   virtual void RequestLayout() = 0;
 
@@ -542,7 +544,7 @@ class Element : public lepus::RefCounted {
 
   void UpdateFinalStyleMap(const StyleMap& styles);
 
-  virtual void OnPatchFinish(PipelineOptions& option) = 0;
+  virtual void OnPatchFinish(std::shared_ptr<PipelineOptions>& option) = 0;
 
   virtual int32_t GetCSSID() const = 0;
 
@@ -561,13 +563,14 @@ class Element : public lepus::RefCounted {
   // When the list element changes, this method will be invoked. For example, if
   // the list's width or height changes, or if the List itself has new diff
   // information.
-  virtual void OnListElementUpdated(const PipelineOptions& options) {}
+  virtual void OnListElementUpdated(
+      const std::shared_ptr<PipelineOptions>& options) {}
 
   // When the rendering of the list's child node is complete, this method will
   // be invoked. In this method, we can accurately obtain the layout
   // information of the child node.
-  virtual void OnComponentFinished(Element* component,
-                                   const PipelineOptions& option) {}
+  virtual void OnComponentFinished(
+      Element* component, const std::shared_ptr<PipelineOptions>& option) {}
 
   // This method is override by ListElement or RadonListElement, which used to
   // notify list that the list item's layout info has been updated.
@@ -576,7 +579,8 @@ class Element : public lepus::RefCounted {
   // When the batch rendering of the list's child nodes are complete, this
   // method will be invoked. In this method, we can accurately obtain the layout
   // information of the child nodes
-  virtual void OnListItemBatchFinished(const PipelineOptions& options) {}
+  virtual void OnListItemBatchFinished(
+      const std::shared_ptr<PipelineOptions>& options) {}
 
   // Send drag distance to list element.
   virtual void ScrollByListContainer(float content_offset_x,

@@ -146,8 +146,8 @@ int64_t BatchListAdapter::BindItemHolderInternal(
   return list::kInvalidIndex;
 }
 
-void BatchListAdapter::OnFinishBindItemHolder(Element* list_item,
-                                              const PipelineOptions& options) {
+void BatchListAdapter::OnFinishBindItemHolder(
+    Element* list_item, const std::shared_ptr<PipelineOptions>& options) {
   ListNode* list_node = nullptr;
   if (!list_element_ || !(list_node = list_element_->GetListNode())) {
     NLIST_LOGE("BatchListAdapter::OnFinishBindItemHolder: "
@@ -155,11 +155,11 @@ void BatchListAdapter::OnFinishBindItemHolder(Element* list_item,
     return;
   }
   int valid_bind_index =
-      OnFinishBindInternal(list_item, options.operation_id, list_node);
+      OnFinishBindInternal(list_item, options->operation_id, list_node);
   if (valid_bind_index != list::kInvalidIndex) {
     // Note: Mark should_flush_finish_layout_ to determine whether needs to
     // invoke FinishLayoutOperation().
-    list_container_->MarkShouldFlushFinishLayout(options.has_layout);
+    list_container_->MarkShouldFlushFinishLayout(options->has_layout);
     if (list_container_->intercept_depth() == 0) {
       // Note: In MULTI_THREAD mode, if the list item has been rendered async,
       // we should invoke list OnLayoutChildren. But in ALL_ON_UI mode, we
@@ -172,11 +172,12 @@ void BatchListAdapter::OnFinishBindItemHolder(Element* list_item,
 }
 
 void BatchListAdapter::OnFinishBindItemHolders(
-    const std::vector<Element*>& list_items, const PipelineOptions& options) {
+    const std::vector<Element*>& list_items,
+    const std::shared_ptr<PipelineOptions>& options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LIST_ADAPTER_FINISH_BIND_ITEM_HOLDERS,
               "batch_item_number", list_items.size());
-  if (list_items.empty() || options.operation_ids_.empty() ||
-      list_items.size() != options.operation_ids_.size()) {
+  if (list_items.empty() || options->operation_ids_.empty() ||
+      list_items.size() != options->operation_ids_.size()) {
     return;
   }
   ListNode* list_node = nullptr;
@@ -190,13 +191,13 @@ void BatchListAdapter::OnFinishBindItemHolders(
   // Traverse list items and operation ids array.
   for (size_t i = 0; i < list_item_size; ++i) {
     int valid_bind_index = OnFinishBindInternal(
-        list_items[i], options.operation_ids_[i], list_node);
+        list_items[i], options->operation_ids_[i], list_node);
     has_valid_bind |= valid_bind_index != list::kInvalidIndex;
   }
   if (has_valid_bind) {
     // Note: Mark should_flush_finish_layout_ to determine whether needs to
     // invoke FinishLayoutOperation().
-    list_container_->MarkShouldFlushFinishLayout(options.has_layout);
+    list_container_->MarkShouldFlushFinishLayout(options->has_layout);
     if (list_container_->intercept_depth() == 0) {
       // Note: In MULTI_THREAD mode, if the list items have been rendered async,
       // we should invoke list OnBatchLayoutChildren. But in ALL_ON_UI mode, we

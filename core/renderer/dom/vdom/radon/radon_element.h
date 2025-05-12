@@ -61,8 +61,9 @@ class RadonElement : public Element {
   virtual void UpdateLayoutNodeAttribute(starlight::LayoutAttribute key,
                                          const lepus::Value& value) override;
 
-  virtual void SetNativeProps(const lepus::Value& args,
-                              PipelineOptions& pipeline_options) override;
+  virtual void SetNativeProps(
+      const lepus::Value& args,
+      std::shared_ptr<PipelineOptions>& pipeline_options) override;
 
   virtual void SetAttribute(const base::String& key, const lepus::Value& value,
                             bool need_update_data_model = true) override;
@@ -137,7 +138,7 @@ class RadonElement : public Element {
   void ConsumeStyle(const StyleMap& styles,
                     const StyleMap* inherit_styles = nullptr) override;
 
-  void OnPatchFinish(PipelineOptions& option) override;
+  void OnPatchFinish(std::shared_ptr<PipelineOptions>& option) override;
 
   void FlushAnimatedStyleInternal(tasm::CSSPropertyID,
                                   const tasm::CSSValue&) override;

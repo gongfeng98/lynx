@@ -101,7 +101,7 @@ class TasmMediator : public LynxEngine::Delegate {
       const std::string& page_name, tasm::PackageInstanceDSL dsl,
       tasm::PackageInstanceBundleModuleMode bundle_module_mode,
       const std::string& url,
-      const tasm::PipelineOptions& pipeline_options) override;
+      const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) override;
 
   void CallJSApiCallback(piper::ApiCallBack callback) override;
 
@@ -135,8 +135,9 @@ class TasmMediator : public LynxEngine::Delegate {
   void OnDataUpdatedByNative(tasm::TemplateData data,
                              const bool reset) override;
 
-  void OnJSAppReload(tasm::TemplateData data,
-                     const tasm::PipelineOptions& pipeline_options) override;
+  void OnJSAppReload(
+      tasm::TemplateData data,
+      const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) override;
 
   void OnLifecycleEvent(const lepus::Value& data) override;
 
@@ -163,7 +164,8 @@ class TasmMediator : public LynxEngine::Delegate {
       uintptr_t id,
       base::MoveOnlyClosure<void, int64_t, int64_t> callback) override;
   // delegate for class element manager
-  void DispatchLayoutUpdates(const tasm::PipelineOptions& options) override;
+  void DispatchLayoutUpdates(
+      const std::shared_ptr<tasm::PipelineOptions>& options) override;
   std::unordered_map<int32_t, tasm::LayoutInfoArray> GetSubTreeLayoutInfo(
       int32_t root_id, tasm::Viewport viewport = tasm::Viewport{}) override;
   void SetEnableLayout() override;

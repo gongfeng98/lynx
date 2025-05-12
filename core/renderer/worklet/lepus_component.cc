@@ -295,12 +295,12 @@ void LepusComponent::DoFrame(int64_t start_time, int64_t end_time) {
     if (component->IsPageForBaseComponent()) {
       tasm::UpdatePageOption update_page_option;
       update_page_option.from_native = true;
-      tasm::PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
       tasm->UpdateDataByPreParsedData(
           std::make_shared<tasm::TemplateData>(data_updated_, true),
           update_page_option, pipeline_options);
     } else {
-      tasm::PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
       tasm->page_proxy()->UpdateComponentData(component->ComponentStrId(),
                                               data_updated_, pipeline_options);
     }

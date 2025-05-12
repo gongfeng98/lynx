@@ -138,22 +138,23 @@ class PageProxy {
                          bool should_component_update);
 
   bool UpdateGlobalProps(const lepus::Value &table, bool should_render,
-                         PipelineOptions &pipeline_options);
+                         std::shared_ptr<PipelineOptions> &pipeline_options);
 
   lepus::Value GetGlobalPropsFromTasm() const;
 
   void UpdateComponentData(const std::string &id, const lepus::Value &table,
-                           PipelineOptions &pipeline_options);
+                           std::shared_ptr<PipelineOptions> &pipeline_options);
 
-  bool UpdateGlobalDataInternal(const lepus_value &value,
-                                const UpdatePageOption &update_page_option,
-                                PipelineOptions &pipeline_options);
+  bool UpdateGlobalDataInternal(
+      const lepus_value &value, const UpdatePageOption &update_page_option,
+      std::shared_ptr<PipelineOptions> &pipeline_options);
 
   const lepus::Value GetComponentContextDataByKey(const std::string &id,
                                                   const std::string &key);
 
   bool UpdateConfig(const lepus::Value &config, lepus::Value &out,
-                    bool to_refresh, PipelineOptions &pipeline_options);
+                    bool to_refresh,
+                    std::shared_ptr<PipelineOptions> &pipeline_options);
 
   std::unique_ptr<lepus::Value> GetData();
 
@@ -166,13 +167,13 @@ class PageProxy {
   // get impl id of failed components and try to render fallback
   bool OnLazyBundleLoadedFailed(uint32_t uid, int &impl_id);
 
-  void OnLazyBundleLoadedFromJS(const std::string &url,
-                                const std::vector<std::string> &ids,
-                                PipelineOptions &pipeline_options);
+  void OnLazyBundleLoadedFromJS(
+      const std::string &url, const std::vector<std::string> &ids,
+      std::shared_ptr<PipelineOptions> &pipeline_options);
 
   void UpdateInLoadTemplate(const lepus::Value &data,
                             const UpdatePageOption &update_page_option,
-                            PipelineOptions &pipeline_options);
+                            std::shared_ptr<PipelineOptions> &pipeline_options);
   void ForceUpdate(const UpdatePageOption &update_page_option);
 
   void SetRadonPage(RadonPage *page);
@@ -196,7 +197,7 @@ class PageProxy {
   void SetCSSVariables(const std::string &component_id,
                        const std::string &id_selector,
                        const lepus::Value &properties,
-                       PipelineOptions &pipeline_options);
+                       std::shared_ptr<PipelineOptions> &pipeline_options);
 
   std::vector<std::string> SelectComponent(const std::string &comp_id,
                                            const std::string &id_selector,
@@ -332,8 +333,9 @@ class PageProxy {
   // Hydration may be triggered immediately after lepus rendered the page if no
   // js constructor is triggered. And otherwise hydration will be triggered when
   // all pending js tasks are done.
-  void HydrateOnFirstScreenIfPossible(TemplateAssembler *tasm,
-                                      PipelineOptions &pipeline_options);
+  void HydrateOnFirstScreenIfPossible(
+      TemplateAssembler *tasm,
+      std::shared_ptr<PipelineOptions> &pipeline_options);
 
   // When the data used for server side rendering is the same with the current
   // client side page data. It can be assumed that the page rendered on client
@@ -350,15 +352,15 @@ class PageProxy {
 
   void RenderWithSSRData(TemplateAssembler *tasm, const lepus::Value &data,
                          const lepus::Value &injected_data, int32_t instance_id,
-                         PipelineOptions &pipeline_options);
+                         std::shared_ptr<PipelineOptions> &pipeline_options);
 
   void RenderWithSSRData(SSRHydrateInfo info, std::string global_event_script,
                          int32_t instance_id,
-                         PipelineOptions &pipeline_options);
+                         std::shared_ptr<PipelineOptions> &pipeline_options);
 
   void UpdateDataForSsr(std::vector<base::String> &keys_to_be_updated,
                         const lepus::Value &data,
-                        PipelineOptions &pipeline_options);
+                        std::shared_ptr<PipelineOptions> &pipeline_options);
   void DiffHydrationData(const lepus::Value &data);
 
   void ResetHydrateInfo();

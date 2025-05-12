@@ -2288,8 +2288,9 @@ void FiberElement::SetWorkletEventHandler(const base::String &name,
   MarkDirty(kDirtyEvent);
 }
 
-void FiberElement::SetNativeProps(const lepus::Value &native_props,
-                                  PipelineOptions &pipeline_options) {
+void FiberElement::SetNativeProps(
+    const lepus::Value &native_props,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, FIBER_ELEMENT_SET_NATIVE_PROPS,
               [this](lynx::perfetto::EventContext ctx) {
                 UpdateTraceDebugInfo(ctx.event());
@@ -2647,7 +2648,7 @@ void FiberElement::UpdateCSSVariable(const lepus::Value &css_variable_updated) {
     MarkStyleDirty(false);
   }
   RecursivelyMarkChildrenCSSVariableDirty(css_variable_updated);
-  PipelineOptions option;
+  auto option = std::make_shared<PipelineOptions>();
   element_manager()->OnPatchFinish(option, this);
 }
 
@@ -2961,7 +2962,7 @@ void FiberElement::OnPseudoStatusChanged(PseudoState prev_status,
         MarkStyleDirty(false);
       }
       InvalidateChildren(invalidation_set);
-      PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<PipelineOptions>();
       element_manager_->OnPatchFinish(pipeline_options, this);
     }
     return;
@@ -2978,7 +2979,7 @@ void FiberElement::OnPseudoStatusChanged(PseudoState prev_status,
   has_extreme_parsed_styles_ = false;
 
   data_model_->SetPseudoState(current_status);
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   element_manager_->OnPatchFinish(pipeline_options, this);
 }
 
@@ -3270,7 +3271,7 @@ void FiberElement::ResetTransitionStylesInAdvanceInternal(
   ResetStyleInternal(css_id);
 }
 
-void FiberElement::OnPatchFinish(PipelineOptions &option) {
+void FiberElement::OnPatchFinish(std::shared_ptr<PipelineOptions> &option) {
   element_manager_->OnPatchFinish(option, this);
 }
 

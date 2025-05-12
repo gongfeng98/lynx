@@ -1137,11 +1137,11 @@ Value AppProxy::get(Runtime* rt, const PropNameID& name) {
           if (!ptr || ptr->IsDestroying()) {
             return piper::Value::undefined();
           }
-          tasm::PipelineOptions options;
+          auto options = std::make_shared<tasm::PipelineOptions>();
           piper::Object options_obj = piper::Object(rt);
-          options_obj.setProperty(rt, tasm::kPipelineID, options.pipeline_id);
+          options_obj.setProperty(rt, tasm::kPipelineID, options->pipeline_id);
           options_obj.setProperty(rt, tasm::kPipelineNeedTimestamps,
-                                  options.need_timestamps);
+                                  options->need_timestamps);
           return options_obj;
         });
   } else if (methodName == "onPipelineStart") {
@@ -1730,11 +1730,11 @@ void App::SetCSSVariable(const std::string& component_id,
   if (!rt) {
     return;
   }
-  tasm::PipelineOptions pipeline_options;
-  pipeline_options.pipeline_origin = tasm::timing::kUpdateTriggeredByBts;
-  delegate_->OnPipelineStart(pipeline_options.pipeline_id,
-                             pipeline_options.pipeline_origin,
-                             pipeline_options.pipeline_start_timestamp);
+  auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
+  pipeline_options->pipeline_origin = tasm::timing::kUpdateTriggeredByBts;
+  delegate_->OnPipelineStart(pipeline_options->pipeline_id,
+                             pipeline_options->pipeline_origin,
+                             pipeline_options->pipeline_start_timestamp);
   delegate_->SetCSSVariables(component_id, id_selector, properties,
                              std::move(pipeline_options));
 }
@@ -2553,15 +2553,15 @@ void App::setJsAppObj(piper::Object&& obj) {
 
 void App::appDataChange(lepus_value&& data, ApiCallBack callback,
                         runtime::UpdateDataType update_data_type) {
-  tasm::PipelineOptions pipeline_options;
-  pipeline_options.pipeline_origin = tasm::timing::kUpdateTriggeredByBts;
-  delegate_->OnPipelineStart(pipeline_options.pipeline_id,
-                             pipeline_options.pipeline_origin,
-                             pipeline_options.pipeline_start_timestamp);
+  auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
+  pipeline_options->pipeline_origin = tasm::timing::kUpdateTriggeredByBts;
+  delegate_->OnPipelineStart(pipeline_options->pipeline_id,
+                             pipeline_options->pipeline_origin,
+                             pipeline_options->pipeline_start_timestamp);
   const auto& timing_flag = tasm::GetTimingFlag(data);
   if (!timing_flag.empty()) {
-    pipeline_options.need_timestamps = true;
-    delegate_->BindPipelineIDWithTimingFlag(pipeline_options.pipeline_id,
+    pipeline_options->need_timestamps = true;
+    delegate_->BindPipelineIDWithTimingFlag(pipeline_options->pipeline_id,
                                             timing_flag);
     tasm::TimingCollector::Scope<runtime::TemplateDelegate> scope(
         delegate_, pipeline_options);
@@ -2687,15 +2687,15 @@ std::optional<JSINativeException> App::batchedUpdateData(
       update_data_type =
           runtime::UpdateDataType(js_update_data_type_opt->getNumber());
     }
-    tasm::PipelineOptions pipeline_options;
-    pipeline_options.pipeline_origin = tasm::timing::kUpdateTriggeredByBts;
-    delegate_->OnPipelineStart(pipeline_options.pipeline_id,
-                               pipeline_options.pipeline_origin,
-                               pipeline_options.pipeline_start_timestamp);
+    auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
+    pipeline_options->pipeline_origin = tasm::timing::kUpdateTriggeredByBts;
+    delegate_->OnPipelineStart(pipeline_options->pipeline_id,
+                               pipeline_options->pipeline_origin,
+                               pipeline_options->pipeline_start_timestamp);
     const auto& timing_flag = tasm::GetTimingFlag(*data_lepusValue);
     if (!timing_flag.empty()) {
-      pipeline_options.need_timestamps = true;
-      delegate_->BindPipelineIDWithTimingFlag(pipeline_options.pipeline_id,
+      pipeline_options->need_timestamps = true;
+      delegate_->BindPipelineIDWithTimingFlag(pipeline_options->pipeline_id,
                                               timing_flag);
       tasm::TimingCollector::Scope<runtime::TemplateDelegate> scope(
           delegate_, pipeline_options);
@@ -3067,15 +3067,15 @@ void App::updateComponentData(const std::string& component_id,
                               runtime::UpdateDataType update_data_type) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, JS_UPDATE_COMPONET_DATA);
   LOGI(" updateComponentData " << component_id << " " << this);
-  tasm::PipelineOptions pipeline_options;
-  pipeline_options.pipeline_origin = tasm::timing::kUpdateTriggeredByBts;
-  delegate_->OnPipelineStart(pipeline_options.pipeline_id,
-                             pipeline_options.pipeline_origin,
-                             pipeline_options.pipeline_start_timestamp);
+  auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
+  pipeline_options->pipeline_origin = tasm::timing::kUpdateTriggeredByBts;
+  delegate_->OnPipelineStart(pipeline_options->pipeline_id,
+                             pipeline_options->pipeline_origin,
+                             pipeline_options->pipeline_start_timestamp);
   const auto& timing_flag = tasm::GetTimingFlag(data);
   if (!timing_flag.empty()) {
-    pipeline_options.need_timestamps = true;
-    delegate_->BindPipelineIDWithTimingFlag(pipeline_options.pipeline_id,
+    pipeline_options->need_timestamps = true;
+    delegate_->BindPipelineIDWithTimingFlag(pipeline_options->pipeline_id,
                                             timing_flag);
     tasm::TimingCollector::Scope<runtime::TemplateDelegate> scope(
         delegate_, pipeline_options);
@@ -3130,11 +3130,11 @@ void App::GetFields(tasm::NodeSelectRoot root, tasm::NodeSelectOptions options,
 void App::SetNativeProps(tasm::NodeSelectRoot root,
                          tasm::NodeSelectOptions options,
                          lepus::Value native_props) {
-  tasm::PipelineOptions pipeline_options;
-  pipeline_options.pipeline_origin = tasm::timing::kSetNativeProps;
-  delegate_->OnPipelineStart(pipeline_options.pipeline_id,
-                             pipeline_options.pipeline_origin,
-                             pipeline_options.pipeline_start_timestamp);
+  auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
+  pipeline_options->pipeline_origin = tasm::timing::kSetNativeProps;
+  delegate_->OnPipelineStart(pipeline_options->pipeline_id,
+                             pipeline_options->pipeline_origin,
+                             pipeline_options->pipeline_start_timestamp);
   LOGI(" SetNativeProps with root: " << root.ToPrettyString()
                                      << ", node: " << options.ToString()
                                      << ", App: " << this);
@@ -3256,15 +3256,15 @@ void App::ReloadFromJS(const lepus::Value& value, ApiCallBack callback) {
   auto rt = rt_.lock();
   if (rt) {
     runtime::UpdateDataType update_data_type;
-    tasm::PipelineOptions pipeline_options;
-    pipeline_options.pipeline_origin = tasm::timing::kReloadBundleFromBts;
-    delegate_->OnPipelineStart(pipeline_options.pipeline_id,
-                               pipeline_options.pipeline_origin,
-                               pipeline_options.pipeline_start_timestamp);
+    auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
+    pipeline_options->pipeline_origin = tasm::timing::kReloadBundleFromBts;
+    delegate_->OnPipelineStart(pipeline_options->pipeline_id,
+                               pipeline_options->pipeline_origin,
+                               pipeline_options->pipeline_start_timestamp);
     const auto& timing_flag = tasm::GetTimingFlag(value);
     if (!timing_flag.empty()) {
-      pipeline_options.need_timestamps = true;
-      delegate_->BindPipelineIDWithTimingFlag(pipeline_options.pipeline_id,
+      pipeline_options->need_timestamps = true;
+      delegate_->BindPipelineIDWithTimingFlag(pipeline_options->pipeline_id,
                                               timing_flag);
       tasm::TimingCollector::Scope<runtime::TemplateDelegate> scope(
           delegate_, pipeline_options);

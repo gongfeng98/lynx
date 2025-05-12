@@ -29,11 +29,14 @@ class ListContainerImpl : public ListContainer::Delegate {
 
   bool ResolveAttribute(const base::String& key,
                         const lepus::Value& value) override;
-  void FinishBindItemHolder(Element* component,
-                            const PipelineOptions& option) override;
-  void FinishBindItemHolders(const std::vector<Element*>& list_items,
-                             const PipelineOptions& options) override;
-  void OnLayoutChildren(const PipelineOptions& options) override;
+  void FinishBindItemHolder(
+      Element* component,
+      const std::shared_ptr<PipelineOptions>& option) override;
+  void FinishBindItemHolders(
+      const std::vector<Element*>& list_items,
+      const std::shared_ptr<PipelineOptions>& options) override;
+  void OnLayoutChildren(
+      const std::shared_ptr<PipelineOptions>& options) override;
   void ScrollByPlatformContainer(float content_offset_x, float content_offset_y,
                                  float original_x, float original_y) override;
   void ScrollToPosition(int index, float offset, int align,
@@ -103,8 +106,9 @@ class ListContainerImpl : public ListContainer::Delegate {
            list::BatchRenderStrategy::kDefault;
   }
   void ClearValidDiff() { has_valid_diff_ = false; }
-  void ReportListItemLifecycleStatistic(const PipelineOptions& option,
-                                        const std::string& item_key);
+  void ReportListItemLifecycleStatistic(
+      const std::shared_ptr<PipelineOptions>& option,
+      const std::string& item_key);
   void CheckZIndex(Element* child) const;
   void SendDebugEvent(const fml::RefPtr<lepus::Dictionary>& detail) {
     list_event_manager_->SendDebugEvent(detail);

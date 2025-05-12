@@ -43,7 +43,7 @@ class LayoutMediator : public tasm::LayoutContext::Delegate,
                       const std::array<float, 4> &borders,
                       const std::array<float, 4> *sticky_positions,
                       float max_height) override;
-  void OnLayoutAfter(const tasm::PipelineOptions &option,
+  void OnLayoutAfter(const std::shared_ptr<tasm::PipelineOptions> &option,
                      std::unique_ptr<tasm::PlatformExtraBundleHolder> holder,
                      bool has_layout) override;
   void PostPlatformExtraBundle(
@@ -81,11 +81,13 @@ class LayoutMediator : public tasm::LayoutContext::Delegate,
  private:
   static void HandlePendingLayoutTask(
       TASMOperationQueue *queue, tasm::Catalyzer *catalyzer,
-      tasm::PipelineOptions option, const tasm::PageOptions &page_options,
+      std::shared_ptr<tasm::PipelineOptions> option,
+      const tasm::PageOptions &page_options,
       const std::vector<TASMOperationQueue::TASMOperationWrapper> *operations =
           nullptr);
   static void HandleListOrComponentUpdated(
-      tasm::NodeManager *node_manager, const tasm::PipelineOptions &options);
+      tasm::NodeManager *node_manager,
+      const std::shared_ptr<tasm::PipelineOptions> &options);
 
   std::shared_ptr<LynxActor<LynxEngine>> engine_actor_;
   std::shared_ptr<LynxActor<NativeFacade>> facade_actor_;

@@ -11,7 +11,8 @@ namespace ssr {
 bool SSRRenderUtils::DecodeSSRData(
     tasm::TemplateAssembler* tasm, std::vector<uint8_t> data,
     const std::shared_ptr<tasm::TemplateData>& template_data,
-    tasm::PipelineOptions& pipeline_options, int32_t instance_id) {
+    std::shared_ptr<tasm::PipelineOptions>& pipeline_options,
+    int32_t instance_id) {
   LYNX_ERROR(error::E_SSR_DECODE, "SSR not implemented", "");
   return false;
 }

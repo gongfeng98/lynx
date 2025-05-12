@@ -816,11 +816,10 @@ bool RadonComponent::UpdateRadonComponentWithoutDispatch(
   return PreRender(render_type);
 }
 
-void RadonComponent::UpdateRadonComponent(RenderType render_type,
-                                          const lepus::Value& incoming_property,
-                                          const lepus::Value& incoming_data,
-                                          const DispatchOption& option,
-                                          PipelineOptions& pipeline_options) {
+void RadonComponent::UpdateRadonComponent(
+    RenderType render_type, const lepus::Value& incoming_property,
+    const lepus::Value& incoming_data, const DispatchOption& option,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   LOGI("RadonComponent::UpdateRadonComponent, name: "
        << name_.str() << ", component id: " << ComponentId());
   TRACE_EVENT(LYNX_TRACE_CATEGORY, RADON_COMPONENT_UPDATE_COMPONENT,
@@ -841,9 +840,9 @@ void RadonComponent::UpdateRadonComponent(RenderType render_type,
   }
 }
 
-void RadonComponent::SetCSSVariables(const std::string& id_selector,
-                                     const lepus::Value& properties,
-                                     PipelineOptions& pipeline_options) {
+void RadonComponent::SetCSSVariables(
+    const std::string& id_selector, const lepus::Value& properties,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   set_variable_ops_.emplace_back(SetCSSVariableOp(id_selector, properties));
   DispatchOption dispatch_option(page_proxy_);
   dispatch_option.css_variable_changed_ = true;
@@ -854,8 +853,9 @@ void RadonComponent::SetCSSVariables(const std::string& id_selector,
   page_proxy_->element_manager()->OnPatchFinish(pipeline_options);
 }
 
-void RadonComponent::Refresh(const DispatchOption& option,
-                             PipelineOptions& pipeline_options) {
+void RadonComponent::Refresh(
+    const DispatchOption& option,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   // Radon Compatible
   OnComponentUpdate(option);
   for (auto& slot : slots()) {
@@ -869,12 +869,12 @@ void RadonComponent::Refresh(const DispatchOption& option,
   auto original_radon_children = std::move(radon_children_);
   radon_children_.clear();
   RenderOption renderOption;
-  if (pipeline_options.need_timestamps) {
+  if (pipeline_options->need_timestamps) {
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderStart);
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomStart);
   }
   RenderRadonComponentIfNeeded(renderOption);
-  if (pipeline_options.need_timestamps) {
+  if (pipeline_options->need_timestamps) {
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomEnd);
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderEnd);
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kResolveStart);
@@ -882,11 +882,11 @@ void RadonComponent::Refresh(const DispatchOption& option,
         ->painting_context()
         ->MarkUIOperationQueueFlushTiming(
             tasm::timing::kPaintingUiOperationExecuteStart,
-            pipeline_options.pipeline_id);
+            pipeline_options->pipeline_id);
   }
 
   RadonMyersDiff(original_radon_children, option);
-  if (pipeline_options.need_timestamps) {
+  if (pipeline_options->need_timestamps) {
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kResolveEnd);
   }
   /*
@@ -1262,7 +1262,7 @@ void RadonComponent::OnReactComponentDidUpdate(const DispatchOption& option) {
       catch_error->SetValue(kStack, render_error_.GetProperty(kStack));
       catch_error->SetValue(kName, BASE_STATIC_STRING(LEPUS_RENDER_ERROR));
       DispatchOption dispatch_option(page_proxy_);
-      PipelineOptions pipeline_options;
+      auto pipeline_options = std::make_shared<PipelineOptions>();
       UpdateRadonComponent(RadonComponent::RenderType::UpdateByRenderError,
                            lepus::Value(), lepus::Value(), dispatch_option,
                            pipeline_options);

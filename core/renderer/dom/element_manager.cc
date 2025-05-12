@@ -409,7 +409,8 @@ void ElementManager::CheckAndProcessSlotForInspector(Element *element) {
   });
 }
 
-void ElementManager::RequestLayout(const PipelineOptions &options) {
+void ElementManager::RequestLayout(
+    const std::shared_ptr<PipelineOptions> &options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_MANAGER_REQUEST_LAYOUT);
   if (enable_diff_without_layout_) {
     delegate_->SetEnableLayout();
@@ -419,11 +420,11 @@ void ElementManager::RequestLayout(const PipelineOptions &options) {
 }
 
 void ElementManager::DispatchLayoutUpdates(
-    const tasm::PipelineOptions &options) {
+    const std::shared_ptr<PipelineOptions> &options) {
   // insert PAINTING_UI_OPERATION_FLUSH_END to UI Operation Queue before layout.
-  if (options.need_timestamps) {
+  if (options->need_timestamps) {
     painting_context()->MarkUIOperationQueueFlushTiming(
-        tasm::timing::kPaintingUiOperationExecuteEnd, options.pipeline_id);
+        tasm::timing::kPaintingUiOperationExecuteEnd, options->pipeline_id);
   }
   delegate_->DispatchLayoutUpdates(options);
 }
@@ -598,8 +599,8 @@ void ElementManager::SetInspectorElementObserver(
   devtool_flag_ = true;
 }
 
-void ElementManager::OnFinishUpdateProps(Element *node,
-                                         PipelineOptions &options) {
+void ElementManager::OnFinishUpdateProps(
+    Element *node, std::shared_ptr<PipelineOptions> &options) {
   if (node->is_radon_element()) {
     SetNeedsLayout();
     static_cast<RadonElement *>(node)
@@ -613,11 +614,12 @@ void ElementManager::OnFinishUpdateProps(Element *node,
   }
 }
 
-void ElementManager::OnPatchFinishForRadon(PipelineOptions &options) {
+void ElementManager::OnPatchFinishForRadon(
+    std::shared_ptr<PipelineOptions> &options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, ELEMENT_MANAGER_ON_PATCH_FINISH);
   catalyzer_->painting_context()->FinishTasmOperation(options);
 
-  if (options.is_reload_template) {
+  if (options->is_reload_template) {
     catalyzer_->painting_context()->UpdateNodeReloadPatching();
   }
 
@@ -630,7 +632,7 @@ void ElementManager::OnPatchFinishForRadon(PipelineOptions &options) {
     LOGI("ElementManager::OnPatchFinish");
     TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_MANAGER_ON_PATCH_FINISH_INNER,
                 [&options](lynx::perfetto::EventContext ctx) {
-                  options.UpdateTraceDebugInfo(ctx.event());
+                  options->UpdateTraceDebugInfo(ctx.event());
                 });
     BindTimingFlagToPipelineOptions(options);
     PatchEventRelatedInfo();
@@ -657,7 +659,8 @@ void ElementManager::PatchEventRelatedInfo() {
 }
 
 #if ENABLE_AIR
-void ElementManager::OnPatchFinishInnerForAir(const PipelineOptions &options) {
+void ElementManager::OnPatchFinishInnerForAir(
+    const std::shared_ptr<PipelineOptions> &options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_MANAGER_ON_PATCH_FINISH_FOR_AIR);
   DispatchLayoutUpdates(options);
 }
@@ -840,12 +843,13 @@ void ElementManager::AppendTimingFlag(std::string flag) {
   attribute_timing_flag_list_.Push(std::move(flag));
 }
 
-void ElementManager::BindTimingFlagToPipelineOptions(PipelineOptions &options) {
+void ElementManager::BindTimingFlagToPipelineOptions(
+    std::shared_ptr<PipelineOptions> &options) {
   auto timing_flag = ObtainTimingFlagList();
   if (!timing_flag.empty()) {
-    options.need_timestamps = true;
+    options->need_timestamps = true;
     for (const auto &attribute_timing_flag : timing_flag) {
-      delegate_->BindPipelineIDWithTimingFlag(options.pipeline_id,
+      delegate_->BindPipelineIDWithTimingFlag(options->pipeline_id,
                                               attribute_timing_flag);
     }
   }
@@ -871,7 +875,7 @@ void ElementManager::NotifyElementDestroy(Element *element) {
 void ElementManager::TickAllElement(fml::TimePoint &frame_time) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_MANAGER_TICK_ALL_ELEMENT);
   if (element_vsync_proxy_) {
-    PipelineOptions options;
+    auto options = std::make_shared<PipelineOptions>();
     auto temp_element_set = std::unordered_set<Element *>();
     // We should swap all element to a temporary set before when we tick them.
     temp_element_set.swap(animation_element_set_);
@@ -1144,7 +1148,8 @@ fml::RefPtr<FrameElement> ElementManager::CreateFiberFrame() {
   return res;
 }
 
-void ElementManager::OnPatchFinish(PipelineOptions &option, Element *element) {
+void ElementManager::OnPatchFinish(std::shared_ptr<PipelineOptions> &option,
+                                   Element *element) {
   if (element == nullptr) {
     element = static_cast<Element *>(root());
   }
@@ -1157,40 +1162,40 @@ void ElementManager::OnPatchFinish(PipelineOptions &option, Element *element) {
   } else if (element->is_fiber_element()) {
     OnPatchFinishForFiber(option, static_cast<FiberElement *>(element));
   }
-  if (option.need_timestamps) {
+  if (option->need_timestamps) {
     report::EventTracker::UpdateGenericInfo(
         instance_id_, kEventDomSizeKey,
         static_cast<int64_t>(element_count_.load()));
   }
 }
 
-void ElementManager::OnPatchFinishForFiber(PipelineOptions &options,
-                                           FiberElement *element) {
+void ElementManager::OnPatchFinishForFiber(
+    std::shared_ptr<PipelineOptions> &options, FiberElement *element) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_MANAGER_ON_PATCH_FINISH_FOR_FIBER);
-  if (options.need_timestamps) {
+  if (options->need_timestamps) {
     painting_context()->MarkUIOperationQueueFlushTiming(
-        tasm::timing::kPaintingUiOperationExecuteStart, options.pipeline_id);
+        tasm::timing::kPaintingUiOperationExecuteStart, options->pipeline_id);
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kResolveStart);
   }
-  if (options.enable_report_list_item_life_statistic_ &&
-      options.IsRenderListItem()) {
-    options.list_item_life_option_.start_dispatch_time_ =
+  if (options->enable_report_list_item_life_statistic_ &&
+      options->IsRenderListItem()) {
+    options->list_item_life_option_.start_dispatch_time_ =
         base::CurrentTimeMicroseconds();
   }
 
-  if (options.force_update_style_sheet_) {
+  if (options->force_update_style_sheet_) {
     // When force_update_style_sheet_ is true, need recursively traverse the
     // entire tree to mark dirty and reset style sheet.
     element->ApplyFunctionRecursive([](FiberElement *element) {
       element->ResetStyleSheet();
       element->MarkStyleDirty();
     });
-  } else if (options.force_resolve_style_) {
+  } else if (options->force_resolve_style_) {
     // When force_resolve_style_ is true, need recursively traverse the entire
     // tree to mark dirty.
     element->MarkStyleDirty(true);
   }
-  if (options.is_reload_template && config_ &&
+  if (options->is_reload_template && config_ &&
       config_->GetEnableReloadLifecycle()) {
     element->ApplyFunctionRecursive(
         [](FiberElement *element) { element->onNodeReload(); });
@@ -1200,12 +1205,12 @@ void ElementManager::OnPatchFinishForFiber(PipelineOptions &options,
 
   BindTimingFlagToPipelineOptions(options);
 
-  if (options.need_timestamps) {
+  if (options->need_timestamps) {
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kResolveEnd);
   }
-  if (options.enable_report_list_item_life_statistic_ &&
-      options.IsRenderListItem()) {
-    options.list_item_life_option_.end_dispatch_time_ =
+  if (options->enable_report_list_item_life_statistic_ &&
+      options->IsRenderListItem()) {
+    options->list_item_life_option_.end_dispatch_time_ =
         base::CurrentTimeMicroseconds();
   }
 
@@ -1213,7 +1218,7 @@ void ElementManager::OnPatchFinishForFiber(PipelineOptions &options,
 
   // if flush_option do not need layout or options do not need layout, skip
   // layout.
-  if (!need_layout_ || !options.trigger_layout_) {
+  if (!need_layout_ || !options->trigger_layout_) {
     TRACE_EVENT(LYNX_TRACE_CATEGORY,
                 ELEMENT_MANAGER_ON_PATCH_FINISH_FIBER_NO_PATCH);
     LOGI("ElementManager::OnPatchFinishForFiber NoPatch!");
@@ -1279,11 +1284,12 @@ Element *ElementManager::GetComponent(const std::string &id) {
   return nullptr;
 }
 
-void ElementManager::OnListComponentUpdated(const PipelineOptions &options) {
-  if (options.operation_id != 0 && options.list_id_ != 0 &&
-      options.list_comp_id_ != 0 && node_manager_) {
-    Element *list = node_manager_->Get(options.list_id_);
-    Element *component = node_manager_->Get(options.list_comp_id_);
+void ElementManager::OnListComponentUpdated(
+    const std::shared_ptr<PipelineOptions> &options) {
+  if (options->operation_id != 0 && options->list_id_ != 0 &&
+      options->list_comp_id_ != 0 && node_manager_) {
+    Element *list = node_manager_->Get(options->list_id_);
+    Element *component = node_manager_->Get(options->list_comp_id_);
     if (list && list->DisableListPlatformImplementation() && component) {
       list->OnComponentFinished(component, options);
     }

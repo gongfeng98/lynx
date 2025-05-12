@@ -61,11 +61,11 @@ class LayoutContext : public std::enable_shared_from_this<LayoutContext>,
                                 const std::array<float, 4>& borders,
                                 const std::array<float, 4>* sticky_positions,
                                 float max_height) = 0;
-    void OnLayoutAfter(const PipelineOptions& options) {
+    void OnLayoutAfter(const std::shared_ptr<PipelineOptions>& options) {
       OnLayoutAfter(options, nullptr, false);
     };
     virtual void OnLayoutAfter(
-        const PipelineOptions& options,
+        const std::shared_ptr<PipelineOptions>& options,
         std::unique_ptr<PlatformExtraBundleHolder> holder, bool has_layout) = 0;
     virtual void PostPlatformExtraBundle(
         int32_t id, std::unique_ptr<tasm::PlatformExtraBundle> bundle) = 0;
@@ -137,7 +137,7 @@ class LayoutContext : public std::enable_shared_from_this<LayoutContext>,
                             bool allow_inline,
                             const std::shared_ptr<PropBundle>& props);
   void MarkDirty(int32_t id);
-  void DispatchLayoutUpdates(const PipelineOptions& options);
+  void DispatchLayoutUpdates(const std::shared_ptr<PipelineOptions>& options);
   void SetPageConfigForLayoutThread(const std::shared_ptr<PageConfig>& config);
   void SetPageOptions(const PageOptions& options) { page_options_ = options; }
 
@@ -155,7 +155,8 @@ class LayoutContext : public std::enable_shared_from_this<LayoutContext>,
   void SetFontFaces(const FontFacesMap& fontfaces);
 
   // Thread safe
-  void Layout(const PipelineOptions& options = PipelineOptions());
+  void Layout(const std::shared_ptr<PipelineOptions>& options =
+                  std::make_shared<PipelineOptions>());
   void UpdateViewport(float width, int width_mode, float height,
                       int height_mode, bool need_layout = true);
 
@@ -215,9 +216,11 @@ class LayoutContext : public std::enable_shared_from_this<LayoutContext>,
   CircularLayoutDependencyDetector circular_layout_detector_;
 
   // Should be call on the thread that layout engine work on
-  void RequestLayout(const PipelineOptions& options = PipelineOptions());
+  void RequestLayout(const std::shared_ptr<PipelineOptions>& options =
+                         std::make_shared<PipelineOptions>());
   void DispatchLayoutBeforeRecursively(LayoutNode* node);
-  void LayoutRecursively(LayoutNode* node, const PipelineOptions& options);
+  void LayoutRecursively(LayoutNode* node,
+                         const std::shared_ptr<PipelineOptions>& options);
   void DestroyPlatformNodesIfNeeded();
   bool SetViewportSizeToRootNode();
   int GetIndexForChild(LayoutNode* parent, LayoutNode* child);
@@ -252,7 +255,8 @@ class LayoutContext : public std::enable_shared_from_this<LayoutContext>,
 
   // SetLayoutEarlyExitTiming needs to be called during an early return to
   // simulate layout timing when the layout is not actually executed.
-  void SetLayoutEarlyExitTiming(const PipelineOptions& options);
+  void SetLayoutEarlyExitTiming(
+      const std::shared_ptr<PipelineOptions>& options);
   void GetLayoutInfoRecursively(
       std::unordered_map<int32_t, LayoutInfoArray>& result, LayoutNode* node);
 
@@ -297,7 +301,8 @@ class LayoutContext : public std::enable_shared_from_this<LayoutContext>,
 
   // Stores the pipeline options of all paused layouts,
   // which will be used for layout upon resumption.
-  std::vector<PipelineOptions> pipeline_options_for_paused_layouts_{};
+  std::vector<std::shared_ptr<PipelineOptions>>
+      pipeline_options_for_paused_layouts_{};
 };
 }  // namespace tasm
 }  // namespace lynx

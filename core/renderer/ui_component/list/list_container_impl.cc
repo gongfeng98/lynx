@@ -35,23 +35,25 @@ ListContainerImpl::ListContainerImpl(Element* element)
              << this << ", list_element=" << element_);
 }
 
-void ListContainerImpl::FinishBindItemHolder(Element* component,
-                                             const PipelineOptions& option) {
+void ListContainerImpl::FinishBindItemHolder(
+    Element* component, const std::shared_ptr<PipelineOptions>& option) {
   if (list_adapter_) {
     list_adapter_->OnFinishBindItemHolder(component, option);
   }
 }
 
 void ListContainerImpl::FinishBindItemHolders(
-    const std::vector<Element*>& list_items, const PipelineOptions& options) {
+    const std::vector<Element*>& list_items,
+    const std::shared_ptr<PipelineOptions>& options) {
   if (list_adapter_) {
     list_adapter_->OnFinishBindItemHolders(list_items, options);
   }
 }
 
 void ListContainerImpl::ReportListItemLifecycleStatistic(
-    const PipelineOptions& option, const std::string& item_key) {
-  if (option.enable_report_list_item_life_statistic_) {
+    const std::shared_ptr<PipelineOptions>& option,
+    const std::string& item_key) {
+  if (option->enable_report_list_item_life_statistic_) {
     std::string id_selector;
     if (element() && element()->data_model()) {
       id_selector = element()->data_model()->idSelector().str();
@@ -61,17 +63,17 @@ void ListContainerImpl::ReportListItemLifecycleStatistic(
           event.SetName(list::kListItemLifecycleStatistic);
           event.SetProps(list::kListIdSelector, id_selector);
           event.SetProps(list::kItemKey, item_key);
-          if (option.list_item_life_option_.update_duration() > 0.) {
+          if (option->list_item_life_option_.update_duration() > 0.) {
             event.SetProps(list::kListItemUpdateDuration,
-                           option.list_item_life_option_.update_duration());
+                           option->list_item_life_option_.update_duration());
           } else {
             event.SetProps(list::kListItemRenderDuration,
-                           option.list_item_life_option_.render_duration());
+                           option->list_item_life_option_.render_duration());
             event.SetProps(list::kListItemDispatchDuration,
-                           option.list_item_life_option_.dispatch_duration());
+                           option->list_item_life_option_.dispatch_duration());
           }
           event.SetProps(list::kListItemLayoutDuration,
-                         option.list_item_life_option_.layout_duration());
+                         option->list_item_life_option_.layout_duration());
         });
   }
 }
@@ -176,8 +178,8 @@ void ListContainerImpl::FlushPatching() {
     element_->painting_context()->UpdateNodeReadyPatching();
     if (should_flush_finish_layout_) {
       should_flush_finish_layout_ = false;
-      PipelineOptions options;
-      options.has_layout = true;
+      auto options = std::make_shared<PipelineOptions>();
+      options->has_layout = true;
       element_->painting_context()->FinishLayoutOperation(options);
     }
     element_->painting_context()->FlushImmediately();
@@ -429,9 +431,10 @@ bool ListContainerImpl::ResolveAttribute(const base::String& key,
   return should_set_props;
 };
 
-void ListContainerImpl::OnLayoutChildren(const PipelineOptions& options) {
+void ListContainerImpl::OnLayoutChildren(
+    const std::shared_ptr<PipelineOptions>& options) {
   if (list_layout_manager_) {
-    if (options.need_timestamps) {
+    if (options->need_timestamps) {
       tasm::TimingCollector::Instance()->Mark(
           tasm::timing::kListRenderChildrenStart);
     }
@@ -449,7 +452,7 @@ void ListContainerImpl::OnLayoutChildren(const PipelineOptions& options) {
         list_layout_manager_->OnBatchLayoutChildren();
       }
     }
-    if (options.need_timestamps) {
+    if (options->need_timestamps) {
       tasm::TimingCollector::Instance()->Mark(
           tasm::timing::kListRenderChildrenEnd);
       const float list_main_size =

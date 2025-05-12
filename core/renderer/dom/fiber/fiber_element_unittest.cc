@@ -6556,7 +6556,7 @@ TEST_P(FiberElementTest, RemoveIntergenerationalChild) {
   EXPECT_CALL(tasm_mediator, InsertLayoutNodeBefore(element11->impl_id(),
                                                     child00->impl_id(), -1));
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
   painting_context->Flush();
 
@@ -6716,7 +6716,7 @@ TEST_P(FiberElementTest, RemoveIntergenerationalChild1) {
 
   auto painting_context =
       static_cast<FiberMockPaintingContext*>(page->painting_context()->impl());
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
   painting_context->Flush();
   manager->catalyzer_->UpdateLayoutRecursively();
@@ -6780,7 +6780,7 @@ TEST_P(FiberElementTest, RemoveIntergenerationalChild2) {
 
   auto painting_context =
       static_cast<FiberMockPaintingContext*>(page->painting_context()->impl());
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
   painting_context->Flush();
   manager->catalyzer_->UpdateLayoutRecursively();
@@ -6844,7 +6844,7 @@ TEST_P(FiberElementTest, RemoveIntergenerationalChild3) {
 
   auto painting_context =
       static_cast<FiberMockPaintingContext*>(page->painting_context()->impl());
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
   painting_context->Flush();
   manager->catalyzer_->UpdateLayoutRecursively();
@@ -7100,7 +7100,8 @@ TEST_P(FiberElementTest, SetNativePropsCases) {
   native_props.SetProperty("text", lepus::Value("testing..."));
   native_props.SetProperty("background-color", lepus::Value("red"));
   native_props.SetProperty("transform", lepus::Value("translateY(30px)"));
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
+  ;
   fiber_element_2->SetNativeProps(native_props, pipeline_options);
 
   auto painting_context =
@@ -7212,7 +7213,8 @@ TEST_P(FiberElementTest, SetNativePropsNormalCases) {
 
   lepus::Value native_props = lepus::Value(lepus::Dictionary::Create());
   native_props.SetProperty("background-color", lepus::Value("red"));
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
+  ;
   fiber_element_2->SetNativeProps(native_props, pipeline_options);
 
   auto painting_context =
@@ -7269,7 +7271,8 @@ TEST_P(FiberElementTest, SetNativePropsTextCases) {
     native_props.SetProperty("text", lepus::Value("testing..."));
     native_props.SetProperty("background-color", lepus::Value("red"));
     native_props.SetProperty("transform", lepus::Value("translateY(30px)"));
-    PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
+    ;
     fiber_text_1->SetNativeProps(native_props, pipeline_options);
 
     auto painting_context = static_cast<FiberMockPaintingContext*>(
@@ -7289,7 +7292,8 @@ TEST_P(FiberElementTest, SetNativePropsTextCases) {
     native_props.SetProperty("text", lepus::Value("changing x-text"));
     native_props.SetProperty("background-color", lepus::Value("red"));
     native_props.SetProperty("transform", lepus::Value("translateY(30px)"));
-    PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
+    ;
     fiber_text_1->SetNativeProps(native_props, pipeline_options);
 
     auto painting_context = static_cast<FiberMockPaintingContext*>(
@@ -7332,7 +7336,8 @@ TEST_P(FiberElementTest, SetNativePropsTextBadCases) {
   lepus::Value native_props = lepus::Value(lepus::Dictionary::Create());
   native_props.SetProperty("text", lepus::Value("Test Content"));
 
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
+  ;
 
   tasm_mediator.captured_ids_.clear();
 
@@ -7678,7 +7683,7 @@ TEST_P(FiberElementTest, ListItemTest0_0) {
   EXPECT_TRUE(view_0->is_list_item());
   EXPECT_FALSE(view_1->is_list_item());
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options);
   EXPECT_FALSE(platform_impl_->HasFlushed());
   platform_impl_->ResetFlushFlag();
@@ -7694,7 +7699,7 @@ TEST_P(FiberElementTest, ListItemTest0_1) {
                                        lepus::Value(), lepus::Value());
   page->InsertNode(list);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options);
   EXPECT_FALSE(platform_impl_->HasFlushed());
   platform_impl_->ResetFlushFlag();
@@ -7735,7 +7740,7 @@ TEST_P(FiberElementTest, ListItemTest0_2) {
   wrapper_0->InsertNode(wrapper_1);
 
   page->InsertNode(list);
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options);
   EXPECT_FALSE(platform_impl_->HasFlushed());
   platform_impl_->ResetFlushFlag();
@@ -7803,7 +7808,7 @@ TEST_P(FiberElementTest, InlineElementTest0) {
   image->MarkCanBeLayoutOnly(false);
   wrapper->InsertNode(image);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -7839,7 +7844,7 @@ TEST_P(FiberElementTest, InlineElementTest0_0) {
   text->InsertNode(wrapper);
   page->InsertNode(text);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -7879,7 +7884,7 @@ TEST_P(FiberElementTest, InlineElementTest1) {
   image->MarkCanBeLayoutOnly(false);
   wrapper1->InsertNode(image);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -7923,7 +7928,7 @@ TEST_P(FiberElementTest, InlineElementTest1_0) {
   text->InsertNode(wrapper);
   page->InsertNode(text);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -7963,7 +7968,7 @@ TEST_P(FiberElementTest, InlineElementTestLayoutOnly1_0) {
   text->InsertNode(wrapper);
   page->InsertNode(text);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8011,7 +8016,7 @@ TEST_P(FiberElementTest, InlineElementTest2) {
   image->MarkCanBeLayoutOnly(false);
   wrapper1->InsertNode(image);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8078,7 +8083,7 @@ TEST_P(FiberElementTest, InlineElementTest2_1) {
   list->SetAttribute("custom-list-name", lepus::Value("list-container"));
   wrapper1->InsertNode(list);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   auto* mock_painting_context = static_cast<FiberMockPaintingContext*>(
@@ -8136,7 +8141,7 @@ TEST_P(FiberElementTest, InlineElementTestLayoutOnly2) {
   auto image = manager->CreateFiberImage("image");
   wrapper1->InsertNode(image);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8188,7 +8193,7 @@ TEST_P(FiberElementTest, InlineElementTest2_0) {
   text->InsertNode(wrapper);
   page->InsertNode(text);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8240,7 +8245,7 @@ TEST_P(FiberElementTest, InlineElementTestLayoutOnly2_0) {
   text->InsertNode(wrapper);
   page->InsertNode(text);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8292,7 +8297,7 @@ TEST_P(FiberElementTest, InlineElementTest3) {
   text1->MarkCanBeLayoutOnly(false);
   truncation->InsertNode(text1);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8336,7 +8341,7 @@ TEST_P(FiberElementTest, InlineElementTestLayoutOnly3) {
   auto text1 = manager->CreateFiberText("text");
   truncation->InsertNode(text1);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8379,7 +8384,7 @@ TEST_P(FiberElementTest, InlineElementTest3_0) {
   text->InsertNode(wrapper);
   page->InsertNode(text);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8416,7 +8421,7 @@ TEST_P(FiberElementTest, InlineElementTestLayoutOnly3_0) {
   text->InsertNode(wrapper);
   page->InsertNode(text);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8452,7 +8457,7 @@ TEST_P(FiberElementTest, InlineElementTest4) {
   image->MarkCanBeLayoutOnly(false);
   wrapper1->InsertNode(image);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8492,7 +8497,7 @@ TEST_P(FiberElementTest, InlineElementTestLayoutOnly4) {
   auto image = manager->CreateFiberImage("image");
   wrapper1->InsertNode(image);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8532,7 +8537,7 @@ TEST_P(FiberElementTest, InlineElementTest4_0) {
   text->InsertNode(view);
   page->InsertNode(text);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -8573,7 +8578,7 @@ TEST_P(FiberElementTest, InlineElementTestLayoutOnly4_0) {
   text->InsertNode(view);
   page->InsertNode(text);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options, page.get());
 
   EXPECT_FALSE(text->is_inline_element());
@@ -9934,8 +9939,8 @@ TEST_P(FiberElementTest, ClassChildSelectorTest) {
   fiber_element_3->arch_type_ = RadonArch;
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10019,8 +10024,8 @@ TEST_P(FiberElementTest, TagNotSelectorTest) {
   fiber_element_2->SetClass("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10109,8 +10114,8 @@ TEST_P(FiberElementTest, ClassNotSelectorTest) {
   fiber_element_2->SetClass("B");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10206,8 +10211,8 @@ TEST_P(FiberElementTest, IdNotSelectorTest) {
   fiber_element_2->SetIdSelector("B");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10338,8 +10343,8 @@ TEST_P(FiberElementTest, Class_ClassCascadeForceFlushTest) {
   fiber_element_2->SetClass("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10439,8 +10444,8 @@ TEST_P(FiberElementTest, ID_IDCascadeForceFlushTest) {
   fiber_element_2->SetIdSelector("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10540,8 +10545,8 @@ TEST_P(FiberElementTest, Class_IDCascadeForceFlushTest) {
   fiber_element_2->SetClass("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10641,8 +10646,8 @@ TEST_P(FiberElementTest, ID_ClassCascadeForceFlushTest) {
   fiber_element_2->SetIdSelector("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10764,8 +10769,8 @@ TEST_P(FiberElementTest, ClassChildSelectorCSSParserTest) {
   fiber_element_3->arch_type_ = RadonArch;
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10853,8 +10858,8 @@ TEST_P(FiberElementTest, TagNotSelectorCSSParserTest) {
   fiber_element_2->SetClass("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -10946,8 +10951,8 @@ TEST_P(FiberElementTest, ClassNotSelectorCSSParserTest) {
   fiber_element_2->SetClass("B");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -11046,8 +11051,8 @@ TEST_P(FiberElementTest, IdNotSelectorCSSParserTest) {
   fiber_element_2->SetIdSelector("B");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -11188,8 +11193,8 @@ TEST_P(FiberElementTest, Class_ClassCascadeForceFlushCSSParserTest) {
   fiber_element_2->SetClass("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -11295,8 +11300,8 @@ TEST_P(FiberElementTest, ID_IDCascadeForceFlushCSSParserTest) {
   fiber_element_2->SetIdSelector("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -11402,8 +11407,8 @@ TEST_P(FiberElementTest, Class_IDCascadeForceFlushCSSParserTest) {
   fiber_element_2->SetClass("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =
@@ -11509,8 +11514,8 @@ TEST_P(FiberElementTest, ID_ClassCascadeForceFlushCSSParserTest) {
   fiber_element_2->SetIdSelector("C");
 
   // flush fiber tree
-  PipelineOptions options;
-  options.force_resolve_style_ = true;
+  auto options = std::make_shared<PipelineOptions>();
+  options->force_resolve_style_ = true;
   manager->OnPatchFinish(options, page.get());
 
   auto painting_context =

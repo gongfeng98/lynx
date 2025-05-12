@@ -25,10 +25,10 @@ class RadonPage : public RadonComponent {
   virtual ~RadonPage();
 
   void UpdateComponentData(const std::string &id, const lepus::Value &table,
-                           PipelineOptions &pipeline_options);
+                           std::shared_ptr<PipelineOptions> &pipeline_options);
   bool UpdatePage(const lepus::Value &table,
                   const UpdatePageOption &update_page_option,
-                  PipelineOptions &pipeline_options);
+                  std::shared_ptr<PipelineOptions> &pipeline_options);
 #if ENABLE_TRACE_PERFETTO
   std::string ConcatUpdateDataInfo(const RadonComponent *comp,
                                    const lepus::Value &table) const;
@@ -42,14 +42,14 @@ class RadonPage : public RadonComponent {
   // for remove component element
   virtual bool NeedsElement() const override { return true; }
   virtual bool UpdateConfig(const lepus::Value &config, bool to_refresh,
-                            PipelineOptions &pipeline_options);
+                            std::shared_ptr<PipelineOptions> &pipeline_options);
   void UpdateSystemInfo(const lynx::lepus::Value &config);
   void Refresh(const DispatchOption &,
-               PipelineOptions &pipeline_options) override;
+               std::shared_ptr<PipelineOptions> &pipeline_options) override;
   void SetCSSVariables(const std::string &component_id,
                        const std::string &id_selector,
                        const lepus::Value &properties,
-                       PipelineOptions &pipeline_options);
+                       std::shared_ptr<PipelineOptions> &pipeline_options);
 
   virtual bool IsPageForBaseComponent() const override { return true; }
   virtual CSSFragment *GetStyleSheetBase(AttributeHolder *holder) override;
@@ -68,8 +68,9 @@ class RadonPage : public RadonComponent {
     enable_check_data_when_update_page_ = option;
   }
 
-  bool RefreshWithGlobalProps(const lepus::Value &table, bool should_render,
-                              PipelineOptions &pipeline_options);
+  bool RefreshWithGlobalProps(
+      const lepus::Value &table, bool should_render,
+      std::shared_ptr<PipelineOptions> &pipeline_options);
 
   RadonComponent *GetComponent(const std::string &comp_id);
 
@@ -92,7 +93,7 @@ class RadonPage : public RadonComponent {
   void SetScreenMetricsOverrider(const lepus::Value &overrider);
 
   // Bind the page logic to the page reconstructed from ssr data
-  void Hydrate(PipelineOptions &pipeline_options);
+  void Hydrate(std::shared_ptr<PipelineOptions> &pipeline_options);
 
  protected:
   virtual fml::RefPtr<Element> CreateFiberElement() override;

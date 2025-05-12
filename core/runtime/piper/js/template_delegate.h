@@ -41,7 +41,8 @@ namespace runtime {
 struct UpdateDataTask {
   UpdateDataTask(bool card, const std::string& component_id,
                  const lepus::Value& data, piper::ApiCallBack callback,
-                 UpdateDataType type, tasm::PipelineOptions pipeline_options,
+                 UpdateDataType type,
+                 std::shared_ptr<tasm::PipelineOptions> pipeline_options,
                  std::string stacks = "")
       : is_card_(card),
         component_id_(component_id),
@@ -61,7 +62,7 @@ struct UpdateDataTask {
   lepus::Value data_;
   piper::ApiCallBack callback_;
   UpdateDataType type_;
-  tasm::PipelineOptions pipeline_options_;
+  std::shared_ptr<tasm::PipelineOptions> pipeline_options_;
   // stacks of setState/setData tasks, only use for debug mode
   std::string stacks_;
 };
@@ -162,15 +163,15 @@ class TemplateDelegate : public ContextProxy::Delegate {
   // for vsync
   virtual std::shared_ptr<runtime::IVSyncObserver> GetVSyncObserver() = 0;
 
-  virtual void SetCSSVariables(const std::string& component_id,
-                               const std::string& id_selector,
-                               const lepus::Value& properties,
-                               tasm::PipelineOptions pipeline_options) = 0;
+  virtual void SetCSSVariables(
+      const std::string& component_id, const std::string& id_selector,
+      const lepus::Value& properties,
+      std::shared_ptr<tasm::PipelineOptions> pipeline_options) = 0;
 
-  virtual void SetNativeProps(tasm::NodeSelectRoot root,
-                              const tasm::NodeSelectOptions& options,
-                              const lepus::Value& native_props,
-                              tasm::PipelineOptions pipeline_options) = 0;
+  virtual void SetNativeProps(
+      tasm::NodeSelectRoot root, const tasm::NodeSelectOptions& options,
+      const lepus::Value& native_props,
+      std::shared_ptr<tasm::PipelineOptions> pipeline_options) = 0;
 
   virtual void ReloadFromJS(UpdateDataTask task) = 0;
 

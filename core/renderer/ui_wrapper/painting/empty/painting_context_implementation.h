@@ -52,8 +52,10 @@ class PaintingContextPlatformImpl : public PaintingCtxPlatformImpl {
       std::unique_ptr<PropBundle> keyframes_data) override {}
   virtual void Flush() override {}
   virtual void HandleValidate(int tag) override {}
-  virtual void FinishTasmOperation(const PipelineOptions& options) override {}
-  virtual void FinishLayoutOperation(const PipelineOptions& options) override {}
+  virtual void FinishTasmOperation(
+      const std::shared_ptr<PipelineOptions>& options) override {}
+  virtual void FinishLayoutOperation(
+      const std::shared_ptr<PipelineOptions>& options) override {}
 
   virtual std::vector<float> getBoundingClientOrigin(int id) override {
     return floats_;

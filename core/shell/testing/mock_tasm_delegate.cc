@@ -270,7 +270,8 @@ void MockTasmDelegate::OnJSSourcePrepared(
     tasm::TasmRuntimeBundle bundle, const lepus::Value& global_props,
     const std::string& page_name, tasm::PackageInstanceDSL dsl,
     tasm::PackageInstanceBundleModuleMode bundle_module_mode,
-    const std::string& url, const tasm::PipelineOptions& pipeline_options) {
+    const std::string& url,
+    const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) {
   ss_ << "OnCardDecoded " << bundle.name << std::endl;
   ss_ << "OnJSSourcePrepared " << page_name << static_cast<int>(dsl) << " "
       << static_cast<int>(bundle_module_mode) << "\n";
@@ -318,7 +319,7 @@ void MockTasmDelegate::OnDataUpdatedByNative(tasm::TemplateData data,
 }
 void MockTasmDelegate::OnJSAppReload(
     tasm::TemplateData init_data,
-    const tasm::PipelineOptions& pipeline_options) {
+    const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) {
   ss_ << "OnJSAppReload ";
   init_data.GetValue().PrintValue(ss_);
   ss_ << std::endl;

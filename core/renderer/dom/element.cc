@@ -776,7 +776,7 @@ void Element::Animate(const lepus::Value& args) {
       break;
   }
   ConsumeStyle(styles);
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   element_manager_->OnFinishUpdateProps(this, options);
   OnPatchFinish(options);
 }
@@ -1323,7 +1323,7 @@ void Element::SetDataToNativeTransitionAnimator() {
 }
 
 bool Element::TickAllAnimation(fml::TimePoint& frame_time,
-                               PipelineOptions& options) {
+                               std::shared_ptr<PipelineOptions>& options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_TICK_ALL_ANIMATION);
 
   if (css_transition_manager_ != nullptr) {

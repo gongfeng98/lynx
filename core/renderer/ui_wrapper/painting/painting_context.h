@@ -93,7 +93,8 @@ class PaintingContext {
     platform_impl_->SetKeyframes(std::move(keyframes_data));
   }
 
-  inline void FinishTasmOperation(const PipelineOptions& options) {
+  inline void FinishTasmOperation(
+      const std::shared_ptr<PipelineOptions>& options) {
     TRACE_EVENT(LYNX_TRACE_CATEGORY, PAINTING_CONTEXT_FINISH_TASM_OPERATION);
     platform_impl_->FinishTasmOperation(options);
   }
@@ -174,7 +175,7 @@ class PaintingContext {
   // Pass the opions to the tasm thread through the tasm queue, and mount them
   // on the PaintingContext. The UI Flush stage reads the opions from the
   // PaintingContext for collecting timing, and clears the opions at the end.
-  void AppendOptionsForTiming(const PipelineOptions& options) {
+  void AppendOptionsForTiming(const std::shared_ptr<PipelineOptions>& options) {
     options_for_timing_.emplace_back(options);
   }
 
@@ -210,7 +211,7 @@ class PaintingContext {
                                            bool is_init_scroll_offset,
                                            bool from_layout);
 
-  void FinishLayoutOperation(const PipelineOptions& options);
+  void FinishLayoutOperation(const std::shared_ptr<PipelineOptions>& options);
   void SetTimingCollectorPlatform(
       const std::shared_ptr<shell::TimingCollectorPlatform>& timing);
   void SetNeedMarkDrawEndTiming(const tasm::PipelineID& pipeline_id);
@@ -242,7 +243,7 @@ class PaintingContext {
   // Pass the opions to the tasm thread through the tasm queue, and mount them
   // on the PaintingContext. The UI Flush stage reads the opions from the
   // PaintingContext for collecting timing, and clears the opions at the end.
-  base::InlineVector<PipelineOptions, 1> options_for_timing_;
+  base::InlineVector<std::shared_ptr<PipelineOptions>, 1> options_for_timing_;
 };
 }  // namespace tasm
 }  // namespace lynx

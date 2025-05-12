@@ -5,6 +5,7 @@
 #ifndef CORE_RENDERER_UI_COMPONENT_LIST_LIST_CONTAINER_DEFAULT_H_
 #define CORE_RENDERER_UI_COMPONENT_LIST_LIST_CONTAINER_DEFAULT_H_
 
+#include <memory>
 #include <vector>
 
 #include "core/renderer/ui_component/list/list_container.h"
@@ -21,11 +22,14 @@ class ListContainerDefault : public ListContainer::Delegate {
                         const lepus::Value& value) override {
     return true;
   }
-  void FinishBindItemHolder(Element* component,
-                            const PipelineOptions& option) override {}
-  void FinishBindItemHolders(const std::vector<Element*>& list_items,
-                             const PipelineOptions& options) override {}
-  void OnLayoutChildren(const PipelineOptions& options) override {}
+  void FinishBindItemHolder(
+      Element* component,
+      const std::shared_ptr<PipelineOptions>& option) override {}
+  void FinishBindItemHolders(
+      const std::vector<Element*>& list_items,
+      const std::shared_ptr<PipelineOptions>& options) override {}
+  void OnLayoutChildren(
+      const std::shared_ptr<PipelineOptions>& options) override {}
   void ScrollByPlatformContainer(float content_offset_x, float content_offset_y,
                                  float original_x, float original_y) override {}
   void ScrollToPosition(int index, float offset, int align,

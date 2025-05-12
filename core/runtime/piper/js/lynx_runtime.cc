@@ -586,7 +586,8 @@ void LynxRuntime::OnJSSourcePrepared(
     tasm::TasmRuntimeBundle bundle, const lepus::Value& global_props,
     const std::string& page_name, tasm::PackageInstanceDSL dsl,
     tasm::PackageInstanceBundleModuleMode bundle_module_mode,
-    const std::string& url, const tasm::PipelineOptions& pipeline_options) {
+    const std::string& url,
+    const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) {
   init_global_props_ = global_props;
   if (state_ != State::kJsCoreLoaded && state_ != State::kNotStarted &&
       state_ != State::kSsrRuntimeReady) {
@@ -708,8 +709,9 @@ void LynxRuntime::Destroy() {
   js_executor_ = nullptr;
 }
 
-void LynxRuntime::OnAppReload(tasm::TemplateData data,
-                              const tasm::PipelineOptions& pipeline_options) {
+void LynxRuntime::OnAppReload(
+    tasm::TemplateData data,
+    const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) {
   QueueOrExecTask([this, data = std::move(data), pipeline_options]() mutable {
     tasm::TimingCollector::Scope<TemplateDelegate> scope(delegate_.get(),
                                                          pipeline_options);

@@ -121,12 +121,14 @@ class BatchListAdapter : public ListAdapter {
   void BindItemHolders(const ItemHolderSet& item_holder_set) override;
 
   // Finish bind item holder with element.
-  void OnFinishBindItemHolder(Element* list_item,
-                              const PipelineOptions& option) override;
+  void OnFinishBindItemHolder(
+      Element* list_item,
+      const std::shared_ptr<PipelineOptions>& option) override;
 
   // Finish bind item holders with elements
-  void OnFinishBindItemHolders(const std::vector<Element*>& list_items,
-                               const PipelineOptions& options) override;
+  void OnFinishBindItemHolders(
+      const std::vector<Element*>& list_items,
+      const std::shared_ptr<PipelineOptions>& options) override;
 
   // Recycle ItemHolder.
   void RecycleItemHolder(ItemHolder* item_holder) override;

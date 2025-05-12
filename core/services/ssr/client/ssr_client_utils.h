@@ -28,7 +28,8 @@ class SSRRenderUtils {
   static bool DecodeSSRData(
       tasm::TemplateAssembler* tasm, std::vector<uint8_t> data,
       const std::shared_ptr<tasm::TemplateData>& template_data,
-      tasm::PipelineOptions& pipeline_options, int32_t instance_id);
+      std::shared_ptr<tasm::PipelineOptions>& pipeline_options,
+      int32_t instance_id);
   static void ReconstructDom(
       const lepus::Value& ssr_out_data, tasm::PageProxy* proxy,
       tasm::RadonPage* page, const lepus::Value& injected_data,

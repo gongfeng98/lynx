@@ -211,7 +211,8 @@ class ElementManager {
     Delegate() = default;
     virtual ~Delegate() = default;
 
-    virtual void DispatchLayoutUpdates(const PipelineOptions &options) = 0;
+    virtual void DispatchLayoutUpdates(
+        const std::shared_ptr<PipelineOptions> &options) = 0;
     virtual std::unordered_map<int32_t, LayoutInfoArray> GetSubTreeLayoutInfo(
         int32_t root_id, Viewport viewport = Viewport{}) = 0;
 
@@ -285,8 +286,8 @@ class ElementManager {
       uint32_t node_index = 0,
       RadonNodeType radon_node_type = RadonNodeType::kRadonUnknown);
 
-  BASE_EXPORT_FOR_DEVTOOL void OnFinishUpdateProps(Element *node,
-                                                   PipelineOptions &options);
+  BASE_EXPORT_FOR_DEVTOOL void OnFinishUpdateProps(
+      Element *node, std::shared_ptr<PipelineOptions> &options);
 
   void PatchEventRelatedInfo();
 
@@ -302,7 +303,7 @@ class ElementManager {
   AirPageElement *CreateAirPage(int32_t lepus_id);
   inline void SetAirRoot(AirPageElement *node) { air_root_ = node; }
   AirPageElement *AirRoot() { return air_root_; }
-  void OnPatchFinishInnerForAir(const PipelineOptions &option);
+  void OnPatchFinishInnerForAir(const std::shared_ptr<PipelineOptions> &option);
   // for air end
 
   PaintingContext *painting_context();
@@ -756,7 +757,8 @@ class ElementManager {
 
   auto ObtainTimingFlagList() { return attribute_timing_flag_list_.PopAll(); }
 
-  void BindTimingFlagToPipelineOptions(PipelineOptions &options);
+  void BindTimingFlagToPipelineOptions(
+      std::shared_ptr<PipelineOptions> &options);
 
   // Element notify element_manager to trigger layout.
   void SetNeedsLayout();
@@ -922,8 +924,8 @@ class ElementManager {
    */
   fml::RefPtr<FrameElement> CreateFiberFrame();
 
-  BASE_EXPORT_FOR_DEVTOOL void OnPatchFinish(PipelineOptions &option,
-                                             Element *root = nullptr);
+  BASE_EXPORT_FOR_DEVTOOL void OnPatchFinish(
+      std::shared_ptr<PipelineOptions> &option, Element *root = nullptr);
 
   /**
    * Generate ID for element
@@ -1080,7 +1082,7 @@ class ElementManager {
    * call this function to request layout
    * @param options the pipeline options passed to layout context
    */
-  void RequestLayout(const PipelineOptions &options);
+  void RequestLayout(const std::shared_ptr<PipelineOptions> &options);
 
   /**
    * call this function after exec OnPatchFinishForFiber
@@ -1101,20 +1103,20 @@ class ElementManager {
  private:
   // Do not call this function directly; it needs to be called from
   // OnPatchFinish.
-  void OnPatchFinishForRadon(PipelineOptions &option);
+  void OnPatchFinishForRadon(std::shared_ptr<PipelineOptions> &option);
   /**
    * a special onPatchFinish function for fiber
    * @param option options for onPatchFinish
    */
   // Do not call this function directly; it needs to be called from
   // OnPatchFinish.
-  void OnPatchFinishForFiber(PipelineOptions &option,
+  void OnPatchFinishForFiber(std::shared_ptr<PipelineOptions> &option,
                              FiberElement *root = nullptr);
   void WillDestroy();
   ElementManager(const ElementManager &) = delete;
   ElementManager &operator=(const ElementManager &) = delete;
-  void OnListComponentUpdated(const PipelineOptions &options);
-  void DispatchLayoutUpdates(const tasm::PipelineOptions &options);
+  void OnListComponentUpdated(const std::shared_ptr<PipelineOptions> &options);
+  void DispatchLayoutUpdates(const std::shared_ptr<PipelineOptions> &options);
   CSSFragment *preresolving_style_sheet_ = nullptr;
   bool devtool_flag_ = false;
   bool dom_tree_enabled_ = true;

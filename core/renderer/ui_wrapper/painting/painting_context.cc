@@ -230,15 +230,16 @@ void PaintingContext::SetNeedMarkDrawEndTiming(
 
 void PaintingContext::MarkLayoutUIOperationQueueFlushStartIfNeed() {
   for (const auto& option_for_timing : options_for_timing_) {
-    if (option_for_timing.need_timestamps) {
+    if (option_for_timing->need_timestamps) {
       MarkUIOperationQueueFlushTiming(
           tasm::timing::kLayoutUiOperationExecuteStart,
-          option_for_timing.pipeline_id);
+          option_for_timing->pipeline_id);
     }
   }
 }
 
-void PaintingContext::FinishLayoutOperation(const PipelineOptions& options) {
+void PaintingContext::FinishLayoutOperation(
+    const std::shared_ptr<PipelineOptions>& options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, PAINTING_CONTEXT_FINISH_LAYOUT_OPERATION);
   if (has_first_screen_) {
     platform_impl_->FinishLayoutOperation(options);
@@ -249,14 +250,14 @@ void PaintingContext::FinishLayoutOperation(const PipelineOptions& options) {
   // the PaintingContext for collecting timing, and clears the opions at the
   // end.
   for (const auto& option_for_timing : options_for_timing_) {
-    if (option_for_timing.need_timestamps) {
+    if (option_for_timing->need_timestamps) {
       MarkUIOperationQueueFlushTiming(
           tasm::timing::kLayoutUiOperationExecuteEnd,
-          option_for_timing.pipeline_id);
+          option_for_timing->pipeline_id);
     }
-    if (option_for_timing.need_timestamps &&
-        !option_for_timing.pipeline_id.empty()) {
-      SetNeedMarkDrawEndTiming(option_for_timing.pipeline_id);
+    if (option_for_timing->need_timestamps &&
+        !option_for_timing->pipeline_id.empty()) {
+      SetNeedMarkDrawEndTiming(option_for_timing->pipeline_id);
     }
   }
   {

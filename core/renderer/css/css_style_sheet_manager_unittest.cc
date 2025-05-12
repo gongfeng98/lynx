@@ -49,7 +49,7 @@ TEST_F(CSSStyleSheetManagerTest, LoadTemplate) {
   EXPECT_TRUE(istream.good());
   std::vector<uint8_t> data((std::istreambuf_iterator<char>(istream)),
                             std::istreambuf_iterator<char>());
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   tasm->LoadTemplate(path, std::move(data), nullptr, pipeline_options);
   auto entry = tasm->FindEntry(DEFAULT_ENTRY_NAME);
 
@@ -76,7 +76,7 @@ TEST_F(CSSStyleSheetManagerTest, Pseudo) {
   EXPECT_TRUE(istream.good());
   std::vector<uint8_t> data((std::istreambuf_iterator<char>(istream)),
                             std::istreambuf_iterator<char>());
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   tasm->LoadTemplate(path, std::move(data), nullptr, pipeline_options);
   auto entry = tasm->FindEntry(DEFAULT_ENTRY_NAME);
 
@@ -104,7 +104,7 @@ TEST_F(CSSStyleSheetManagerTest, DISABLED_Fontfaces) {
   EXPECT_TRUE(istream.good());
   std::vector<uint8_t> data((std::istreambuf_iterator<char>(istream)),
                             std::istreambuf_iterator<char>());
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   tasm->LoadTemplate(path, std::move(data), nullptr, pipeline_options);
   auto entry = tasm->FindEntry(DEFAULT_ENTRY_NAME);
 

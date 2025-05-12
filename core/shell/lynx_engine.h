@@ -61,44 +61,47 @@ class LynxEngine {
 
   void LoadTemplate(const std::string& url, std::vector<uint8_t> source,
                     const std::shared_ptr<tasm::TemplateData>& template_data,
-                    tasm::PipelineOptions pipeline_options,
+                    std::shared_ptr<tasm::PipelineOptions> pipeline_options,
                     const bool enable_pre_painting = false,
                     bool enable_recycle_template_bundle = false);
 
   void LoadTemplateBundle(
       const std::string& url, tasm::LynxTemplateBundle template_bundle,
       const std::shared_ptr<tasm::TemplateData>& template_data,
-      tasm::PipelineOptions pipeline_options,
+      std::shared_ptr<tasm::PipelineOptions> pipeline_options,
       const bool enable_pre_painting = false,
       bool enable_dump_element_tree = false);
 
   void LoadSSRData(std::vector<uint8_t> source,
                    const std::shared_ptr<tasm::TemplateData>& template_data,
-                   tasm::PipelineOptions pipeline_options);
+                   std::shared_ptr<tasm::PipelineOptions> pipeline_options);
 
-  void UpdateDataByParsedData(const std::shared_ptr<tasm::TemplateData>& data,
-                              uint32_t native_update_data_order,
-                              tasm::PipelineOptions pipeline_options);
+  void UpdateDataByParsedData(
+      const std::shared_ptr<tasm::TemplateData>& data,
+      uint32_t native_update_data_order,
+      std::shared_ptr<tasm::PipelineOptions> pipeline_options);
 
-  void ResetDataByParsedData(const std::shared_ptr<tasm::TemplateData>& data,
-                             uint32_t native_update_data_order,
-                             tasm::PipelineOptions pipeline_options);
+  void ResetDataByParsedData(
+      const std::shared_ptr<tasm::TemplateData>& data,
+      uint32_t native_update_data_order,
+      std::shared_ptr<tasm::PipelineOptions> pipeline_options);
 
   void UpdateMetaData(const std::shared_ptr<tasm::TemplateData>& data,
                       const lepus::Value& global_props,
                       uint32_t native_update_data_order,
-                      tasm::PipelineOptions pipeline_options);
+                      std::shared_ptr<tasm::PipelineOptions> pipeline_options);
 
   void ReloadTemplate(const std::shared_ptr<tasm::TemplateData>& data,
                       const lepus::Value& global_props,
                       uint32_t native_update_data_order,
-                      tasm::PipelineOptions pipeline_options);
+                      std::shared_ptr<tasm::PipelineOptions> pipeline_options);
 
   void UpdateConfig(const lepus::Value& config,
-                    tasm::PipelineOptions pipeline_options);
+                    std::shared_ptr<tasm::PipelineOptions> pipeline_options);
 
-  void UpdateGlobalProps(const lepus::Value& global_props,
-                         tasm::PipelineOptions pipeline_options);
+  void UpdateGlobalProps(
+      const lepus::Value& global_props,
+      std::shared_ptr<tasm::PipelineOptions> pipeline_options);
 
   void SetFontScale(float scale);
 
@@ -225,12 +228,12 @@ class LynxEngine {
   void SetCSSVariables(const std::string& component_id,
                        const std::string& id_selector,
                        const lepus::Value& properties,
-                       tasm::PipelineOptions pipeline_options);
+                       std::shared_ptr<tasm::PipelineOptions> pipeline_options);
 
   void SetNativeProps(const tasm::NodeSelectRoot& root,
                       const tasm::NodeSelectOptions& options,
                       const lepus::Value& native_props,
-                      tasm::PipelineOptions pipeline_options);
+                      std::shared_ptr<tasm::PipelineOptions> pipeline_options);
 
   void ReloadFromJS(runtime::UpdateDataTask task);
 

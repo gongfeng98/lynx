@@ -34,7 +34,7 @@ class MockLayoutDelegate : public LayoutContext::Delegate {
   void SetEnableAirStrictMode(bool enable_air_strict_mode) override {}
   MOCK_METHOD(void, OnFirstMeaningfulLayout, (), (override));
   MOCK_METHOD(void, OnLayoutAfter,
-              (const PipelineOptions&,
+              (const std::shared_ptr<PipelineOptions>&,
                std::unique_ptr<PlatformExtraBundleHolder>, bool),
               (override));
 };

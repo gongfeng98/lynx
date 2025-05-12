@@ -1338,7 +1338,7 @@ EventResult TouchEventHandler::FireElementWorklet(
         handler->lepus_script(), value, task_handler_, element_id,
         context.event_type);
     // trigger patch finish when a worklet operation is completed
-    tasm::PipelineOptions options;
+    auto options = std::make_shared<PipelineOptions>();
     // TODO(kechenglong): SetNeedsLayout if and only if needed.
     tasm->page_proxy()->element_manager()->SetNeedsLayout();
     tasm->page_proxy()->element_manager()->OnPatchFinish(options);

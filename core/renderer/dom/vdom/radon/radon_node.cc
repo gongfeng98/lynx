@@ -874,7 +874,7 @@ void RadonNode::CollectInvalidationSetsForPseudoAndInvalidate(
     }
   }
   if (should_patch) {
-    PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
     // TODO(kechenglong): SetNeedsLayout if and only if needed.
     page_proxy_->element_manager()->SetNeedsLayout();
     page_proxy_->element_manager()->OnPatchFinish(pipeline_options);
@@ -904,7 +904,7 @@ void RadonNode::OnPseudoStateChanged(PseudoState prev, PseudoState curr) {
     should_patch = RefreshStyle();
   }
   if (should_patch) {
-    PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
     // TODO(kechenglong): SetNeedsLayout if and only if needed.
     page_proxy_->element_manager()->SetNeedsLayout();
     page_proxy_->element_manager()->OnPatchFinish(pipeline_options);

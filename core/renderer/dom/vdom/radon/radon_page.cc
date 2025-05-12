@@ -99,9 +99,9 @@ RadonPage::~RadonPage() {
   }
 }
 
-void RadonPage::UpdateComponentData(const std::string &id,
-                                    const lepus::Value &table,
-                                    PipelineOptions &pipeline_options) {
+void RadonPage::UpdateComponentData(
+    const std::string &id, const lepus::Value &table,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   uint64_t start_time = base::CurrentTimeMicroseconds();
   ResetComponentDispatchOrder();
   int i_id = atoi(id.c_str());
@@ -220,7 +220,7 @@ RadonComponent *RadonPage::GetComponent(const std::string &comp_id) {
 
 bool RadonPage::UpdatePage(const lepus::Value &table,
                            const UpdatePageOption &update_page_option,
-                           PipelineOptions &pipeline_options) {
+                           std::shared_ptr<PipelineOptions> &pipeline_options) {
   TRACE_EVENT(
       LYNX_TRACE_CATEGORY, LYNX_UPDATE_DATA,
       [&](lynx::perfetto::EventContext ctx) {
@@ -303,7 +303,7 @@ bool RadonPage::UpdatePage(const lepus::Value &table,
         DispatchOption trigger_option(proxy_);
         triggerNewLifecycle(trigger_option);
       }
-      pipeline_options.native_update_data_order_ =
+      pipeline_options->native_update_data_order_ =
           update_page_option.native_update_data_order_;
       page_proxy_->element_manager()->OnPatchFinish(pipeline_options);
       return need_update;
@@ -359,7 +359,7 @@ bool RadonPage::UpdatePage(const lepus::Value &table,
             ->painting_context()
             ->MarkUIOperationQueueFlushTiming(
                 tasm::timing::kPaintingUiOperationExecuteStart,
-                pipeline_options.pipeline_id);
+                pipeline_options->pipeline_id);
       }
       option.ignore_component_lifecycle_ = page_proxy_->GetPrePaintingStage() !=
                                            PrePaintingStage::kPrePaintingOFF;
@@ -373,7 +373,7 @@ bool RadonPage::UpdatePage(const lepus::Value &table,
         LOGI("should_component_update is false in RadonPage::UpdatePage.");
         return need_update;
       }
-      if (pipeline_options.need_timestamps) {
+      if (pipeline_options->need_timestamps) {
         tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderStart);
         tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomStart);
       }
@@ -400,21 +400,21 @@ bool RadonPage::UpdatePage(const lepus::Value &table,
       if (element() != nullptr) {
         EXEC_EXPR_FOR_INSPECTOR(NotifyElementNodeSetted());
       }
-      if (pipeline_options.need_timestamps) {
+      if (pipeline_options->need_timestamps) {
         tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomEnd);
         tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderEnd);
         page_proxy_->element_manager()
             ->painting_context()
             ->MarkUIOperationQueueFlushTiming(
                 tasm::timing::kPaintingUiOperationExecuteStart,
-                pipeline_options.pipeline_id);
+                pipeline_options->pipeline_id);
       }
       PreHandlerCSSVariable();
-      if (pipeline_options.need_timestamps) {
+      if (pipeline_options->need_timestamps) {
         tasm::TimingCollector::Instance()->Mark(tasm::timing::kResolveStart);
       }
       RadonMyersDiff(original_radon_children, option);
-      if (pipeline_options.need_timestamps) {
+      if (pipeline_options->need_timestamps) {
         tasm::TimingCollector::Instance()->Mark(tasm::timing::kResolveEnd);
       }
     }
@@ -430,12 +430,12 @@ bool RadonPage::UpdatePage(const lepus::Value &table,
     TriggerComponentLifecycleUpdate(kComponentAttached);
   }
 
-  pipeline_options.is_first_screen = update_page_option.update_first_time;
-  pipeline_options.is_reload_template = update_page_option.reload_template;
+  pipeline_options->is_first_screen = update_page_option.update_first_time;
+  pipeline_options->is_reload_template = update_page_option.reload_template;
   if (option.has_patched_) {
     page_proxy_->element_manager()->SetNeedsLayout();
   };
-  pipeline_options.native_update_data_order_ =
+  pipeline_options->native_update_data_order_ =
       update_page_option.native_update_data_order_;
   if (!proxy_->HasSSRRadonPage() && !proxy_->IsServerSideRendering()) {
     if (proxy_->EnableFeatureReport()) {
@@ -508,9 +508,9 @@ void RadonPage::DispatchForDiff(const DispatchOption &option) {
   RadonNode::DispatchForDiff(option);
 }
 
-bool RadonPage::RefreshWithGlobalProps(const lynx::lepus::Value &table,
-                                       bool should_render,
-                                       PipelineOptions &pipeline_options) {
+bool RadonPage::RefreshWithGlobalProps(
+    const lynx::lepus::Value &table, bool should_render,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, RADON_REFRESH_WITH_GLOBAL_PROPS,
               [&should_render](lynx::perfetto::EventContext ctx) {
                 auto *debug = ctx.event()->add_debug_annotations();
@@ -722,7 +722,7 @@ void RadonPage::UpdateSystemInfo(const lepus::Value &info) {
 }
 
 void RadonPage::Refresh(const DispatchOption &option,
-                        PipelineOptions &pipeline_options) {
+                        std::shared_ptr<PipelineOptions> &pipeline_options) {
   this->attribute_holder()->Reset();
   auto original_radon_children = std::move(radon_children_);
   radon_children_.clear();
@@ -738,10 +738,10 @@ void RadonPage::Refresh(const DispatchOption &option,
   page_proxy_->element_manager()->OnPatchFinish(pipeline_options);
 }
 
-void RadonPage::SetCSSVariables(const std::string &component_id,
-                                const std::string &id_selector,
-                                const lepus::Value &properties,
-                                PipelineOptions &pipeline_options) {
+void RadonPage::SetCSSVariables(
+    const std::string &component_id, const std::string &id_selector,
+    const lepus::Value &properties,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   LOGI("start SetProperty from js id: " << component_id);
   if (component_id == PAGE_ID) {
     set_variable_ops_.emplace_back(SetCSSVariableOp(id_selector, properties));
@@ -782,8 +782,9 @@ CSSFragment *RadonPage::GetStyleSheetBase(AttributeHolder *holder) {
   return style_sheet_.get();
 }
 
-bool RadonPage::UpdateConfig(const lepus::Value &config, bool to_refresh,
-                             PipelineOptions &pipeline_options) {
+bool RadonPage::UpdateConfig(
+    const lepus::Value &config, bool to_refresh,
+    std::shared_ptr<PipelineOptions> &pipeline_options) {
   if (!context_) {
     return false;
   }
@@ -867,7 +868,7 @@ void RadonPage::SetScreenMetricsOverrider(const lepus::Value &overrider) {
   get_override_screen_metrics_function_ = overrider;
 }
 
-void RadonPage::Hydrate(PipelineOptions &pipeline_options) {
+void RadonPage::Hydrate(std::shared_ptr<PipelineOptions> &pipeline_options) {
   if (!page_proxy_->HasSSRRadonPage()) {
     return;
   }
@@ -882,7 +883,7 @@ void RadonPage::Hydrate(PipelineOptions &pipeline_options) {
       ->painting_context()
       ->MarkUIOperationQueueFlushTiming(
           tasm::timing::kPaintingUiOperationExecuteStart,
-          pipeline_options.pipeline_id);
+          pipeline_options->pipeline_id);
 
   auto old_radon_children = std::move(page_proxy_->SSRPage()->radon_children_);
   DispatchSelf(dispatch_option);

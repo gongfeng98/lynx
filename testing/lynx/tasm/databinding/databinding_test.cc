@@ -386,7 +386,7 @@ void DataBindingTest::CheckEquality(const std::string& left,
 void DataBindingShell::TasmLoadTemplate(
     const std::string& url, std::vector<uint8_t> source,
     const std::shared_ptr<TemplateData>& template_data) {
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   tasm_->LoadTemplate(url, std::move(source), template_data, pipeline_options,
                       test_pre_painting_);
 }
@@ -410,7 +410,7 @@ void DataBindingLoadTemplateBundleShell::TasmLoadTemplate(
     template_bundle.quick_context_pool_->AddContextSafely(1);
   }
 
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   tasm_->LoadTemplateBundle(url, std::move(template_bundle), template_data,
                             pipeline_options, test_pre_painting_);
 }
@@ -420,7 +420,7 @@ void DataBindingTemplateBundleRecycleShell::TasmLoadTemplate(
     const std::shared_ptr<TemplateData>& template_data) {
   LynxTemplateBundle recycled_bundle;
 
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   // get recycled bundle
   {
     DataBindingShell mock_shell;
@@ -435,7 +435,7 @@ void DataBindingTemplateBundleRecycleShell::TasmLoadTemplate(
 }
 
 void DataBindingShell::UpdateDataByJS(const lepus::Value& table) {
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   runtime::UpdateDataTask task(true, "-1", table, piper::ApiCallBack(),
                                runtime::UpdateDataType(),
                                std::move(pipeline_options));
@@ -444,7 +444,7 @@ void DataBindingShell::UpdateDataByJS(const lepus::Value& table) {
 
 void DataBindingShell::UpdateDataByPreParsedData(const lepus::Value& table,
                                                  bool reset) {
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   UpdatePageOption update_page_option;
   update_page_option.from_native = true;
   update_page_option.reset_page_data = reset;

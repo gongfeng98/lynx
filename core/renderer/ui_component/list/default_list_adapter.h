@@ -81,12 +81,14 @@ class DefaultListAdapter : public ListAdapter {
   void BindItemHolders(const ItemHolderSet& item_holder_set) override {}
 
   // Finish bind item holder with element.
-  void OnFinishBindItemHolder(Element* component,
-                              const PipelineOptions& option) override;
+  void OnFinishBindItemHolder(
+      Element* component,
+      const std::shared_ptr<PipelineOptions>& option) override;
 
   // Finish bind item holders with elements. Note: no need to implement.
-  void OnFinishBindItemHolders(const std::vector<Element*>& components,
-                               const PipelineOptions& option) override {}
+  void OnFinishBindItemHolders(
+      const std::vector<Element*>& components,
+      const std::shared_ptr<PipelineOptions>& option) override {}
 
   // Recycle ItemHolder.
   void RecycleItemHolder(ItemHolder* item_holder) override;

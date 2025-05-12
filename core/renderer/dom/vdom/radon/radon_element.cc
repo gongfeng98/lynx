@@ -190,8 +190,9 @@ bool RadonElement::is_component() const {
   return data_model_->radon_node_ptr()->IsRadonComponent();
 }
 
-void RadonElement::SetNativeProps(const lepus::Value& args,
-                                  PipelineOptions& pipeline_options) {
+void RadonElement::SetNativeProps(
+    const lepus::Value& args,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, RADON_ELEMENT_SET_NATIVE_PROPS);
   if (!args.IsTable()) {
     LOGE("SetNativeProps's param must be a Table!");
@@ -835,7 +836,7 @@ void RadonElement::ResolveStyleValue(CSSPropertyID id,
   }
 }
 
-void RadonElement::OnPatchFinish(PipelineOptions& option) {
+void RadonElement::OnPatchFinish(std::shared_ptr<PipelineOptions>& option) {
   element_manager_->OnPatchFinish(option);
 }
 

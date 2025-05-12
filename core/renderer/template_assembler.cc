@@ -229,9 +229,9 @@ TemplateAssembler::~TemplateAssembler() {
   LOGI("TemplateAssembler::Release url:" << url_ << " this:" << this);
 };
 
-void TemplateAssembler::UpdateGlobalProps(const lepus::Value& data,
-                                          bool need_render,
-                                          PipelineOptions& pipeline_options) {
+void TemplateAssembler::UpdateGlobalProps(
+    const lepus::Value& data, bool need_render,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
 #if ENABLE_TESTBENCH_RECORDER
   tasm::recorder::TemplateAssemblerRecorder::RecordSetGlobalProps(data,
                                                                   record_id_);
@@ -277,7 +277,7 @@ void TemplateAssembler::SetLepusObserver(
 }
 
 void TemplateAssembler::UpdateGlobalPropsWithDefaultProps(
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   if (page_proxy_.HasSSRRadonPage() &&
       !page_proxy_.GetDefaultGlobalProps().IsEmpty()) {
     if (global_props_.IsNil()) {
@@ -302,7 +302,8 @@ void TemplateAssembler::UpdateGlobalPropsToContext(const lepus::Value& props) {
   });
 }
 
-bool TemplateAssembler::OnLoadTemplate(PipelineOptions& pipeline_options) {
+bool TemplateAssembler::OnLoadTemplate(
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   // timing actions
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kLoadBundleStart);
 
@@ -334,7 +335,7 @@ void TemplateAssembler::OnDecodeTemplate() {
 void TemplateAssembler::DidDecodeTemplate(
     const std::shared_ptr<TemplateData>& template_data,
     const std::shared_ptr<TemplateEntry>& entry, bool post_js,
-    const PipelineOptions& pipeline_options) {
+    const std::shared_ptr<PipelineOptions>& pipeline_options) {
   if (component_loader_) {
     component_loader_->SetEnableComponentAsyncDecode(
         page_config_->GetEnableComponentAsyncDecode());
@@ -512,7 +513,7 @@ TemplateData TemplateAssembler::ProcessInitData(
 TemplateData TemplateAssembler::OnRenderTemplate(
     const std::shared_ptr<TemplateData>& template_data,
     const std::shared_ptr<TemplateEntry>& card, bool post_js,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   // If global_props_ not nil, update global_props_ to page_proxy_.
   if (!global_props_.IsNil()) {
     page_proxy_.UpdateGlobalProps(global_props_, false, pipeline_options);
@@ -555,7 +556,7 @@ TemplateData TemplateAssembler::OnRenderTemplate(
 
 void TemplateAssembler::RenderTemplate(
     const std::shared_ptr<TemplateEntry>& card, const TemplateData& data,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   if (EnableFiberArch()) {
     RenderTemplateForFiber(card, data, pipeline_options);
   } else if (EnableLynxAir()) {
@@ -584,10 +585,10 @@ void TemplateAssembler::RenderTemplate(
 
 void TemplateAssembler::UpdateTemplate(
     const TemplateData& data, const UpdatePageOption& update_page_option,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   if (EnableFiberArch()) {
     if (update_page_option.reload_template ||
-        pipeline_options.need_timestamps) {
+        pipeline_options->need_timestamps) {
       tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomStart);
     }
 
@@ -609,7 +610,7 @@ void TemplateAssembler::UpdateTemplate(
                std::move(options));
 
     if (!update_page_option.reload_template &&
-        pipeline_options.need_timestamps) {
+        pipeline_options->need_timestamps) {
       tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomEnd);
       tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderEnd);
     }
@@ -632,7 +633,7 @@ void TemplateAssembler::UpdateTemplate(
 
 void TemplateAssembler::RenderTemplateForFiber(
     const std::shared_ptr<TemplateEntry>& card, const TemplateData& data,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomStart);
 
   lepus::Value render_options(lepus::Dictionary::Create());
@@ -683,7 +684,7 @@ void TemplateAssembler::RenderTemplateForFiber(
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kCreateVdomEnd);
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderEnd);
 
-  pipeline_options.is_first_screen = true;
+  pipeline_options->is_first_screen = true;
   page_proxy()->element_manager()->OnPatchFinish(pipeline_options);
 
   if (page_proxy()->element_manager()->GetEnableDumpElementTree()) {
@@ -693,7 +694,7 @@ void TemplateAssembler::RenderTemplateForFiber(
 
 void TemplateAssembler::RenderTemplateForAir(
     const std::shared_ptr<TemplateEntry>& card, const lepus::Value& data,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
 #if ENABLE_AIR
   auto* page = page_proxy()->element_manager()->AirRoot();
   if (!page) {
@@ -713,7 +714,7 @@ void TemplateAssembler::RenderTemplateForAir(
       ->painting_context()
       ->MarkUIOperationQueueFlushTiming(
           tasm::timing::kPaintingUiOperationExecuteStart,
-          pipeline_options.pipeline_id);
+          pipeline_options->pipeline_id);
 
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kRenderPageStartAir);
 
@@ -741,13 +742,14 @@ void TemplateAssembler::RenderTemplateForAir(
 
   TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, PATCH_FINISH_INNER_FOR_AIR);
   page_proxy()->element_manager()->AirRoot()->SetFontFaces();
-  pipeline_options.is_first_screen = true;
+  pipeline_options->is_first_screen = true;
   EnsureAirTouchEventHandler();
   page_proxy()->element_manager()->OnPatchFinishInnerForAir(pipeline_options);
 #endif
 }
 
-void TemplateAssembler::DidRenderTemplate(PipelineOptions& pipeline_options) {
+void TemplateAssembler::DidRenderTemplate(
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   // ssr actions
   if (page_proxy_.IsWaitingSSRHydrate()) {
     LOGI("start to try hydrate SSR page, this:" << this << ", url" << url_);
@@ -788,8 +790,8 @@ void TemplateAssembler::DidLoadTemplate() {
 void TemplateAssembler::LoadTemplateBundle(
     const std::string& url, LynxTemplateBundle template_bundle,
     const std::shared_ptr<TemplateData>& template_data,
-    PipelineOptions& pipeline_options, const bool enable_pre_painting,
-    bool enable_dump_element_tree) {
+    std::shared_ptr<PipelineOptions>& pipeline_options,
+    const bool enable_pre_painting, bool enable_dump_element_tree) {
   // TODO (nihao.royal) add testbench for LoadTemplateBundle.
 #if ENABLE_TESTBENCH_RECORDER
   tasm::recorder::TemplateAssemblerRecorder::RecordLoadTemplateBundle(
@@ -828,8 +830,8 @@ void TemplateAssembler::LoadTemplateBundle(
 void TemplateAssembler::LoadTemplate(
     const std::string& url, std::vector<uint8_t> source,
     const std::shared_ptr<TemplateData>& template_data,
-    PipelineOptions& pipeline_options, const bool enable_pre_painting,
-    bool enable_recycle_template_bundle) {
+    std::shared_ptr<PipelineOptions>& pipeline_options,
+    const bool enable_pre_painting, bool enable_recycle_template_bundle) {
 #if ENABLE_TESTBENCH_RECORDER
   // test-bench actions
   tasm::recorder::TemplateAssemblerRecorder::RecordLoadTemplate(
@@ -877,7 +879,7 @@ void TemplateAssembler::LoadTemplate(
 // 11. DidLoadTemplate
 void TemplateAssembler::LoadTemplateInternal(
     const std::string& url, const std::shared_ptr<TemplateData>& template_data,
-    PipelineOptions& pipeline_options,
+    std::shared_ptr<PipelineOptions>& pipeline_options,
     base::MoveOnlyClosure<bool, const std::shared_ptr<TemplateEntry>&>
         entry_initializer) {
   // Trace LoadTemplate
@@ -951,7 +953,7 @@ void TemplateAssembler::LoadTemplateInternal(
     TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, VM_EXECUTE);
 
     // Before vm execute template, do some preparation. Only timing actions now.
-    if (pipeline_options.need_timestamps) {
+    if (pipeline_options->need_timestamps) {
       tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderStart);
     }
     OnVMExecute();
@@ -1010,7 +1012,8 @@ void TemplateAssembler::LoadTemplateInternal(
 // TODO(fulei.bill) support pre_painting_ in ReloadTemplate
 void TemplateAssembler::ReloadTemplate(
     const std::shared_ptr<TemplateData>& template_data,
-    UpdatePageOption& update_page_option, PipelineOptions& pipeline_options) {
+    UpdatePageOption& update_page_option,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
 #if ENABLE_TESTBENCH_RECORDER
   // test-bench actions
   tasm::recorder::TemplateAssemblerRecorder::RecordReloadTemplate(template_data,
@@ -1063,7 +1066,7 @@ void TemplateAssembler::ReloadTemplate(
   // SETUP_SET_INIT_DATA_START, SETUP_SET_INIT_DATA_END
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kParseStart);
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kParseEnd);
-  if (pipeline_options.need_timestamps) {
+  if (pipeline_options->need_timestamps) {
     tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderStart);
   }
   tasm::TimingCollector::Instance()->MarkFrameworkTiming(
@@ -1124,7 +1127,7 @@ void TemplateAssembler::ReloadTemplate(
 void TemplateAssembler::ReloadTemplate(
     const std::shared_ptr<TemplateData>& template_data,
     const lepus::Value& global_props, UpdatePageOption& update_page_option,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS,
               LYNX_RELOAD_TEMPLATE_WITH_GLOBAL_PROPS);
   if (!global_props.IsNil()) {
@@ -1133,8 +1136,9 @@ void TemplateAssembler::ReloadTemplate(
   ReloadTemplate(template_data, update_page_option, pipeline_options);
 }
 
-void TemplateAssembler::ReloadFromJS(const runtime::UpdateDataTask& task,
-                                     PipelineOptions& pipeline_options) {
+void TemplateAssembler::ReloadFromJS(
+    const runtime::UpdateDataTask& task,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, RELOAD_FROM_JS);
   Scope scope(this);
   LOGI("Lynx ReloadFromJS. url: " << url_);
@@ -1194,7 +1198,7 @@ void TemplateAssembler::DidPreloadComponent(
 
 void TemplateAssembler::DidLoadComponent(
     LazyBundleLoader::CallBackInfo callback_info,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   auto component_url = callback_info.component_url;
   if (callback_info.Success()) {
     LoadComponentWithCallbackInfo(std::move(callback_info), pipeline_options);
@@ -1230,7 +1234,7 @@ void TemplateAssembler::DidLoadBundle(
 
 void TemplateAssembler::LoadComponentWithCallbackInfo(
     LazyBundleLoader::CallBackInfo callback_info,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   const auto& url = callback_info.component_url;
   auto sync = callback_info.sync;
   auto callback_id = callback_info.callback_id;
@@ -1499,8 +1503,9 @@ lepus::Value TemplateAssembler::GetPageDataByKey(
   return lepus::Value::Clone(page_proxy()->GetDataByKey(keys));
 }
 
-void TemplateAssembler::UpdateComponentData(const runtime::UpdateDataTask& task,
-                                            PipelineOptions& pipeline_options) {
+void TemplateAssembler::UpdateComponentData(
+    const runtime::UpdateDataTask& task,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_UPDATE_COMPONENT_DATA_BY_JS,
               [update_data_type = static_cast<uint32_t>(task.type_),
                instance_id = instance_id_,
@@ -1946,7 +1951,7 @@ TemplateData TemplateAssembler::GenerateTemplateDataPostedToJs(
 void TemplateAssembler::UpdateMetaData(
     const std::shared_ptr<TemplateData>& template_data,
     const lepus::Value& global_props, UpdatePageOption& update_page_option,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, UPDATE_META_DATA);
   if (destroyed()) {
     return;
@@ -1967,7 +1972,8 @@ void TemplateAssembler::UpdateMetaData(
 
 void TemplateAssembler::UpdateDataByPreParsedData(
     const std::shared_ptr<TemplateData>& template_data,
-    UpdatePageOption& update_page_option, PipelineOptions& pipeline_options) {
+    UpdatePageOption& update_page_option,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
 #if ENABLE_TESTBENCH_RECORDER
   tasm::recorder::TemplateAssemblerRecorder::RecordUpdateDataByPreParsedData(
       template_data, update_page_option, record_id_);
@@ -2001,8 +2007,8 @@ void TemplateAssembler::UpdateDataByPreParsedData(
     const auto& timing_flag = tasm::GetTimingFlag(data.GetValue());
     tasm::TimingCollector::Scope<Delegate> scope(&delegate_, pipeline_options);
     if (!timing_flag.empty()) {
-      pipeline_options.need_timestamps = true;
-      delegate_.BindPipelineIDWithTimingFlag(pipeline_options.pipeline_id,
+      pipeline_options->need_timestamps = true;
+      delegate_.BindPipelineIDWithTimingFlag(pipeline_options->pipeline_id,
                                              timing_flag);
       tasm::TimingCollector::Instance()->Mark(tasm::timing::kSetStateTrigger,
                                               update_data_trigger);
@@ -2040,9 +2046,9 @@ void TemplateAssembler::UpdateDataByPreParsedData(
   }
 }
 
-bool TemplateAssembler::UpdateConfig(const lepus::Value& config,
-                                     bool noticeDelegate,
-                                     PipelineOptions& pipeline_options) {
+bool TemplateAssembler::UpdateConfig(
+    const lepus::Value& config, bool noticeDelegate,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
 #if ENABLE_TESTBENCH_RECORDER
   tasm::recorder::TemplateAssemblerRecorder::RecordUpdateConfig(
       config, noticeDelegate, record_id_);
@@ -2063,8 +2069,9 @@ bool TemplateAssembler::UpdateConfig(const lepus::Value& config,
   return false;
 }
 
-void TemplateAssembler::UpdateDataByJS(const runtime::UpdateDataTask& task,
-                                       PipelineOptions& pipeline_options) {
+void TemplateAssembler::UpdateDataByJS(
+    const runtime::UpdateDataTask& task,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_UPDATE_DATA_BY_JS,
               [update_data_type = static_cast<uint32_t>(task.type_),
                instance_id = instance_id_, stacks = std::move(task.stacks_)](
@@ -2144,7 +2151,7 @@ bool TemplateAssembler::FromBinary(const std::shared_ptr<TemplateEntry>& entry,
 
 bool TemplateAssembler::UpdateGlobalDataInternal(
     const lepus_value& value, const UpdatePageOption& update_page_option,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   Scope scope(this);
 
   if (!value.IsObject()) {
@@ -2537,8 +2544,9 @@ void TemplateAssembler::ExecuteDataProcessor(TemplateData& input) {
 
 // TODO(fulei.bill) currently we just pending JS event dispatch
 // we will load appservice in later MRs
-void TemplateAssembler::OnJSPrepared(const std::string& url,
-                                     const PipelineOptions& pipeline_options) {
+void TemplateAssembler::OnJSPrepared(
+    const std::string& url,
+    const std::shared_ptr<PipelineOptions>& pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, TEMPLATE_ASSEMBLER_ON_JS_PREPARED,
               "url", url);
   auto card = FindEntry(DEFAULT_ENTRY_NAME);
@@ -2720,18 +2728,18 @@ bool TemplateAssembler::UseLepusNG() {
   }
 }
 
-void TemplateAssembler::SetCSSVariables(const std::string& component_id,
-                                        const std::string& id_selector,
-                                        const lepus::Value& properties,
-                                        PipelineOptions& pipeline_options) {
+void TemplateAssembler::SetCSSVariables(
+    const std::string& component_id, const std::string& id_selector,
+    const lepus::Value& properties,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   page_proxy()->SetCSSVariables(component_id, id_selector, properties,
                                 pipeline_options);
 }
 
-void TemplateAssembler::SetNativeProps(const NodeSelectRoot& root,
-                                       const tasm::NodeSelectOptions& options,
-                                       const lepus::Value& native_props,
-                                       PipelineOptions& pipeline_options) {
+void TemplateAssembler::SetNativeProps(
+    const NodeSelectRoot& root, const tasm::NodeSelectOptions& options,
+    const lepus::Value& native_props,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_ASSEMBLER_SET_NATIVE_PROPS,
               [&native_props](lynx::perfetto::EventContext ctx) {
                 auto* debug = ctx.event()->add_debug_annotations();
@@ -2974,7 +2982,7 @@ TemplateData TemplateAssembler::ProcessTemplateDataForRadon(
 void TemplateAssembler::RenderPageWithSSRData(
     std::vector<uint8_t> ssr_byte_array,
     const std::shared_ptr<TemplateData>& template_data,
-    PipelineOptions& pipeline_options) {
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
 #if ENABLE_TESTBENCH_RECORDER
   tasm::recorder::TemplateAssemblerRecorder::RecordLoadTemplate(
       "", ssr_byte_array, template_data, record_id_, false);

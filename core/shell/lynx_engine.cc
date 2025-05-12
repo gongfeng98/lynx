@@ -4,6 +4,8 @@
 
 #include "core/shell/lynx_engine.h"
 
+#include <memory>
+
 #include "base/include/string/string_utils.h"
 #include "base/trace/native/trace_event.h"
 #include "core/base/threading/vsync_monitor.h"
@@ -75,8 +77,8 @@ void LynxEngine::Init() {
 void LynxEngine::LoadTemplate(
     const std::string& url, std::vector<uint8_t> source,
     const std::shared_ptr<tasm::TemplateData>& template_data,
-    tasm::PipelineOptions pipeline_options, const bool enable_pre_painting,
-    bool enable_recycle_template_bundle) {
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options,
+    const bool enable_pre_painting, bool enable_recycle_template_bundle) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_ENGINE_LOAD_TEMPLATE, "url", url,
               "instance_id", instance_id_);
   tasm::TimingCollector::Scope<Delegate> scope(delegate_.get(),
@@ -91,8 +93,8 @@ void LynxEngine::LoadTemplate(
 void LynxEngine::LoadTemplateBundle(
     const std::string& url, tasm::LynxTemplateBundle template_bundle,
     const std::shared_ptr<tasm::TemplateData>& template_data,
-    tasm::PipelineOptions pipeline_options, const bool enable_pre_painting,
-    bool enable_dump_element_tree) {
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options,
+    const bool enable_pre_painting, bool enable_dump_element_tree) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_ENGINE_LOAD_TEMPLATE_BUNDLE, "url", url,
               "instance_id", instance_id_);
   tasm::TimingCollector::Scope<Delegate> scope(delegate_.get(),
@@ -108,7 +110,7 @@ void LynxEngine::LoadTemplateBundle(
 void LynxEngine::LoadSSRData(
     std::vector<uint8_t> source,
     const std::shared_ptr<tasm::TemplateData>& template_data,
-    tasm::PipelineOptions pipeline_options) {
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   tasm::TimingCollector::Scope<Delegate> scope(delegate_.get(),
                                                pipeline_options);
   tasm_->RenderPageWithSSRData(std::move(source), template_data,
@@ -117,7 +119,8 @@ void LynxEngine::LoadSSRData(
 
 void LynxEngine::UpdateDataByParsedData(
     const std::shared_ptr<tasm::TemplateData>& data,
-    uint32_t native_update_data_order, tasm::PipelineOptions pipeline_options) {
+    uint32_t native_update_data_order,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   tasm::timing::LongTaskMonitor::Scope longTaskScope(
       tasm_->GetPageOptions(), tasm::timing::kUpdateDataByNativeTask,
       tasm::timing::kTaskNameLynxEngineUpdateDataByParsedData);
@@ -127,10 +130,10 @@ void LynxEngine::UpdateDataByParsedData(
   tasm_->UpdateDataByPreParsedData(data, update_page_option, pipeline_options);
 }
 
-void LynxEngine::UpdateMetaData(const std::shared_ptr<tasm::TemplateData>& data,
-                                const lepus::Value& global_props,
-                                uint32_t native_update_data_order,
-                                tasm::PipelineOptions pipeline_options) {
+void LynxEngine::UpdateMetaData(
+    const std::shared_ptr<tasm::TemplateData>& data,
+    const lepus::Value& global_props, uint32_t native_update_data_order,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   tasm::UpdatePageOption update_page_option;
   update_page_option.from_native = true;
   update_page_option.native_update_data_order_ = native_update_data_order;
@@ -140,7 +143,8 @@ void LynxEngine::UpdateMetaData(const std::shared_ptr<tasm::TemplateData>& data,
 
 void LynxEngine::ResetDataByParsedData(
     const std::shared_ptr<tasm::TemplateData>& data,
-    uint32_t native_update_data_order, tasm::PipelineOptions pipeline_options) {
+    uint32_t native_update_data_order,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   tasm::timing::LongTaskMonitor::Scope longTaskScope(
       tasm_->GetPageOptions(), tasm::timing::kUpdateDataByNativeTask,
       tasm::timing::kTaskNameLynxEngineResetDataByParsedData);
@@ -151,10 +155,10 @@ void LynxEngine::ResetDataByParsedData(
   tasm_->UpdateDataByPreParsedData(data, update_page_option, pipeline_options);
 }
 
-void LynxEngine::ReloadTemplate(const std::shared_ptr<tasm::TemplateData>& data,
-                                const lepus::Value& global_props,
-                                uint32_t native_update_data_order,
-                                tasm::PipelineOptions pipeline_options) {
+void LynxEngine::ReloadTemplate(
+    const std::shared_ptr<tasm::TemplateData>& data,
+    const lepus::Value& global_props, uint32_t native_update_data_order,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   tasm::UpdatePageOption update_page_option;
   update_page_option.native_update_data_order_ = native_update_data_order;
   tasm::TimingCollector::Scope<Delegate> scope(delegate_.get(),
@@ -166,13 +170,15 @@ void LynxEngine::ReloadTemplate(const std::shared_ptr<tasm::TemplateData>& data,
                         pipeline_options);
 }
 
-void LynxEngine::UpdateConfig(const lepus::Value& config,
-                              tasm::PipelineOptions pipeline_options) {
+void LynxEngine::UpdateConfig(
+    const lepus::Value& config,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   tasm_->UpdateConfig(config, false, pipeline_options);
 }
 
-void LynxEngine::UpdateGlobalProps(const lepus::Value& global_props,
-                                   tasm::PipelineOptions pipeline_options) {
+void LynxEngine::UpdateGlobalProps(
+    const lepus::Value& global_props,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   tasm::timing::LongTaskMonitor::Scope longTaskScope(
       tasm_->GetPageOptions(), tasm::timing::kUpdateDataByNativeTask,
       tasm::timing::kTaskNameLynxEngineUpdateGlobalProps);
@@ -301,11 +307,11 @@ void LynxEngine::TriggerEventBus(const std::string& name,
 
 void LynxEngine::DidLoadComponentFromJS(
     tasm::LazyBundleLoader::CallBackInfo callback_info) {
-  tasm::PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
   if (delegate_) {
-    delegate_->OnPipelineStart(pipeline_options.pipeline_id,
-                               pipeline_options.pipeline_origin,
-                               pipeline_options.pipeline_start_timestamp);
+    delegate_->OnPipelineStart(pipeline_options->pipeline_id,
+                               pipeline_options->pipeline_origin,
+                               pipeline_options->pipeline_start_timestamp);
   }
   tasm_->LoadComponentWithCallbackInfo(std::move(callback_info),
                                        pipeline_options);
@@ -322,11 +328,11 @@ void LynxEngine::DidLoadComponent(
       tasm_->GetPageOptions(), tasm::timing::kNativeFuncTask,
       tasm::timing::kTaskNameLynxEngineDidLoadComponent,
       callback_info.component_url);
-  tasm::PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<tasm::PipelineOptions>();
   if (delegate_) {
-    delegate_->OnPipelineStart(pipeline_options.pipeline_id,
-                               pipeline_options.pipeline_origin,
-                               pipeline_options.pipeline_start_timestamp);
+    delegate_->OnPipelineStart(pipeline_options->pipeline_id,
+                               pipeline_options->pipeline_origin,
+                               pipeline_options->pipeline_start_timestamp);
   }
   tasm_->DidLoadComponent(std::move(callback_info), pipeline_options);
 }
@@ -547,18 +553,18 @@ void LynxEngine::Flush() {
 
 std::shared_ptr<tasm::TemplateAssembler> LynxEngine::GetTasm() { return tasm_; }
 
-void LynxEngine::SetCSSVariables(const std::string& component_id,
-                                 const std::string& id_selector,
-                                 const lepus::Value& properties,
-                                 tasm::PipelineOptions pipeline_options) {
+void LynxEngine::SetCSSVariables(
+    const std::string& component_id, const std::string& id_selector,
+    const lepus::Value& properties,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   tasm_->SetCSSVariables(component_id, id_selector, properties,
                          pipeline_options);
 }
 
-void LynxEngine::SetNativeProps(const tasm::NodeSelectRoot& root,
-                                const tasm::NodeSelectOptions& options,
-                                const lepus::Value& native_props,
-                                tasm::PipelineOptions pipeline_options) {
+void LynxEngine::SetNativeProps(
+    const tasm::NodeSelectRoot& root, const tasm::NodeSelectOptions& options,
+    const lepus::Value& native_props,
+    std::shared_ptr<tasm::PipelineOptions> pipeline_options) {
   tasm_->SetNativeProps(root, options, native_props, pipeline_options);
 }
 

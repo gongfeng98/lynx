@@ -4,6 +4,8 @@
 
 #include "devtool/lynx_devtool/element/element_inspector.h"
 
+#include <memory>
+
 #include "core/base/utils/any.h"
 #include "core/inspector/style_sheet.h"
 #include "core/renderer/css/css_decoder.h"
@@ -447,7 +449,7 @@ void ElementInspector::Flush(Element* element) {
     if (element->GetTag() == "page" && element_manager) {
       element_manager->SetRootOnLayout(element->impl_id());
     }
-    lynx::tasm::PipelineOptions options;
+    auto options = std::make_shared<tasm::PipelineOptions>();
     if (element_manager) {
       element_manager->OnFinishUpdateProps(element, options);
     }

@@ -162,7 +162,7 @@ TEST_P(ListItemSchedulerAdapterTest, ListItemResolveSubtreePropertyTest) {
   list->SetAttribute(list::kExperimentalBatchRenderStrategy, lepus::Value(3));
   page->InsertNode(list);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options);
   EXPECT_FALSE(platform_impl_->HasFlushed());
   platform_impl_->ResetFlushFlag();
@@ -269,7 +269,7 @@ TEST_P(ListItemSchedulerAdapterTest, RecordingRenderRootComponentElementTest) {
   list->SetAttribute(list::kExperimentalBatchRenderStrategy, lepus::Value(3));
   page->InsertNode(list);
 
-  PipelineOptions options;
+  auto options = std::make_shared<PipelineOptions>();
   manager->OnPatchFinish(options);
   EXPECT_FALSE(platform_impl_->HasFlushed());
   platform_impl_->ResetFlushFlag();

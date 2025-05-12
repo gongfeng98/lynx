@@ -103,8 +103,10 @@ class PaintingContextAndroid : public PaintingCtxPlatformImpl {
   void FlushImmediately() override;
   void HandleValidate(int tag) override;
 
-  void FinishTasmOperation(const PipelineOptions& options) override;
-  void FinishLayoutOperation(const PipelineOptions& options) override;
+  void FinishTasmOperation(
+      const std::shared_ptr<PipelineOptions>& options) override;
+  void FinishLayoutOperation(
+      const std::shared_ptr<PipelineOptions>& options) override;
 
   void ConsumeGesture(int64_t id, int32_t gesture_id,
                       const pub::Value& params) override;

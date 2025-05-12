@@ -56,7 +56,7 @@ void AirComponentElement::SetProperty(const base::String &key,
 
 void AirComponentElement::SetData(const lepus::Value &data) {
   if (data.IsObject() && UpdateComponentInLepus(data)) {
-    PipelineOptions options;
+    auto options = std::make_shared<PipelineOptions>();
     element_manager()->OnPatchFinishInnerForAir(options);
   }
 }

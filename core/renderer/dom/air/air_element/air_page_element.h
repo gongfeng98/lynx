@@ -37,7 +37,7 @@ class AirPageElement : public AirElement {
 
   bool UpdatePageData(const lepus::Value& table,
                       const UpdatePageOption& update_page_option,
-                      PipelineOptions& pipeline_options);
+                      std::shared_ptr<PipelineOptions>& pipeline_options);
 
   void SetContext(lepus::Context* context) { context_ = context; }
 

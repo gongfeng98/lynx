@@ -157,7 +157,7 @@ TEST_F(ElementContainerTest, ZIndex) {
     EXPECT_EQ(child_container->parent(), page_container);
     // 0 parent_container 1 out child_container
     EXPECT_EQ(page_container->children()[1], child_container);
-    tasm::PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
     manager->OnPatchFinish(pipeline_options);
 
     EXPECT_EQ(page_container->children().size(), static_cast<size_t>(2));
@@ -696,7 +696,7 @@ TEST_F(ElementContainerTest, InsertFixedNew) {
     auto l_front = manager->fixed_node_list_.begin();
     std::advance(l_front, 0);
     EXPECT_EQ(*l_front, child_sibling_container);
-    tasm::PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
     manager->OnPatchFinish(pipeline_options);
 
     EXPECT_EQ(page_container->children().size(), static_cast<size_t>(2));

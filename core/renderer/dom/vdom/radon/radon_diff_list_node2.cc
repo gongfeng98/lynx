@@ -412,24 +412,24 @@ int32_t RadonDiffListNode2::ComponentAtIndex(uint32_t index,
       reuse_pool_->Dequeue(item_key, reuse_identifier, component);
   tasm_->page_proxy()->InsertEmptyComponent(component);
 
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   static bool enable_report =
       LynxEnv::GetInstance().EnableReportListItemLifeStatistic();
-  pipeline_options.enable_report_list_item_life_statistic_ = enable_report;
+  pipeline_options->enable_report_list_item_life_statistic_ = enable_report;
   if (reuse_action.type_ == ListReusePool::Action::Type::UPDATE) {
     LOGI("UPDATE key: " << item_key.str() << " , index: " << index);
     if (enable_report) {
-      pipeline_options.list_item_life_option_.start_update_time_ =
+      pipeline_options->list_item_life_option_.start_update_time_ =
           base::CurrentTimeMicroseconds();
     }
     SyncComponentExtraInfo(component, index, operationId);
     if (enable_report) {
-      pipeline_options.list_item_life_option_.end_update_time_ =
+      pipeline_options->list_item_life_option_.end_update_time_ =
           base::CurrentTimeMicroseconds();
     }
   } else {
     if (enable_report) {
-      pipeline_options.list_item_life_option_.start_render_time_ =
+      pipeline_options->list_item_life_option_.start_render_time_ =
           base::CurrentTimeMicroseconds();
     }
     RadonListBase::SyncComponentExtraInfo(component, index, operationId);
@@ -457,8 +457,8 @@ int32_t RadonDiffListNode2::ComponentAtIndex(uint32_t index,
 
     if (enable_report) {
       uint64_t time = base::CurrentTimeMicroseconds();
-      pipeline_options.list_item_life_option_.end_render_time_ = time;
-      pipeline_options.list_item_life_option_.start_dispatch_time_ = time;
+      pipeline_options->list_item_life_option_.end_render_time_ = time;
+      pipeline_options->list_item_life_option_.start_dispatch_time_ = time;
     }
 
     DispatchOption dispatch_option(page_proxy_);
@@ -530,14 +530,14 @@ int32_t RadonDiffListNode2::ComponentAtIndex(uint32_t index,
     }
 
     if (enable_report) {
-      pipeline_options.list_item_life_option_.end_dispatch_time_ =
+      pipeline_options->list_item_life_option_.end_dispatch_time_ =
           base::CurrentTimeMicroseconds();
     }
   }
   component->SetListItemKey(item_key);
-  pipeline_options.operation_id = operationId;
-  pipeline_options.list_comp_id_ = component->element()->impl_id();
-  pipeline_options.list_id_ =
+  pipeline_options->operation_id = operationId;
+  pipeline_options->list_comp_id_ = component->element()->impl_id();
+  pipeline_options->list_id_ =
       DisablePlatformImplementation() ? element()->impl_id() : 0;
   // TODO(kechenglong): SetNeedsLayout if and only if needed.
   page_proxy_->element_manager()->SetNeedsLayout();
@@ -583,7 +583,7 @@ void UpdateRadonComponentWithInitialData(RadonComponent* comp,
   option.need_create_js_counterpart_ = true;
   option.use_new_component_data_ = true;
   option.refresh_lifecycle_ = true;
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   comp->UpdateRadonComponent(RadonComponent::RenderType::UpdateByNativeList,
                              props, comp->GetInitialData(), option,
                              pipeline_options);
@@ -624,7 +624,7 @@ void RadonDiffListNode2::SyncComponentExtraInfo(RadonComponent* comp,
     comp->set_need_reset_data(false);
     return;
   }
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   comp->UpdateRadonComponent(RadonComponent::RenderType::UpdateByNativeList,
                              props, comp_info->data_, dispatch_option,
                              pipeline_options);
@@ -664,7 +664,7 @@ void RadonDiffListNode2::UpdateOldComponent(RadonComponent* component,
     component->set_need_reset_data(false);
     return;
   }
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
   component->UpdateRadonComponent(
       RadonComponent::RenderType::UpdateByNativeList,
       component_info.properties_, component_info.data_, dispatch_update_option,

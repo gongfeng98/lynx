@@ -22,12 +22,14 @@ class ListContainer {
     virtual ~Delegate() = default;
     virtual bool ResolveAttribute(const base::String& key,
                                   const lepus::Value& value) = 0;
-    virtual void OnLayoutChildren(const PipelineOptions& options) = 0;
+    virtual void OnLayoutChildren(
+        const std::shared_ptr<PipelineOptions>& options) = 0;
     virtual void OnNextFrame() {}
-    virtual void FinishBindItemHolder(Element* component,
-                                      const PipelineOptions& option) = 0;
-    virtual void FinishBindItemHolders(const std::vector<Element*>& list_items,
-                                       const PipelineOptions& options) = 0;
+    virtual void FinishBindItemHolder(
+        Element* component, const std::shared_ptr<PipelineOptions>& option) = 0;
+    virtual void FinishBindItemHolders(
+        const std::vector<Element*>& list_items,
+        const std::shared_ptr<PipelineOptions>& options) = 0;
     virtual void ScrollByPlatformContainer(float content_offset_x,
                                            float content_offset_y,
                                            float original_x,

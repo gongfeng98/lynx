@@ -751,12 +751,12 @@ void PaintingContextAndroid::HandleValidate(int tag) {
 }
 
 void PaintingContextAndroid::FinishLayoutOperation(
-    const PipelineOptions& options) {
+    const std::shared_ptr<PipelineOptions>& options) {
   if (ui_operation_batch_builder_) {
     ui_operation_batch_builder_->putInt(
         static_cast<int32_t>(UIOperationType::kLayoutFinish));
-    ui_operation_batch_builder_->putInt(options.list_comp_id_);
-    ui_operation_batch_builder_->putLong(options.operation_id);
+    ui_operation_batch_builder_->putInt(options->list_comp_id_);
+    ui_operation_batch_builder_->putLong(options->operation_id);
   } else {
     Enqueue([impl = impl_, options = options]() {
       TRACE_EVENT(LYNX_TRACE_CATEGORY,
@@ -768,13 +768,13 @@ void PaintingContextAndroid::FinishLayoutOperation(
       }
       JNIEnv* env = base::android::AttachCurrentThread();
       Java_PaintingContext_FinishLayoutOperation(
-          env, local_ref.Get(), options.list_comp_id_, options.operation_id,
-          options.is_first_screen);
+          env, local_ref.Get(), options->list_comp_id_, options->operation_id,
+          options->is_first_screen);
     });
   }
 
   Enqueue([weak_queue = std::weak_ptr<shell::DynamicUIOperationQueue>(queue_),
-           native_update_data_order = options.native_update_data_order_]() {
+           native_update_data_order = options->native_update_data_order_]() {
     if (auto queue = weak_queue.lock()) {
       if (native_update_data_order == queue->GetNativeUpdateDataOrder()) {
         queue->UpdateStatus(shell::UIOperationStatus::ALL_FINISH);
@@ -782,7 +782,8 @@ void PaintingContextAndroid::FinishLayoutOperation(
     }
   });
 
-  if (options.native_update_data_order_ == queue_->GetNativeUpdateDataOrder()) {
+  if (options->native_update_data_order_ ==
+      queue_->GetNativeUpdateDataOrder()) {
     queue_->UpdateStatus(shell::UIOperationStatus::LAYOUT_FINISH);
   }
   if (GetEnableVsyncAlignedFlush()) {
@@ -801,7 +802,7 @@ void PaintingContextAndroid::RequestPlatformLayout() {
 }
 
 void PaintingContextAndroid::FinishTasmOperation(
-    const PipelineOptions& options) {
+    const std::shared_ptr<PipelineOptions>& options) {
   // Reset iterable container and iterator
   {
     if (LynxEnv::GetInstance().EnableNativeCreateViewAsync()) {
@@ -815,7 +816,7 @@ void PaintingContextAndroid::FinishTasmOperation(
   if (ui_operation_batch_builder_) {
     ui_operation_batch_builder_->putInt(
         static_cast<int32_t>(UIOperationType::kTasmFinish));
-    ui_operation_batch_builder_->putLong(options.operation_id);
+    ui_operation_batch_builder_->putLong(options->operation_id);
   } else {
     Enqueue([impl = impl_, options]() {
       TRACE_EVENT(LYNX_TRACE_CATEGORY,
@@ -829,10 +830,11 @@ void PaintingContextAndroid::FinishTasmOperation(
       JNIEnv* env = base::android::AttachCurrentThread();
 
       Java_PaintingContext_finishTasmOperation(env, local_ref.Get(),
-                                               options.operation_id);
+                                               options->operation_id);
     });
   }
-  if (options.native_update_data_order_ == queue_->GetNativeUpdateDataOrder()) {
+  if (options->native_update_data_order_ ==
+      queue_->GetNativeUpdateDataOrder()) {
     queue_->UpdateStatus(shell::UIOperationStatus::TASM_FINISH);
   }
 }

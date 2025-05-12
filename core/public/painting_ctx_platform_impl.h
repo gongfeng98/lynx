@@ -99,8 +99,10 @@ class PaintingCtxPlatformImpl {
   virtual void Flush() = 0;
   virtual void FlushImmediately() { Flush(); };
   virtual void HandleValidate(int tag) = 0;
-  virtual void FinishTasmOperation(const PipelineOptions& options) = 0;
-  virtual void FinishLayoutOperation(const PipelineOptions& options) = 0;
+  virtual void FinishTasmOperation(
+      const std::shared_ptr<PipelineOptions>& options) = 0;
+  virtual void FinishLayoutOperation(
+      const std::shared_ptr<PipelineOptions>& options) = 0;
 
   virtual std::vector<float> getBoundingClientOrigin(int id) = 0;
   virtual std::vector<float> getWindowSize(int id) = 0;

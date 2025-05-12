@@ -44,7 +44,7 @@ void RadonDiffListNode::SyncComponentExtraInfo(RadonComponent* comp,
   auto& comp_info = components_[index];
   const lepus::Value& props = comp_info->properties_;
   DispatchOption dispatch_option(page_proxy_);
-  PipelineOptions pipeline_options;
+  auto pipeline_options = std::make_shared<PipelineOptions>();
 
   if (!comp->dispatched()) {
     comp->UpdateRadonComponentWithoutDispatch(
@@ -71,7 +71,7 @@ void RadonDiffListNode::SyncComponentExtraInfo(RadonComponent* comp,
         comp_info->list_component_dispatch_option_.use_new_component_data_;
     dispatch_option.refresh_lifecycle_ =
         comp_info->list_component_dispatch_option_.refresh_lifecycle_;
-    PipelineOptions pipeline_options;
+    auto pipeline_options = std::make_shared<PipelineOptions>();
     comp->UpdateRadonComponent(RadonComponent::RenderType::UpdateByNative,
                                props, comp_info->data_, dispatch_option,
                                pipeline_options);
@@ -82,7 +82,7 @@ void RadonDiffListNode::SyncComponentExtraInfo(RadonComponent* comp,
     page_proxy_->element_manager()->SetNeedsLayout();
   };
 
-  pipeline_options.operation_id = operation_id;
+  pipeline_options->operation_id = operation_id;
   page_proxy_->element_manager()->OnPatchFinish(pipeline_options);
 }
 

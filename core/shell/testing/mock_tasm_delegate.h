@@ -62,7 +62,7 @@ class MockTasmDelegate : public TemplateAssembler::Delegate,
       const std::string& page_name, tasm::PackageInstanceDSL dsl,
       tasm::PackageInstanceBundleModuleMode bundle_module_mode,
       const std::string& url,
-      const tasm::PipelineOptions& pipeline_options) override;
+      const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) override;
   void OnGlobalPropsUpdated(const lepus::Value& props) override;
   virtual void OnEventCapture(long target_id, bool is_catch,
                               int64_t event_id) override;
@@ -91,7 +91,7 @@ class MockTasmDelegate : public TemplateAssembler::Delegate,
                                      const bool reset = false) override;
   virtual void OnJSAppReload(
       tasm::TemplateData init_data,
-      const tasm::PipelineOptions& pipeline_options) override;
+      const std::shared_ptr<tasm::PipelineOptions>& pipeline_options) override;
   virtual void OnLifecycleEvent(const lepus::Value& args) override;
 
   virtual void SendAnimationEvent(const char* type, int tag,
@@ -129,7 +129,8 @@ class MockTasmDelegate : public TemplateAssembler::Delegate,
   std::string DumpDelegate() { return ss_.str(); }
   void ResetThemeConfig();
 
-  void DispatchLayoutUpdates(const PipelineOptions& options) override {
+  void DispatchLayoutUpdates(
+      const std::shared_ptr<PipelineOptions>& options) override {
     dispatch_layout_updates_called_ = true;
   }
 

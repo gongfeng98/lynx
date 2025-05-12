@@ -81,7 +81,7 @@ void LayoutMediator::OnLayoutUpdate(
 }
 
 void LayoutMediator::OnLayoutAfter(
-    const tasm::PipelineOptions &options,
+    const std::shared_ptr<tasm::PipelineOptions> &options,
     std::unique_ptr<tasm::PlatformExtraBundleHolder> holder, bool has_layout) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LAYOUT_MEDIATOR_ON_LAYOUT_AFTER);
   bool is_first_layout = false;
@@ -93,11 +93,11 @@ void LayoutMediator::OnLayoutAfter(
   // on the PaintingContext. The UI Flush stage reads the opions from the
   // PaintingContext for collecting timing, and clears the opions at the end.
   if (catalyzer_ != nullptr &&
-      (options.is_first_screen || options.is_reload_template ||
-       options.need_timestamps)) {
+      (options->is_first_screen || options->is_reload_template ||
+       options->need_timestamps)) {
     TRACE_EVENT(LYNX_TRACE_CATEGORY, LAYOUT_AFTER_APPEND_OPTIONS_FOR_TIMING,
                 [&options](lynx::perfetto::EventContext ctx) {
-                  options.UpdateTraceDebugInfo(ctx.event());
+                  options->UpdateTraceDebugInfo(ctx.event());
                 });
     operation_queue_->EnqueueTrivialOperation(
         [catalyzer = catalyzer_, options = options]() {
@@ -105,7 +105,7 @@ void LayoutMediator::OnLayoutAfter(
             TRACE_EVENT(LYNX_TRACE_CATEGORY,
                         PAINTING_CONTEXT_APPEND_OPTIONS_FOR_TIMING,
                         [&options](lynx::perfetto::EventContext ctx) {
-                          options.UpdateTraceDebugInfo(ctx.event());
+                          options->UpdateTraceDebugInfo(ctx.event());
                         });
             catalyzer->painting_context()->AppendOptionsForTiming(options);
           }
@@ -130,13 +130,13 @@ void LayoutMediator::OnLayoutAfter(
                         is_first_layout, facade_actor = facade_actor_,
                         node_manager = node_manager_,
                         page_options = page_options_](auto &engine) mutable {
-      options.has_layout = has_layout;
+      options->has_layout = has_layout;
       HandlePendingLayoutTask(queue, catalyzer, options, page_options);
       HandleListOrComponentUpdated(node_manager, options);
 
-      if (options.has_layout) {
+      if (options->has_layout) {
         // TODO(heshan): now trigger onFirstScreen when first layout,
-        // but it is inconsistent with options.is_first_screen.
+        // but it is inconsistent with options->is_first_screen.
         facade_actor->Act([is_first_screen = is_first_layout](auto &facade) {
           facade->OnPageChanged(is_first_screen);
         });
@@ -151,14 +151,14 @@ void LayoutMediator::OnLayoutAfter(
          node_manager = node_manager_, operations = std::move(operations),
          holder = std::move(holder), options = options, is_first_layout,
          has_layout, page_options = page_options_]() mutable {
-          options.has_layout = has_layout;
+          options->has_layout = has_layout;
           HandlePendingLayoutTask(nullptr, catalyzer, options, page_options,
                                   &operations);
           HandleListOrComponentUpdated(node_manager, options);
 
-          if (options.has_layout) {
+          if (options->has_layout) {
             // TODO(klaxxi): now trigger onFirstScreen when first layout,
-            // but it is inconsistent with options.is_first_screen.
+            // but it is inconsistent with options->is_first_screen.
             facade_actor->Act(
                 [is_first_screen = is_first_layout](auto &facade) {
                   facade->OnPageChanged(is_first_screen);
@@ -179,7 +179,7 @@ void LayoutMediator::OnLayoutAfter(
   // layout copies the options, the HandleListOrComponentUpdated may also
   // trigger twice. Therefore, updated_list_elements_ has to be cleared after
   // the first call.
-  options.updated_list_elements_.clear();
+  options->updated_list_elements_.clear();
   if (is_first_layout) {
     runtime_actor_->ActAsync([](auto &runtime) {
       runtime::MessageEvent event(
@@ -238,7 +238,8 @@ void LayoutMediator::SetTiming(tasm::Timing timing) {
 // @note: run on tasm thread
 void LayoutMediator::HandlePendingLayoutTask(
     TASMOperationQueue *queue, tasm::Catalyzer *catalyzer,
-    tasm::PipelineOptions options, const tasm::PageOptions &page_options,
+    std::shared_ptr<tasm::PipelineOptions> options,
+    const tasm::PageOptions &page_options,
     const std::vector<TASMOperationQueue::TASMOperationWrapper> *operations) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LAYOUT_MEDIATOR_HANDLE_PENDING_LAYOUT_TASK);
   if (catalyzer == nullptr) {
@@ -280,46 +281,48 @@ void LayoutMediator::HandlePendingLayoutTask(
 // Trigger list element update or notify list element that child component has
 // finished rendering.
 void LayoutMediator::HandleListOrComponentUpdated(
-    tasm::NodeManager *node_manager, const tasm::PipelineOptions &options) {
+    tasm::NodeManager *node_manager,
+    const std::shared_ptr<tasm::PipelineOptions> &options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY,
               LAYOUT_MEDIATOR_HANDLE_LIST_OR_COMPONENT_UPDATED);
   if (node_manager) {
     static bool enable_native_list_nested =
         tasm::LynxEnv::GetInstance().EnableNativeListNested();
-    if (!options.updated_list_elements_.empty() &&
+    if (!options->updated_list_elements_.empty() &&
         (enable_native_list_nested ||
-         (!enable_native_list_nested && options.list_id_ == 0 &&
-          options.operation_id == 0 && options.list_comp_id_ == 0))) {
+         (!enable_native_list_nested && options->list_id_ == 0 &&
+          options->operation_id == 0 && options->list_comp_id_ == 0))) {
       TRACE_EVENT(LYNX_TRACE_CATEGORY, LAYOUT_AFTER_ON_LIST_ELEMENT_UPDATED,
                   [&options](lynx::perfetto::EventContext ctx) {
-                    options.UpdateTraceDebugInfo(ctx.event());
+                    options->UpdateTraceDebugInfo(ctx.event());
                   });
-      for (auto tag : options.updated_list_elements_) {
+      for (auto tag : options->updated_list_elements_) {
         auto *node = node_manager->Get(tag);
         if (node) {
           node->OnListElementUpdated(options);
         }
       }
     }
-    if (options.list_id_ != 0 && options.operation_id != 0 &&
-        options.list_comp_id_ != 0) {
+    if (options->list_id_ != 0 && options->operation_id != 0 &&
+        options->list_comp_id_ != 0) {
       TRACE_EVENT(LYNX_TRACE_CATEGORY, LAYOUT_AFTER_ON_COMPONENT_FINISHED,
                   [&options](lynx::perfetto::EventContext ctx) {
-                    options.UpdateTraceDebugInfo(ctx.event());
+                    options->UpdateTraceDebugInfo(ctx.event());
                   });
-      auto *list_node = node_manager->Get(options.list_id_);
-      auto *component_node = node_manager->Get(options.list_comp_id_);
+      auto *list_node = node_manager->Get(options->list_id_);
+      auto *component_node = node_manager->Get(options->list_comp_id_);
       if (list_node) {
         list_node->OnComponentFinished(component_node, options);
       }
-    } else if (options.list_id_ != 0 && !options.operation_ids_.empty() &&
-               !options.list_item_ids_.empty() &&
-               options.operation_ids_.size() == options.list_item_ids_.size()) {
+    } else if (options->list_id_ != 0 && !options->operation_ids_.empty() &&
+               !options->list_item_ids_.empty() &&
+               options->operation_ids_.size() ==
+                   options->list_item_ids_.size()) {
       TRACE_EVENT(LYNX_TRACE_CATEGORY, LAYOUT_AFTER_ON_LIST_ITEM_BATCH_FINISHED,
                   [&options](lynx::perfetto::EventContext ctx) {
-                    options.UpdateTraceDebugInfo(ctx.event());
+                    options->UpdateTraceDebugInfo(ctx.event());
                   });
-      auto *list_element = node_manager->Get(options.list_id_);
+      auto *list_element = node_manager->Get(options->list_id_);
       if (list_element) {
         list_element->OnListItemBatchFinished(options);
       }
@@ -342,7 +345,7 @@ void LayoutMediator::HandleLayoutVoluntarily(
   // for other case, like update data, just try fetch layout result.
   using namespace std::chrono_literals;  // NOLINT
   static constexpr auto kFirstScreenWaitTimeout = 50ms;
-  tasm::PipelineOptions options;
+  auto options = std::make_shared<tasm::PipelineOptions>();
 
   if (!queue->has_first_screen_) {
     std::mutex first_screen_cv_mutex;

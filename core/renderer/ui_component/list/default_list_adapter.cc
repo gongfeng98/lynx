@@ -4,6 +4,7 @@
 
 #include "core/renderer/ui_component/list/default_list_adapter.h"
 
+#include <memory>
 #include <string>
 
 #include "core/renderer/trace/renderer_trace_event_def.h"
@@ -123,14 +124,14 @@ bool DefaultListAdapter::BindItemHolder(ItemHolder* item_holder, int index,
 
 // When the rendering of the list's child node is complete, this method will
 // be invoked.
-void DefaultListAdapter::OnFinishBindItemHolder(Element* component,
-                                                const PipelineOptions& option) {
+void DefaultListAdapter::OnFinishBindItemHolder(
+    Element* component, const std::shared_ptr<PipelineOptions>& option) {
   if (!component) {
     NLIST_LOGE(
         "DefaultListAdapter::OnFinishBindItemHolder: component is nullptr");
     return;
   }
-  int64_t operation_id = option.operation_id;
+  int64_t operation_id = option->operation_id;
   TRACE_EVENT(LYNX_TRACE_CATEGORY, DEFAULT_LIST_ADAPTER_FINISH_BIND_ITEM_HOLDER,
               "operation_id", operation_id);
   list::BindingItemHolderMap::const_iterator it =
@@ -167,7 +168,7 @@ void DefaultListAdapter::OnFinishBindItemHolder(Element* component,
     binding_item_holder_map_->erase(it);
     // Note: Mark should_flush_finish_layout_ to determine whether needs to
     // invoke FinishLayoutOperation().
-    list_container_->MarkShouldFlushFinishLayout(option.has_layout);
+    list_container_->MarkShouldFlushFinishLayout(option->has_layout);
     if (list_container_->intercept_depth() == 0) {
       list_container_->list_layout_manager()->OnLayoutChildren(true, index);
     }

@@ -6,6 +6,7 @@
 #define CORE_SERVICES_TIMING_HANDLER_TIMING_H_
 
 #include <chrono>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -56,10 +57,11 @@ class TimingCollector {
     explicit Scope(D* delegate_ptr) : delegate_ptr_(delegate_ptr) {
       TimingCollector::Instance()->timing_stack_.emplace();
     }
-    explicit Scope(D* delegate_ptr, const PipelineOptions& pipeline_options)
+    explicit Scope(D* delegate_ptr,
+                   const std::shared_ptr<PipelineOptions>& pipeline_options)
         : delegate_ptr_(delegate_ptr) {
       TimingCollector::Instance()->timing_stack_.emplace(
-          pipeline_options.pipeline_id);
+          pipeline_options->pipeline_id);
     }
     explicit Scope(D* delegate_ptr, const PipelineID& pipeline_id)
         : delegate_ptr_(delegate_ptr) {

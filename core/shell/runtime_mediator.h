@@ -127,15 +127,15 @@ class RuntimeMediator : public runtime::TemplateDelegate {
     return vsync_observer_;
   }
 
-  void SetCSSVariables(const std::string& component_id,
-                       const std::string& id_selector,
-                       const lepus::Value& properties,
-                       tasm::PipelineOptions pipeline_options) override;
+  void SetCSSVariables(
+      const std::string& component_id, const std::string& id_selector,
+      const lepus::Value& properties,
+      std::shared_ptr<tasm::PipelineOptions> pipeline_options) override;
 
-  void SetNativeProps(tasm::NodeSelectRoot root,
-                      const tasm::NodeSelectOptions& options,
-                      const lepus::Value& native_props,
-                      tasm::PipelineOptions pipeline_options) override;
+  void SetNativeProps(
+      tasm::NodeSelectRoot root, const tasm::NodeSelectOptions& options,
+      const lepus::Value& native_props,
+      std::shared_ptr<tasm::PipelineOptions> pipeline_options) override;
 
   void ReloadFromJS(runtime::UpdateDataTask task) override;
 
