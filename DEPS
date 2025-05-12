@@ -137,12 +137,12 @@ deps = {
         "type": "http",
         "url": {
             "linux": f"https://cmake.org/files/v3.18/cmake-3.18.1-Linux-x86_64.tar.gz",
-            "darwin": f"https://cmake.org/files/v3.18/cmake-3.18.1-Darwin-x86_64.tar.gz",
+            "darwin": f"https://dl.google.com/android/repository/ba34c321f92f6e6fd696c8354c262c122f56abf8.cmake-3.18.1-darwin.zip",
             "windows": f"https://cmake.org/files/v3.18/cmake-3.18.1-win64-x64.zip"
         }.get(system, None),
         "sha256": {
             "linux": "537de8ad3a7fb4ec9b8517870db255802ad211aec00002c651e178848f7a769e",
-            "darwin": "f5c5a1f82f94b8eedcab3a95510ba59f9b1f598cb82aaf6bf8c0d72d2b245f46",
+            "darwin": "b15d6d7ab5615a48bb14962f5a931be6cd9a0c187f4bd6be404bdd46a7bef60b",
             "windows": "2c6c06da43c1088fc3a673e4440c8ebb1531bb6511134892c0589aa0b94f11ad"
         }.get(system, None),
         "ignore_in_git": True,
