@@ -17,7 +17,10 @@ if (!is_oliver_ssr) {
 }
 
 if (is_android) {
-  long_task_timing_shared_sources += [ "android/long_task_monitor_android.cc" ]
+  long_task_timing_shared_sources += [
+    "android/long_task_monitor_android.cc",
+    "android/long_task_monitor_android.h",
+  ]
 }
 
 lynx_core_source_set("long_task_timing") {

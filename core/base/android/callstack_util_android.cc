@@ -3,16 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 #include "core/base/android/callstack_util_android.h"
 
-#include "platform/android/lynx_android/src/main/jni/gen/CallStackUtil_jni.h"
-#include "platform/android/lynx_android/src/main/jni/gen/CallStackUtil_register_jni.h"
-
-namespace lynx {
-namespace jni {
-bool RegisterJNIForCallStackUtil(JNIEnv *env) {
-  return RegisterNativesImpl(env);
-}
-}  // namespace jni
-}  // namespace lynx
+#include "core/build/gen/CallStackUtil_jni.h"
 
 namespace lynx {
 namespace base {
@@ -21,6 +12,10 @@ namespace android {
 constexpr char kErrorMsgGetJavaExceptionFailed[] =
     "Another JNI exception occurred when get java exception info, "
     "please ask Lynx for help";
+
+bool CallStackUtilAndroid::RegisterJNI(JNIEnv *env) {
+  return RegisterNativesImpl(env);
+}
 
 std::string CallStackUtilAndroid::GetMessageOfCauseChain(
     JNIEnv *env, const ScopedLocalJavaRef<jthrowable> &throwable) {

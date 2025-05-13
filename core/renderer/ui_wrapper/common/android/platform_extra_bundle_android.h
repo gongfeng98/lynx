@@ -23,6 +23,8 @@ class PlatformBundleHolderAndroid : public PlatformExtraBundleHolder {
       int32_t signature,
       const base::android::ScopedLocalJavaRef<jobject> &bundle);
 
+  static bool RegisterJNI(JNIEnv *env);
+
  private:
   base::android::ScopedGlobalJavaRef<jobject> impl_ = {};
 };

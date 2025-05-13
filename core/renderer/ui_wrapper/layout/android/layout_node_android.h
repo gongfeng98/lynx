@@ -12,6 +12,7 @@ namespace lynx {
 namespace tasm {
 class LayoutNodeAndroid {
  public:
+  static bool RegisterJNI(JNIEnv* env);
   static lynx::base::android::ScopedLocalJavaRef<jfloatArray> Measure(
       JNIEnv* env, jobject obj, jfloat width, int widthMode, jfloat height,
       int heightMode, jboolean finalMeasure);

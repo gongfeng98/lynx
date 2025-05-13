@@ -16,6 +16,7 @@ class JsonData;
 namespace tasm {
 class LynxViewDataManagerAndroid : public LynxViewDataManager {
  public:
+  static bool RegisterJNI(JNIEnv* env);
   static lepus::Value GetJsThreadDataFromTemplateData(JNIEnv* env,
                                                       jobject jni_object);
   static void ConsumeTemplateDataActions(JNIEnv* env, jobject jni_object);

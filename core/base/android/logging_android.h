@@ -14,6 +14,8 @@ namespace lynx {
 namespace base {
 namespace logging {
 
+BASE_EXPORT_FOR_DEVTOOL bool RegisterJNI(JNIEnv* env);
+
 BASE_EXPORT_FOR_DEVTOOL void InitLynxLog();
 
 }  // namespace logging

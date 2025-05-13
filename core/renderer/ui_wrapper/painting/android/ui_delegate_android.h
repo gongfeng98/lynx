@@ -16,6 +16,8 @@ namespace tasm {
 
 class UIDelegateAndroid : public UIDelegate {
  public:
+  static bool RegisterJNI(JNIEnv* env);
+
   UIDelegateAndroid(long painting_context, long layout_context)
       : painting_context_(
             reinterpret_cast<PaintingCtxPlatformImpl*>(painting_context)),

@@ -8,17 +8,9 @@
 #include "core/base/android/java_only_array.h"
 #include "core/base/android/java_only_map.h"
 #include "core/base/android/jni_helper.h"
+#include "core/build/gen/LynxEventReporter_jni.h"
 #include "core/renderer/ui_wrapper/common/android/prop_bundle_android.h"
-#include "platform/android/lynx_android/src/main/jni/gen/LynxEventReporter_jni.h"
-#include "platform/android/lynx_android/src/main/jni/gen/LynxEventReporter_register_jni.h"
-
-namespace lynx {
-namespace jni {
-bool RegisterJNIForLynxEventReporter(JNIEnv* env) {
-  return RegisterNativesImpl(env);
-}
-}  // namespace jni
-}  // namespace lynx
+#include "core/services/event_report/android/event_tracker_android.h"
 
 void RunOnReportThread(JNIEnv* env, jobject jcaller, jobject runnable) {
   auto taskRunner =
@@ -40,6 +32,8 @@ void RunOnReportThread(JNIEnv* env, jobject jcaller, jobject runnable) {
 namespace lynx {
 namespace tasm {
 namespace report {
+
+void RegisterJni(JNIEnv* env) { (void)RegisterNativesImpl(env); }
 
 static void DoReportEvent(JNIEnv* env, int32_t instance_id,
                           MoveOnlyEvent&& event) {

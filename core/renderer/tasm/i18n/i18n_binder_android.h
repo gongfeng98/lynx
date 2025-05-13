@@ -13,6 +13,7 @@ namespace lynx {
 namespace tasm {
 class I18nBinderAndroid : public I18nBinder {
  public:
+  static void RegisterJNI(JNIEnv *env);
   I18nBinderAndroid() = default;
   ~I18nBinderAndroid() = default;
 

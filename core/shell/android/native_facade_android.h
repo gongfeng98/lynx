@@ -28,6 +28,8 @@ class NativeFacadeAndroid : public NativeFacade {
   NativeFacadeAndroid(NativeFacadeAndroid&& facade) = default;
   NativeFacadeAndroid& operator=(NativeFacadeAndroid&&) = default;
 
+  static void RegisterJni(JNIEnv* env);
+
   void OnDataUpdated() override;
 
   void OnPageChanged(bool is_first_screen) override;

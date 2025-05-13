@@ -19,6 +19,8 @@ namespace shell {
 class RuntimeLifecycleListenerDelegateAndroid
     : public runtime::RuntimeLifecycleListenerDelegate {
  public:
+  static void RegisterJNI(JNIEnv* env);
+
   RuntimeLifecycleListenerDelegateAndroid(JNIEnv* env, jobject delegate);
   ~RuntimeLifecycleListenerDelegateAndroid() override = default;
 

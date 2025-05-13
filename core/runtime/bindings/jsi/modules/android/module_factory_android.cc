@@ -8,17 +8,8 @@
 #include <utility>
 
 #include "core/base/android/jni_helper.h"
+#include "core/build/gen/LynxModuleFactory_jni.h"
 #include "core/value_wrapper/android/value_impl_android.h"
-#include "platform/android/lynx_android/src/main/jni/gen/LynxModuleFactory_jni.h"
-#include "platform/android/lynx_android/src/main/jni/gen/LynxModuleFactory_register_jni.h"
-
-namespace lynx {
-namespace jni {
-bool RegisterJNIForLynxModuleFactory(JNIEnv* env) {
-  return RegisterNativesImpl(env);
-}
-}  // namespace jni
-}  // namespace lynx
 
 jboolean RetainJniObject(JNIEnv* env, jobject jcaller, jlong nativePtr) {
   lynx::piper::ModuleFactoryAndroid* module_manager =
@@ -31,6 +22,10 @@ jboolean RetainJniObject(JNIEnv* env, jobject jcaller, jlong nativePtr) {
 
 namespace lynx {
 namespace piper {
+
+bool ModuleFactoryAndroid::RegisterJNIUtils(JNIEnv* env) {
+  return RegisterNativesImpl(env);
+}
 
 ModuleFactoryAndroid::ModuleFactoryAndroid(JNIEnv* env, jobject moduleFactory)
     : jni_object_(env, moduleFactory) {

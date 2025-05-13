@@ -21,6 +21,7 @@ class PlatformBundleHolderAndroid;
 
 class LayoutContextAndroid : public LayoutCtxPlatformImpl {
  public:
+  static bool RegisterJNI(JNIEnv* env);
   LayoutContextAndroid(JNIEnv* env, jobject impl);
   ~LayoutContextAndroid() override;
 

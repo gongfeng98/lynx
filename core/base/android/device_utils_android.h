@@ -16,6 +16,8 @@ class DeviceUtilsAndroid {
   DeviceUtilsAndroid() = delete;
   ~DeviceUtilsAndroid() = delete;
 
+  static void RegisterJNI(JNIEnv* env);
+
   static bool Is64BitDevice();
 };
 

@@ -12,16 +12,7 @@
 #include "base/include/log/logging.h"
 #include "base/include/no_destructor.h"
 #include "base/include/platform/android/jni_convert_helper.h"
-#include "platform/android/lynx_android/src/main/jni/gen/LynxJSIObjectHub_jni.h"
-#include "platform/android/lynx_android/src/main/jni/gen/LynxJSIObjectHub_register_jni.h"
-
-namespace lynx {
-namespace jni {
-bool RegisterJNIForLynxJSIObjectHub(JNIEnv *env) {
-  return RegisterNativesImpl(env);
-}
-}  // namespace jni
-}  // namespace lynx
+#include "build/gen/LynxJSIObjectHub_jni.h"
 
 namespace lynx {
 namespace piper {
@@ -108,6 +99,10 @@ LynxPlatformJSIObjectAndroid::JObjectType GetJObjectTypeByJObject(
   }
 }
 }  // namespace
+
+bool LynxPlatformJSIObjectAndroid::RegisterJNI(JNIEnv *env) {
+  return RegisterNativesImpl(env);
+}
 
 std::shared_ptr<LynxPlatformJSIObjectAndroid>
 LynxPlatformJSIObjectAndroid::Create(JNIEnv *env, jobject i_jsi_object) {

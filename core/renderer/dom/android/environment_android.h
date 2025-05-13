@@ -13,6 +13,7 @@ namespace base {
 namespace android {
 class EnvironmentAndroid {
  public:
+  static bool RegisterJNIUtils(JNIEnv* env);
   static std::string GetCacheDir();
 
  private:

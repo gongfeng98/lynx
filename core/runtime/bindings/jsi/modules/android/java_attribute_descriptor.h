@@ -16,6 +16,8 @@ namespace piper {
 
 class JavaAttributeDescriptor {
  public:
+  static bool RegisterJNI(JNIEnv* env);
+
   JavaAttributeDescriptor() {}
   JavaAttributeDescriptor(JNIEnv* env, jobject jni_object)
       : wrapper_(env, jni_object) {}
