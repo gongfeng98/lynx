@@ -8903,6 +8903,7 @@ public class com::lynx::tasm::behavior::ui::list::container::UIListContainer : c
   public boolean com.lynx.tasm.behavior.ui.list.container.UIListContainer.initialPropsFlushed(String initialPropKey, String cacheKey);
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.setInitialPropsHasFlushed(String initialPropKey, String cacheKey);
   public Object com.lynx.tasm.behavior.ui.list.container.UIListContainer.getValueFromNativeStorage(String key);
+  public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.layout();
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.invalidate();
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.destroy();
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.updateContentSizeAndOffset(float contentSize, float deltaX, float deltaY);

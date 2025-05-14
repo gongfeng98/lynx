@@ -337,6 +337,18 @@ public class UIListContainer extends UISimpleView<ListContainerView>
   }
 
   @Override
+  public void layout() {
+    // Note: If list is overflow visible, mView's parent will be set clip children to false in
+    // super.layout() which lets mView not be clipped to its bound. Consider list item view's parent
+    // is the LinearLayout, so we should also invoke mView.setClipChildren(false) to make
+    // LinearLayout not be clipped to its bound.
+    if (getOverflow() != OVERFLOW_HIDDEN) {
+      mView.setClipChildren(false);
+    }
+    super.layout();
+  }
+
+  @Override
   public void invalidate() {
     if (mView.getLinearLayout() != null) {
       mView.getLinearLayout().invalidate();
