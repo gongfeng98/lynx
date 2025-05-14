@@ -84,6 +84,8 @@ piper::Value JSClosureEventListener::GetClosure() {
 
 piper::Value JSClosureEventListener::ConvertEventToPiperValue(
     event::Event* event) {
+  TRACE_EVENT(LYNX_TRACE_CATEGORY,
+              CLOSURE_EVENT_LISTENER_CONVERT_TO_PIPER_VALUE);
   auto rt = rt_.lock();
   auto app = native_app_.lock();
   if (rt == nullptr || event == nullptr || app == nullptr) {

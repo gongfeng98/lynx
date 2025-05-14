@@ -453,6 +453,9 @@ inline constexpr const char* const ANIMATION_FRAME_TASK_CANCEL_ANIMATION_FRAME =
     "AnimationFrameTaskHandler::CancelAnimationFrame";
 inline constexpr const char* const ANIMATION_FRAME_TASK_DO_FRAME =
     "AnimationFrameTaskHandler::DoFrame";
+inline constexpr const char* const
+    CLOSURE_EVENT_LISTENER_CONVERT_TO_PIPER_VALUE =
+        "JSClosureEventListener::ConvertEventToPiperValue";
 /**
  * @trace_description: Invoke the NativeModule method with module name
  * @args{module}, method name @args(method} and first_args @args{first_arg}.

@@ -143,7 +143,7 @@ public class LynxUIOwner {
         LynxEnv.getBooleanFromExternalEnv(LynxEnvKey.ENABLE_REPORT_CREATE_ASYNC_TAG, false);
     mCreateNodeConfigHasReportedMark = new HashMap<String, Boolean>();
     attachUIBodyView(body);
-    TraceEvent.endSection("LynxUIOwner initialized");
+    TraceEvent.endSection(TraceEventDef.UI_OWNER_INIT);
   }
 
   /**
