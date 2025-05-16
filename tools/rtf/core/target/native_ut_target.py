@@ -90,7 +90,7 @@ class NativeUTTarget(Target):
         if self.is_timeout:
             state = "timeout"
         if self.end_time is None or self.start_time is None:
-            summary.insert("costTime", "-1")
+            summary.insert("costTime", "0")
             state = "unknown"
         else:
             summary.insert(
