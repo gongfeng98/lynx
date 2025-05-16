@@ -207,7 +207,7 @@ jlong Create(JNIEnv* env, jclass jcaller, jlong timing_collector_android,
              jstring js_group_thread_name, jobject tasm_platform_invoker,
              jlong white_board_ptr, jlong ui_delegate_ptr,
              jboolean use_invoke_ui_method, jboolean long_task_monitor_disabled,
-             jboolean force_layout_on_background_thread) {
+             jboolean force_layout_on_background_thread, jint embedded_mode) {
   auto* ui_delegate =
       reinterpret_cast<lynx::tasm::UIDelegate*>(ui_delegate_ptr);
 
@@ -241,6 +241,8 @@ jlong Create(JNIEnv* env, jclass jcaller, jlong timing_collector_android,
   shell_option.page_options_.SetInstanceID(shell_option.instance_id_);
   shell_option.page_options_.SetLongTaskMonitorDisabled(
       long_task_monitor_disabled);
+  shell_option.page_options_.SetEmbeddedMode(
+      static_cast<lynx::tasm::EmbeddedMode>(embedded_mode));
 
   std::shared_ptr<lynx::tasm::WhiteBoard> white_board = nullptr;
   if (white_board_ptr != 0) {

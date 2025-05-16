@@ -102,6 +102,17 @@
 - (void)setThreadStrategyForRender:(LynxThreadStrategyForRender)threadStrategy;
 - (LynxThreadStrategyForRender)getThreadStrategyForRender;
 
+/**
+ * embeddedMode is an experimental switch. When embeddedMode is set,
+ * we offer optimal performance for embedded scenarios,
+ * but it will restrict business flexibility.
+ * For now, you can just ignore this switch.
+ * Please DO NOT enable this switch on your own for now.
+ * Contact the Lynx team for more information.
+ */
+- (void)setEmbeddedMode:(EmbeddedMode)embeddedMode;
+- (EmbeddedMode)getEmbeddedMode;
+
 - (void)addLynxResourceProvider:(NSString* _Nonnull)resType
                        provider:(id<LynxResourceProvider> _Nonnull)provider;
 

@@ -46,6 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
   BOOL _enableImageDownsampling;
   BOOL _enableTextNonContiguousLayout;
   BOOL _enableLayoutOnly;
+  EmbeddedMode _embeddedMode;
 
   BOOL _hasStartedLoad;
   BOOL _enableLayoutSafepoint;

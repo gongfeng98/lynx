@@ -195,6 +195,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   _enableAsyncDisplayFromNative = YES;
   _enableTextNonContiguousLayout = [builder enableTextNonContiguousLayout];
   _enableLayoutOnly = [LynxEnv.sharedInstance getEnableLayoutOnly];
+  _embeddedMode = [builder getEmbeddedMode];
 
   builder.config = builder.config ?: [LynxEnv sharedInstance].config;
   builder.config = builder.config ?: [[LynxConfig alloc] initWithProvider:nil];
@@ -410,6 +411,8 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   if (_runtime) {
     option.instance_id_ = _runtime.runtimeActor->GetInstanceId();
   }
+  option.page_options_.SetInstanceID(option.instance_id_);
+  option.page_options_.SetEmbeddedMode(static_cast<lynx::tasm::EmbeddedMode>(_embeddedMode));
   return option;
 }
 

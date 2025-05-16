@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import com.lynx.jsbridge.LynxModule;
+import com.lynx.tasm.EmbeddedMode;
 import com.lynx.tasm.base.TraceEvent;
 import com.lynx.tasm.base.trace.TraceEventDef;
 import com.lynx.tasm.behavior.Behavior;
@@ -93,6 +94,8 @@ public class LynxViewBuilder {
   LynxBackgroundRuntime lynxBackgroundRuntime;
 
   private ILynxUIRenderer lynxUIRenderer;
+
+  EmbeddedMode embeddedMode = EmbeddedMode.UNSET;
 
   public LynxViewBuilder() {
     LynxEnv.inst().lazyInitIfNeeded();
@@ -589,5 +592,20 @@ public class LynxViewBuilder {
 
   public ILynxUIRenderer lynxUIRenderer() {
     return lynxUIRenderer;
+  }
+
+  /**
+   * embeddedMode is an experimental switch. When embeddedMode is set,
+   * we offer optimal performance for embedded scenarios,
+   * but it will restrict business flexibility.
+   * For now, you can just ignore this switch.
+   * Please DO NOT enable this switch on your own for now.
+   * Contact the Lynx team for more information.
+   * @param embeddedMode
+   * @return
+   */
+  public LynxViewBuilder setEmbeddedMode(EmbeddedMode embeddedMode) {
+    this.embeddedMode = embeddedMode;
+    return this;
   }
 }

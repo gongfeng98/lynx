@@ -1380,6 +1380,15 @@ public class com::lynx::react::bridge::mapbuffer::DynamicFromMapBuffer : com.lyn
   public void com.lynx.react.bridge.mapbuffer.DynamicFromMapBuffer.recycle();
 }
 
+public enum com::lynx::tasm::EmbeddedMode {
+  public com.lynx.tasm.EmbeddedMode.UNSET UNSET;
+  public com.lynx.tasm.EmbeddedMode.EMBEDDED_MODE_BASE EMBEDDED_MODE_BASE;
+  public com.lynx.tasm.EmbeddedMode.ENGINE_POOL ENGINE_POOL;
+  public com.lynx.tasm.EmbeddedMode.EMBEDDED_MODE_ALL EMBEDDED_MODE_ALL;
+  public com.lynx.tasm.EmbeddedMode.EmbeddedMode(int mode);
+  public int com.lynx.tasm.EmbeddedMode.mode();
+}
+
 public enum com::lynx::tasm::behavior::event::EventTarget::EnableStatus {
   public com.lynx.tasm.behavior.event.EventTarget.EnableStatus.Enable Enable;
   public com.lynx.tasm.behavior.event.EventTarget.EnableStatus.Disable Disable;
@@ -6062,6 +6071,7 @@ public class com::lynx::tasm::LynxViewBuilder :  {
   public LynxViewBuilder com.lynx.tasm.LynxViewBuilder.setLynxViewConfig(Map< String, String > map);
   public LynxViewBuilder com.lynx.tasm.LynxViewBuilder.setLynxUIRenderer(ILynxUIRenderer renderer);
   public ILynxUIRenderer com.lynx.tasm.LynxViewBuilder.lynxUIRenderer();
+  public LynxViewBuilder com.lynx.tasm.LynxViewBuilder.setEmbeddedMode(EmbeddedMode embeddedMode);
   public static void com.lynx.tasm.LynxViewBuilder.setDefaultDensity(Float density);
 }
 

@@ -8,6 +8,50 @@
 namespace lynx {
 namespace tasm {
 
+/**
+ * Embedded mode is an experimental switch
+ * When embeddedMode is set, we offer optimal performance for embedded
+ * scenarios. But it will restrict business flexibility. Embedded mode
+ * configuration options using bitwise operations for multiple selections
+ *
+ * Usage:
+ * 1. Basic usage:
+ *    - Use UNSET for no options selected
+ *    - Use EMBEDDED_MODE_BASE for basic optimizations
+ *    - Use EMBEDDED_MODE_ALL for all optimizations
+ *
+ * 2. Combine options:
+ *    - Use bitwise OR (|) to combine options
+ *    - Example: EMBEDDED_MODE_BASE | ENGINE_POOL
+ *
+ * 3. Check options:
+ *    - Use bitwise AND (&) to check if an option is enabled
+ *    - Example: (mode & ENGINE_POOL) != 0
+ */
+enum EmbeddedMode {
+  /**
+   * No optimization options selected
+   */
+  UNSET = 0,
+
+  /**
+   * Basic embedded mode with minimal optimizations
+   */
+  EMBEDDED_MODE_BASE = 1 << 0,
+
+  /**
+   * Engine pool optimization for better instance reuse
+   */
+  ENGINE_POOL = 1 << 1,
+
+  /**
+   * Combination of all optimization options
+   *
+   * Note: When adding new optimization options, update this value
+   */
+  EMBEDDED_MODE_ALL = EMBEDDED_MODE_BASE | ENGINE_POOL
+};
+
 /// Common options shared by components within a Lynx page.
 /// Unlike PageConfig, the options are dynamic and can be updated on-the-flight
 /// by calling LynxShell::SetPageOptions
@@ -33,9 +77,14 @@ struct PageOptions {
   // Get long task monitoring disabled status for this instance.
   bool GetLongTaskMonitorDisabled() const { return long_task_disabled_; }
 
+  void SetEmbeddedMode(EmbeddedMode mode) { embedded_mode_ = mode; }
+
+  bool IsEmbeddedModeOn() { return embedded_mode_ != EmbeddedMode::UNSET; }
+
  private:
   int32_t instance_id_{kUnknownInstanceID};
   bool long_task_disabled_{false};
+  EmbeddedMode embedded_mode_{UNSET};
 };
 
 }  // namespace tasm

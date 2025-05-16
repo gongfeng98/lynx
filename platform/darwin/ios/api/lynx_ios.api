@@ -4522,6 +4522,8 @@ public class LynxViewBuilder : NSObject {
   public BOOL isUIRunningMode LynxViewBuilder::__attribute__((deprecated("try to set 'threadStrategy' variable if you want to change the thread strategy for rendering")));
   public void LynxViewBuilder::setThreadStrategyForRender:(LynxThreadStrategyForRender threadStrategy);
   public LynxThreadStrategyForRender LynxViewBuilder::getThreadStrategyForRender();
+  public void LynxViewBuilder::setEmbeddedMode:(EmbeddedMode embeddedMode);
+  public EmbeddedMode LynxViewBuilder::getEmbeddedMode();
   public void LynxViewBuilder::addLynxResourceProvider:provider:(NSString *_Nonnull resType,[provider] id< LynxResourceProvider > _Nonnull provider);
   public void LynxViewBuilder::registerFont:forName:(UIFont *_Nonnull font,[forName] NSString *_Nonnull name);
   public void LynxViewBuilder::registerFamilyName:withAliasName:(NSString *_Nonnull fontFamilyName,[withAliasName] NSString *_Nonnull aliasName);
@@ -5104,6 +5106,7 @@ public interface UIViewController(LynxHeroTransition) {
 
   public typedef NS_ENUM(NSInteger, LynxViewSizeMode);
   public typedef NS_ENUM(NSInteger, LynxThreadStrategyForRender);
+  public typedef NS_OPTIONS(NSInteger, EmbeddedMode);
 
   typedef void(^ LynxPromiseResolveBlock) (id result)
   typedef void(^ LynxPromiseRejectBlock) (NSString *code, NSString *message)
