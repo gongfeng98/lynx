@@ -95,6 +95,8 @@ Element::Element(const base::String& tag, ElementManager* manager,
         manager->GetEnableExtendedLayoutOnlyOpt();
     enable_component_layout_only_ = manager->GetEnableComponentLayoutOnly();
   }
+
+  record_parent_font_size_ = manager->GetLynxEnvConfig().DefaultFontSize();
 }
 
 // The copy constructor of the element is now only used for copying fiber
@@ -145,7 +147,8 @@ Element::Element(const Element& element, bool clone_resolved_props)
       max_height_(element.max_height_),
       css_patching_(this, nullptr),
       global_bind_target_set_(element.global_bind_target_set_),
-      animation_previous_styles_(element.animation_previous_styles_) {
+      animation_previous_styles_(element.animation_previous_styles_),
+      record_parent_font_size_(element.record_parent_font_size_) {
   platform_css_style_ = std::make_unique<starlight::ComputedCSSStyle>(
       *(element.computed_css_style()));
 }
@@ -967,12 +970,11 @@ bool Element::TendToFlatten() {
 double Element::GetFontSize() { return computed_css_style()->GetFontSize(); }
 
 double Element::GetParentFontSize() {
-  if (!IsCSSInheritanceEnabled() || is_parallel_flush() ||
-      parent() == nullptr) {
-    return element_manager()->GetLynxEnvConfig().DefaultFontSize();
+  if (IsCSSInheritanceEnabled() && is_parallel_flush() == false &&
+      parent() != nullptr) {
+    record_parent_font_size_ = parent()->GetFontSize();
   }
-
-  return parent()->GetFontSize();
+  return record_parent_font_size_;
 }
 
 double Element::GetRecordedRootFontSize() {
