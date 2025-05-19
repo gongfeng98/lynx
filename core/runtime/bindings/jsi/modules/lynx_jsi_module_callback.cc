@@ -60,6 +60,10 @@ void ModuleCallback::Invoke(Runtime* runtime,
   args_->ForeachArray([&values, runtime](int64_t index, const pub::Value& val) {
     values[index] = pub::ValueUtils::ConvertValueToPiperValue(*runtime, val);
   });
+  // Directly destroy `args_` to avoid issues caused by the unstable destruction
+  // order of `shared_ptr`, which can lead to `args_` being destroyed by other
+  // threads.
+  args_.reset();
   uint64_t convert_params_end = base::CurrentSystemTimeMilliseconds();
   TRACE_EVENT_INSTANT(
       LYNX_TRACE_CATEGORY_JSB, JSB_TIMING_CALLBACK_CONVERT_PARAMS_END,
