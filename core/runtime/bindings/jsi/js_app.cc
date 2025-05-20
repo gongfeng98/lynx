@@ -2863,8 +2863,8 @@ std::shared_ptr<ContextProxyInJS> App::GetContextProxy(
   }
   auto result = context_proxy_vector_[static_cast<int32_t>(type)];
   if (result == nullptr) {
-    result = std::make_shared<ContextProxyInJS>(*delegate_, type, rt_,
-                                                weak_from_this());
+    result =
+        std::make_shared<ContextProxyInJS>(*delegate_, type, weak_from_this());
     context_proxy_vector_[static_cast<int32_t>(type)] = result;
   }
   return result;

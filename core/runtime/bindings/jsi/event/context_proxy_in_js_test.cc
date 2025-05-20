@@ -308,9 +308,9 @@ TEST_P(ContextProxyInJSTest, ContextProxyInJSOnTriggerEventTest) {
       .call(rt, piper::Value::undefined());
 
   auto compare_event_listener = std::make_unique<JSClosureEventListener>(
-      runtime, app_, *(runtime->global().getProperty(rt, "onEvent")));
+      app_, *(runtime->global().getProperty(rt, "onEvent")));
   auto compare_event_listener_1 = std::make_unique<JSClosureEventListener>(
-      runtime, app_, *(runtime->global().getProperty(rt, "onEvent_1")));
+      app_, *(runtime->global().getProperty(rt, "onEvent_1")));
 
   EXPECT_TRUE(app_
                   ->context_proxy_vector_[static_cast<int32_t>(
