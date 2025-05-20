@@ -79,7 +79,9 @@ struct PageOptions {
 
   void SetEmbeddedMode(EmbeddedMode mode) { embedded_mode_ = mode; }
 
-  bool IsEmbeddedModeOn() { return embedded_mode_ != EmbeddedMode::UNSET; }
+  bool IsEmbeddedModeOn() const {
+    return embedded_mode_ != EmbeddedMode::UNSET;
+  }
 
  private:
   int32_t instance_id_{kUnknownInstanceID};

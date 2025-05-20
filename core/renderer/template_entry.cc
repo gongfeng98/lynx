@@ -72,16 +72,18 @@ bool TemplateEntry::ConstructContext(TemplateAssembler* assembler,
       source_type =
           vm_context_ ? LepusContextSourceType::kFromGlobalPool : source_type;
     }
-
-    tasm::report::EventTracker::OnEvent(
-        [source_type](tasm::report::MoveOnlyEvent& event) {
-          event.SetName("quick_context_pre_create");
-          event.SetProps(
-              "use_global_context_pool",
-              source_type == LepusContextSourceType::kFromGlobalPool);
-          event.SetProps("use_bundle_context_pool",
-                         source_type == LepusContextSourceType::kFromLocalPool);
-        });
+    if (assembler->EnableEventReporter()) {
+      tasm::report::EventTracker::OnEvent(
+          [source_type](tasm::report::MoveOnlyEvent& event) {
+            event.SetName("quick_context_pre_create");
+            event.SetProps(
+                "use_global_context_pool",
+                source_type == LepusContextSourceType::kFromGlobalPool);
+            event.SetProps(
+                "use_bundle_context_pool",
+                source_type == LepusContextSourceType::kFromLocalPool);
+          });
+    }
   }
 
   // 3. construct a context at runtime

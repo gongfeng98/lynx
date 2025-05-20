@@ -146,12 +146,37 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
 
   private PageConfig mPageConfig;
 
+  private EmbeddedMode embeddedMode = EmbeddedMode.UNSET;
+
   public LynxContext(Context base, DisplayMetrics screenMetrics) {
     super(base);
     mVirtualScreenMetrics = new DisplayMetrics();
     mVirtualScreenMetrics.setTo(screenMetrics);
 
     initUIExposure();
+  }
+
+  /**
+   * @brief check whether enable eventReporter
+   * @return false if embedMode is open
+   */
+  public boolean enableEventReporter() {
+    return !isEmbeddedModeOn();
+  }
+
+  /**
+   * @brief check whether embedMode is open
+   */
+  public boolean isEmbeddedModeOn() {
+    return embeddedMode != EmbeddedMode.UNSET;
+  }
+
+  /**
+   * @brief embedMode setter
+   * @param embedMode switch, normally set from LynxViewBuilder
+   */
+  public void setEmbeddedMode(EmbeddedMode embeddedMode) {
+    this.embeddedMode = embeddedMode;
   }
 
   public void setEnableAsyncLoadImage(boolean b) {

@@ -141,6 +141,9 @@ class LayoutContext : public std::enable_shared_from_this<LayoutContext>,
   void SetPageConfigForLayoutThread(const std::shared_ptr<PageConfig>& config);
   void SetPageOptions(const PageOptions& options) { page_options_ = options; }
 
+  // In Embedded mode, we disable event reporter by now.
+  bool EnableEventReporter() const { return !IsEmbeddedModeOn(); }
+
   void SetEnableLayout();
 
   // Check fixed node, if position type has been changed, update the
@@ -262,6 +265,7 @@ class LayoutContext : public std::enable_shared_from_this<LayoutContext>,
 
   starlight::Constraints ConvertViewportToOneSideConstraint(Viewport viewport);
   bool IfNeedsUpdateLayoutInfo(LayoutNode* node);
+  bool IsEmbeddedModeOn() const { return page_options_.IsEmbeddedModeOn(); }
 
   std::shared_ptr<LayoutCtxPlatformImpl> platform_impl_;
   std::unique_ptr<Delegate> delegate_;

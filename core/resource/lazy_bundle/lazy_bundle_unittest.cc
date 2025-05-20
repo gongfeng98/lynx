@@ -22,7 +22,7 @@ TEST(LazyBundleTest, SendTrackEvent) {
   tasm::LynxEnv::GetInstance().external_env_map_
       [tasm::LynxEnv::Key::ENABLE_REPORT_DYNAMIC_COMPONENT_EVENT] = "true";
   constexpr int32_t kInstanceId = 1;
-  LazyBundleLifecycleOption("lynx", kInstanceId);
+  LazyBundleLifecycleOption("lynx", kInstanceId, true);
 
   // flush tasks
   tasm::report::EventTracker::Flush(kInstanceId);

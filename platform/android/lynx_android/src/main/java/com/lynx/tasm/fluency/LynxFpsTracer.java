@@ -218,6 +218,10 @@ public class LynxFpsTracer {
         }
       }
     }
+    LynxContext context = mContext.get();
+    if (context == null || !context.enableEventReporter()) {
+      return;
+    }
 
     // do report
     if (mIFluencyCallback != null) {

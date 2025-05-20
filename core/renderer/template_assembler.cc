@@ -110,8 +110,11 @@ base::LynxError ConstructLynxErrorForLazyBundle(const std::string& url,
 class ComponentUpdateReporter {
  public:
   ComponentUpdateReporter(const runtime::UpdateDataTask& task,
-                          const PageProxy& proxy)
-      : type_(task.type_) {
+                          const PageProxy& proxy, bool enable)
+      : type_(task.type_), enable_{enable} {
+    if (!enable_) {
+      return;
+    }
     if (!proxy.EnableFeatureReport()) {
       return;
     }
@@ -155,6 +158,7 @@ class ComponentUpdateReporter {
   uint64_t start_time_ = 0;
   const runtime::UpdateDataType type_;
   std::string component_name_;
+  bool enable_{true};
 };
 
 }  // namespace
@@ -312,9 +316,12 @@ bool TemplateAssembler::OnLoadTemplate(
   LOGI("start TemplateAssembler::LoadTemplate, url:"
        << url_ << " len: " << source_size_ << " this:" << this);
 
-  // record source size
-  report::EventTracker::UpdateGenericInfo(
-      instance_id_, kTemplateJSSizeOfGenericInfo, std::to_string(source_size_));
+  if (EnableEventReporter()) {
+    // record source size
+    report::EventTracker::UpdateGenericInfo(instance_id_,
+                                            kTemplateJSSizeOfGenericInfo,
+                                            std::to_string(source_size_));
+  }
 
   // check if is_loading_template_ == true, report error
   if (is_loading_template_) {
@@ -1432,6 +1439,9 @@ void TemplateAssembler::ReportError(base::LynxError error) {
 
 void TemplateAssembler::ReportGCTimingEvent(const char* start,
                                             const char* end) {
+  if (!EnableEventReporter()) {
+    return;
+  }
   std::string start_info(start);
   std::string end_info(end);
   tasm::report::EventTracker::OnEvent([start_info = std::move(start_info),
@@ -1522,7 +1532,8 @@ void TemplateAssembler::UpdateComponentData(
   LOGI("TemplateAssembler::UpdateComponentData. this:"
        << this << " url:" << url_
        << " update_data_type:" << static_cast<uint32_t>(task.type_));
-  ComponentUpdateReporter updateReporter(task, page_proxy_);
+  ComponentUpdateReporter updateReporter(task, page_proxy_,
+                                         EnableEventReporter());
   lepus_value v =
       task.data_.GetProperty(BASE_STATIC_STRING(k_actual_first_screen));
   if (v.IsTrue()) {
@@ -2101,7 +2112,8 @@ void TemplateAssembler::UpdateDataByJS(
   LOGI("TemplateAssembler::UpdateDataByJS this:"
        << this << " url:" << url_
        << " update_data_type:" << static_cast<uint32_t>(task.type_));
-  ComponentUpdateReporter updateReporter(task, page_proxy_);
+  ComponentUpdateReporter updateReporter(task, page_proxy_,
+                                         EnableEventReporter());
   if (task.data_.IsObject()) {
     auto table = task.data_.Table();
     if (table->Contains(BASE_STATIC_STRING(CARD_CONFIG_STR))) {
@@ -2320,10 +2332,12 @@ void TemplateAssembler::OnScreenMetricsSet(float width, float height) {
         "fields as numbers!!");
   }
 
-  // update screen size info for EventReporter
-  std::unordered_map<std::string, float> prop_map = {{"screen_width", width},
-                                                     {"screen_height", height}};
-  report::EventTracker::UpdateGenericInfo(instance_id_, std::move(prop_map));
+  if (EnableEventReporter()) {
+    // update screen size info for EventReporter
+    std::unordered_map<std::string, float> prop_map = {
+        {"screen_width", width}, {"screen_height", height}};
+    report::EventTracker::UpdateGenericInfo(instance_id_, std::move(prop_map));
+  }
   // update element tree and layout tree
   client->UpdateScreenMetrics(width, height);
   return;
@@ -2370,8 +2384,8 @@ std::shared_ptr<TemplateEntry> TemplateAssembler::RequireTemplateEntry(
   tasm::recorder::RecordRequireTemplateScope scope(this, url, record_id_);
 #endif  // ENABLE_TESTBENCH_RECORDER
   LOGI("LoadLazyBundle RequireTemplate: " << url);
-  auto lifecycle_option =
-      std::make_unique<LazyBundleLifecycleOption>(url, instance_id_);
+  auto lifecycle_option = std::make_unique<LazyBundleLifecycleOption>(
+      url, instance_id_, EnableEventReporter());
   lifecycle_option->callback = callback;
   lifecycle_option->enable_fiber_arch = EnableFiberArch();
   if (lazy_bundle) {
@@ -2731,7 +2745,9 @@ void TemplateAssembler::OnPageConfigDecoded(
         report::LynxFeature::CPP_DISABLE_EVENT_REFACTOR,
         page_proxy()->element_manager()->GetInstanceId());
   }
-  report::EventTracker::UpdateGenericInfoByPageConfig(instance_id_, config);
+  if (EnableEventReporter()) {
+    report::EventTracker::UpdateGenericInfoByPageConfig(instance_id_, config);
+  }
 }
 
 bool TemplateAssembler::UseLepusNG() {

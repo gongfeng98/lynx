@@ -371,7 +371,9 @@ class PageProxy {
 
   bool CheckComponentExists(int component_id) const;
 
-  bool EnableFeatureReport() const { return enable_feature_report_; };
+  bool EnableFeatureReport() const {
+    return enable_feature_report_ && element_manager()->EnableEventReporter();
+  };
 
   lepus::Value &GetGlobalComponentInfoMap(const std::string &entry_name);
   lepus::Value &GetGlobalComponentPathMap(const std::string &entry_name);

@@ -4399,7 +4399,8 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
       // rendering time of list item in FE framework.
       static bool enable_report =
           LynxEnv::GetInstance().EnableReportListItemLifeStatistic();
-      if (enable_report) {
+      auto self = GET_TASM_POINTER();
+      if (enable_report && self->EnableEventReporter()) {
         options->enable_report_list_item_life_statistic_ = true;
         BASE_STATIC_STRING_DECL(kListItemLifeOption, "listItemLifeOption");
         if (arg1->Contains(kListItemLifeOption)) {

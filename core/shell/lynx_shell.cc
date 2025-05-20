@@ -227,6 +227,7 @@ void LynxShell::InitRuntime(
   auto runtime = std::make_unique<runtime::LynxRuntime>(
       group_id, instance_id_, std::move(delegate), code_cache_source_url,
       runtime_flags, page_options_);
+  runtime->SetPageOptions(page_options_);
   runtime_actor_ = std::make_shared<LynxActor<runtime::LynxRuntime>>(
       std::move(runtime), js_task_runner, instance_id_, enable_runtime_);
   delegate_raw_ptr->set_vsync_monitor(vsync_monitor, runtime_actor_);
@@ -1118,10 +1119,16 @@ void LynxShell::SetEnableBytecode(bool enable,
 
 void LynxShell::SetPageOptions(const tasm::PageOptions& page_options) {
   engine_actor_->Act([page_options](auto& engine) {
-    engine->GetTasm()->SetPageOptions(page_options);
+    const auto tasm = engine->GetTasm();
+    if (tasm) {
+      tasm->SetPageOptions(page_options);
+    }
   });
-  runtime_actor_->Act(
-      [page_options](auto& runtime) { runtime->SetPageOptions(page_options); });
+  if (runtime_actor_) {
+    runtime_actor_->Act([page_options](auto& runtime) {
+      runtime->SetPageOptions(page_options);
+    });
+  }
   layout_actor_->Act(
       [page_options](auto& layout) { layout->SetPageOptions(page_options); });
   ui_operation_queue_->SetPageOptions(page_options);

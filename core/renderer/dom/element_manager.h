@@ -480,6 +480,9 @@ class ElementManager : public ElementContextDelegate {
 
   const PageOptions &GetPageOptions() { return page_options_; }
 
+  // In Embedded mode, we disable event reporter by now.
+  bool EnableEventReporter() const { return !IsEmbeddedModeOn(); }
+
   void SetEnableLayoutOnly(bool enable) { enable_layout_only_ = enable; }
 
   void SetThreadStrategy(int thread_strategy) {
@@ -970,7 +973,8 @@ class ElementManager : public ElementContextDelegate {
   bool GetEnableParallelElement() { return enable_parallel_element_; }
 
   bool GetEnableReportThreadedElementFlushStatistic() {
-    return enable_report_threaded_element_flush_statistic_;
+    return enable_report_threaded_element_flush_statistic_ &&
+           EnableEventReporter();
   }
 
   void SetEnableReportThreadedElementFlushStatistic(bool value) {
@@ -1121,6 +1125,7 @@ class ElementManager : public ElementContextDelegate {
   void OnListComponentUpdated(const std::shared_ptr<PipelineOptions> &options);
   void DispatchLayoutUpdates(const std::shared_ptr<PipelineOptions> &options);
 
+  bool IsEmbeddedModeOn() const { return page_options_.IsEmbeddedModeOn(); }
   const int instance_id_;
   int32_t element_id_{kInitialImplId};
 

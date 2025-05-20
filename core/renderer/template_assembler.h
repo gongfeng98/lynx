@@ -723,10 +723,15 @@ class TemplateAssembler final
   // Start pixel pipeline process;
   void RunPixelPipeline();
 
+  // In Embedded mode, we disable event reporter by now.
+  bool EnableEventReporter() const { return !IsEmbeddedModeOn(); }
+
  private:
   friend class TemplateBinaryReader;
   friend class TemplateBinaryReaderSSR;
   friend class TemplateEntry;
+
+  bool IsEmbeddedModeOn() const { return page_options_.IsEmbeddedModeOn(); }
 
   void ExecuteDataProcessor(TemplateData& data);
 

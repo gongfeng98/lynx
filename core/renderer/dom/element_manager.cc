@@ -186,7 +186,7 @@ static bool EnableLayoutOnlyStatistic() {
 }
 
 ElementManager::~ElementManager() {
-  if (EnableLayoutOnlyStatistic()) {
+  if (EnableLayoutOnlyStatistic() && EnableEventReporter()) {
     report::EventTracker::OnEvent([element_count = element_count_.load(),
                                    layout_only_element_count =
                                        layout_only_element_count_.load(),
@@ -1164,7 +1164,7 @@ void ElementManager::OnPatchFinish(std::shared_ptr<PipelineOptions> &option,
     OnPatchFinishForFiber(option, std::move(patch_finish_callback),
                           static_cast<FiberElement *>(element));
   }
-  if (option->need_timestamps) {
+  if (option->need_timestamps && EnableEventReporter()) {
     report::EventTracker::UpdateGenericInfo(
         instance_id_, kEventDomSizeKey,
         static_cast<int64_t>(element_count_.load()));
@@ -1196,7 +1196,7 @@ void ElementManager::ResolveStyle(std::shared_ptr<PipelineOptions> &option,
     OnPatchFinishForFiber(option, std::move(patch_finish_callback),
                           static_cast<FiberElement *>(element));
   }
-  if (option->need_timestamps) {
+  if (option->need_timestamps && EnableEventReporter()) {
     report::EventTracker::UpdateGenericInfo(
         instance_id_, kEventDomSizeKey,
         static_cast<int64_t>(element_count_.load()));

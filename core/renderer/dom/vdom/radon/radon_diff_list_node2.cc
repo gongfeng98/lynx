@@ -415,7 +415,8 @@ int32_t RadonDiffListNode2::ComponentAtIndex(uint32_t index,
   auto pipeline_options = std::make_shared<PipelineOptions>();
   static bool enable_report =
       LynxEnv::GetInstance().EnableReportListItemLifeStatistic();
-  pipeline_options->enable_report_list_item_life_statistic_ = enable_report;
+  pipeline_options->enable_report_list_item_life_statistic_ =
+      enable_report && page_proxy_->element_manager()->EnableEventReporter();
   if (reuse_action.type_ == ListReusePool::Action::Type::UPDATE) {
     LOGI("UPDATE key: " << item_key.str() << " , index: " << index);
     if (enable_report) {

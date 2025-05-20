@@ -1501,6 +1501,9 @@ public class LynxUIOwner {
    * @param componentName the used component in LynxView
    */
   public void componentStatistic(String componentName) {
+    if (mContext == null || !mContext.enableEventReporter()) {
+      return;
+    }
     if (!mComponentSet.contains(componentName)) {
       mComponentSet.add(componentName);
       // Report asynchronously to avoid affecting the main thread.
@@ -1778,6 +1781,9 @@ public class LynxUIOwner {
   @RestrictTo(RestrictTo.Scope.LIBRARY)
   public void reportCreateAsyncSuccessEvent(
       int sign, String tagName, boolean isSuccess, int status) {
+    if (mContext == null || !mContext.enableEventReporter()) {
+      return;
+    }
     if (mEnableReportCreateAsync) {
       LynxBaseUI ui = getNode(sign);
       String uiName = null;
@@ -1799,6 +1805,9 @@ public class LynxUIOwner {
 
   @RestrictTo(RestrictTo.Scope.LIBRARY)
   public void reportCreateViewConfig(int sign, String tagName, boolean createAsync) {
+    if (mContext == null || !mContext.enableEventReporter()) {
+      return;
+    }
     if (TextUtils.equals(tagName, LynxConstants.ROOT_TAG_NAME)) {
       // page node will not be created asynchronously, just block it.
       return;

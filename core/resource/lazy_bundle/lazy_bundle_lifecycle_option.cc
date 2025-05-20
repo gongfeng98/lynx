@@ -13,14 +13,15 @@ namespace lynx {
 namespace tasm {
 
 LazyBundleLifecycleOption::LazyBundleLifecycleOption(const std::string& url,
-                                                     int instance_id)
+                                                     int instance_id,
+                                                     bool enable_event_reporter)
     : component_url(url), instance_id(instance_id) {
   // to prevent from reading Env too frequently
-  static bool enable_report_event =
+  static bool enable_report_event_from_env =
       lynx::tasm::LynxEnv::GetInstance().GetBoolEnv(
           lynx::tasm::LynxEnv::Key::ENABLE_REPORT_DYNAMIC_COMPONENT_EVENT,
           enable_report_event_);
-  enable_report_event_ = enable_report_event;
+  enable_report_event_ = enable_report_event_from_env && enable_event_reporter;
 };
 
 bool LazyBundleLifecycleOption::HandleLoadFailure(TemplateAssembler* tasm) {

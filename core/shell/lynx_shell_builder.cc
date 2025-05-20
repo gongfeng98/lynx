@@ -319,6 +319,7 @@ LynxShell* LynxShellBuilder::build() {
   }
 
   shell->runtime_actor_ = runtime_actor_;
+  shell->SetPageOptions(shell_option_.page_options_);
   return shell;
 }
 

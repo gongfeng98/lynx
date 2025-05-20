@@ -3681,6 +3681,9 @@ public class com::lynx::tasm::utils::LynxConstants :  {
 public class abstract com::lynx::tasm::behavior::LynxContext : com.lynx.tasm.behavior.LynxBaseContext, com.lynx.tasm.behavior.ExceptionHandler {
   public final int com.lynx.tasm.behavior.LynxContext.INSTANCE_ID_DEFAULT INSTANCE_ID_DEFAULT;
   public com.lynx.tasm.behavior.LynxContext.LynxContext(Context base, DisplayMetrics screenMetrics);
+  public boolean com.lynx.tasm.behavior.LynxContext.enableEventReporter();
+  public boolean com.lynx.tasm.behavior.LynxContext.isEmbeddedModeOn();
+  public void com.lynx.tasm.behavior.LynxContext.setEmbeddedMode(EmbeddedMode embeddedMode);
   public void com.lynx.tasm.behavior.LynxContext.setEnableAsyncLoadImage(boolean b);
   public boolean com.lynx.tasm.behavior.LynxContext.isEnableAsyncLoadImage();
   public LynxBooleanOption com.lynx.tasm.behavior.LynxContext.getLongTaskMonitorEnabled();

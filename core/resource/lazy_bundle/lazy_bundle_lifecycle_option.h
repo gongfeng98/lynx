@@ -17,7 +17,8 @@ namespace lynx {
 namespace tasm {
 
 struct LazyBundleLifecycleOption {
-  LazyBundleLifecycleOption(const std::string &url, int instance_id);
+  LazyBundleLifecycleOption(const std::string &url, int instance_id,
+                            bool enable_event_reporter);
 
   // Move Only.
   LazyBundleLifecycleOption(const LazyBundleLifecycleOption &) = delete;

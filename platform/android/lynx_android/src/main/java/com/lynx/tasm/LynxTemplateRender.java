@@ -353,6 +353,8 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
         };
     mTemplateAssembler.setLynxContext(mLynxContext);
 
+    mLynxContext.setEmbeddedMode(builder.embeddedMode);
+
     mLynxContext.setLynxView(mLynxView);
     mLynxContext.setForceDarkAllowed(builder.forceDarkAllowed);
     mLynxContext.setContextData(mLynxViewBuilder.getContextData());
@@ -499,7 +501,7 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
   public void putExtraParamsForReportingEvents(final Map<String, Object> params) {
     String eventName = "LynxTemplateRender.putExtraParamsForReportEvents";
     onTraceEventBegin(eventName);
-    if (mLynxContext != null) {
+    if (mLynxContext != null && mLynxContext.enableEventReporter()) {
       int instanceId = mLynxContext.getInstanceId();
       LynxEventReporter.putExtraParams(params, instanceId);
     }
@@ -573,7 +575,7 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
       }
       int lastInstanceId = LynxEventReporter.INSTANCE_ID_UNKNOWN;
       if (mNativePtr != 0) {
-        if (mLynxContext != null) {
+        if (mLynxContext != null && mLynxContext.enableEventReporter()) {
           lastInstanceId = mLynxContext.getInstanceId();
           LynxEventReporter.removeGenericInfo(lastInstanceId);
         }
@@ -716,9 +718,11 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
       mClientV2.setInstanceId(mLynxContext.getInstanceId());
     }
 
-    LynxEventReporter.updateGenericInfo(LynxEventReporter.PROP_NAME_THREAD_MODE,
-        mThreadStrategyForRendering.id(), mLynxContext.getInstanceId());
-    LynxEventReporter.moveExtraParams(lastInstanceId, mLynxContext.getInstanceId());
+    if (mLynxContext != null && mLynxContext.enableEventReporter()) {
+      LynxEventReporter.updateGenericInfo(LynxEventReporter.PROP_NAME_THREAD_MODE,
+          mThreadStrategyForRendering.id(), mLynxContext.getInstanceId());
+      LynxEventReporter.moveExtraParams(lastInstanceId, mLynxContext.getInstanceId());
+    }
 
     if (!"none".equals(BuildConfig.JS_ENGINE_TYPE)) {
       if (mRuntime != null) {
@@ -1136,7 +1140,10 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
   }
 
   private void updateGenericInfoURL(String url) {
-    if (mLynxContext != null && url != null) {
+    if (mLynxContext == null || !mLynxContext.enableEventReporter()) {
+      return;
+    }
+    if (url != null) {
       int instanceId = mLynxContext.getInstanceId();
       if (mGenericInfo != null) {
         mGenericInfo.updateLynxUrl(mLynxContext, url);
@@ -1401,8 +1408,7 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
 
     mSSRHelper = new LynxSSRHelper();
     mSSRHelper.onLoadSSRDataBegan(url);
-
-    if (mLynxContext != null) {
+    if (mLynxContext != null && mLynxContext.enableEventReporter()) {
       LynxEventReporter.updateGenericInfo(
           LynxEventReporter.PROP_NAME_ENABLE_SSR, true, mLynxContext.getInstanceId());
     }
@@ -1866,7 +1872,7 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
     }
     if (mNativePtr != 0) {
       // remove generic info of template instance before destroy.
-      if (mLynxContext != null) {
+      if (mLynxContext != null && mLynxContext.enableEventReporter()) {
         LynxEventReporter.clearCache(mLynxContext.getInstanceId());
       }
       destroyLynxEngine();
@@ -1885,7 +1891,7 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
       return;
     }
     mHasPageStart = true;
-    if (mLynxContext != null) {
+    if (mLynxContext != null && mLynxContext.enableEventReporter()) {
       LynxEventReporter.onEvent(EVENT_NAME_LYNX_OPEN_PAGE, null, mLynxContext.getInstanceId());
     }
     TraceEvent.instant(TraceEvent.CATEGORY_VITALS, TraceEventDef.TEMPLATE_RENDER_START_LOAD);
@@ -1931,20 +1937,22 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
       mSSRHelper.onErrorOccurred(error.getType(), error);
     }
     if (!error.isLogBoxOnly()) {
-      // report error
-      int instanceId = mLynxContext == null ? LynxEventReporter.INSTANCE_ID_UNKNOWN
-                                            : mLynxContext.getInstanceId();
-      LynxEventReporter.onEvent(
-          LynxEventReporter.LYNX_SDK_ERROR_EVENT, instanceId, new LynxEventReporter.PropsBuilder() {
-            @Override
-            public Map<String, Object> build() {
-              Map<String, Object> props = new HashMap<>();
-              props.put("code", error.getErrorCode());
-              props.put("level", error.getLevel() == null ? "" : error.getLevel());
-              props.put("summary_message", error.getSummaryMessage());
-              return props;
-            }
-          });
+      if (mLynxContext != null && mLynxContext.enableEventReporter()) {
+        // report error
+        int instanceId = mLynxContext == null ? LynxEventReporter.INSTANCE_ID_UNKNOWN
+                                              : mLynxContext.getInstanceId();
+        LynxEventReporter.onEvent(LynxEventReporter.LYNX_SDK_ERROR_EVENT, instanceId,
+            new LynxEventReporter.PropsBuilder() {
+              @Override
+              public Map<String, Object> build() {
+                Map<String, Object> props = new HashMap<>();
+                props.put("code", error.getErrorCode());
+                props.put("level", error.getLevel() == null ? "" : error.getLevel());
+                props.put("summary_message", error.getSummaryMessage());
+                return props;
+              }
+            });
+      }
       // dispatch to clients who listen
       dispatchError(error.getType(), error);
     }
@@ -2824,7 +2832,7 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
     if (mGenericInfo != null) {
       mGenericInfo.updateThreadStrategy(mThreadStrategyForRendering);
     }
-    if (mLynxContext != null) {
+    if (mLynxContext != null && mLynxContext.enableEventReporter()) {
       LynxEventReporter.updateGenericInfo(LynxEventReporter.PROP_NAME_THREAD_MODE,
           mThreadStrategyForRendering.id(), mLynxContext.getInstanceId());
     }

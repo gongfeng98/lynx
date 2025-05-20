@@ -1416,6 +1416,10 @@ public class LynxView extends UIBodyView {
   }
 
   private void checkAccessFromNonUiThread(String method) {
+    LynxContext lynxContext = getLynxContext();
+    if (lynxContext == null || !lynxContext.enableEventReporter()) {
+      return;
+    }
     boolean sEnableCheckAccessFromNonUiThread = LynxEnv.inst().enableCheckAccessFromNonUIThread();
     if (!sEnableCheckAccessFromNonUiThread || mHasReportedAccessFromNonUiThread) {
       return;
