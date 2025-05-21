@@ -76,13 +76,13 @@ class JSCRuntime : public Runtime {
 
   void setDescription(const std::string& desc) { description_ = desc; }
 
-  void AddObjectObserver(base::Observer* obs) {
-    jsc_object_observers_.AddObserver(obs);
+  uint64_t AddObjectObserver(base::Observer* obs) {
+    auto key = jsc_object_id_generator_++;
+    jsc_object_observers_.emplace(key, obs);
+    return key;
   }
 
-  void RemoveObjectObserver(base::Observer* obs) {
-    jsc_object_observers_.RemoveObserver(obs);
-  }
+  void RemoveObjectObserver(uint64_t key) { jsc_object_observers_.erase(key); }
 
   std::atomic<intptr_t>& objectCounter() { return ctx_->objectCounter(); }
 
@@ -205,7 +205,8 @@ class JSCRuntime : public Runtime {
   std::shared_ptr<JSCContextGroupWrapper> ctx_group_;
   std::shared_ptr<JSCContextWrapper> ctx_;
   std::string description_;
-  base::ObserverList jsc_object_observers_;
+  std::unordered_map<uint64_t, base::Observer*> jsc_object_observers_;
+  uint64_t jsc_object_id_generator_{0};
 };
 
 }  // namespace piper

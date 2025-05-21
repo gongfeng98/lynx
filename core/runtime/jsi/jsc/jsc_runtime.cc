@@ -46,7 +46,11 @@ JSCRuntime::JSCRuntime() : ctx_group_(nullptr), ctx_(nullptr) {}
 JSCRuntime::~JSCRuntime() {
   *is_runtime_destroyed_ = true;
   ClearHostContainers();
-  jsc_object_observers_.ForEachObserver();
+  for (auto& pair : jsc_object_observers_) {
+    if (pair.second) {
+      pair.second->Update();
+    }
+  }
   ctx_->Release();
   ctx_.reset();
   ctx_group_.reset();

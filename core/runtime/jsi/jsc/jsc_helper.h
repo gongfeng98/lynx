@@ -17,7 +17,6 @@
 
 #include "base/include/string/string_utils.h"
 #include "core/base/observer/observer.h"
-#include "core/base/observer/observer_list.h"
 #include "core/runtime/jsi/jsi.h"
 
 namespace lynx {
@@ -44,12 +43,12 @@ class JSCObjectBase : public Runtime::PointerValue, public base::Observer {
 #if defined(DEBUG) || (defined(LYNX_UNIT_TEST) && LYNX_UNIT_TEST)
     counter_ += 1;
 #endif
-    jsc_runtime_->AddObjectObserver(this);
+    key_ = jsc_runtime_->AddObjectObserver(this);
   }
 
   ~JSCObjectBase() {
     if (jsc_runtime_) {
-      jsc_runtime_->RemoveObjectObserver(this);
+      jsc_runtime_->RemoveObjectObserver(key_);
       jsc_runtime_ = nullptr;
     }
   }
@@ -80,6 +79,7 @@ class JSCObjectBase : public Runtime::PointerValue, public base::Observer {
  protected:
   JSGlobalContextRef ctx_;
   T sym_;
+  uint64_t key_;
   friend class JSCRuntime;
   friend class JSCHelper;
 
