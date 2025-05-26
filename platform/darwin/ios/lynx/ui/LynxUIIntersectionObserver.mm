@@ -198,14 +198,22 @@ using namespace lynx;
   [self parseMargin:margins];
 }
 
-// only support id selector
+// support id selector and uid
 - (void)observe:(NSString*)targetSelector callbackId:(NSInteger)callbackId {
-  if (![targetSelector hasPrefix:@"#"]) return;
-  LynxUI* target = [_manager.uiOwner findUIByIdSelector:[targetSelector substringFromIndex:1]
-                                               withinUI:_container];
-  // for historical reason, to avoid break, if not found in container, finding in all element
-  if (target == nil) {
-    target = [_manager.uiOwner uiWithIdSelector:[targetSelector substringFromIndex:1]];
+  LynxUI* target = nil;
+  if ([targetSelector hasPrefix:@"#"]) {
+    target = [_manager.uiOwner findUIByIdSelector:[targetSelector substringFromIndex:1]
+                                         withinUI:_container];
+    // for historical reason, to avoid break, if not found in container, finding in all element
+    if (target == nil) {
+      target = [_manager.uiOwner uiWithIdSelector:[targetSelector substringFromIndex:1]];
+    }
+  } else {
+    NSScanner* scanner = [NSScanner scannerWithString:targetSelector];
+    NSInteger uid = 0;
+    if ([scanner scanInteger:&uid] && [scanner isAtEnd]) {
+      target = [_manager.uiOwner findUIBySign:uid];
+    }
   }
 
   if (target) {
