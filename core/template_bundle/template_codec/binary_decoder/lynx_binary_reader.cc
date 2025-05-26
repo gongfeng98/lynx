@@ -9,7 +9,6 @@
 
 #include "core/renderer/utils/lynx_env.h"
 #include "core/runtime/vm/lepus/context.h"
-#include "core/runtime/vm/lepus/quick_context_pool.h"
 #include "core/template_bundle/template_codec/binary_decoder/binary_decoder_trace_event_def.h"
 #include "core/template_bundle/template_codec/template_binary.h"
 

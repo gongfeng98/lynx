@@ -141,12 +141,12 @@ lynx_lepus_ng_sources = [
 
 lynx_lepus_ng_sources_path = get_path_info(lynx_lepus_ng_sources, "abspath")
 
-lynx_quick_context_pool_sources = [
-  "quick_context_pool.cc",
-  "quick_context_pool.h",
+lynx_context_pool_sources = [
+  "context_pool.cc",
+  "context_pool.h",
 ]
-lynx_quick_context_pool_sources_path =
-    get_path_info(lynx_quick_context_pool_sources, "abspath")
+lynx_context_pool_sources_path =
+    get_path_info(lynx_context_pool_sources, "abspath")
 
 lynx_lepus_task_sources = [
   "tasks/lepus_callback_manager.cc",

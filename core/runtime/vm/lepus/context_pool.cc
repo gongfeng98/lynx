@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "core/runtime/vm/lepus/quick_context_pool.h"
+#include "core/runtime/vm/lepus/context_pool.h"
 
 #include <algorithm>
 
@@ -10,57 +10,47 @@
 #include "core/renderer/lynx_global_pool.h"
 #include "core/renderer/utils/lynx_env.h"
 #include "core/runtime/vm/lepus/context.h"
-#include "core/runtime/vm/lepus/quick_context.h"
 
 namespace lynx {
 namespace lepus {
 
-std::shared_ptr<QuickContextPool> QuickContextPool::Create() {
-  return std::shared_ptr<QuickContextPool>(new QuickContextPool());
+std::shared_ptr<LynxContextPool> LynxContextPool::Create(
+    bool is_lepus_ng, bool disable_tracing_gc) {
+  return std::shared_ptr<LynxContextPool>(
+      new LynxContextPool(is_lepus_ng, disable_tracing_gc));
 }
 
-std::shared_ptr<QuickContextPool> QuickContextPool::Create(
+std::shared_ptr<LynxContextPool> LynxContextPool::Create(
+    bool is_lepus_ng, bool disable_tracing_gc,
     const std::shared_ptr<ContextBundle>& context_bundle,
     const tasm::CompileOptions& compile_options,
     tasm::PageConfig* page_configs) {
-  return std::shared_ptr<QuickContextPool>(
-      new QuickContextPool(context_bundle, compile_options, page_configs));
+  return std::shared_ptr<LynxContextPool>(
+      new LynxContextPool(is_lepus_ng, disable_tracing_gc, context_bundle,
+                          compile_options, page_configs));
 }
 
-void QuickContextPool::FillPool(int32_t count) {
+void LynxContextPool::FillPool(int32_t count) {
+  if (count <= 0) {
+    return;
+  }
   base::TaskRunnerManufactor::PostTaskToConcurrentLoop(
-      [count, weak_pool = std::weak_ptr<QuickContextPool>(
+      [count, weak_pool = std::weak_ptr<LynxContextPool>(
                   shared_from_this())]() mutable {
         auto context_pool = weak_pool.lock();
-        if (!context_pool) {
-          return;
+        if (context_pool) {
+          context_pool->AddContextSafely(count);
         }
-
-        count = context_pool->TryCheckSettings(count);
-
-        if (count <= 0) {
-          return;
-        }
-
-        context_pool->AddContextSafely(count);
       },
       base::ConcurrentTaskType::NORMAL_PRIORITY);
 }
 
-int32_t QuickContextPool::TryCheckSettings(int32_t default_value) {
-  if (need_check_settings_) {
-    need_check_settings_ = false;
-    return tasm::LynxEnv::GetInstance().GetGlobalQuickContextPoolSize(
-        default_value);
-  }
-  return default_value;
-}
-
-void QuickContextPool::AddContextSafely(int32_t count) {
+void LynxContextPool::AddContextSafely(int32_t count) {
   // build contexts without lock
   decltype(contexts_) temp_contexts;
   for (; count > 0; --count) {
-    auto context = std::make_shared<QuickContext>();
+    std::shared_ptr<Context> context =
+        Context::CreateContext(is_lepus_ng_, disable_tracing_gc_);
     if (context_bundle_) {
       context->SetSdkVersion(target_sdk_version_);
       context->Initialize();
@@ -82,8 +72,8 @@ void QuickContextPool::AddContextSafely(int32_t count) {
   }
 }
 
-std::shared_ptr<lepus::QuickContext> QuickContextPool::TakeContextSafely() {
-  std::shared_ptr<lepus::QuickContext> context = nullptr;
+std::shared_ptr<lepus::Context> LynxContextPool::TakeContextSafely() {
+  std::shared_ptr<lepus::Context> context = nullptr;
   {
     // lock to take context safely
     std::unique_lock<std::mutex> lock(mtx_, std::try_to_lock);
@@ -102,7 +92,7 @@ std::shared_ptr<lepus::QuickContext> QuickContextPool::TakeContextSafely() {
   return context;
 }
 
-void QuickContextPool::SetEnableAutoGenerate(bool enable) {
+void LynxContextPool::SetEnableAutoGenerate(bool enable) {
   enable_auto_generate_ = enable;
 }
 

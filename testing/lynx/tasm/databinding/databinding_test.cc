@@ -402,14 +402,12 @@ void DataBindingLoadTemplateBundleShell::TasmLoadTemplate(
   }
 
   auto template_bundle = reader.GetTemplateBundle();
-  // pre-create context if is lepusNG
-  if (template_bundle.is_lepusng_binary()) {
+
+  // pre-create context
+  if (template_bundle.page_configs_) {
     template_bundle.page_configs_->SetEnableUseContextPool(true);
-    template_bundle.quick_context_pool_ = lepus::QuickContextPool::Create(
-        template_bundle.context_bundle_, template_bundle.compile_options_,
-        template_bundle.page_configs_.get());
-    template_bundle.quick_context_pool_->AddContextSafely(1);
   }
+  template_bundle.PrepareVMByConfigs();
 
   auto pipeline_options = std::make_shared<PipelineOptions>();
   tasm_->LoadTemplateBundle(url, std::move(template_bundle), template_data,

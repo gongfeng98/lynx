@@ -4,11 +4,10 @@
 
 #define private public
 
-#include "core/runtime/vm/lepus/quick_context_pool.h"
+#include "core/runtime/vm/lepus/context_pool.h"
 
 #include "core/base/threading/task_runner_manufactor.h"
 #include "core/renderer/lynx_global_pool.h"
-#include "core/runtime/vm/lepus/quick_context.h"
 #include "third_party/googletest/googletest/include/gtest/gtest.h"
 
 namespace lynx {

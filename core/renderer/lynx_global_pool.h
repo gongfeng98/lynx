@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "base/include/no_destructor.h"
-#include "core/runtime/vm/lepus/quick_context_pool.h"
+#include "core/runtime/vm/lepus/context_pool.h"
 
 namespace lynx {
 namespace tasm {
@@ -30,12 +30,13 @@ class LynxGlobalPool {
   // Only called when LynxEnv is initialized
   void PreparePool();
 
-  lepus::QuickContextPool& GetQuickContextPool();
+  lepus::LynxContextPool& GetQuickContextPool() { return *quick_context_pool_; }
 
  private:
-  LynxGlobalPool() : quick_context_pool_(lepus::QuickContextPool::Create()){};
+  LynxGlobalPool()
+      : quick_context_pool_(lepus::LynxContextPool::Create(true, false)){};
 
-  std::shared_ptr<lepus::QuickContextPool> quick_context_pool_{nullptr};
+  std::shared_ptr<lepus::LynxContextPool> quick_context_pool_;
 
   friend class base::NoDestructor<LynxGlobalPool>;
 };

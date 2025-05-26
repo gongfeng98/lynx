@@ -44,41 +44,43 @@ lepus::Value LynxTemplateBundle::GetExtraInfo() {
 }
 
 void LynxTemplateBundle::PrepareVMByConfigs() {
-  // Contexts cannot be pre-created in two cases:
-  // 1. not lepusNG
-  // 2. will reuse context (dynamic component && no-diff)
-  if (!is_lepusng_binary() || ShouldReuseLepusContext()) {
+  // Contexts cannot be pre-created in following case:
+  // will reuse context (dynamic component && no-diff)
+  if (ShouldReuseLepusContext()) {
     return;
   }
 
-  quick_context_pool_ = lepus::QuickContextPool::Create(
-      context_bundle_, compile_options_, page_configs_.get());
+  const bool disable_tracing_gc =
+      page_configs_ && page_configs_->GetDisableQuickTracingGC();
+
+  context_pool_ = lepus::LynxContextPool::Create(
+      is_lepusng_binary(), disable_tracing_gc, context_bundle_,
+      compile_options_, page_configs_.get());
 
   // if FE disables it in card, do not pre-create contexts. However, we reserve
   // the ability for the client to force pre-creation
-  if (page_configs_ && page_configs_->GetEnableUseContextPool() &&
-      !page_configs_->GetDisableQuickTracingGC()) {
+  if (page_configs_ && page_configs_->GetEnableUseContextPool()) {
     constexpr int32_t kLocalQuickContextPoolSize = 1;
-    quick_context_pool_->FillPool(kLocalQuickContextPoolSize);
+    context_pool_->FillPool(kLocalQuickContextPoolSize);
   }
 }
 
 bool LynxTemplateBundle::PrepareLepusContext(int32_t count) {
-  if (!quick_context_pool_ || count <= 0) {
+  if (!context_pool_ || count <= 0) {
     return false;
   }
 
   // a maximum of 20 contexts can be created in a single task
   constexpr int32_t kOnePatchMaxSize = 20;
-  quick_context_pool_->FillPool(std::min(kOnePatchMaxSize, count));
+  context_pool_->FillPool(std::min(kOnePatchMaxSize, count));
 
   force_use_context_pool_ = true;
   return true;
 }
 
 void LynxTemplateBundle::SetEnableVMAutoGenerate(bool enable) {
-  if (quick_context_pool_) {
-    quick_context_pool_->SetEnableAutoGenerate(enable);
+  if (context_pool_) {
+    context_pool_->SetEnableAutoGenerate(enable);
   }
 }
 

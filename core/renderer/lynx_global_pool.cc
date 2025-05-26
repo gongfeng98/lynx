@@ -4,6 +4,8 @@
 
 #include "core/renderer/lynx_global_pool.h"
 
+#include "core/renderer/utils/lynx_env.h"
+
 namespace lynx {
 namespace tasm {
 
@@ -14,11 +16,9 @@ LynxGlobalPool& LynxGlobalPool::GetInstance() {
 
 void LynxGlobalPool::PreparePool() {
   constexpr int32_t kGlobalQuickContextPoolSize = 5;
-  quick_context_pool_->FillPool(kGlobalQuickContextPoolSize);
-}
-
-lepus::QuickContextPool& LynxGlobalPool::GetQuickContextPool() {
-  return *quick_context_pool_;
+  int32_t size = tasm::LynxEnv::GetInstance().GetGlobalQuickContextPoolSize(
+      kGlobalQuickContextPoolSize);
+  quick_context_pool_->FillPool(size);
 }
 
 }  // namespace tasm

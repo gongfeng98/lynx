@@ -51,21 +51,21 @@ bool TemplateEntry::ConstructContext(TemplateAssembler* assembler,
                                      bool use_context_pool,
                                      bool disable_tracing_gc) {
   auto source_type = LepusContextSourceType::kFromRuntime;
-  bool enable_use_context_pool = (is_lepusng_binary && use_context_pool) ||
-                                 template_bundle().EnableUseContextPool();
+  bool enable_use_context_pool =
+      use_context_pool || template_bundle().EnableUseContextPool();
   // TODO(nihao.royal): maybe add a platform interface to enable the runtime
   // leak checker later;
   bool enable_runtime_leak_check = LynxEnv::GetInstance().IsDevToolEnabled();
-  if (enable_use_context_pool && !disable_tracing_gc &&
-      !enable_runtime_leak_check) {
+  if (enable_use_context_pool && !enable_runtime_leak_check) {
     // 1. try to take context for local pool
-    if (template_bundle().quick_context_pool_) {
-      vm_context_ = template_bundle().quick_context_pool_->TakeContextSafely();
+    if (template_bundle().context_pool_) {
+      vm_context_ = template_bundle().context_pool_->TakeContextSafely();
     }
     if (vm_context_) {
       source_type = LepusContextSourceType::kFromLocalPool;
-    } else {
-      // 2. try to take context for global pool
+    } else if (is_lepusng_binary && !disable_tracing_gc) {
+      // 2. if is lepus ng and not disable tracing gc, could try to take context
+      // for global pool
       vm_context_ = LynxGlobalPool::GetInstance()
                         .GetQuickContextPool()
                         .TakeContextSafely();
