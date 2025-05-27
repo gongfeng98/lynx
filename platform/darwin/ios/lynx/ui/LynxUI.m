@@ -208,7 +208,9 @@ static const CGFloat OFFSET_ROTATE_AUTO = -1024.f;
     _view.isAccessibilityElement = self.enableAccessibilityByDefault;
     _view.accessibilityTraits = self.accessibilityTraitsByDefault;
     _view.accessibilityLabel = nil;
-    _view.lynxClickable = self.accessibilityClickable;
+    if (self.accessibilityClickable) {
+      _view.lynxClickable = YES;
+    }
   }
   return self;
 }

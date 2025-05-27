@@ -229,7 +229,7 @@ const LynxBorderRadii LynxBorderRadiiZero = {{0, 0}, {0, 0}, {0, 0}, {0, 0},
 }
 
 - (BOOL)clearAllBackgroundDrawable {
-  if ([_backgroundDrawable count] <= 0) {
+  if (![self hasBackgroundImageOrGradient]) {
     return NO;
   }
   [_backgroundDrawable removeAllObjects];
@@ -541,7 +541,7 @@ const LynxBorderRadii LynxBorderRadiiZero = {{0, 0}, {0, 0}, {0, 0}, {0, 0},
 }
 
 - (BOOL)hasBackgroundImageOrGradient {
-  return [self.backgroundDrawable count] != 0;
+  return _backgroundDrawable != nil && [_backgroundDrawable count] != 0;
 }
 
 - (NSMutableArray*)generateImageLayerWithBound:(CGSize)bound
@@ -938,12 +938,12 @@ const LynxBorderRadii LynxBorderRadiiZero = {{0, 0}, {0, 0}, {0, 0}, {0, 0},
   _backgroundLayer.allowsEdgeAntialiasing = _allowsEdgeAntialiasing;
   _backgroundLayer.enableAsyncDisplay = self.ui.enableAsyncDisplay;
   _backgroundLayer.backgroundColorClip =
-      [self.backgroundClip count] == 0
+      ![self hasBackgroundClip]
           ? LynxBackgroundClipBorderBox
           : (LynxBackgroundClipType)[[self.backgroundClip lastObject] integerValue];
   _backgroundLayer.paddingWidth = _backgroundInfo.paddingWidth;
 
-  _ui.view.backgroundColor = [UIColor clearColor];
+  _ui.view.layer.backgroundColor = [UIColor clearColor].CGColor;
   if (!complex) {
     _backgroundLayer.cornerRadius = [self adjustRadius:[_backgroundInfo borderRadius].topLeftX.val
                                                 bySize:_backgroundLayer.frame.size];
@@ -1065,7 +1065,7 @@ const LynxBorderRadii LynxBorderRadiiZero = {{0, 0}, {0, 0}, {0, 0}, {0, 0},
 }
 
 - (BOOL)isSimpleBackground {
-  if ([self.backgroundClip count] != 0) {
+  if ([self hasBackgroundClip]) {
     // should clip background color
     return NO;
   }
@@ -1075,7 +1075,7 @@ const LynxBorderRadii LynxBorderRadiiZero = {{0, 0}, {0, 0}, {0, 0}, {0, 0},
     return NO;
   }
 
-  if ([self.backgroundDrawable count] != 0) {
+  if ([self hasBackgroundImageOrGradient]) {
     return NO;
   }
 
@@ -1208,7 +1208,7 @@ const LynxBorderRadii LynxBorderRadiiZero = {{0, 0}, {0, 0}, {0, 0}, {0, 0},
   const BOOL noBackgroundLayer =
       isSimpleBackground && ![self toAddSubLayerOnBackgroundLayer:!noBorderLayer];
   // noMaskLayer = the view shouldn't contain a mask layer
-  const BOOL noMaskLayer = [self.maskDrawable count] == 0 ? YES : NO;
+  const BOOL noMaskLayer = ![self hasMaskDrawable];
 
   BOOL borderChanged = NO;
   if (isSizeChanged) {
@@ -1268,7 +1268,7 @@ const LynxBorderRadii LynxBorderRadiiZero = {{0, 0}, {0, 0}, {0, 0}, {0, 0},
       [_backgroundInfo BGChangedNoneImage] || needToCreateBackgroundLayer) {
     if (noBackgroundLayer) {
       [self removeBackgroundLayer];
-      _ui.view.backgroundColor = [_backgroundInfo backgroundColor];
+      _ui.view.layer.backgroundColor = [_backgroundInfo backgroundColor].CGColor;
       _ui.view.layer.cornerRadius = [self adjustRadius:[_backgroundInfo borderRadius].topLeftX.val
                                                 bySize:newViewSize];
       _isBGChangedImage = _isBGChangedNoneImage = NO;
@@ -1617,6 +1617,10 @@ const LynxBorderRadii LynxBorderRadiiZero = {{0, 0}, {0, 0}, {0, 0}, {0, 0},
   return _backgroundClip;
 }
 
+- (BOOL)hasBackgroundClip {
+  return _backgroundClip != nil && [_backgroundClip count] != 0;
+}
+
 - (NSMutableArray*)backgroundImageSize {
   if (!_backgroundImageSize) {
     _backgroundImageSize = [[NSMutableArray alloc] init];
@@ -1629,6 +1633,10 @@ const LynxBorderRadii LynxBorderRadiiZero = {{0, 0}, {0, 0}, {0, 0}, {0, 0},
     _maskDrawable = [[NSMutableArray alloc] init];
   }
   return _maskDrawable;
+}
+
+- (BOOL)hasMaskDrawable {
+  return _maskDrawable != nil && [_maskDrawable count] != 0;
 }
 
 - (NSMutableArray*)maskOrigin {
