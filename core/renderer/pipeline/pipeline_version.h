@@ -23,6 +23,10 @@ class PipelineVersion {
     return minor_ < other.minor_;
   }
 
+  bool operator==(const PipelineVersion& other) const {
+    return major_ == other.major_ && minor_ == other.minor_;
+  }
+
   PipelineVersion GenerateNextMinorVersion() const {
     return PipelineVersion(major_, minor_ + 1);
   }

@@ -64,6 +64,7 @@ struct ListItemLifeOption {
 };
 
 class Element;
+class PipelineVersion;
 
 struct PipelineOptions {
   // TODO(kechenglong): impl ToLepusValue here.
@@ -132,6 +133,7 @@ struct PipelineOptions {
     debug_has_layout->set_string_value(has_layout ? "true" : "false");
   }
 #endif
+  bool HeldByContext() const { return version != nullptr; }
 
   // flag for unified pixel pipeline
   bool enable_unified_pixel_pipeline{false};
@@ -143,6 +145,7 @@ struct PipelineOptions {
   Element* target_node{nullptr};
   // Whether the current template has been reloaded.
   bool reload{false};
+  const PipelineVersion* version{nullptr};
 
  private:
   // Helper class to generate pipelineID

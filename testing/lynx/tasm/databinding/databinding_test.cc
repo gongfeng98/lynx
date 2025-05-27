@@ -434,8 +434,9 @@ void DataBindingTemplateBundleRecycleShell::TasmLoadTemplate(
   }
 
   // load with recycled bundle
+  auto another_pipeline_options = std::make_shared<PipelineOptions>();
   tasm_->LoadTemplateBundle(url, std::move(recycled_bundle), template_data,
-                            pipeline_options, test_pre_painting_);
+                            another_pipeline_options, test_pre_painting_);
 }
 
 void DataBindingShell::UpdateDataByJS(const lepus::Value& table) {

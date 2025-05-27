@@ -15,7 +15,7 @@ namespace lynx {
 namespace tasm {
 class PipelineContextManager {
  public:
-  PipelineContextManager(bool enable_unified_pixel_pipeline);
+  explicit PipelineContextManager(bool enable_unified_pixel_pipeline);
   ~PipelineContextManager() = default;
 
   PipelineContext* CreateAndUpdateCurrentPipelineContext(

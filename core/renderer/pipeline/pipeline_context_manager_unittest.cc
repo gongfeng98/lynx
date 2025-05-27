@@ -20,7 +20,8 @@ TEST_F(PipelineContextManagerTest, TestPipelineContextManagerCreate) {
   auto context = manager->CreateAndUpdateCurrentPipelineContext(options);
   EXPECT_EQ(context->GetVersion().GetMajor(), 0);
   EXPECT_EQ(context->GetVersion().GetMinor(), 1);
-  context = manager->CreateAndUpdateCurrentPipelineContext(options, true);
+  auto next_options = std::make_shared<PipelineOptions>();
+  context = manager->CreateAndUpdateCurrentPipelineContext(next_options, true);
   EXPECT_EQ(context->GetVersion().GetMajor(), 1);
   EXPECT_EQ(context->GetVersion().GetMinor(), 1);
 }
@@ -52,8 +53,9 @@ TEST_F(PipelineContextManagerTest,
   context->MarkReload(false);
   EXPECT_FALSE(context->IsReload());
 
+  auto next_options = std::make_shared<PipelineOptions>();
   auto next_context =
-      manager->CreateAndUpdateCurrentPipelineContext(options, false);
+      manager->CreateAndUpdateCurrentPipelineContext(next_options, false);
   EXPECT_NE(next_context, current_context);
   EXPECT_EQ(next_context, manager->GetCurrentPipelineContext());
   EXPECT_EQ(next_context->GetVersion().GetMajor(), 0);
@@ -79,6 +81,16 @@ TEST_F(PipelineContextManagerTest,
     EXPECT_EQ(context->GetVersion().GetMinor(),
               contexts[i]->GetVersion().GetMinor());
   }
+}
+
+TEST_F(PipelineContextManagerTest, TestPipelineOptionsHeldByContext) {
+  auto options = std::make_shared<PipelineOptions>();
+  auto manager = std::make_unique<PipelineContextManager>(false);
+  auto* context = manager->CreateAndUpdateCurrentPipelineContext(options);
+  EXPECT_NE(context, nullptr);
+  auto* next_context = manager->CreateAndUpdateCurrentPipelineContext(options);
+  EXPECT_EQ(context, next_context);
+  EXPECT_EQ(context->GetVersion(), next_context->GetVersion());
 }
 
 }  // namespace test

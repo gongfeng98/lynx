@@ -19,6 +19,10 @@ PipelineContextManager::PipelineContextManager(
 PipelineContext* PipelineContextManager::CreateAndUpdateCurrentPipelineContext(
     const std::shared_ptr<PipelineOptions>& pipeline_options,
     bool is_major_updated) {
+  if (pipeline_options->HeldByContext()) {
+    return GetPipelineContextByVersion(*pipeline_options->version);
+  }
+
   auto current_version = current_pipeline_context_
                              ? current_pipeline_context_->GetVersion()
                              : PipelineVersion::Create();
@@ -30,7 +34,12 @@ PipelineContext* PipelineContextManager::CreateAndUpdateCurrentPipelineContext(
   }
   pipeline_options->enable_unified_pixel_pipeline =
       enable_unified_pixel_pipeline_;
+
+  // Set pipeline options to pipeline context, and mark options as held by
+  // context.
   pipeline_context->SetOptions(pipeline_options);
+  pipeline_options->version = &(pipeline_context->GetVersion());
+
   current_pipeline_context_ = pipeline_context.get();
   pipeline_contexts_.emplace(pipeline_context->GetVersion(),
                              std::move(pipeline_context));

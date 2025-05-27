@@ -169,8 +169,6 @@ TemplateAssembler::page_moulds() {
 
 thread_local TemplateAssembler* TemplateAssembler::curr_ = nullptr;
 
-static constexpr const char k_actual_first_screen[] = "__isActualFirstScreen";
-
 TemplateAssembler::Scope::Scope(TemplateAssembler* tasm) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_ASSEMBLER_SCOPE_CONSTRUCTOR);
   if (tasm != nullptr && curr_ == nullptr) {
@@ -1014,6 +1012,10 @@ void TemplateAssembler::ReloadTemplate(
                                                                   record_id_);
 #endif
   Scope scope(this);
+  // Reload update major version.
+  pipeline_context_manager_->CreateAndUpdateCurrentPipelineContext(
+      pipeline_options, true /*is_major_updated*/);
+
   if (is_loading_template_) {
     // TODO(zhoupeng.z): this error should not be a 10X fatal, change the error
     // code later.
@@ -1095,6 +1097,9 @@ void TemplateAssembler::ReloadTemplate(
   update_page_option.reload_template = true;
 
   UpdateTemplate(data, update_page_option, pipeline_options);
+
+  // UpdateTemplate will RequestResolve if needed.
+  RunPixelPipeline();
 
   // Here no need to call delegate_.OnDataUpdated();
   // Because this update is like a new template loaded, but not a update.
@@ -1523,15 +1528,10 @@ void TemplateAssembler::UpdateComponentData(
        << " update_data_type:" << static_cast<uint32_t>(task.type_));
   ComponentUpdateReporter updateReporter(task, page_proxy_,
                                          EnableEventReporter());
-  lepus_value v =
-      task.data_.GetProperty(BASE_STATIC_STRING(k_actual_first_screen));
-  if (v.IsTrue()) {
-    page_proxy_.UpdateComponentData(task.component_id_, task.data_,
-                                    pipeline_options);
-  } else {
-    page_proxy_.UpdateComponentData(task.component_id_, task.data_,
-                                    pipeline_options);
-  }
+  page_proxy_.UpdateComponentData(task.component_id_, task.data_,
+                                  pipeline_options);
+  // UpdateComponentData will RequestResolve if needed.
+  RunPixelPipeline();
 
   delegate_.CallJSApiCallback(task.callback_);
 }
@@ -2098,6 +2098,8 @@ void TemplateAssembler::UpdateDataByJS(
                 ctx.event()->add_debug_annotations("stacks", stacks);
               });
 
+  pipeline_context_manager_->CreateAndUpdateCurrentPipelineContext(
+      pipeline_options);
   LOGI("TemplateAssembler::UpdateDataByJS this:"
        << this << " url:" << url_
        << " update_data_type:" << static_cast<uint32_t>(task.type_));
@@ -2118,6 +2120,9 @@ void TemplateAssembler::UpdateDataByJS(
     // data.value_.Table()->dump();
     delegate_.OnDataUpdated();
   }
+
+  // UpdateGlobalDataInternal will RequestResolve if needed.
+  RunPixelPipeline();
 }
 
 bool TemplateAssembler::FromBinary(const std::shared_ptr<TemplateEntry>& entry,
@@ -3189,6 +3194,8 @@ bool TemplateAssembler::LoadTemplateForSSRRuntime(std::vector<uint8_t> source) {
 }
 
 // starts run pixel pipeline process;
+// TODO(@yangguangzhao.solace): The same context is only allowed to enter the
+// pixel pipeline once, controlled by its lifecycle state.
 void TemplateAssembler::RunPixelPipeline() {
   auto* current_pipeline_context = GetCurrentPipelineContext();
   auto pipeline_option = current_pipeline_context->GetOptions();
@@ -3211,7 +3218,7 @@ void TemplateAssembler::RunPixelPipeline() {
     current_pipeline_context->ResetResolveRequested();
   }
 
-  // TODO(@yangguangzhao): Advance Pipeline Lifecycle State;
+  // TODO(@yangguangzhao.solace): Advance Pipeline Lifecycle State;
   if (current_pipeline_context->IsLayoutRequested()) {
     TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_PIPELINE_TRIGGER_LAYOUT);
     // Execute Layout Job.
@@ -3221,7 +3228,7 @@ void TemplateAssembler::RunPixelPipeline() {
     current_pipeline_context->ResetLayoutRequested();
   }
 
-  // TODO(@yangguangzhao): Advance Pipeline Lifecycle State;
+  // TODO(@yangguangzhao.solace): Advance Pipeline Lifecycle State;
   // Execute Flush UI OP;
   if (current_pipeline_context->IsFlushUIOperationRequested()) {
     TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_PIPELINE_FLUSH_UI_OPERATION);
@@ -3229,7 +3236,7 @@ void TemplateAssembler::RunPixelPipeline() {
     current_pipeline_context->ResetFlushUIOperationRequested();
   }
 
-  // TODO(@yangguangzhao): Advance Pipeline Lifecycle State;
+  // TODO(@yangguangzhao.solace): Advance Pipeline Lifecycle State;
 }
 }  // namespace tasm
 }  // namespace lynx
