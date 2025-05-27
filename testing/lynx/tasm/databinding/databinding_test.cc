@@ -481,26 +481,6 @@ RadonFiberTest::~RadonFiberTest() {
       [lynx::tasm::LynxEnv::Key::ENABLE_FIBER_ELEMENT_FOR_RADON_DIFF] = "false";
 }
 
-UnifiedPipelineDataBindingTest::UnifiedPipelineDataBindingTest() {
-  left_.reset(new UnifiedPipelineDataBindingShell());
-  right_.reset(new UnifiedPipelineDataBindingShell());
-}
-
-void UnifiedPipelineDataBindingShell::ResetTasm() {
-  lynx::tasm::LynxEnv::GetInstance().external_env_map_
-      [lynx::tasm::LynxEnv::Key::ENABLE_UNIFIED_PIXEL_PIPELINE] = "true";
-  DataBindingShell::ResetTasm();
-}
-
-UnifiedPipelineDataBindingShell::UnifiedPipelineDataBindingShell() {
-  ResetTasm();
-}
-
-UnifiedPipelineDataBindingShell::~UnifiedPipelineDataBindingShell() {
-  lynx::tasm::LynxEnv::GetInstance().external_env_map_
-      [lynx::tasm::LynxEnv::Key::ENABLE_UNIFIED_PIXEL_PIPELINE] = "false";
-}
-
 }  // namespace test
 }  // namespace tasm
 }  // namespace lynx

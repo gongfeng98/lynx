@@ -466,7 +466,9 @@ class TemplateAssembler final
   std::shared_ptr<TemplateEntry> QueryComponent(const std::string& url);
 
   void SendAirPageEvent(const std::string& event, const lepus::Value& value);
-
+  void RenderTemplateForAir(const std::shared_ptr<TemplateEntry>& card,
+                            const lepus::Value& data,
+                            std::shared_ptr<PipelineOptions>& pipeline_options);
   void SendAirComponentEvent(const std::string& event_name,
                              const int component_id, const lepus::Value& params,
                              const std::string& param_name);
@@ -557,7 +559,7 @@ class TemplateAssembler final
   bool UpdateConfig(const lepus::Value& config, bool noticeDelegate,
                     std::shared_ptr<PipelineOptions>& pipeline_options);
 
-  PipelineContext* GetCurrentPipelineContext() override {
+  PipelineContext* GetCurrentPipelineContext() {
     return pipeline_context_manager_->GetCurrentPipelineContext();
   }
 

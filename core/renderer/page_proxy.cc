@@ -441,24 +441,6 @@ void PageProxy::SetRadonPage(RadonPage *page) {
   }
 }
 
-// used for unified pipeline;
-void PageProxy::RequestResolve(
-    std::shared_ptr<PipelineOptions> &pipeline_options) {
-  if (pipeline_options->enable_unified_pixel_pipeline) {
-    // TODO(nihao.royal): modify pipeline_option here directly here because
-    // only loadTemplate is supported now, current pipeline context won't be
-    // updated. use
-    // `tasm_delegate_->GetCurrentPipelineContext()->RequestLayout();` after all
-    // engine api is supported.
-
-    // mark pipeline context as resolve requested;
-    // tasm_delegate_->GetCurrentPipelineContext()->RequestLayout();
-    pipeline_options->resolve_requested = true;
-  } else {
-    element_manager()->OnPatchFinish(pipeline_options);
-  }
-}
-
 void PageProxy::ResetHydrateInfo() { hydrate_info_ = SSRHydrateInfo{}; }
 
 void PageProxy::ResetComponentId() { component_id_generator_ = 1; }

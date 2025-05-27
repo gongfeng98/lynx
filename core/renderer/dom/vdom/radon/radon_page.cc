@@ -135,8 +135,7 @@ void RadonPage::UpdateComponentData(
       ReportNoPatch(dispatch_option.has_patched_, start_time,
                     component->path().str());
     }
-    page_proxy_->RequestResolve(pipeline_options);
-
+    page_proxy_->element_manager()->OnPatchFinish(pipeline_options);
     TriggerComponentLifecycleUpdate(kComponentReady);
   }
 }
@@ -306,7 +305,7 @@ bool RadonPage::UpdatePage(const lepus::Value &table,
       }
       pipeline_options->native_update_data_order_ =
           update_page_option.native_update_data_order_;
-      page_proxy_->RequestResolve(pipeline_options);
+      page_proxy_->element_manager()->OnPatchFinish(pipeline_options);
       return need_update;
     }
   }
@@ -442,7 +441,7 @@ bool RadonPage::UpdatePage(const lepus::Value &table,
     if (proxy_->EnableFeatureReport()) {
       ReportNoPatch(option.has_patched_, start_time);
     }
-    page_proxy_->RequestResolve(pipeline_options);
+    page_proxy_->element_manager()->OnPatchFinish(pipeline_options);
   }
   if (page_proxy_->GetPrePaintingStage() == PrePaintingStage::kPrePaintingOFF) {
     TriggerComponentLifecycleUpdate(kComponentReady);

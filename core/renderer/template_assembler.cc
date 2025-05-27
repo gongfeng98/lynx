@@ -566,6 +566,8 @@ void TemplateAssembler::RenderTemplate(
     std::shared_ptr<PipelineOptions>& pipeline_options) {
   if (EnableFiberArch()) {
     RenderTemplateForFiber(card, data, pipeline_options);
+  } else if (EnableLynxAir()) {
+    RenderTemplateForAir(card, data.GetValue(), pipeline_options);
   } else {
     UpdatePageOption update_page_option;
     update_page_option.update_first_time = true;
@@ -690,18 +692,67 @@ void TemplateAssembler::RenderTemplateForFiber(
   tasm::TimingCollector::Instance()->Mark(tasm::timing::kMtsRenderEnd);
 
   pipeline_options->is_first_screen = true;
+  page_proxy()->element_manager()->OnPatchFinish(pipeline_options);
 
-  // TODO(nihao.royal): use `enable_unified_pixel_pipeline` to switch multi
-  // behaviours. After `RunPixelPipeline` is unified, we may remove the
-  // redundant logic here.
-  if (pipeline_options->enable_unified_pixel_pipeline) {
-    this->GetCurrentPipelineContext()->RequestResolve();
+  if (page_proxy()->element_manager()->GetEnableDumpElementTree()) {
+    DumpElementTree(card);
+  }
+}
+
+void TemplateAssembler::RenderTemplateForAir(
+    const std::shared_ptr<TemplateEntry>& card, const lepus::Value& data,
+    std::shared_ptr<PipelineOptions>& pipeline_options) {
+#if ENABLE_AIR
+  auto* page = page_proxy()->element_manager()->AirRoot();
+  if (!page) {
+    // AirRoot is nullptr means an error occurs during VM execution, no further
+    // steps are needed.
+    return;
+  }
+  const auto page_ptr = AirLepusRef::Create(
+      page_proxy()->element_manager()->air_node_manager()->Get(
+          page->impl_id()));
+  UpdatePageOption update_options;
+  update_options.update_first_time = true;
+  page_proxy()->element_manager()->AirRoot()->UpdatePageData(
+      data, update_options, pipeline_options);
+  page_proxy()
+      ->element_manager()
+      ->painting_context()
+      ->MarkUIOperationQueueFlushTiming(
+          tasm::timing::kPaintingUiOperationExecuteStart,
+          pipeline_options->pipeline_id);
+
+  tasm::TimingCollector::Instance()->Mark(tasm::timing::kRenderPageStartAir);
+
+  if (card->compile_options().radon_mode_ ==
+      CompileOptionRadonMode::RADON_MODE_RADON) {
+    lepus::Value p1(std::move(page_ptr));
+    BASE_STATIC_STRING_DECL(kCreatePage0, "$createPage0");
+    BASE_STATIC_STRING_DECL(kUpdatePage0, "$updatePage0");
+    card->GetVm()->Call(kCreatePage0, p1);
+    card->GetVm()->Call(kUpdatePage0, p1);
   } else {
-    page_proxy()->element_manager()->OnPatchFinish(pipeline_options);
-    if (page_proxy()->element_manager()->GetEnableDumpElementTree()) {
-      DumpElementTree(card);
+    BASE_STATIC_STRING_DECL(kRenderPage0, "$renderPage0");
+    lepus::Value ret = card->GetVm()->Call(
+        kRenderPage0, lepus::Value(std::move(page_ptr)), lepus::Value(true),
+        lepus::Value(page_proxy()->element_manager()->AirRoot()->GetData()));
+    // In some cases, some element may fail to execute the flush operation due
+    // to exceptions in the execution of lepus code. As a result, layout and
+    // other operations are not necessary.
+    bool lepus_success = ret.IsBool() && ret.Bool();
+    if (!lepus_success) {
+      return;
     }
   }
+  tasm::TimingCollector::Instance()->Mark(tasm::timing::kRenderPageEndAir);
+
+  TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, PATCH_FINISH_INNER_FOR_AIR);
+  page_proxy()->element_manager()->AirRoot()->SetFontFaces();
+  pipeline_options->is_first_screen = true;
+  EnsureAirTouchEventHandler();
+  page_proxy()->element_manager()->OnPatchFinishInnerForAir(pipeline_options);
+#endif
 }
 
 void TemplateAssembler::DidRenderTemplate(
@@ -855,8 +906,6 @@ void TemplateAssembler::LoadTemplateInternal(
 #endif
 
   Scope scope(this);
-  pipeline_context_manager_->CreateAndUpdateCurrentPipelineContext(
-      pipeline_options);
 
   // Before exec load template, do some preparation
   // 1. exec timing actions
@@ -952,9 +1001,6 @@ void TemplateAssembler::LoadTemplateInternal(
 
     // render template
     RenderTemplate(card, data, pipeline_options);
-
-    // starts to run pixel pipeline;
-    this->RunPixelPipeline();
 
     // After render template, exec some aftercare
     // 1. ssr actions
