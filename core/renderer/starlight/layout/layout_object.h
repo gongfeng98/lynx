@@ -64,7 +64,7 @@ class LayoutObject : public ContainerNode {
   BASE_EXPORT void SetCanReuseLayoutWithSameSizeAsGivenConstraintFunc(
       SLCanReuseLayoutWithSameSizeAsGivenConstraintFunc layout_depends_ofunc);
 
-  BASE_EXPORT void Reset(LayoutObject* node);
+  void Reset(LayoutObject* node);
 
   inline const LayoutConfigs& GetLayoutConfigs() const { return configs_; }
 
@@ -104,10 +104,7 @@ class LayoutObject : public ContainerNode {
   void MarkChildrenDirtyWithoutTriggerLayout();
   BASE_EXPORT bool IsDirty();
 
-  void MarkUpdated();
-  // TODO(yuanzhiwen): The exported functions will be moved to a unified
-  // location.
-  BASE_EXPORT void MarkNotDirty();
+  BASE_EXPORT void MarkUpdated();
   bool GetHasNewLayout() const;
 
   bool GetFinalMeasure() const { return final_measure_; }
@@ -227,9 +224,7 @@ class LayoutObject : public ContainerNode {
   LAYOUT_OBJECT_GET_RESULT(BorderBottomWidth)
 #undef LAYOUT_OBJECT_GET_RESULT
 
-  // TODO(yuanzhiwen): The exported functions will be moved to a unified
-  // location.
-  BASE_EXPORT BoxInfo* GetBoxInfo();
+  BoxInfo* GetBoxInfo();
   const BoxInfo* GetBoxInfo() const;
 
   float ClampExactWidth(float width) const;
@@ -243,12 +238,10 @@ class LayoutObject : public ContainerNode {
   float GetBorderBoxWidthFromInnerWidth(float inner_width) const;
   float GetBorderBoxHeightFromInnerHeight(float inner_height) const;
 
-  void ReLayout(const SLNodeSet* fixed_node_set = nullptr);
+  BASE_EXPORT void ReLayout(const SLNodeSet* fixed_node_set = nullptr);
 
-  // TODO(yuanzhiwen): The exported functions will be moved to a unified
-  // location.
-  BASE_EXPORT void ReLayoutWithConstraints(
-      Constraints& constraints, const SLNodeSet* fixed_node_set = nullptr);
+  void ReLayoutWithConstraints(Constraints& constraints,
+                               const SLNodeSet* fixed_node_set = nullptr);
 
   void UpdateConstraintsForViewport(Constraints& constraints);
   virtual FloatSize UpdateMeasure(const Constraints& constraints,

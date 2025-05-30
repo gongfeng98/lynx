@@ -24,9 +24,8 @@ DimensionValue<LayoutUnit> ComputePreferredSize(
 
 void ApplyAspectRatio(const LayoutObject* layout_object, Constraints& size);
 
-// TODO(yuanzhiwen): The exported functions will be moved to a unified location.
-BASE_EXPORT Constraints GenerateDefaultConstraints(
-    const LayoutObject& item, const Constraints& container_constraint);
+Constraints GenerateDefaultConstraints(const LayoutObject& item,
+                                       const Constraints& container_constraint);
 
 void ApplyMinMaxToConstraints(Constraints& constraints,
                               const LayoutObject& item);

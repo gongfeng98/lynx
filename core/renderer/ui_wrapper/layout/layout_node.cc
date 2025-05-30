@@ -139,9 +139,6 @@ void LayoutNode::CalculateLayout(const SLNodeSet* fixed_node_set) {
 
 void LayoutNode::CalculateLayoutWithConstraints(
     starlight::Constraints& constraints, const SLNodeSet* fixed_node_set) {
-  sl_node_.MarkDirty();
-  sl_node_.GetBoxInfo()->InitializeBoxInfo(constraints, sl_node_,
-                                           sl_node_.GetLayoutConfigs());
   sl_node_.ReLayoutWithConstraints(constraints, fixed_node_set);
 }
 

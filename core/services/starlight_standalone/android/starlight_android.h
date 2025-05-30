@@ -6,7 +6,7 @@
 #define CORE_SERVICES_STARLIGHT_STANDALONE_ANDROID_STARLIGHT_ANDROID_H_
 
 #include "base/include/platform/android/scoped_java_ref.h"
-#include "core/include/starlight_standalone/starlight.h"
+#include "core/services/starlight_standalone/core/include/starlight.h"
 
 namespace starlight {
 class StarlightAndroid {
@@ -14,16 +14,17 @@ class StarlightAndroid {
   static bool RegisterJNIUtils(JNIEnv *env);
 };
 
-class SLMeasureDelegateAndroid {
+class SLMeasureDelegateAndroid : public MeasureDelegate {
  public:
   SLMeasureDelegateAndroid(JNIEnv *env, jobject obj);
-  StarlightSize Measure(float width, SLNodeMeasureMode width_mode, float height,
-                        SLNodeMeasureMode height_mode);
+  ~SLMeasureDelegateAndroid() override;
+  SLSize Measure(SLConstraints &constraint) override;
+  float Baseline(SLConstraints &constraint) override;
+  void Alignment() override;
 
  private:
   lynx::base::android::ScopedWeakGlobalJavaRef<jobject> jni_object_;
 };
-
 }  // namespace starlight
 
 #endif  // CORE_SERVICES_STARLIGHT_STANDALONE_ANDROID_STARLIGHT_ANDROID_H_

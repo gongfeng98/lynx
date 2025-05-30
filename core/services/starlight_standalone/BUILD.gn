@@ -21,7 +21,9 @@ group("starlight_standalone") {
   } else {
     deps += [
       "../../base",
+      "../../renderer/css",
       "../../renderer/starlight",
+      "../../runtime/vm/lepus",
     ]
   }
 }
