@@ -141,8 +141,15 @@
 
 - (void)resetViewAndLayer {
   // clear view
-  [[self subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
-  [[self.layer sublayers] makeObjectsPerformSelector:@selector(removeFromSuperlayer)];
+  for (NSUInteger i = self.subviews.count - 1; i >= 0; i--) {
+    UIView* view = [self.subviews objectAtIndex:i];
+    [view removeFromSuperview];
+  }
+  // clear layer
+  for (NSUInteger i = self.layer.sublayers.count - 1; i >= 0; i--) {
+    CALayer* layer = [self.layer.sublayers objectAtIndex:i];
+    [layer removeFromSuperlayer];
+  }
 }
 
 - (void)reset {
