@@ -5,14 +5,14 @@
 # /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import shutil
 import xml.etree.ElementTree as ET
 import difflib
 import os
 import sys
-import subprocess
 from compounddef_parse import *
 from env_setup import *
+from api_utils import is_doxygen_installed
+from doxygen_config import DoxygenConfig
 
 API_DOC_ANNOTATION = """/*
  * This file is generated, do not edit.
@@ -22,35 +22,6 @@ API_DOC_ANNOTATION = """/*
  *
  */
 """
-
-
-def remove_dirs(dir_path):
-    """Remove all directories under the specified path
-    Args:
-        dir_path (str): Path to the directory
-    """
-    if os.path.exists(dir_path) and os.path.isdir(dir_path):
-        try:
-            shutil.rmtree(dir_path)
-        except Exception as e:
-            print(f"Failed to remove directory {dir_path}: {e}", file=sys.stderr)
-
-
-def is_doxygen_installed():
-    """Check if doxygen is installed in the system
-
-    Returns:
-        bool: True if installed, False otherwise
-    """
-    try:
-        subprocess.check_output([DOXYGEN_PATH, "--version"])
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        print(
-            f"Doxygen not found, please check {HANDLE_FAILED_INSTRUCTION} for more infomation",
-            file=sys.stderr,
-        )
-        return False
 
 
 def generate_api_metadata(api_path, platform):
@@ -69,28 +40,12 @@ def generate_api_metadata(api_path, platform):
     if not is_doxygen_installed():
         return False
 
-    doxygen_config_path = os.path.join(
-        ANDROID_API_PATH if platform == "android" else IOS_API_PATH, "doxygen.cfg"
+    doxygen_config = DoxygenConfig(
+        platform,
+        enable_generate_xml=True,
+        enable_generate_html=False,
     )
-    if not os.path.exists(doxygen_config_path):
-        print(f"{doxygen_config_path} not found")
-        return False
-
-    remove_dirs(os.path.join(api_path, platform, "xml"))
-    remove_dirs(os.path.join(api_path, platform, "html"))
-
-    try:
-        result = subprocess.run(
-            [DOXYGEN_PATH, doxygen_config_path],
-            capture_output=True,
-            text=True,
-            cwd=api_path,
-            check=True,
-        )
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"generate api metadata failed: {e}", file=sys.stderr)
-        return False
+    return doxygen_config.execute(api_path, platform)
 
 
 COMPOUNDDEF_PARSE_DICT = {
@@ -255,6 +210,28 @@ def update_api_metadata(api_path, platform):
 
     print(f"update {platform} api metadata success")
     return True
+
+
+def generate_api_doc(api_path, platform):
+    """Generate API documentation using doxygen
+    Args:
+        api_path (str): Path to API documentation root
+        platform (str): Target platform ('ios' or 'android')
+    Returns:
+        bool: True if generation succeeded, False otherwise
+    """
+    if not os.path.exists(api_path):
+        print(f"{api_path} not found")
+        return False
+    if not is_doxygen_installed():
+        return False
+
+    doxygen_config = DoxygenConfig(
+        platform,
+        enable_generate_xml=False,
+        enable_generate_html=True,
+    )
+    return doxygen_config.execute(api_path, platform)
 
 
 if __name__ == "__main__":

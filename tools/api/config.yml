@@ -5,3 +5,16 @@
 path:
   doxygen: ../buildtools/doxygen/doxygen
   instruction_doc: https://github.com/lynx-family/lynx/blob/develop/CONTRIBUTING.md#static-code-analysis-tasks
+android:
+  metadata_path:
+    - platform/android/lynx_android/src/main
+  doc_path:
+    - README.md
+    - platform/android/lynx_android/src/main/java/com/lynx/tasm/LynxView.java
+ios:
+  metadata_path:
+    - platform/darwin/ios/lynx
+    - platform/darwin/common/lynx
+  doc_path:
+    - README.md
+    - platform/darwin/ios/lynx/public/LynxView.h

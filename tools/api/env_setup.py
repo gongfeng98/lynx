@@ -22,15 +22,16 @@ PERFORMANCE_OBSERVER_PATH = os.path.join(
     TOOLS_DIR_PATH, "performance", "performance_observer"
 )
 
+API_CONFIG = None
 API_CONFIG_PATH = os.path.abspath(
     os.path.join(LYNX_ROOT_PATH, "tools", "api", "config.yml")
 )
 with open(API_CONFIG_PATH, "r") as f:
-    api_config = yaml.safe_load(f)
+    API_CONFIG = yaml.safe_load(f)
     DOXYGEN_PATH = os.path.normpath(
-        os.path.join(LYNX_ROOT_PATH, api_config["path"]["doxygen"])
+        os.path.join(LYNX_ROOT_PATH, API_CONFIG["path"]["doxygen"])
     )
-    HANDLE_FAILED_INSTRUCTION = api_config["path"]["instruction_doc"]
+    HANDLE_FAILED_INSTRUCTION = API_CONFIG["path"]["instruction_doc"]
 
 
 def guarantee_generated_files():
