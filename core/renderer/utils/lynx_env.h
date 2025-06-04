@@ -98,6 +98,7 @@ class BASE_EXPORT_FOR_DEVTOOL LynxEnv {
     ENABLE_UNIFIED_PIXEL_PIPELINE,
     FIX_PARALLEL_Z_INDEX_CRASH,
     FIX_INSERT_BEFORE_FIXED_BUG,
+    OPT_DESTROY_JS_APP_EARLY,
     OPT_AVOID_DESTROY_RUNTIME_WAIT,
     ENABLE_FIBER_ELEMENT_MEMORY_REPORT,
     // Please add new enum values above
@@ -207,6 +208,7 @@ class BASE_EXPORT_FOR_DEVTOOL LynxEnv {
              "enable_unified_pixel_pipeline"},
             {Key::OPT_AVOID_DESTROY_RUNTIME_WAIT,
              "opt_avoid_destroy_runtime_wait"},
+            {Key::OPT_DESTROY_JS_APP_EARLY, "opt_destroy_js_app_early"},
             {Key::FIX_PARALLEL_Z_INDEX_CRASH, "fix_parallel_z_index_crash"},
             {Key::FIX_INSERT_BEFORE_FIXED_BUG, "fix_insert_before_fixed_bug"},
             {Key::ENABLE_FIBER_ELEMENT_MEMORY_REPORT,

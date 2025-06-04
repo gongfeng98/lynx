@@ -77,7 +77,7 @@ class App : public std::enable_shared_from_this<App> {
     return app;
   }
 
-  ~App() {}
+  ~App() { LOGI("~App()"); }
   void destroy();
   void CallDestroyLifetimeFun();
 

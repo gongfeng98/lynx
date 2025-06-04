@@ -730,6 +730,10 @@ bool LynxRuntime::TryToDestroy() {
     js_executor_->GetJSRuntime()->DestroyInspector();
   }
 
+  destroy_js_app_early_ = tasm::LynxEnv::GetInstance().GetBoolEnv(
+      tasm::LynxEnv::Key::OPT_DESTROY_JS_APP_EARLY, true);
+  DestroyAppAndNapi(destroy_js_app_early_);
+
   // if opt_avoid_destroy_runtime_wait is true, destroy LynxRuntime directly.
   if (tasm::LynxEnv::GetInstance().GetBoolEnv(
           tasm::LynxEnv::Key::OPT_AVOID_DESTROY_RUNTIME_WAIT, true)) {
@@ -753,25 +757,34 @@ void LynxRuntime::Destroy() {
   cached_tasks_.clear();
   ssr_global_event_cached_tasks_.clear();
   callbacks_.clear();
-  // App destroy might invoke front-page's destroy, which could call a NAPI API,
-  // so it's important to call destroy first, and then call NAPI destroy.
-  app_->destroy();
-  app_ = nullptr;
-#if ENABLE_NAPI_BINDING
-  if (napi_environment_) {
-    LOGI("napi detaching runtime, id: " << GetRuntimeId());
-    napi_environment_->Detach();
-    napi_environment_.reset();
-  }
-  if (napi_restricted_environment_) {
-    LOGI("restricted napi detaching runtime, id: " << GetRuntimeId());
-    napi_restricted_environment_->Detach();
-    napi_restricted_environment_.reset();
-  }
-#endif
-  lifecycle_observer_->OnRuntimeDetach();
+  DestroyAppAndNapi(!destroy_js_app_early_);
+
   js_executor_->Destroy();
   js_executor_ = nullptr;
+}
+
+void LynxRuntime::DestroyAppAndNapi(bool destroy) {
+  if (destroy) {
+    LOGI("LynxRuntime::DestroyAppAndNapi, runtime_id: " << GetRuntimeId()
+                                                        << " this: " << this);
+    // App destroy might invoke front-page's destroy, which could call a NAPI
+    // API, so it's important to call destroy first, and then call NAPI destroy.
+    app_->destroy();
+    app_ = nullptr;
+#if ENABLE_NAPI_BINDING
+    if (napi_environment_) {
+      LOGI("napi detaching runtime, id: " << GetRuntimeId());
+      napi_environment_->Detach();
+      napi_environment_.reset();
+    }
+    if (napi_restricted_environment_) {
+      LOGI("restricted napi detaching runtime, id: " << GetRuntimeId());
+      napi_restricted_environment_->Detach();
+      napi_restricted_environment_.reset();
+    }
+#endif
+    lifecycle_observer_->OnRuntimeDetach();
+  }
 }
 
 void LynxRuntime::OnAppReload(
