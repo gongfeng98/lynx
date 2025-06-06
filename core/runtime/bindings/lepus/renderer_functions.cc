@@ -54,6 +54,8 @@
 #include "core/renderer/signal/lynx_signal.h"
 #include "core/renderer/signal/memo.h"
 #include "core/renderer/signal/scope.h"
+#include "core/renderer/simple_styling/simple_style_node.h"
+#include "core/renderer/simple_styling/style_object.h"
 #include "core/renderer/template_assembler.h"
 #include "core/renderer/utils/base/base_def.h"
 #include "core/renderer/utils/base/tasm_constants.h"
@@ -6935,6 +6937,145 @@ RENDERER_FUNCTION_CC(IsProfileRecording) {
 #else
   return lepus::Value(false);
 #endif
+}
+
+static void ParseSimpleStyleValueToMap(const lepus::Value& key,
+                                       const lepus::Value& value, StyleMap& map,
+                                       TemplateAssembler* tasm) {
+  CSSPropertyID id = kPropertyEnd;
+  id = static_cast<CSSPropertyID>(atoi(key.CString()));
+  if (id > kPropertyStart && id < kPropertyEnd) {
+    if (value.IsJsNull() || value.IsNil()) {
+      map[id] = CSSValue::Empty();
+    } else {
+      UnitHandler::Process(id, value, map,
+                           tasm->GetPageConfig()->GetCSSParserConfigs());
+    }
+  }
+}
+
+RENDERER_FUNCTION_CC(CreateStyleObject) {
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "SimpleStyling::CreateStyleObjects");
+  CHECK_ARGC_GE(CreateStyleObject, 1);
+  CONVERT_ARG_AND_CHECK(arg0, 0, Object, CreateStyleObject);
+  StyleMap style_map;
+  auto* tasm = GET_TASM_POINTER();
+
+  ForEachLepusValue(*arg0, [&style_map, tasm](const lepus::Value& key,
+                                              const lepus::Value& value) {
+    ParseSimpleStyleValueToMap(key, value, style_map, tasm);
+  });
+
+  const fml::RefPtr<lepus::RefCounted> style_property_map_ref =
+      fml::MakeRefCounted<style::DynamicStyleObject>(std::move(style_map));
+  return lepus::Value(style_property_map_ref);
+}
+
+static void ReleaseStyleObjectArray(style::StyleObject** arr) {
+  for (auto** p = arr; *p != nullptr; ++p) {
+    (*p)->Release();
+  }
+  delete[] arr;
+}
+
+static void PushStyleObjectToArray(const lepus::Value& value,
+                                   style::StyleObject**& arr,
+                                   style::StyleObject** global_style_object,
+                                   int& idx, int& capacity) {
+  if (idx >= capacity - 1) {
+    int new_cap = capacity <<= 1;
+    style::StyleObject** new_array = static_cast<style::StyleObject**>(
+        realloc(arr, capacity * sizeof(style::StyleObject*)));
+    if (new_array == nullptr) {
+      return;
+    }
+    arr = new_array;
+    capacity = new_cap;
+  }
+
+  if (value.IsRefCounted() &&
+      value.RefCounted()->GetRefType() == lepus::RefType::kStyleObject) {
+    auto* p = value.RefCounted().get();
+    p->AddRef();
+    arr[idx++] = static_cast<style::StyleObject*>(p);
+  } else if (value.IsNumber()) {
+    auto* p = global_style_object[static_cast<size_t>(value.Number())];
+    p->AddRef();
+    arr[idx++] = p;
+  } else if (value.IsArrayOrJSArray()) {
+    ForEachLepusValue(value, [&arr, &global_style_object, &idx, &capacity](
+                                 const lepus::Value&,
+                                 const lepus::Value& value) {
+      PushStyleObjectToArray(value, arr, global_style_object, idx, capacity);
+    });
+  }
+}
+
+RENDERER_FUNCTION_CC(SetStyleObject) {
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "SimpleStyling::SetStyleObject");
+  CHECK_ARGC_GE(SetStyleObject, 2);
+  CONVERT_ARG_AND_CHECK(arg0, 0, RefCounted, SetStyleObject);
+  const auto* arg1 = argv + 1;
+  std::unique_ptr<style::StyleObject*, void (*)(style::StyleObject**)>
+      style_object_list{nullptr, nullptr};
+  auto* tasm = GET_TASM_POINTER();
+  if (arg1->IsArrayOrJSArray()) {
+    int capacity = 16;
+    auto** style_object_raw_array = static_cast<style::StyleObject**>(
+        malloc((capacity * sizeof(style::StyleObject*))));
+
+    style::StyleObject** global_style_objects =
+        tasm->StyleObjectList(DEFAULT_ENTRY_NAME).get();
+    int idx = 0;
+
+    ForEachLepusValue(
+        *arg1, [&style_object_raw_array, global_style_objects, &idx, &capacity](
+                   const lepus::Value&, const lepus::Value& value) {
+          PushStyleObjectToArray(value, style_object_raw_array,
+                                 global_style_objects, idx, capacity);
+        });
+
+    style_object_raw_array[idx] = nullptr;
+    style_object_list =
+        std::unique_ptr<style::StyleObject*, void (*)(style::StyleObject**)>(
+            style_object_raw_array, ReleaseStyleObjectArray);
+  }
+
+  if (const auto element_ref = arg0->RefCounted();
+      element_ref->GetRefType() == lepus::RefType::kElement) {
+    // auto* element_ptr = static_cast<FiberElement*>(element_ref.get());
+
+    // element_ptr->SetStyleObjects(std::move(style_object_list));
+    // TRACE_EVENT(LYNX_TRACE_CATEGORY, "Devtool::ON_NODE_MODIFIED");
+    // EXEC_EXPR_FOR_INSPECTOR(GET_TASM_POINTER()
+    //                             ->page_proxy()
+    //                             ->element_manager()
+    //                             ->OnElementNodeSetForInspector(element_ptr););
+  }
+
+  RETURN_UNDEFINED();
+}
+
+RENDERER_FUNCTION_CC(UpdateStyleObject) {
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "SimpleStyling::UpdateStyleObject");
+  CHECK_ARGC_GE(UpdateStyleObject, 2);
+  lepus::Value* arg0 = argv;
+  CONVERT_ARG_AND_CHECK(arg1, 1, Object, UpdateStyleObject);
+
+  StyleMap style_map;
+  auto* tasm = GET_TASM_POINTER();
+  ForEachLepusValue(*arg1, [&style_map, tasm](const lepus::Value& key,
+                                              const lepus::Value& value) {
+    ParseSimpleStyleValueToMap(key, value, style_map, tasm);
+  });
+  if (const auto style_object_ref = arg0->RefCounted();
+      style_object_ref->GetRefType() == lepus::RefType::kStyleObject) {
+    auto* style_object_ptr =
+        static_cast<style::DynamicStyleObject*>(style_object_ref.get());
+    style_object_ptr->UpdateStyleMap(style_map);
+  }
+
+  RETURN_UNDEFINED();
 }
 
 }  // namespace tasm

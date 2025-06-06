@@ -48,21 +48,20 @@ class StyleObject : public lepus::RefCounted {
                        size_t length, const DecoderCreatorFunc creator)
       : range_(start, end), data_(data), length_(length), creator_(creator) {}
 
-  void BindToElement(SimpleStyleNode* element);
+  virtual void BindToElement(SimpleStyleNode* element);
 
   /**
    * Unbind style object from the element before element is destroyed,
    * preventing from UAF.
    * @param element The element to be unbound.
    */
-  void UnbindFromElement(SimpleStyleNode* element);
-  void UpdateStyleMap(const tasm::StyleMap& style_map);
+  virtual void UnbindFromElement(SimpleStyleNode* element);
 
   /**
    * Reset the style object to the initial state.
    * @param element The element to be reset.
    */
-  void ResetElement(SimpleStyleNode* element) const;
+  void ResetStylesInElement(SimpleStyleNode* element) const;
 
   auto begin() const { return style_map_->begin(); }
   auto end() const { return style_map_->end(); }
@@ -70,17 +69,33 @@ class StyleObject : public lepus::RefCounted {
   void FromBinary();
   lepus::RefType GetRefType() const override;
 
+ protected:
+  std::unique_ptr<StylePropertyMap> style_map_;
+
  private:
   void DecodeImmediately();
 
   tasm::CSSRange range_;
-  std::unique_ptr<StylePropertyMap> style_map_;
+
   uint8_t* data_;
   size_t length_;
-  base::InlineVector<SimpleStyleNode*, 4> elements_;
   std::once_flag decode_flag_;
   DecoderCreatorFunc creator_;
 };
+
+class DynamicStyleObject : public StyleObject {
+ public:
+  explicit DynamicStyleObject(const tasm::StyleMap& style_map)
+      : StyleObject(style_map) {}
+  void BindToElement(SimpleStyleNode* element) override;
+  void UnbindFromElement(SimpleStyleNode* element) override;
+  void UpdateStyleMap(const tasm::StyleMap& style_map);
+  void Reset();
+
+ private:
+  base::InlineVector<SimpleStyleNode*, 1> elements_;
+};
+
 }  // namespace lynx::style
 
 #endif  // CORE_RENDERER_SIMPLE_STYLING_STYLE_OBJECT_H_

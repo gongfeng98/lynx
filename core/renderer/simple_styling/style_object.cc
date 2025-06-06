@@ -11,21 +11,14 @@
 
 namespace lynx::style {
 
-void StyleObject::BindToElement(SimpleStyleNode* element) {
-  elements_.emplace_back(element);
-}
+void StyleObject::BindToElement(SimpleStyleNode* element) {}
 
-void StyleObject::UnbindFromElement(SimpleStyleNode* element) {
-  if (const auto it = std::find(elements_.begin(), elements_.end(), element);
-      it != elements_.end()) {
-    elements_.erase(it);
+void StyleObject::UnbindFromElement(SimpleStyleNode* element) {}
+
+void StyleObject::ResetStylesInElement(SimpleStyleNode* element) const {
+  for (const auto& pair : *style_map_) {
+    element->ResetSimpleStyle(pair.first);
   }
-}
-
-void StyleObject::ResetElement(SimpleStyleNode* element) const {
-  std::for_each(
-      style_map_->begin(), style_map_->end(),
-      [element](const auto& pair) { element->ResetSimpleStyle(pair.first); });
 }
 
 void StyleObject::FromBinary() {
@@ -43,12 +36,30 @@ void StyleObject::DecodeImmediately() {
   style_map_ = std::make_unique<StylePropertyMap>(attr);
 }
 
-void StyleObject::UpdateStyleMap(const tasm::StyleMap& style_map) {
+void DynamicStyleObject::UpdateStyleMap(const tasm::StyleMap& style_map) {
   std::for_each(style_map.begin(), style_map.end(), [this](const auto& pair) {
     style_map_->SetProperty(pair.first, pair.second);
   });
-  for (auto* element : elements_) {
+  for (auto element : elements_) {
     element->UpdateSimpleStyles(style_map);
   }
 }
+
+void DynamicStyleObject::BindToElement(SimpleStyleNode* element) {
+  elements_.emplace_back(element);
+}
+
+void DynamicStyleObject::UnbindFromElement(SimpleStyleNode* element) {
+  if (auto it = std::find(elements_.begin(), elements_.end(), element);
+      it != elements_.end()) {
+    elements_.erase(it);
+  }
+}
+
+void DynamicStyleObject::Reset() {
+  for (auto* element : elements_) {
+    ResetStylesInElement(element);
+  }
+}
+
 }  // namespace lynx::style

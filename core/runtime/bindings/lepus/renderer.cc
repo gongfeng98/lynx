@@ -518,6 +518,12 @@ void Renderer::RegisterBuiltinForFiber(lepus::Context* context) {
                                      &FiberCreateFrame);
   /* 103 */ lepus::RegisterCFunction(context, kCFunctionRunUpdates,
                                      &FiberRunUpdates);
+  /* 104 */ lepus::RegisterCFunction(context, kCFunctionCreateStyleObject,
+                                     &CreateStyleObject);
+  /* 105 */ lepus::RegisterCFunction(context, kCFunctionSetStyleObject,
+                                     &SetStyleObject);
+  /* 106 */ lepus::RegisterCFunction(context, kCFunctionUpdateStyleObject,
+                                     &UpdateStyleObject);
 }
 
 void Renderer::RegisterBuiltinForAir(lepus::Context* context) {

@@ -160,6 +160,12 @@ static const char* kCFunctionGetTemplateParts = "__GetTemplateParts";
 static const char* kCFunctionCreateElementWithProperties =
     "__CreateElementWithProperties";
 
+#pragma region simple styling api
+constexpr const char* kCFunctionCreateStyleObject = "__CreateStyleObject";
+constexpr const char* kCFunctionSetStyleObject = "__SetStyleObject";
+constexpr const char* kCFunctionUpdateStyleObject = "__UpdateStyleObject";
+#pragma endregion  // simple styling api
+
 // Singal API
 // TODO(songshourui.null): Based on the discussion results of the Element API,
 // it will be decided whether to clearly distinguish between the Element API and
