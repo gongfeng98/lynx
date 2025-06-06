@@ -84,6 +84,15 @@ bool FUNCTION_NAME(JNIEnv* env);
 
 """
 
+def write_content_to_file(file_path, content):
+  if os.path.exists(file_path):
+    with open(file_path, 'r') as file:
+      old_content = file.read()
+      if content == old_content:
+        return
+  with open(file_path, 'w') as file:
+    file.write(content)
+
 def generate_register_header(java_file, function_name, register_header_path):
   # generate XXX_register_jni.h which contains RegisterJNIForXXX method.
   guard_string = java_file.replace('/', '_')
@@ -92,9 +101,7 @@ def generate_register_header(java_file, function_name, register_header_path):
   header_filled_template = register_header_template.replace('HEADER_GUARD', guard_string)
   header_filled_template = header_filled_template.replace('JAVA_FILE_PATH', java_file)
   header_filled_template = header_filled_template.replace('FUNCTION_NAME', function_name)
-  with open(register_header_path, 'w') as file:
-    file.write(header_filled_template)
-    file.close()
+  write_content_to_file(register_header_path, header_filled_template)
 
 def append_content_if_changed(file_path, start_flag, end_flag, new_content_list):
   # Find content that starts at start_flag and ends at end_flag
@@ -258,8 +265,7 @@ def append_files_to_gn(gn_configs, gn_files):
     config_list_str = configs_template.replace('CONFIGS', f'\n{"".join(dep_config_list)}  ')
   gn_file_str = gn_file_str.replace('CONFIG_TARGETS', config_list_str)
 
-  with open(gn_file_path, 'w') as file:
-    file.write(gn_file_str)
+  write_content_to_file(gn_file_path, gn_file_str)
 
 def get_modification_time_str(root_path, file_name):
     file_path = os.path.join(root_path, file_name)
