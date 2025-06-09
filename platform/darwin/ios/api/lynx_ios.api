@@ -1887,7 +1887,7 @@ public class LynxKeyboardEventDispatcher : NSObject {
   public instancetype LynxKeyboardEventDispatcher::initWithContext:(LynxContext *context);
 }
 
-public class LynxKeyframeAnimator : NSObject typedef NS_ENUMNSUInteger, LynxKFAnimatorState {
+public class LynxKeyframeAnimator : NSObject typedef enum LynxKFAnimatorState {
   public LynxUI* LynxKeyframeAnimator::ui ui;
   public NSString* LynxKeyframeAnimator::kTransformStr kTransformStr;
   public NSString* LynxKeyframeAnimator::kOpacityStr kOpacityStr;
@@ -4786,7 +4786,33 @@ public interface UIViewController(LynxHeroTransition) {
   public FOUNDATION_EXTERN NSString* const kPropThreadMode kPropThreadMode;
   public FOUNDATION_EXPORT NSString* const kPropEnableSSR kPropEnableSSR;
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(uint32_t, LynxFeature);
+public enum LynxFeature {
+  LynxFeatureObjcImplicitAnimation
+  LynxFeatureObjcPageRtl
+  LynxFeatureObjcPageRtlWithList
+  LynxFeatureObjcDisableNewTransformOriginIos
+  LynxFeatureObjcAutoResumeAnimation
+  LynxFeatureObjcLayoutAnimationCreate
+  LynxFeatureObjcLayoutAnimationUpdate
+  LynxFeatureObjcLayoutAnimationDelete
+  LynxFeatureObjcEnterTransitionName
+  LynxFeatureObjcExitTransitionName
+  LynxFeatureObjcPauseTransitionName
+  LynxFeatureObjcResumeTransitionName
+  LynxFeatureObjcUpdateFontScale
+  LynxFeatureObjcDisableReuseAnimationState
+  LynxFeatureObjcListIosRecursiveLayout
+  LynxFeatureObjcListIosDisableScrollAnimDuringLayout
+  LynxFeatureObjcListIosUseScroller
+  LynxFeatureObjcListPagingEnable
+  LynxFeatureObjcDisableTouchRefactor
+  LynxFeatureObjcSetThemeIos
+  LynxFeatureObjcGetThemeIos
+  LynxFeatureObjcUiOwnerReleaseOnChildThread
+  LynxFeatureObjcEnableAsyncList
+  LynxFeatureObjcUseLegacyElements
+}
+
 
   public std::shared_ptr< lynx::tasm::LynxTemplateBundle > LynxGetRawTemplateBundle(LynxTemplateBundle *bundle);
   public LynxTemplateBundle * ConstructTemplateBundleFromNative(lynx::tasm::LynxTemplateBundle bundle);
@@ -4806,56 +4832,318 @@ public interface UIViewController(LynxHeroTransition) {
   public FOUNDATION_EXTERN NSString* const kTimingContainerInitEnd kTimingContainerInitEnd;
   public FOUNDATION_EXTERN NSString* const kTimingOpenTime kTimingOpenTime;
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSUInteger, LynxWhiteSpaceType);
-  public typedef NS_ENUM(NSUInteger, LynxTextOverflowType);
-  public typedef NS_ENUM(NSUInteger, LynxFontWeightType);
-  public typedef NS_ENUM(NSUInteger, LynxFontStyleType);
-  public typedef NS_ENUM(NSUInteger, LynxVisibilityType);
-  public typedef NS_ENUM(NSUInteger, LynxWordBreakType);
-  public typedef NS_ENUM(NSUInteger, LynxImageRenderingType);
-  public typedef NS_ENUM(NSUInteger, LynxHyphensType);
-  public typedef NS_ENUM(NSUInteger, LynxXAppRegionType);
-  public typedef NS_ENUM(NSUInteger, LynxXAnimationColorInterpolationType);
+public enum LynxWhiteSpaceType {
+  LynxWhiteSpaceNormal
+  LynxWhiteSpaceNowrap
+}
+
+public enum LynxTextOverflowType {
+  LynxTextOverflowClip
+  LynxTextOverflowEllipsis
+}
+
+public enum LynxFontWeightType {
+  LynxFontWeightNormal
+  LynxFontWeightBold
+  LynxFontWeight100
+  LynxFontWeight200
+  LynxFontWeight300
+  LynxFontWeight400
+  LynxFontWeight500
+  LynxFontWeight600
+  LynxFontWeight700
+  LynxFontWeight800
+  LynxFontWeight900
+}
+
+public enum LynxFontStyleType {
+  LynxFontStyleNormal
+  LynxFontStyleItalic
+  LynxFontStyleOblique
+}
+
+public enum LynxVisibilityType {
+  LynxVisibilityHidden
+  LynxVisibilityVisible
+  LynxVisibilityNone
+  LynxVisibilityCollapse
+}
+
+public enum LynxWordBreakType {
+  LynxWordBreakNormal
+  LynxWordBreakBreakAll
+  LynxWordBreakKeepAll
+}
+
+public enum LynxImageRenderingType {
+  LynxImageRenderingAuto
+  LynxImageRenderingCrispEdges
+  LynxImageRenderingPixelated
+}
+
+public enum LynxHyphensType {
+  LynxHyphensNone
+  LynxHyphensManual
+  LynxHyphensAuto
+}
+
+public enum LynxXAppRegionType {
+  LynxXAppRegionNone
+  LynxXAppRegionDrag
+  LynxXAppRegionNoDrag
+}
+
+public enum LynxXAnimationColorInterpolationType {
+  LynxXAnimationColorInterpolationAuto
+  LynxXAnimationColorInterpolationSRGB
+  LynxXAnimationColorInterpolationLinearRGB
+}
+
 
   typedef NSString *(^ LynxBacktraceFunction) (NSString *message, NSUInteger skippedDepth)
   public LYNX_EXTERN void LynxSetBacktraceFunction(LynxBacktraceFunction backtraceFunction);
   public LYNX_EXTERN LynxBacktraceFunction LynxGetBacktraceFunction(void);
 
-  public typedef NS_ENUM(NSInteger, LynxBooleanOption);
+public enum LynxBooleanOption {
+  LynxBooleanOptionUnset
+  LynxBooleanOptionTrue
+  LynxBooleanOptionFalse
+}
 
-  public typedef NS_ENUM(NSUInteger, LynxOverflowType);
-  public typedef NS_ENUM(NSUInteger, LynxTimingFunctionType);
-  public typedef NS_ENUM(NSUInteger, LynxAnimationDirectionType);
-  public typedef NS_ENUM(NSUInteger, LynxAnimationFillModeType);
-  public typedef NS_ENUM(NSUInteger, LynxAnimationPlayStateType);
-  public typedef NS_ENUM(NSUInteger, LynxTransformType);
-  public typedef NS_ENUM(NSUInteger, LynxBoxShadowOption);
-  public typedef NS_ENUM(NSUInteger, LynxPlatformLengthUnit);
-  public typedef NS_ENUM(NSUInteger, LynxPerspectiveLengthUnit);
-  public typedef NS_ENUM(NSUInteger, LynxDirectionType);
-  public typedef NS_ENUM(NSInteger, LynxBackgroundClipType);
-  public typedef NS_ENUM(NSInteger, LynxBackgroundSizeType);
-  public typedef NS_ENUM(NSInteger, LynxBackgroundPositionType);
-  public typedef NS_ENUM(NSUInteger, LynxBackgroundRepeatType);
-  public typedef NS_ENUM(NSUInteger, LynxBackgroundOriginType);
-  public typedef NS_ENUM(NSUInteger, LynxTextAlignType);
-  public typedef NS_ENUM(NSUInteger, LynxTextDecorationType);
-  public typedef NS_ENUM(NSUInteger, LynxBackgroundImageType);
-  public typedef NS_ENUM(NSUInteger, LynxRadialGradientShapeType);
-  public typedef NS_ENUM(NSUInteger, LynxRadialGradientSizeType);
-  public typedef NS_ENUM(NSInteger, LynxVerticalAlign);
-  public typedef NS_ENUM(NSInteger, LynxBorderStyle);
-  public typedef NS_ENUM(NSInteger, LynxFlexDirection);
-  public typedef NS_ENUM(NSInteger, LynxBorderWidth);
-  public typedef NS_ENUM(NSInteger, LynxFilterType);
-  public typedef NS_ENUM(NSInteger, LynxBasicShapeType);
+
+public enum LynxOverflowType {
+  LynxOverflowVisible
+  LynxOverflowHidden
+  LynxOverflowScroll
+}
+
+public enum LynxTimingFunctionType {
+  LynxTimingFunctionLinear
+  LynxTimingFunctionEaseIn
+  LynxTimingFunctionEaseOut
+  LynxTimingFunctionEaseInEaseOut
+  LynxTimingFunctionSquareBezier
+  LynxTimingFunctionCubicBezier
+  LynxTimingFunctionSteps
+}
+
+public enum LynxAnimationDirectionType {
+  LynxAnimationDirectionNormal
+  LynxAnimationDirectionReverse
+  LynxAnimationDirectionAlternate
+  LynxAnimationDirectionAlternateReverse
+}
+
+public enum LynxAnimationFillModeType {
+  LynxAnimationFillModeNone
+  LynxAnimationFillModeForwards
+  LynxAnimationFillModeBackwards
+  LynxAnimationFillModeBoth
+}
+
+public enum LynxAnimationPlayStateType {
+  LynxAnimationPlayStatePaused
+  LynxAnimationPlayStateRunning
+}
+
+public enum LynxTransformType {
+  LynxTransformTypeNone
+  LynxTransformTypeTranslate
+  LynxTransformTypeTranslateX
+  LynxTransformTypeTranslateY
+  LynxTransformTypeTranslateZ
+  LynxTransformTypeTranslate3d
+  LynxTransformTypeRotate
+  LynxTransformTypeRotateX
+  LynxTransformTypeRotateY
+  LynxTransformTypeRotateZ
+  LynxTransformTypeScale
+  LynxTransformTypeScaleX
+  LynxTransformTypeScaleY
+  LynxTransformTypeSkew
+  LynxTransformTypeSkewX
+  LynxTransformTypeSkewY
+  LynxTransformTypeMatrix
+  LynxTransformTypeMatrix3d
+}
+
+public enum LynxBoxShadowOption {
+  LynxBoxShadowOptionNone
+  LynxBoxShadowOptionInset
+  LynxBoxShadowOptionInitial
+  LynxBoxShadowOptionInherit
+}
+
+public enum LynxPlatformLengthUnit {
+  LynxPlatformLengthUnitNumber
+  LynxPlatformLengthUnitPercentage
+  LynxPlatformLengthUnitCalc
+}
+
+public enum LynxPerspectiveLengthUnit {
+  LynxPerspectiveLengthUnitNumber
+  LynxPerspectiveLengthUnitVw
+  LynxPerspectiveLengthUnitVh
+  LynxPerspectiveLengthUnitDefault
+  LynxPerspectiveLengthUnitPX
+}
+
+public enum LynxDirectionType {
+  LynxDirectionNormal
+  LynxDirectionRtl
+  LynxDirectionLtr
+  __attribute__
+}
+
+public enum LynxBackgroundClipType {
+  LynxBackgroundClipPaddingBox
+  LynxBackgroundClipBorderBox
+  LynxBackgroundClipContentBox
+}
+
+public enum LynxBackgroundSizeType {
+  LynxBackgroundSizeAuto
+  LynxBackgroundSizeCover
+  LynxBackgroundSizeContain
+}
+
+public enum LynxBackgroundPositionType {
+  LynxBackgroundPositionTop
+  LynxBackgroundPositionRight
+  LynxBackgroundPositionBottom
+  LynxBackgroundPositionLeft
+  LynxBackgroundPositionCenter
+}
+
+public enum LynxBackgroundRepeatType {
+  LynxBackgroundRepeatRepeat
+  LynxBackgroundRepeatNoRepeat
+  LynxBackgroundRepeatRepeatX
+  LynxBackgroundRepeatRepeatY
+  LynxBackgroundRepeatRound
+  LynxBackgroundRepeatSpace
+}
+
+public enum LynxBackgroundOriginType {
+  LynxBackgroundOriginPaddingBox
+  LynxBackgroundOriginBorderBox
+  LynxBackgroundOriginContentBox
+}
+
+public enum LynxTextAlignType {
+  LynxTextAlignLeft
+  LynxTextAlignCenter
+  LynxTextAlignRight
+  LynxTextAlignStart
+  LynxTextAlignEnd
+  LynxTextAlignJustify
+  __attribute__
+}
+
+public enum LynxTextDecorationType {
+  LynxTextDecorationNone
+  LynxTextDecorationUnderLine
+  LynxTextDecorationLineThrough
+  LynxTextDecorationSolid
+  LynxTextDecorationDouble
+  LynxTextDecorationDotted
+  LynxTextDecorationDashed
+  LynxTextDecorationWavy
+  LynxTextDecorationColor
+}
+
+public enum LynxBackgroundImageType {
+  LynxBackgroundImageNone
+  LynxBackgroundImageURL
+  LynxBackgroundImageLinearGradient
+  LynxBackgroundImageRadialGradient
+}
+
+public enum LynxRadialGradientShapeType {
+  LynxRadialGradientShapeEllipse
+  LynxRadialGradientShapeCircle
+}
+
+public enum LynxRadialGradientSizeType {
+  LynxRadialGradientSizeFarthestCorner
+  LynxRadialGradientSizeFarthestSide
+  LynxRadialGradientSizeClosestCorner
+  LynxRadialGradientSizeClosestSide
+  LynxRadialGradientSizeLength
+}
+
+public enum LynxVerticalAlign {
+  LynxVerticalAlignDefault
+  LynxVerticalAlignBaseline
+  LynxVerticalAlignSub
+  LynxVerticalAlignSuper
+  LynxVerticalAlignTop
+  LynxVerticalAlignTextTop
+  LynxVerticalAlignMiddle
+  LynxVerticalAlignBottom
+  LynxVerticalAlignTextBottom
+  LynxVerticalAlignLength
+  LynxVerticalAlignPercent
+  LynxVerticalAlignCenter
+}
+
+public enum LynxBorderStyle {
+  LynxBorderStyleSolid
+  LynxBorderStyleDashed
+  LynxBorderStyleDotted
+  LynxBorderStyleDouble
+  LynxBorderStyleGroove
+  LynxBorderStyleRidge
+  LynxBorderStyleInset
+  LynxBorderStyleOutset
+  LynxBorderStyleHidden
+  LynxBorderStyleNone
+}
+
+public enum LynxFlexDirection {
+  LynxFlexDirectionColumn
+  LynxFlexDirectionColumnReverse
+  LynxFlexDirectionRow
+  LynxFlexDirectionRowReverse
+}
+
+public enum LynxBorderWidth {
+  LynxBorderWidthThin
+  LynxBorderWidthMedium
+  LynxBorderWidthThick
+}
+
+public enum LynxFilterType {
+  LynxFilterTypeNone
+  LynxFilterTypeGrayScale
+  LynxFilterTypeBlur
+}
+
+public enum LynxBasicShapeType {
+  LynxBasicShapeTypeUnknown
+  LynxBasicShapeTypeCircle
+  LynxBasicShapeTypeEllipse
+  LynxBasicShapeTypePath
+  LynxBasicShapeTypeSuperEllipse
+  LynxBasicShapeTypeInset
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN typedef void(^ LoadedBlock) (NSData *_Nullable data, NSError *_Nullable error) LoadedBlock;
+
+public enum LynxLogLevel {
+  LynxLogLevelReport
+  LynxLogLevelVerbose
+  LynxLogLevelDebug
+  LynxLogLevelInfo
+  LynxLogLevelWarning
+  LynxLogLevelError
+  LynxLogLevelFatal
+}
 
   typedef void(^ LynxLogFunction) (LynxLogLevel level, NSString *message)
   typedef LynxLogObserver LynxLogDelegate
   public LynxLogFunction LynxDefaultLogFunction LynxDefaultLogFunction;
-  public typedef NS_ENUM(NSInteger, LynxLogLevel);
   public typedef NS_OPTIONS(NSInteger, LynxLogSource);
   public LYNX_EXTERN void InitLynxLog(bool enable_devtools);
   public LYNX_EXTERN void SetDebugLoggingDelegate(LynxLogDelegate *delegate);
@@ -4882,18 +5170,51 @@ public interface UIViewController(LynxHeroTransition) {
 
   public const int kLynxPerformanceIsSrrHydrateIndex kLynxPerformanceIsSrrHydrateIndex;
 
+public enum LynxFetchResType {
+  LynxFetchResUnknown
+  LynxFetchResFontFace
+  LynxFetchResImage
+  LynxFetchResLottie
+  LynxFetchResVideo
+  LynxFetchResSVG
+  LynxFetchResTemplate
+  LynxFetchResLynxCoreJS
+  LynxFetchResDynamicComponent
+  LynxFetchResI18NText
+  LynxFetchResTheme
+  LynxFetchResExternalJSSource
+  LynxFetchResURLOnlineOrOffline
+  LynxFetchResURLOnline
+  LynxFetchResURLOffline
+  LynxFetchResURLUnzipped
+  LynxFetchResData
+}
+
   typedef void(^ LynxResourceLoadCompletionBlock) (BOOL isSyncCallback, NSData *_Nullable data, NSError *_Nullable error, NSURL *_Nullable resURL)
   typedef void(^ LynxResourceResolveHandler) (NSString *resolvedURL, id fetcher, id params, NSError *_Nullable error)
   typedef void(^ LynxResourceCompletionHandler) (NSData *_Nullable data, NSError *_Nullable error)
   typedef void(^ LynxLocalFileCompletionHandler) (NSURL *_Nullable url, NSError *_Nullable error)
   typedef void(^ LynxResourceLoadCompletedBlock) (LynxResourceResponse *_Nonnull response)
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxFetchResType);
 
   public const NSString* LYNX_TARGET_SDK_VERSION_1_5 LYNX_TARGET_SDK_VERSION_1_5;
 
-  public typedef NS_ENUM(NSInteger, DevToolLogLevel);
+public enum DevToolLogLevel {
+  DevToolLogLevelInfo
+  DevToolLogLevelWarning
+  DevToolLogLevelError
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN typedef void(^ CDPResultCallback) (NSString *result) CDPResultCallback;
+
+public enum LynxEventType {
+  kNoneEvent
+  kTouchEvent
+  kMouseEVent
+  kWheelEvent
+  kKeyboardEvent
+  kCustomEvent
+}
 
   public FOUNDATION_EXPORT int32_t const LynxTouchPseudoStateNone LynxTouchPseudoStateNone;
   public FOUNDATION_EXPORT int32_t const LynxTouchPseudoStateHover LynxTouchPseudoStateHover;
@@ -4903,12 +5224,13 @@ public interface UIViewController(LynxHeroTransition) {
   public FOUNDATION_EXPORT int32_t const LynxTouchPseudoStateFocus LynxTouchPseudoStateFocus;
   public FOUNDATION_EXPORT int32_t const LynxTouchPseudoStateFocusTransition LynxTouchPseudoStateFocusTransition;
   public FOUNDATION_EXPORT int32_t const LynxTouchPseudoStateAll LynxTouchPseudoStateAll;
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxEventType);
 
-  public enum LynxEventPropStatus
+public enum LynxEventPropStatus {
   kLynxEventPropEnable
   kLynxEventPropDisable
   kLynxEventPropUndefined
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN NSString* const LynxEventTouchMove LynxEventTouchMove;
   public NSString* const LynxEventTouchStart LynxEventTouchStart;
@@ -4921,13 +5243,39 @@ public interface UIViewController(LynxHeroTransition) {
   public NS_ASSUME_NONNULL_BEGIN FOUNDATION_EXPORT int32_t const kUnknownInstanceId kUnknownInstanceId;
   public FOUNDATION_EXPORT NSString* const kLynxSDKErrorEvent kLynxSDKErrorEvent;
 
-  public typedef NS_ENUM(NSInteger, LynxThreadStrategyForRender);
-
   public NS_ASSUME_NONNULL_BEGIN FOUNDATION_EXPORT NSString* const kDefaultComponentID kDefaultComponentID;
 
   public NS_ASSUME_NONNULL_BEGIN typedef void(^ LynxOpenCardCallback) (NSString *) LynxOpenCardCallback;
 
   public NS_ASSUME_NONNULL_BEGIN typedef void(^ onComponentLoaded) (NSData *_Nullable data, NSError *_Nullable error) onComponentLoaded;
+
+public enum LynxEnvKey {
+  LynxEnvSwitchRunloopThread
+  LynxEnvEnableComponentStatisticReport
+  LynxEnvEnableLynxDetailLog
+  LynxEnvFreeImageMemory
+  LynxEnvFreeImageMemoryForce
+  LynxEnvUseNewImage
+  LynxEnvEnableImageExposure
+  LynxEnvEnableMultiTASMThread
+  LynxEnvEnableMultiLayoutThread
+  LynxEnvTextRenderCacheLimit
+  LynxEnvEnableTextRenderCacheHitRate
+  LynxEnvEnableImageMonitor
+  LynxEnvEnableTextLayerRender
+  LynxEnvEnableCreateUIAsync
+  LynxEnvEnableImageEventReport
+  LynxEnvEnableGenericResourceFetcher
+  LynxEnvEnableAnimationSyncTimeOpt
+  LynxEnvFixNewImageDownSampling
+  LynxEnvCachesExpirationDurationInDays
+  LynxEnvCachesCleanupUntrackedFiles
+  LynxEnvEnableTextContainerOpt
+  LynxEnvEnableTextStorageDeallocFix
+  LynxEnvEnableJSGroupThreadByDefault
+  LynxEnvEnableTextLayoutCache
+  LynxEnvKeyEndMark
+}
 
   public NSString* const SP_KEY_ENABLE_AUTOMATION SP_KEY_ENABLE_AUTOMATION;
   public NSString* const KEY_LYNX_DEBUG KEY_LYNX_DEBUG;
@@ -4949,7 +5297,6 @@ public interface UIViewController(LynxHeroTransition) {
   public NSString* const SP_KEY_DEVTOOL_CONNECTED SP_KEY_DEVTOOL_CONNECTED;
   public NSString* const SP_KEY_ENABLE_QUICKJS_DEBUG SP_KEY_ENABLE_QUICKJS_DEBUG;
   public NSString* const SP_KEY_SHOW_DEVTOOL_BADGE SP_KEY_SHOW_DEVTOOL_BADGE;
-  public typedef NS_ENUM(uint64_t, LynxEnvKey);
 
   public NS_ASSUME_NONNULL_BEGIN FOUNDATION_EXPORT NSString* const LynxErrorDomain LynxErrorDomain;
   public FOUNDATION_EXPORT NSString* const LynxErrorUserInfoKeyMessage LynxErrorUserInfoKeyMessage;
@@ -5019,8 +5366,25 @@ public interface UIViewController(LynxHeroTransition) {
   public FOUNDATION_EXPORT NSInteger const LynxErrorCodeUpdate LynxErrorCodeUpdate;
   public FOUNDATION_EXPORT NSInteger const LynxErrorCodeException LynxErrorCodeException;
 
-  public typedef NS_ENUM(NSInteger, LynxLoadMode);
+public enum LynxLoadMode {
+  LynxLoadModeNormal
+  LynxLoadModePrePainting
+}
+
   public typedef NS_OPTIONS(NSInteger, LynxLoadOption);
+
+public enum ELynxLevel {
+  ELynxLevelFatal
+  ELynxLevelError
+  ELynxLevelWarn
+  ELynxLevelUndecided
+}
+
+public enum ELynxConsumer {
+  ELynxConsumerFrontEnd
+  ELynxConsumerClient
+  ELynxConsumerLynx
+}
 
   public NS_ASSUME_NONNULL_BEGIN FOUNDATION_EXPORT NSInteger const ECLynxSuccess ECLynxSuccess;
   public FOUNDATION_EXPORT NSInteger const ECLynxAppBundleLoadRenderFailed ECLynxAppBundleLoadRenderFailed;
@@ -5116,15 +5480,28 @@ public interface UIViewController(LynxHeroTransition) {
   public FOUNDATION_EXPORT NSInteger const ECLynxComponentCustom ECLynxComponentCustom;
   public FOUNDATION_EXPORT NSInteger const ECLynxExceptionPlatform ECLynxExceptionPlatform;
   public FOUNDATION_EXPORT NSInteger const ECLynxExceptionJNI ECLynxExceptionJNI;
-  public typedef NS_ENUM(NSInteger, ELynxLevel);
-  public typedef NS_ENUM(NSInteger, ELynxConsumer);
 
   typedef void(^ LynxTemplateLoadBlock) (id data, NSError *error)
 
-  public typedef NS_ENUM(NSInteger, LynxPipelineOrigin);
+public enum LynxPipelineOrigin {
+  LynxFirstScreen
+  LynxReload
+}
 
-  public typedef NS_ENUM(NSInteger, LynxViewSizeMode);
-  public typedef NS_ENUM(NSInteger, LynxThreadStrategyForRender);
+
+public enum LynxViewSizeMode {
+  LynxViewSizeModeUndefined
+  LynxViewSizeModeExact
+  LynxViewSizeModeMax
+}
+
+public enum LynxThreadStrategyForRender {
+  LynxThreadStrategyForRenderAllOnUI
+  LynxThreadStrategyForRenderMostOnTASM
+  LynxThreadStrategyForRenderPartOnLayout
+  LynxThreadStrategyForRenderMultiThreads
+}
+
   public typedef NS_OPTIONS(NSInteger, EmbeddedMode);
 
   typedef void(^ LynxPromiseResolveBlock) (id result)
@@ -5139,8 +5516,13 @@ public interface UIViewController(LynxHeroTransition) {
   typedef void(^ LynxGenericResourcePathCompletionBlock) (NSString *_Nullable path, NSError *_Nullable error)
   public NS_ASSUME_NONNULL_BEGIN typedef void(^ LynxGenericResourceCompletionBlock) (NSData *_Nullable data, NSError *_Nullable error) LynxGenericResourceCompletionBlock;
 
+public enum LynxResourceOptionalBool {
+  LynxResourceOptionalBoolTrue
+  LynxResourceOptionalBoolFalse
+  LynxResourceOptionalBoolUndefined
+}
+
   public NS_ASSUME_NONNULL_BEGIN typedef void(^ LynxMediaResourceCompletionBlock) (UIImage *_Nullable uiImage, NSError *_Nullable error) LynxMediaResourceCompletionBlock;
-  public typedef NS_ENUM(NSInteger, LynxResourceOptionalBool);
 
   public NS_ASSUME_NONNULL_BEGIN FOUNDATION_EXPORT NSString* const LYNX_PROVIDER_TYPE_IMAGE LYNX_PROVIDER_TYPE_IMAGE;
   public FOUNDATION_EXPORT NSString* const LYNX_PROVIDER_TYPE_FONT LYNX_PROVIDER_TYPE_FONT;
@@ -5156,8 +5538,28 @@ public interface UIViewController(LynxHeroTransition) {
 
   public NS_ASSUME_NONNULL_BEGIN typedef void(^ LynxResourceLoadBlock) (LynxResourceResponse *response) LynxResourceLoadBlock;
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxResourceRequestAsyncMode);
-  public typedef NS_ENUM(NSInteger, LynxResourceRequestType);
+public enum LynxResourceRequestAsyncMode {
+  EXACTLY_ASYNC
+  EXACTLY_SYNC
+  MOST_SYNC
+}
+
+public enum LynxResourceRequestType {
+  LynxResourceTypeGeneric
+  LynxResourceTypeImage
+  LynxResourceTypeFont
+  LynxResourceTypeLottie
+  LynxResourceTypeVideo
+  LynxResourceTypeSVG
+  LynxResourceTypeTemplate
+  LynxResourceTypeLynxCoreJS
+  LynxResourceTypeDynamicComponent
+  LynxResourceTypeI18NText
+  LynxResourceTypeTheme
+  LynxResourceTypeExternalJS
+  LynxResourceTypeExternalByteCode
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN FOUNDATION_EXPORT NSInteger const LynxResourceResponseCodeSuccess LynxResourceResponseCodeSuccess;
   public FOUNDATION_EXPORT NSInteger const LynxResourceResponseCodeFailed LynxResourceResponseCodeFailed;
@@ -5169,9 +5571,11 @@ public interface UIViewController(LynxHeroTransition) {
 
   typedef typedefNS_ASSUME_NONNULL_BEGIN struct napi_env__* napi_env
 
-  public enum LynxContextTagType
+public enum LynxContextTagType {
   LynxContextTagLastLynxURL
   LynxContextTagLastLynxAsyncComponentURL
+}
+
 
   public NSUInteger const kLynxServiceTypeMonitor kLynxServiceTypeMonitor;
   public NSUInteger const kLynxServiceHttp kLynxServiceHttp;
@@ -5188,19 +5592,54 @@ public interface UIViewController(LynxHeroTransition) {
   public NSUInteger const kLynxServiceExtension kLynxServiceExtension;
   public typedef NS_OPTIONS(NSUInteger, LynxServiceScope);
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxServiceResourceScene);
+public enum LynxServiceResourceScene {
+  ResourceSceneOther
+  ResourceSceneLynxTemplate
+  ResourceSceneLynxChildResource
+  ResourceSceneLynxComponent
+  ResourceSceneLynxFont
+  ResourceSceneLynxI18n
+  ResourceSceneLynxImage
+  ResourceSceneLynxLottie
+  ResourceSceneLynxVideo
+  ResourceSceneLynxSVG
+  ResourceSceneLynxExternalJS
+  ResourceSceneWebMainResource
+  ResourceSceneWebChildResource
+}
+
 
   typedef void(^ LynxServiceResourceCompletionHandler) (id< LynxServiceResourceResponseProtocol > __nullable response, NSError *__nullable error)
 
-  public typedef NS_ENUM(NSInteger, LynxTASMType);
+public enum LynxTASMType {
+  LynxTASMTypeTemplate
+  LynxTASMTypeDynamicComponent
+}
+
 
   typedef void(^ attachLynxPageUI) (__weak NSObject *_Nonnull ui)
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSUInteger, LynxSizeValueType);
+public enum LynxSizeValueType {
+  LynxSizeValueTypeUnknown
+  LynxSizeValueTypePercent
+  LynxSizeValueTypeDevicePt
+}
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(UInt8, LynxFPSRecordState);
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSUInteger, LynxGestureFlingTriggerState);
+public enum LynxFPSRecordState {
+  LynxFPSRecordStateNone
+  LynxFPSRecordStatePaused
+  LynxFPSRecordStateActive
+  LynxFPSRecordStateEnded
+}
+
+
+public enum LynxGestureFlingTriggerState {
+  LynxGestureFlingTriggerStateStart
+  LynxGestureFlingTriggerStateUpdate
+  LynxGestureFlingTriggerStateEnd
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN const int LYNX_STATE_INIT LYNX_STATE_INIT;
   public const int LYNX_STATE_BEGIN LYNX_STATE_BEGIN;
@@ -5208,8 +5647,6 @@ public interface UIViewController(LynxHeroTransition) {
   public const int LYNX_STATE_FAIL LYNX_STATE_FAIL;
   public const int LYNX_STATE_END LYNX_STATE_END;
   public const int LYNX_STATE_UNDETERMINED LYNX_STATE_UNDETERMINED;
-
-  public typedef NS_ENUM(NSInteger, LynxBooleanOption);
 
   typedef void(^ DidAnimationStop) (CAAnimation *__nullable animation, BOOL finished)
   public DidAnimationStart didStart didStart;
@@ -5235,17 +5672,44 @@ public interface UIViewController(LynxHeroTransition) {
 
   public void LynxPathAddRoundedRect(CGMutablePathRef path, CGRect bounds, LynxCornerInsets ci);
 
+public enum LynxBorderValueUnit {
+  LynxBorderValueUnitDefault
+  LynxBorderValueUnitPercent
+  LynxBorderValueUnitCalc
+}
+
+public enum LynxBorderPosition {
+  LynxBorderTop
+  LynxBorderLeft
+  LynxBorderBottom
+  LynxBorderRight
+}
+
   typedef struct _LynxBorderUnitValue LynxBorderUnitValue
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxBorderValueUnit);
-  public typedef NS_ENUM(NSInteger, LynxBorderPosition);
   public static bool isBorderUnitEqual(LynxBorderUnitValue lhs, LynxBorderUnitValue rhs);
   public static bool isBorderUnitEqualA(LynxBorderUnitValue lhs, LynxBorderUnitValue rhs, LynxPlatformLength *lLength, LynxPlatformLength *rLength);
 
+public enum LynxAnimOpts {
+  LynxAnimOptHasBorderLayer
+  LynxAnimOptHasBorderComplex
+  LynxAnimOptHasBGLayer
+  LynxAnimOptHasBGComplex
+}
+
+public enum LynxBgTypes {
+  LynxBgTypeSimple
+  LynxBgTypeShape
+  LynxBgTypeComplex
+}
+
+public enum LynxBgShapeLayerProp {
+  LynxBgShapeLayerPropUndefine
+  LynxBgShapeLayerPropEnabled
+  LynxBgShapeLayerPropDisabled
+}
+
   public const LynxBorderRadii LynxBorderRadiiZero LynxBorderRadiiZero;
   public NS_ASSUME_NONNULL_BEGIN NSString * NSStringFromLynxBorderRadii(LynxBorderRadii *radii);
-  public typedef NS_ENUM(NSInteger, LynxAnimOpts);
-  public typedef NS_ENUM(uint8_t, LynxBgTypes);
-  public typedef NS_ENUM(uint8_t, LynxBgShapeLayerProp);
   public static bool _noneZeroBUV(LynxBorderUnitValue unit);
   public static bool LynxHasBorderRadii(LynxBorderRadii radii);
 
@@ -5275,16 +5739,57 @@ public interface UIViewController(LynxHeroTransition) {
   public static void LynxDrawBorders(CGContextRef ctx, LynxBorderStyles borderStyles, CGSize size, LynxBorderRadii cornerRadii, UIEdgeInsets borderInsets, LynxBorderColors borderColors, BOOL drawToEdge, BOOL hasCornerRadii, CGPathRef path, CGPathRef insetPath, const LynxCornerInsets cornerInsets);
   public static void LynxDoDrawOutlineSubRect(CGContextRef ctx, LynxBorderStyle style, UIColor *color, float width, CGRect rect);
 
+public enum LynxRenderBorderStyle {
+  LynxRenderBorderStyleSolidInsetOrOutset
+  LynxRenderBorderStyleDashedOrDotted
+  LynxRenderBorderStyleDoubleGrooveOrRidge
+  LynxRenderBorderStyleNone
+}
+
+public enum LynxBorderPathId {
+  LynxBorderPathId16
+  LynxBorderPathId14
+  LynxBorderPathId12
+  LynxBorderPathId34
+  LynxBorderPathId56
+  LynxBorderPathIdCount
+}
+
   typedef struct _LynxRenderBorderSideData LynxRenderBorderSideInfo
-  public typedef NS_ENUM(NSInteger, LynxRenderBorderStyle);
-  public typedef NS_ENUM(NSInteger, LynxBorderPathId);
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSUInteger, LynxTransformRotationType);
+public enum LynxTransformRotationType {
+  LynxTransformRotationNone
+  LynxTransformRotationX
+  LynxTransformRotationY
+  LynxTransformRotationZ
+}
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSUInteger, LynxFontSrcType);
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxLinearGradientDirection);
-  public typedef NS_ENUM(NSInteger, LynxRadialCenterType);
+public enum LynxFontSrcType {
+  LynxFontSrcLocal
+  LynxFontSrcUrl
+}
+
+
+public enum LynxLinearGradientDirection {
+  LynxLinearGradientDirectionNone
+  LynxLinearGradientDirectionToTop
+  LynxLinearGradientDirectionToBottom
+  LynxLinearGradientDirectionToLeft
+  LynxLinearGradientDirectionToRight
+  LynxLinearGradientDirectionToTopRight
+  LynxLinearGradientDirectionToTopLeft
+  LynxLinearGradientDirectionToBottomRight
+  LynxLinearGradientDirectionToBottomLeft
+  LynxLinearGradientDirectionAngle
+}
+
+public enum LynxRadialCenterType {
+  LynxRadialCenterTypePercentage
+  LynxRadialCenterTypeRPX
+  LynxRadialCenterTypePX
+}
+
   public BOOL LynxSameLynxGradient(LynxGradient *_Nullable left, LynxGradient *_Nullable right);
 
   typedef void(^ LynxImageLoadCompletionBlock) (UIImage *_Nullable image, NSError *_Nullable error, NSURL *_Nullable imageURL)
@@ -5306,7 +5811,7 @@ public interface UIViewController(LynxHeroTransition) {
   public NSAttributedStringKey const LynxInlineBackgroundKey LynxInlineBackgroundKey;
   public NSAttributedStringKey const LynxWordBreakKey LynxWordBreakKey;
 
-  public enum LynxUIMethodErrorCode
+public enum LynxUIMethodErrorCode {
   kUIMethodSuccess
   kUIMethodUnknown
   kUIMethodNodeNotFound
@@ -5316,14 +5821,23 @@ public interface UIViewController(LynxHeroTransition) {
   kUIMethodNoUiForNode
   kUIMethodInvalidStateError
   kUIMethodOperationError
+}
+
   typedef void(^ LynxUIMethodCallbackBlock) (int code, id _Nullable data)
 
-  public enum EVENT_TYPE
+public enum EVENT_TYPE {
   TOUCH_EVENT
   CUSTOM_EVENT
+}
+
+
+public enum LynxInnerEventType {
+  LynxEventTypeTouchEvent
+  LynxEventTypeCustomEvent
+  LynxEventTypeLayoutEvent
+}
 
   typedef BOOL(^ onLynxEvent) (LynxEvent *event)
-  public typedef NS_ENUM(NSInteger, LynxInnerEventType);
 
   public NSString* const _Nonnull ON_TOUCHES_DOWN ON_TOUCHES_DOWN;
   public NSString* const _Nonnull ON_TOUCHES_MOVE ON_TOUCHES_MOVE;
@@ -5335,73 +5849,210 @@ public interface UIViewController(LynxHeroTransition) {
   public NSString* const _Nonnull ON_END ON_END;
   public NS_ASSUME_NONNULL_BEGIN typedef NS_OPTIONS(NSInteger, LynxGestureHandlerOption);
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSUInteger, LynxGestureTypeDarwin);
+public enum LynxGestureTypeDarwin {
+  LynxGestureTypePan
+  LynxGestureTypeFling
+  LynxGestureTypeDefault
+  LynxGestureTypeTap
+  LynxGestureTypeLongPress
+  LynxGestureTypeRotation
+  LynxGestureTypePinch
+  LynxGestureTypeNative
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN typedef void(^ LynxViewAnimFinishCallback) (void) LynxViewAnimFinishCallback;
 
-  public typedef NS_ENUM(NSInteger, LynxBackgroundJsRuntimeType);
+public enum LynxBackgroundJsRuntimeType {
+  LynxBackgroundJsRuntimeTypeJSC
+  LynxBackgroundJsRuntimeTypeQuickjs
+  LynxBackgroundJsRuntimeTypeV8
+}
+
 
   public BOOL LynxImageFetchherSupportsProcessor(id< LynxImageFetcher > fetcher);
 
   public NS_ASSUME_NONNULL_BEGIN typedef NS_OPTIONS(NSInteger, LynxRequestOptions);
 
-  public typedef NS_ENUM(NSInteger, LynxImageRequestType);
+public enum LynxImageRequestType {
+  LynxImageRequestUndefined
+  LynxImageRequestSrc
+  LynxImageRequestPlaceholder
+}
+
 
   typedef struct MeasureResult MeasureResult
 
   typedef void(^ LynxOnLayoutBlock) (void)
 
-  public typedef NS_ENUM(NSInteger, LynxMeasureMode);
+public enum LynxMeasureMode {
+  LynxMeasureModeIndefinite
+  LynxMeasureModeDefinite
+  LynxMeasureModeAtMost
+}
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxShadowNodeType);
+
+public enum LynxShadowNodeType {
+  LynxShadowNodeTypeCommon
+  LynxShadowNodeTypeVirtual
+  LynxShadowNodeTypeCustom
+  LynxShadowNodeTypeInlineView
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN NSAttributedStringKey const LynxInlineViewAttributedStringKey LynxInlineViewAttributedStringKey;
   public NSAttributedStringKey const LynxInlineTextShadowNodeSignKey LynxInlineTextShadowNodeSignKey;
   public NSAttributedStringKey const LynxUsedFontMetricKey LynxUsedFontMetricKey;
   public NSAttributedStringKey const LynxVerticalAlignKey LynxVerticalAlignKey;
 
+public enum LynxOverflow {
+  LynxNoOverflow
+  LynxOverflowX
+  LynxOverflowY
+  LynxOverflowXY
+}
+
   public const NSInteger LynxNumberNotSet LynxNumberNotSet;
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxOverflow);
   public BOOL LynxSameMeasureMode(LynxMeasureMode left, LynxMeasureMode right);
 
   public NS_ASSUME_NONNULL_BEGIN BOOL layoutManagerIsTruncated(NSLayoutManager *layoutManager);
 
-  public typedef NS_ENUM(NSInteger, LynxLayoutModelType);
+public enum LynxLayoutModelType {
+  LynxLayoutModelInvalid
+  LynxLayoutModelNormal
+  LynxLayoutModelFullSpan
+  LyngLayoutModelNative
+}
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxListLayoutUpdateType);
-  public typedef NS_ENUM(NSUInteger, LynxListLayoutType);
 
-  public typedef NS_ENUM(NSUInteger, LynxListScrollStatus);
-  public typedef NS_ENUM(NSInteger, LynxListScrollDirection);
+public enum LynxListLayoutUpdateType {
+  LynxListUpdateTypeNoneUpdate
+  LynxListUpdateTypeDataUpdate
+  LynxListUpdateTypeScrollBoundsUpdate
+  LynxListUpdateTypeScrollThresholdsUpdate
+  LynxListUpdateTypeInitialScrollIndexUpdate
+  LynxListUpdateTypeScrollToPositionUpdate
+  LynxListUpdateTypeLayoutGeneralPropsUpdate
+  LynxListUpdateTypeLayoutSelfSizing
+}
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxAnchorVisibility);
+public enum LynxListLayoutType {
+  LynxListLayoutNone
+  LynxListLayoutWaterfall
+  LynxListLayoutFlow
+}
+
+
+public enum LynxListScrollStatus {
+  LynxListScrollStatusIdle
+  LynxListScrollStatusDragging
+  LynxListScrollStatusScrolling
+  LynxListScrollStatusFling
+}
+
+public enum LynxListScrollDirection {
+  LynxListScrollDirectionToLower
+  LynxListScrollDirectionStop
+  LynxListScrollDirectionToUpper
+}
+
+
+public enum LynxAnchorVisibility {
+  LynxAnchorVisibilityNoAdjustment
+  LynxAnchorVisibilityShow
+  LynxAnchorVisibilityHide
+}
+
+
+public enum InvalidationType {
+  ListNoneUpdate
+  ListInitialDataUpdate
+  ListRegularDataUpdate
+  ListLayoutUpdate
+  ListColumnCountUpdate
+  ListBoundsUpdate
+  ListInsetsUpdate
+  ListCellUpdate
+  ListAnimationUpdate
+  ListCellSelfSizingUpdate
+  ListInitialScrollIndexUpdate
+  ListMainAxisGapUpdate
+  ListCrossAxisGapUpdate
+  ListElementTypeUpdate
+}
 
   public NS_ASSUME_NONNULL_BEGIN FOUNDATION_EXPORT NSInteger const LynxCollectionInvalidNumberOfItems LynxCollectionInvalidNumberOfItems;
   public FOUNDATION_EXPORT NSInteger const LynxCollectionInvalidNumberOfColumns LynxCollectionInvalidNumberOfColumns;
-  public typedef NS_ENUM(NSUInteger, InvalidationType);
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSUInteger, LynxCollectionViewLayoutType);
-  public typedef NS_ENUM(NSUInteger, LynxCollectionViewLayoutDirection);
+public enum LynxCollectionViewLayoutType {
+  LynxCollectionViewLayoutNone
+  LynxCollectionViewLayoutWaterfall
+  LynxCollectionViewLayoutFlow
+}
+
+public enum LynxCollectionViewLayoutDirection {
+  LynxCollectionViewLayoutVertical
+  LynxCollectionViewLayoutHorizontal
+}
+
+
+public enum LynxCollectionCellUpdateAnimationType {
+  LynxCollectionCellUpdateAnimationTypeNone
+  LynxCollectionCellUpdateAnimationTypeDisable
+  LynxCollectionCellUpdateAnimationTypeFadeIn
+}
+
+public enum LynxBounceForbiddenDirection {
+  LynxForbiddenNone
+  LynxForbiddenUpper
+  LynxForbiddenLower
+}
 
   public const CGFloat kInvalidSnapFactor kInvalidSnapFactor;
-  public typedef NS_ENUM(NSUInteger, LynxCollectionCellUpdateAnimationType);
-  public typedef NS_ENUM(NSInteger, LynxBounceForbiddenDirection);
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxListLayoutOrientation);
+public enum LynxListLayoutOrientation {
+  LynxListLayoutOrientationNone
+  LynxListLayoutOrientationVertical
+  LynxListLayoutOrientationHorizontal
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN FOUNDATION_EXPORT NSString* const kLynxListNodeAppearEvent kLynxListNodeAppearEvent;
   public FOUNDATION_EXPORT NSString* const kLynxListNodeDisappearEvent kLynxListNodeDisappearEvent;
 
-  public typedef NS_ENUM(NSInteger, LynxListDebugInfoLevel);
+public enum LynxListDebugInfoLevel {
+  LynxListDebugInfoLevelNone
+  LynxListDebugInfoLevelError
+  LynxListDebugInfoLevelInfo
+  LynxListDebugInfoLevelVerbose
+}
 
-  public typedef NS_ENUM(NSUInteger, LynxListScrollState);
-  public typedef NS_ENUM(NSUInteger, LynxListScrollPosition);
+
+public enum LynxListScrollState {
+  LynxListScrollStateNone
+  LynxListScrollStateDargging
+  LynxListScrollStateScrolling
+}
+
+public enum LynxListScrollPosition {
+  LynxListScrollPositionInit
+  LynxListScrollPositionTop
+  LynxListScrollPositionMid
+  LynxListScrollPositionBottom
+  LynxListScrollPositionBothEnds
+}
+
 
   public LynxBasicShape *_Nullable LBSCreateBasicShapeFromArray(NSArray< NSNumber * > *array);
   public CGPathRef LBSCreatePathFromBasicShape(LynxBasicShape *shape, CGSize viewport);
   public LynxBasicShape *_Nullable LBSCreateBasicShapeFromPathData(NSString *data);
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSInteger, LynxGestureState);
+public enum LynxGestureState {
+  LynxGestureStateActive
+  LynxGestureStateFail
+  LynxGestureStateEnd
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN FOUNDATION_EXPORT NSString* const LynxEventScroll LynxEventScroll;
   public FOUNDATION_EXPORT NSString* const LynxEventScrollEnd LynxEventScrollEnd;
@@ -5427,21 +6078,43 @@ public interface UIViewController(LynxHeroTransition) {
   public FOUNDATION_EXPORT short const OVERFLOW_XY_VAL OVERFLOW_XY_VAL;
   public FOUNDATION_EXPORT short const OVERFLOW_HIDDEN_VAL OVERFLOW_HIDDEN_VAL;
 
-  public enum LynxPropStatus
+public enum LynxPropStatus {
   kLynxPropEnable
   kLynxPropDisable
   kLynxPropUndefined
+}
+
   typedef struct TransOffset TransOffset
   typedef void(^ LynxNodeReadyBlock) (LynxUI *)
 
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSUInteger, LynxBounceViewDirection);
+public enum LynxBounceViewDirection {
+  LynxBounceViewDirectionRight
+  LynxBounceViewDirectionBottom
+  LynxBounceViewDirectionLeft
+  LynxBounceViewDirectionTop
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN UIKIT_EXTERN NSNotificationName const LynxImpressionWillManualExposureNotification LynxImpressionWillManualExposureNotification;
   public UIKIT_EXTERN NSNotificationName const LynxImpressionLynxViewIDNotificationKey LynxImpressionLynxViewIDNotificationKey;
   public UIKIT_EXTERN NSNotificationName const LynxImpressionStatusNotificationKey LynxImpressionStatusNotificationKey;
   public UIKIT_EXTERN NSNotificationName const LynxImpressionForceImpressionBoolKey LynxImpressionForceImpressionBoolKey;
 
-  public typedef NS_ENUM(NSInteger, HoverPosition);
+public enum HoverPosition {
+  HoverPositionTop
+  HoverPositionBottom
+  HoverPositionCenter
+  HoverPositionLeft
+  HoverPositionRight
+}
+
+
+public enum LynxScrollViewTouchBehavior {
+  LynxScrollViewTouchBehaviorNone
+  LynxScrollViewTouchBehaviorForbid
+  LynxScrollViewTouchBehaviorPause
+  LynxScrollViewTouchBehaviorStop
+}
 
   typedef NSInteger(^ UIScrollViewGetIndexFromView) (UIView *view)
   typedef CGRect(^ UIScrollViewGetViewRectAtIndex) (NSInteger index)
@@ -5449,10 +6122,19 @@ public interface UIViewController(LynxHeroTransition) {
   typedef BOOL(^ UIScrollViewLynxCompletion) (BOOL scrollEnabledAtStart, BOOL completed)
   typedef CGPoint(^ UIScrollViewLynxProgressInterception) (double timeProgress, double distProgress, CGPoint contentOffset)
   typedef double(^ UIScrollViewLynxTimingFunction) (double input)
-  public NS_ASSUME_NONNULL_BEGIN typedef NS_ENUM(NSUInteger, LynxScrollViewTouchBehavior);
 
-  public typedef NS_ENUM(NSInteger, LynxGestureConsumeStatus);
-  public typedef NS_ENUM(NSInteger, LynxInterceptGestureState);
+public enum LynxGestureConsumeStatus {
+  LynxGestureConsumeStatusUndefined
+  LynxGestureConsumeStatusBlock
+  LynxGestureConsumeStatusAllow
+}
+
+public enum LynxInterceptGestureState {
+  LynxInterceptGestureStateUnset
+  LynxInterceptGestureStateFalse
+  LynxInterceptGestureStateTrue
+}
+
 
   public NS_ASSUME_NONNULL_BEGIN NSString* const KEY_LYNX_ENABLE_MULTI_ASYNC_THREAD KEY_LYNX_ENABLE_MULTI_ASYNC_THREAD;
   public NSString* const KEY_LYNX_PLATFORM_CONFIG KEY_LYNX_PLATFORM_CONFIG;
@@ -5464,18 +6146,22 @@ public interface UIViewController(LynxHeroTransition) {
   typedef struct LBSPathConsumer LBSPathConsumer
   public CGPathRef LBSCreatePathFromData(const char *data);
 
-  public enum LBSPathConsumerType
+public enum LBSPathConsumerType {
   kLBSPathConsumerTypeUnknown
   kLBSPathConsumerTypeCoreGraphics
   kLBSPathConsumerTypeString
+}
+
   typedef enum LBSPathConsumerType LBSPathConsumerType
   typedef struct LBSPathConsumer LBSPathConsumer
   public void LBSParsePathWithConsumer(const char *data, LBSPathConsumer *consumer);
 
   typedef void(^ LynxPropsDidUpdateBlockReadyBlock) (LynxUI *)
 
-  public enum TagSupportedState
+public enum TagSupportedState {
   LynxRootTag
   LynxSupportedTag
   LynxUnsupportedTag
+}
+
 

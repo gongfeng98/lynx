@@ -48,9 +48,10 @@ def typedef_parse(memberdef) -> str:
 def enum_parse(memberdef) -> str:
     if not kind_check(memberdef, "enum"):
         return ""
-    enum_str = f'  public enum {memberdef.find("name").text}'
+    enum_str = f'public enum {memberdef.find("name").text} {{\n'
     for enumvalue in memberdef.findall("enumvalue"):
-        enum_str += f'\n  {enumvalue.find("name").text}'
+        enum_str += f'  {enumvalue.find("name").text}\n'
+    enum_str += "}\n"
     return enum_str
 
 
