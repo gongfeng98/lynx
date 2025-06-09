@@ -26,6 +26,5 @@ public class LepusDebugInfoHelperTest {
 
     String result = mDebugInfoHelper.getDebugInfo(invalidUrl);
     assertTrue(result.isEmpty());
-    assertEquals(mDebugInfoHelper.getDebugInfoUrl(), invalidUrl);
   }
 }

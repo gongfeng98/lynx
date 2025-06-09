@@ -55,12 +55,8 @@ class DevToolPlatformFacadeMock : public lynx::devtool::DevToolPlatformFacade {
   std::string GetLepusDebugInfo(const std::string& url) override {
     return "test GetLepusDebugInfo";
   }
-  void SetLepusDebugInfoUrl(const std::string& url) override {
-    debug_info_url_ = url;
-  }
 
   std::unordered_map<std::string, bool> devtools_switch_;
-  std::string debug_info_url_;
 };
 
 }  // namespace testing

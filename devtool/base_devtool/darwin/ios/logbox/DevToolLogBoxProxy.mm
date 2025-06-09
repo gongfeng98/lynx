@@ -155,6 +155,11 @@
   return [provider logSources];
 }
 
+- (NSString*)logSourceWithFileName:(NSString*)fileName {
+  __strong id<DevToolLogBoxResProvider> provider = _resProvider;
+  return [provider logSourceWithFileName:fileName];
+}
+
 - (NSString*)entryUrlForLogSrc {
   __strong id<DevToolLogBoxResProvider> provider = _resProvider;
   return [provider entryUrlForLogSrc];

@@ -122,6 +122,15 @@ void SendLayerTreeDidChangeEvent(JNIEnv* env, jobject jcaller,
   platform_facade->SendLayerTreeDidChangeEvent();
 }
 
+jstring GetLepusDebugInfoUrl(JNIEnv* env, jobject jcaller, jlong facadePtr,
+                             jstring fileName) {
+  auto platform_facade = *reinterpret_cast<
+      std::shared_ptr<lynx::devtool::DevToolPlatformAndroid>*>(facadePtr);
+  std::string url = platform_facade->GetLepusDebugInfoUrl(
+      lynx::base::android::JNIConvertHelper::ConvertToString(env, fileName));
+  return env->NewStringUTF(url.c_str());  // NOLINT
+}
+
 namespace lynx {
 namespace devtool {
 DevToolPlatformAndroid::DevToolPlatformAndroid(JNIEnv* env, jobject owner)
@@ -247,18 +256,6 @@ std::string DevToolPlatformAndroid::GetLepusDebugInfo(const std::string& url) {
         env, jni_debug_info.Get());
   }
   return "";
-}
-
-void DevToolPlatformAndroid::SetLepusDebugInfoUrl(const std::string& url) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  JNIEnv* env = lynx::base::android::AttachCurrentThread();
-  lynx::base::android::ScopedLocalJavaRef<jobject> ref(weak_android_delegate_);
-  if (!env->IsSameObject(ref.Get(), nullptr)) {
-    auto jni_url =
-        lynx::base::android::JNIConvertHelper::ConvertToJNIStringUTF(env, url);
-    Java_DevToolPlatformAndroidDelegate_setLepusDebugInfoUrl(env, ref.Get(),
-                                                             jni_url.Get());
-  }
 }
 
 // OnConsoleObject and OnConsoleMessage are called from the JS thread, and

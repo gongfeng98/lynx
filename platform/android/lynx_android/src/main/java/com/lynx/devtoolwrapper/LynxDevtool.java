@@ -350,9 +350,9 @@ public class LynxDevtool {
     }
   }
 
-  public String getDebugInfoUrl() {
+  public String getDebugInfoUrl(String fileName) {
     if (mOwner != null) {
-      return mOwner.getDebugInfoUrl();
+      return mOwner.getDebugInfoUrl(fileName);
     }
     return "";
   }

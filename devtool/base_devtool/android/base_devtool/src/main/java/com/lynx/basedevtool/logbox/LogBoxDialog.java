@@ -9,9 +9,12 @@ import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 import com.lynx.basedevtool.utils.DevToolFileLoadCallback;
+import com.lynx.basedevtool.utils.DownloadCallback;
 import com.lynx.basedevtool.utils.UIThreadUtils;
 import java.lang.ref.WeakReference;
+import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -251,6 +254,59 @@ class LogBoxDialog extends LogBoxDialogBase {
           manager.requestLogsOfViewIndex(viewIndex, mLevel);
         }
       });
+    }
+
+    public void getResource(final int callbackId, final String name) {
+      if (TextUtils.isEmpty(name)) {
+        sendResult(callbackId, "");
+        return;
+      }
+      DownloadCallback downloadCallback = new DownloadCallback() {
+        @Override
+        public void onData(byte[] bytes, int length) {
+          String content = new String(bytes, Charset.defaultCharset());
+          sendResult(callbackId, content);
+        }
+
+        @Override
+        public void onFailure(String reason) {
+          sendResult(callbackId, "");
+          Log.w(TAG, "Download failed: " + reason + ", and the url is " + name);
+        }
+      };
+      if (name.startsWith("http")) {
+        download(name, downloadCallback);
+        return;
+      }
+
+      LogBoxManager manager = mManager.get();
+      if (manager != null) {
+        String value = manager.getLogSourceWithFileName(name, mLevel);
+        if (!TextUtils.isEmpty(value)) {
+          if (value.startsWith("http")) {
+            download(value, downloadCallback);
+          } else {
+            sendResult(callbackId, value);
+          }
+          return;
+        }
+      }
+
+      if (mJsSource == null) {
+        sendResult(callbackId, "");
+        Log.w(TAG, "the js source cache is null");
+        return;
+      }
+      Object src = "";
+      for (Map.Entry<String, Object> entry : mJsSource.entrySet()) {
+        String key = entry.getKey();
+        if (key.contains(name)) {
+          src = entry.getValue();
+          break;
+        }
+      }
+      String res = (src instanceof String) ? (String) src : "";
+      sendResult(callbackId, res);
     }
   }
 }

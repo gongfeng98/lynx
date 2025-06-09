@@ -729,10 +729,6 @@ std::string QuickContext::FormatExceptionMessage(const std::string& message,
   ret += " backtrace:\n";
   ret += stack;
 
-  if (!debug_info_url_.empty()) {
-    // add template_debug.json url to backtrace info
-    ret += "\ntemplate_debug_url:" + debug_info_url_;
-  }
   return ret;
 }
 
@@ -872,7 +868,9 @@ bool QuickContext::DeSerialize(const ContextBundle& bundle, bool reuse_context,
     LOGE("QuickContext deserialize error " << msg);
     return false;
   }
-  if (inspector_manager_ && tasm::LynxEnv::GetInstance().IsDevToolConnected()) {
+  if (inspector_manager_ &&
+      (tasm::LynxEnv::GetInstance().IsDevToolConnected() ||
+       tasm::LynxEnv::GetInstance().IsLogBoxEnabled())) {
     SetFunctionFileName(val, file_name);
   }
   SetTopLevelFunction(val);

@@ -77,7 +77,7 @@ abstract public class LogBoxDialogBase extends Dialog {
 
   private WebView mWebView;
 
-  private Map<String, Object> mJsSource;
+  protected Map<String, Object> mJsSource;
 
   private LinearLayout mRootLayout;
 
@@ -105,48 +105,6 @@ abstract public class LogBoxDialogBase extends Dialog {
           .append(obj.toString())
           .append(");");
       evaluateJs(strBuilder.toString());
-    }
-
-    public void getResource(final int callbackId, final String name) {
-      if (TextUtils.isEmpty(name)) {
-        sendResult(callbackId, "");
-        return;
-      }
-      if (name.startsWith("http")) {
-        download(name, new DownloadCallback() {
-          @Override
-          public void onData(byte[] bytes, int length) {
-            String content = new String(bytes, Charset.defaultCharset());
-            sendResult(callbackId, content);
-          }
-
-          @Override
-          public void onFailure(String reason) {
-            sendResult(callbackId, "");
-            Log.w(TAG, "Download failed: " + reason + ", and the url is " + name);
-          }
-        });
-        return;
-      }
-      if (mJsSource == null) {
-        sendResult(callbackId, "");
-        Log.w(TAG, "the js source cache is null");
-        return;
-      }
-      String processedName = name;
-      if (name.contains("lynx_core.js")) {
-        processedName = "core.js";
-      }
-      Object src = "";
-      for (Map.Entry<String, Object> entry : mJsSource.entrySet()) {
-        String key = entry.getKey();
-        if (key.contains(processedName)) {
-          src = entry.getValue();
-          break;
-        }
-      }
-      String res = (src instanceof String) ? (String) src : "";
-      sendResult(callbackId, res);
     }
 
     public void download(String url, DownloadCallback callback) {

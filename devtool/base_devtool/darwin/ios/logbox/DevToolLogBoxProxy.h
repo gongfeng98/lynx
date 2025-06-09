@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)getErrorNamespace;
 - (void)onMovedToWindow;
 - (void)onResourceProviderReady;
+- (NSString *)logSourceWithFileName:(NSString *)fileName;
 - (void)reset;
 - (void)destroy;
 

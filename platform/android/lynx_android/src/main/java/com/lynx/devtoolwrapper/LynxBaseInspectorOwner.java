@@ -52,7 +52,7 @@ public interface LynxBaseInspectorOwner {
 
   void onPerfMetricsEvent(String eventName, @NonNull JSONObject data);
 
-  String getDebugInfoUrl();
+  String getDebugInfoUrl(String fileName);
 
   void onReceiveMessageEvent(ReadableMap event);
 

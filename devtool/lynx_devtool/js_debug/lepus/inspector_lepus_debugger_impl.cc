@@ -30,11 +30,18 @@ std::string InspectorLepusDebuggerImpl::GetDebugInfo(const std::string &url) {
   return sp->GetLepusDebugInfo(url);
 }
 
-void InspectorLepusDebuggerImpl::SetDebugInfoUrl(const std::string &url) {
-  auto sp = devtool_platform_facade_wp_.lock();
-  CHECK_NULL_AND_LOG_RETURN(sp,
-                            "lepus debug: devtool_platform_facade_ is null");
-  sp->SetLepusDebugInfoUrl(url);
+void InspectorLepusDebuggerImpl::SetDebugInfoUrl(const std::string &url,
+                                                 const std::string &file_name) {
+  file_name_to_debug_info_url_[file_name] = url;
+}
+
+std::string InspectorLepusDebuggerImpl::GetDebugInfoUrl(
+    const std::string &file_name) {
+  auto it = file_name_to_debug_info_url_.find(file_name);
+  if (it != file_name_to_debug_info_url_.end()) {
+    return it->second;
+  }
+  return "";
 }
 
 void InspectorLepusDebuggerImpl::OnInspectorInited(

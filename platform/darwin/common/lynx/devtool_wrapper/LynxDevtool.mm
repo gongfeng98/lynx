@@ -52,6 +52,7 @@
 
     if (LynxEnv.sharedInstance.logBoxEnabled && devtoolService) {
       _logbox = [devtoolService createLogBoxWithLynxView:view];
+      [_logbox setLynxDevTool:self];
     } else {
       _logbox = nil;
     }
@@ -249,8 +250,8 @@
   }
 }
 
-- (NSString *)debugInfoUrl {
-  return [_owner debugInfoUrl];
+- (NSString *)debugInfoUrl:(NSString *)filename {
+  return [_owner debugInfoUrl:filename];
 }
 
 - (void)onReceiveMessageEvent:(NSDictionary *)event {

@@ -10,36 +10,37 @@ interface IMTJSErrorInfo {
   debugInfoUrl: string;
 }
 
-class MTSResourceProvider implements IResourceProvider {
-  debugInfo: any;
+interface MTSParsedFrames {
+  frames: StackFrame[];
+  resourceProvider: MTSResourceProvider;
+  callerInfo: string;
+}
 
-  constructor(debugInfo: any) {
-    this.debugInfo = debugInfo;
-    if (!debugInfo) {
-      console.log('MTSResourceProvider: init without debug info');
+class MTSResourceProvider implements IResourceProvider {
+  resourceMap: Map<string, any>;
+
+  constructor() {
+    this.resourceMap = new Map();
+  }
+  setResource(resource: any, fileName: string) {
+    if (this.resourceMap.has(fileName) && !this.resourceMap.get(fileName)) {
+      return;
     }
+    this.resourceMap.set(fileName, resource);
   }
 
   async getResource(name: string): Promise<string> {
-    if (!this.debugInfo) {
-      return '';
-    }
-    if (this.debugInfo.lepusNG_debug_info) {
-      return this.debugInfo.lepusNG_debug_info.function_source ?? null;
-    } else if (this.debugInfo.lepus_debug_info) {
-      // compatible with legacy format for debug info
-      const functionInfoList = this.debugInfo.lepus_debug_info.function_info;
-      if (functionInfoList && functionInfoList.length > 0) {
-        return functionInfoList[0].function_source ?? null;
-      }
-      console.log('MTSResourceProvider: invalid function info in debug info');
-    }
-    console.log('MTSResourceProvider: cannot find function source in debug info');
-    return '';
+    return this.resourceMap.get(name) ?? '';
   }
 }
 
 export class MTSErrorParser implements IErrorParser {
+  debugInfo: Map<string, any>;
+
+  constructor() {
+    this.debugInfo = new Map();
+  }
+
   async parse(rawError: any): Promise<IErrorRecord | null> {
     const errorProps: IErrorProps = {
       code: rawError.error_code,
@@ -57,6 +58,10 @@ export class MTSErrorParser implements IErrorParser {
       originalErrorInfo = json.rawError.cause.cause;
     }
     const errorInfo = this.extractErrorInfo(originalErrorInfo);
+    if (errorInfo.debugInfoUrl) {
+      const debugInfo = await window.logBoxCore.queryResource(errorInfo.debugInfoUrl);
+      this.debugInfo.set('main-thread.js', debugInfo);
+    }
     errorProps.stack = errorInfo.stack;
     // get the origin stack frames
     let rawFrames = window.logBoxCore.parseStack(errorInfo.stack);
@@ -69,25 +74,15 @@ export class MTSErrorParser implements IErrorParser {
       stackFrames: rawFrames,
       errorProps,
     };
-    if (!errorInfo.debugInfoUrl) {
-      return errorRecord;
-    }
-    const debugInfo = await window.logBoxCore.queryResource(errorInfo.debugInfoUrl);
-    const debugInfoJson = parseJsonStringSafely(debugInfo);
-    if (!debugInfoJson) {
-      console.log('Failed to parse main thread js error caused by invalid debug info');
-      return errorRecord;
-    }
+
+    const { frames, resourceProvider, callerInfo } = await this.getStackFramesInProduction(rawFrames);
+
     // fill in the call info for the error
-    if (errorRecord.message.includes('not a function') && rawFrames.length > 0) {
-      const rawFrame = rawFrames[0];
-      const callerInfo = this.getCallerInfo(rawFrame.lineNumber, rawFrame.columnNumber, debugInfoJson);
-      if (callerInfo) {
-        errorRecord.message = errorRecord.message + ':' + callerInfo;
-      }
+    if (errorRecord.message.includes('not a function') && callerInfo) {
+      errorRecord.message = errorRecord.message + ':' + callerInfo;
     }
-    rawFrames = this.getStackFramesInProduction(rawFrames, debugInfoJson);
-    const parsedFrames = await window.logBoxCore.map(rawFrames, DEFAULT_CONTEXT_SIZE, new MTSResourceProvider(debugInfoJson));
+
+    const parsedFrames = await window.logBoxCore.map(frames, DEFAULT_CONTEXT_SIZE, resourceProvider);
     errorRecord.stackFrames = parsedFrames;
     return errorRecord;
   }
@@ -102,19 +97,11 @@ export class MTSErrorParser implements IErrorParser {
     };
   }
 
-  getCallerInfo(functionId: number | null, pcIndex: number | null, debugInfoJson: any): string {
+  getCallerInfo(functionId: number | null, pcIndex: number | null, functionInfoList: any): string {
     if (!functionId || !pcIndex) {
       console.log('Failed to get caller info caused by invalid function id or pc index');
       return '';
     }
-    let debugInfo = null;
-    if (debugInfoJson.lepusNG_debug_info) {
-      debugInfo = debugInfoJson.lepusNG_debug_info;
-    } else if (debugInfoJson.lepus_debug_info) {
-      // compatible with legacy format for debug info
-      debugInfo = debugInfoJson.lepus_debug_info;
-    }
-    const functionInfoList = debugInfo ? debugInfo.function_info : null;
     if (functionInfoList) {
       const functionInfo = functionInfoList.find((info: any) => info.function_id == functionId);
       if (functionInfo && functionInfo.pc2caller_info && pcIndex in functionInfo.pc2caller_info) {
@@ -126,27 +113,48 @@ export class MTSErrorParser implements IErrorParser {
     return '';
   }
 
-  getStackFramesInProduction(frames: StackFrame[], debugInfoJson: any): StackFrame[] {
-    let debugInfo = null;
-    if (debugInfoJson.lepusNG_debug_info) {
-      debugInfo = debugInfoJson.lepusNG_debug_info;
-    } else if (debugInfoJson.lepus_debug_info) {
-      // compatible with legacy format for debug info
-      debugInfo = debugInfoJson.lepus_debug_info;
-    }
-    const functionInfoList = debugInfo ? debugInfo.function_info : null;
-    const parsedFrames = frames.map((frame) => {
+  async getStackFramesInProduction(frames: StackFrame[]): Promise<MTSParsedFrames> {
+    let resourceProvider = new MTSResourceProvider();
+    let callerInfo = '';
+    const parsedFrames: StackFrame[] = [];
+    for (let index = 0; index < frames.length; index++) {
+      const frame = frames[index];
       if (!frame.fileName) {
         frame.fileName = 'main-thread.js';
       }
-      if (!functionInfoList) {
-        return frame;
+
+      let debugInfo = null;
+      if (this.debugInfo.has(frame.fileName)) {
+        debugInfo = this.debugInfo.get(frame.fileName);
+      } else {
+        debugInfo = await window.logBoxCore.queryResource(frame.fileName);
+        this.debugInfo.set(frame.fileName, debugInfo);
       }
+      const debugInfoJson = parseJsonStringSafely(debugInfo);
+      if (!debugInfoJson) {
+        console.log('Failed to parse main thread js error caused by invalid debug info');
+        parsedFrames.push(frame);
+        continue;
+      }
+
+      const { functionInfoList, functionSource } = this.getFunctionInfo(debugInfoJson, frame.fileName);
+      resourceProvider.setResource(functionSource ?? '', frame.fileName);
+
+      if (!functionInfoList) {
+        parsedFrames.push(frame);
+        continue;
+      }
+
+      if (index === 0) {
+        callerInfo = this.getCallerInfo(frame.lineNumber, frame.columnNumber, functionInfoList);
+      }
+
       const functionId = frame.lineNumber ?? -1;
       const pcIndex = frame.columnNumber ?? -1;
       const fInfo = functionInfoList.find((info: any) => info.function_id === functionId);
       if (!fInfo || pcIndex === -1) {
-        return frame;
+        parsedFrames.push(frame);
+        continue;
       }
       if (fInfo.line_col && fInfo.line_col.length > pcIndex) {
         const pos = fInfo.line_col[pcIndex];
@@ -166,8 +174,51 @@ export class MTSErrorParser implements IErrorParser {
           frame.columnNumber = column;
         }
       }
-      return frame;
+      parsedFrames.push(frame);
+      continue;
+    }
+    return Promise.resolve({
+      frames: parsedFrames,
+      resourceProvider,
+      callerInfo,
     });
-    return parsedFrames;
+  }
+
+  getFunctionInfo(debugInfoJson: any, fileName: string): any {
+    let debugInfoEntry = null;
+    for (const key in debugInfoJson) {
+      if (fileName.includes(key)) {
+        debugInfoEntry = debugInfoJson[key];
+        break;
+      }
+    }
+    if (debugInfoEntry === null) {
+      if (debugInfoJson.lepusNG_debug_info) {
+        debugInfoEntry = debugInfoJson.lepusNG_debug_info;
+      } else if (debugInfoJson.lepus_debug_info) {
+        // compatible with legacy format for debug info
+        debugInfoEntry = debugInfoJson.lepus_debug_info;
+      }
+    }
+
+    let functionInfoList = null;
+    let functionSource = null;
+    if (debugInfoEntry) {
+      functionInfoList = debugInfoEntry.function_info;
+      if (debugInfoEntry.function_source) {
+        functionSource = debugInfoEntry.function_source;
+      } else if (functionInfoList && functionInfoList.length > 0) {
+        functionSource = functionInfoList[0].function_source;
+      }
+    }
+
+    if (!functionSource) {
+      console.log('getFunctionInfo: cannot find function source in debug info');
+    }
+    if (!functionInfoList) {
+      console.log('getFunctionInfo: cannot find function info in debug info');
+    }
+
+    return { functionInfoList, functionSource };
   }
 }

@@ -236,9 +236,8 @@ class Context {
     return lepus::Value();
   }
 
-  void SetDebugInfoURL(const std::string& url, const std::string& file_name);
-
-  const std::string& GetDebugInfoURL() { return debug_info_url_; }
+  virtual void SetDebugInfoURL(const std::string& url,
+                               const std::string& file_name);
 
   virtual void EnableRuntimeLeakCheck(bool enable){};
 
@@ -269,7 +268,6 @@ class Context {
   // debugger source code
   std::string debug_source_;
 
-  std::string debug_info_url_;
   std::unique_ptr<LepusInspectorManager> inspector_manager_;
 };
 

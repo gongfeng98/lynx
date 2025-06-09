@@ -27,7 +27,8 @@ class InspectorLepusObserver {
   }
   virtual bool IsDebugEnabled() { return false; }
   virtual std::string GetDebugInfo(const std::string& url) { return ""; }
-  virtual void SetDebugInfoUrl(const std::string& url) = 0;
+  virtual void SetDebugInfoUrl(const std::string& url,
+                               const std::string& file_name) = 0;
 
   virtual void OnInspectorInited(
       const std::string& vm_type, const std::string& name,

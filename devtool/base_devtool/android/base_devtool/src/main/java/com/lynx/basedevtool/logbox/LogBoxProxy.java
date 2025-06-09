@@ -143,6 +143,11 @@ public class LogBoxProxy {
     return provider == null ? null : provider.getLogSources();
   }
 
+  public String getLogSourceWithFileName(String fileName) {
+    ILogBoxResourceProvider provider = mProvider.get();
+    return provider == null ? "" : provider.getLogSourceWithFileName(fileName);
+  }
+
   public int getLogCount(final LogBoxLogLevel level) {
     List<String> logs = mLogs.get(level);
     return logs == null ? 0 : logs.size();

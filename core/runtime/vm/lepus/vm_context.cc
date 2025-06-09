@@ -543,6 +543,12 @@ std::string VMContext::BuildBackTrace(const base::Vector<int>& pc,
   return backtrace_info;
 }
 
+void VMContext::SetDebugInfoURL(const std::string& url,
+                                const std::string& file_name) {
+  debug_info_url_ = url;
+  Context::SetDebugInfoURL(url, file_name);
+}
+
 LEPUS_NOT_INLINE void VMContext::RunFrame_Op_Neg_UnlikelyPath(Value*& a) {
   char* endptr;
   double t = strtod(a->CString(), &endptr);

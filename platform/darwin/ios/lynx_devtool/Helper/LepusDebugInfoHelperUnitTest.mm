@@ -21,7 +21,6 @@
 
   std::string result = [_debugInfoHelper getDebugInfo:invalid_url];
   XCTAssertTrue(result.empty());
-  XCTAssertEqual([[_debugInfoHelper debugInfoUrl] UTF8String], invalid_url);
 }
 
 @end

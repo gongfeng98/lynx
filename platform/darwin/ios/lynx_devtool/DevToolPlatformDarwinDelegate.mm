@@ -263,13 +263,6 @@ class DevToolPlatformDarwin : public DevToolPlatformFacade {
     return [result copy];
   }
 
-  void SetLepusDebugInfoUrl(const std::string& url) override {
-    __strong typeof(_darwin) darwin = _darwin;
-    if (darwin) {
-      [darwin setLepusDebugInfoUrl:url];
-    }
-  }
-
  private:
   __weak DevToolPlatformDarwinDelegate* _darwin;
 };
@@ -512,12 +505,12 @@ class DevToolPlatformDarwin : public DevToolPlatformFacade {
   return [_lepusDebugInfoHelper getDebugInfo:url];
 }
 
-- (void)setLepusDebugInfoUrl:(const std::string&)url {
-  [_lepusDebugInfoHelper setDebugInfoUrl:[NSString stringWithUTF8String:url.c_str()]];
-}
-
-- (NSString*)getLepusDebugInfoUrl {
-  return [_lepusDebugInfoHelper debugInfoUrl];
+- (NSString*)getLepusDebugInfoUrl:(NSString*)filename {
+  std::string url;
+  if (devtool_platform_facade_ != nullptr) {
+    url = devtool_platform_facade_->GetLepusDebugInfoUrl([filename UTF8String]);
+  }
+  return [NSString stringWithUTF8String:url.c_str()];
 }
 
 - (void)emulateTouch:(std::shared_ptr<lynx::devtool::MouseEvent>)input {

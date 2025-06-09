@@ -69,7 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)onPerfMetricsEvent:(NSString *_Nonnull)eventName
                   withData:(NSDictionary<NSString *, NSObject *> *_Nonnull)data;
 
-- (NSString *)debugInfoUrl;
+- (NSString *)debugInfoUrl:(NSString *_Nonnull)filename;
 
 - (void)onReceiveMessageEvent:(NSDictionary *)event;
 

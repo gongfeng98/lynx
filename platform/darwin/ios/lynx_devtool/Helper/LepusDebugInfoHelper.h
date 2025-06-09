@@ -8,8 +8,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface LepusDebugInfoHelper : NSObject
 
-@property(readwrite) NSString* debugInfoUrl;
-
 - (instancetype)init;
 
 - (std::string)getDebugInfo:(const std::string&)url;

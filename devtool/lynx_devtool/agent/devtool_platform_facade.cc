@@ -171,5 +171,14 @@ void DevToolPlatformFacade::SendPageFrameNavigatedEvent(
   ui_executor->SendPageFrameNavigatedEvent(url);
 }
 
+std::string DevToolPlatformFacade::GetLepusDebugInfoUrl(
+    const std::string& file_name) {
+  auto debugger = lepus_debugger_wp_.lock();
+  if (debugger != nullptr) {
+    return debugger->GetDebugInfoUrl(file_name);
+  }
+  return "";
+}
+
 }  // namespace devtool
 }  // namespace lynx

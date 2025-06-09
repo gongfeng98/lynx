@@ -121,7 +121,7 @@ typedef void (^CDPResultCallback)(NSString *result);
 
 - (void)setDispatchMessageEventBlock:(void (^)(NSDictionary *))block;
 
-- (NSString *)debugInfoUrl;
+- (NSString *)debugInfoUrl:(NSString *_Nonnull)filename;
 
 - (void)onGlobalPropsUpdated:(LynxTemplateData *)props;
 

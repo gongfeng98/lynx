@@ -3,10 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 package com.lynx.devtool.logbox;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import com.lynx.basedevtool.logbox.LogBoxLogLevel;
 import com.lynx.devtoolwrapper.LynxDevtool;
+import java.util.HashMap;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,5 +56,34 @@ public class LynxLogBoxWrapperTest {
         return false;
       }
     }));
+  }
+
+  @Test
+  public void testGetLogSourceWithFileName() {
+    LynxLogBoxWrapper testWrapper = new LynxLogBoxWrapper(null);
+    String result = testWrapper.getLogSourceWithFileName("");
+    assertEquals(result, "");
+
+    String mtsFileName = "file:///main-thread.js";
+    String expectedUrl = "http://test-url/debug-info.json";
+    when(mockDevtool.getDebugInfoUrl(anyString())).thenReturn(expectedUrl);
+    result = lynxLogBoxWrapper.getLogSourceWithFileName(mtsFileName);
+    assertEquals(expectedUrl, result);
+
+    String fileName1 = "test.js";
+    String fileName2 = "name/test.js";
+    String expectedLogSource1 = "test";
+    String expectedLogSource2 = "name/test";
+    when(mockDevtool.getAllJsSource()).thenReturn(new HashMap<String, Object>() {
+      {
+        put(fileName1, expectedLogSource1);
+        put(fileName2, expectedLogSource2);
+      }
+    });
+
+    result = lynxLogBoxWrapper.getLogSourceWithFileName("file:///test.js");
+    assertEquals(expectedLogSource1, result);
+    result = lynxLogBoxWrapper.getLogSourceWithFileName("file://name/test.js");
+    assertEquals(expectedLogSource2, result);
   }
 }

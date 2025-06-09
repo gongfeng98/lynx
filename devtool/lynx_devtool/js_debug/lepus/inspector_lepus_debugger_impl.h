@@ -24,7 +24,8 @@ class InspectorLepusDebuggerImpl : public JavaScriptDebuggerNG {
   const std::shared_ptr<InspectorLepusObserverImpl>&
   GetInspectorLepusObserver();
   std::string GetDebugInfo(const std::string& url);
-  void SetDebugInfoUrl(const std::string& url);
+  void SetDebugInfoUrl(const std::string& url, const std::string& file_name);
+  std::string GetDebugInfoUrl(const std::string& file_name);
 
   void OnInspectorInited(
       const std::string& vm_type, const std::string& name,
@@ -47,6 +48,7 @@ class InspectorLepusDebuggerImpl : public JavaScriptDebuggerNG {
   // them, with the context name as the key.
   std::unordered_map<std::string, std::shared_ptr<InspectorClientDelegateImpl>>
       delegates_;
+  std::unordered_map<std::string, std::string> file_name_to_debug_info_url_;
 
   std::mutex mutex_;
 };

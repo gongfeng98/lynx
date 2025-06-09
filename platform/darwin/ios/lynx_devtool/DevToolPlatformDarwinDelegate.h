@@ -85,9 +85,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (std::string)getLepusDebugInfo:(const std::string &)url;
 
-- (void)setLepusDebugInfoUrl:(const std::string &)url;
-
-- (NSString *)getLepusDebugInfoUrl;
+- (NSString *)getLepusDebugInfoUrl:(NSString *_Nonnull)filename;
 
 - (void)emulateTouch:(std::shared_ptr<lynx::devtool::MouseEvent>)input;
 - (void)emulateTouch:(nonnull NSString *)type

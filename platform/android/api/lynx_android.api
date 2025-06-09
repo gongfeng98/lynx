@@ -3318,7 +3318,7 @@ public interface com::lynx::devtoolwrapper::LynxBaseInspectorOwner {
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.setLynxInspectorConsoleDelegate(Object delegate);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.getConsoleObject(String objectId, boolean needStringify, Callback callback);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.onPerfMetricsEvent(String eventName, @NonNull JSONObject data);
-  public String com.lynx.devtoolwrapper.LynxBaseInspectorOwner.getDebugInfoUrl();
+  public String com.lynx.devtoolwrapper.LynxBaseInspectorOwner.getDebugInfoUrl(String fileName);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.onReceiveMessageEvent(ReadableMap event);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.onGlobalPropsUpdated(TemplateData props);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.setDevToolDelegate(IDevToolDelegate devToolDelegate);
@@ -3981,7 +3981,7 @@ public class com::lynx::devtoolwrapper::LynxDevtool :  {
   public void com.lynx.devtoolwrapper.LynxDevtool.attachLynxUIOwner(LynxUIOwner uiOwner);
   public void com.lynx.devtoolwrapper.LynxDevtool.onTemplateLoadSuccess(byte[] template);
   public void com.lynx.devtoolwrapper.LynxDevtool.onPerfMetricsEvent(String eventName, @NonNull JSONObject data);
-  public String com.lynx.devtoolwrapper.LynxDevtool.getDebugInfoUrl();
+  public String com.lynx.devtoolwrapper.LynxDevtool.getDebugInfoUrl(String fileName);
   public Boolean com.lynx.devtoolwrapper.LynxDevtool.enableAirStrictMode();
   public void com.lynx.devtoolwrapper.LynxDevtool.onReceiveMessageEvent(ReadableMap event);
 }

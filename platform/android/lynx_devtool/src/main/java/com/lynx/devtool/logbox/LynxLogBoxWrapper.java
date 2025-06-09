@@ -63,6 +63,29 @@ public class LynxLogBoxWrapper implements ILynxLogBox, ILogBoxResourceProvider {
     return devtool == null ? null : devtool.getAllJsSource();
   }
 
+  @Override
+  public String getLogSourceWithFileName(String fileName) {
+    LynxDevtool devtool = mDevtool.get();
+    if (devtool == null) {
+      return "";
+    }
+    if (fileName.endsWith("main-thread.js")) {
+      return devtool.getDebugInfoUrl(fileName);
+    } else {
+      Map<String, Object> logSources = getLogSources();
+      String value = "";
+      int matchLength = 0;
+      for (Map.Entry<String, Object> entry : logSources.entrySet()) {
+        String key = entry.getKey();
+        if (fileName.endsWith(key) && key.length() > matchLength) {
+          matchLength = key.length();
+          value = (String) entry.getValue();
+        }
+      }
+      return value;
+    }
+  }
+
   protected void sendErrorEventToPerf(final String message, final LogBoxLogLevel level) {
     if (level == LogBoxLogLevel.Info) {
       return;

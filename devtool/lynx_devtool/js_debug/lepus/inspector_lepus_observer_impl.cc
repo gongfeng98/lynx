@@ -49,10 +49,11 @@ std::string InspectorLepusObserverImpl::GetDebugInfo(const std::string &url) {
   return "";
 }
 
-void InspectorLepusObserverImpl::SetDebugInfoUrl(const std::string &url) {
+void InspectorLepusObserverImpl::SetDebugInfoUrl(const std::string &url,
+                                                 const std::string &file_name) {
   auto sp = debugger_wp_.lock();
   if (sp != nullptr) {
-    sp->SetDebugInfoUrl(url);
+    sp->SetDebugInfoUrl(url, file_name);
   }
 }
 

@@ -217,6 +217,18 @@ public class LogBoxManager {
     return proxy == null ? null : proxy.getLogSources();
   }
 
+  public String getLogSourceWithFileName(String fileName, LogBoxLogLevel level) {
+    LogProxyList proxyList = mLogProxyListMap.get(level);
+    if (proxyList == null) {
+      return "";
+    }
+    LogBoxProxy proxy = proxyList.currentProxy();
+    if (proxy == null) {
+      return "";
+    }
+    return proxy.getLogSourceWithFileName(fileName);
+  }
+
   public void onProxyReset(LogBoxProxy proxy) {
     if (proxy == null) {
       return;

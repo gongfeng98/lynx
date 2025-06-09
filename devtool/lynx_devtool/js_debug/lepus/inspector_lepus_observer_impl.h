@@ -27,7 +27,8 @@ class InspectorLepusObserverImpl : public lepus::InspectorLepusObserver {
     return DevToolConfig::ShouldStopAtEntry(true);
   }
   std::string GetDebugInfo(const std::string& url) override;
-  void SetDebugInfoUrl(const std::string& url) override;
+  void SetDebugInfoUrl(const std::string& url,
+                       const std::string& file_name) override;
 
   void SetConsolePostNeeded(bool need) { need_post_console_ = need; }
   void SetDevToolMediator(

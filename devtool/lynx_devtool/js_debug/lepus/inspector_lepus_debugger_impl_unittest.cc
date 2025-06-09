@@ -53,15 +53,8 @@ TEST_F(InspectorLepusDebuggerImplTest, GetDebugInfo) {
 }
 
 TEST_F(InspectorLepusDebuggerImplTest, SetDebugInfoUrl) {
-  {
-    std::shared_ptr<lynx::testing::DevToolPlatformFacadeMock> platform =
-        std::make_shared<lynx::testing::DevToolPlatformFacadeMock>();
-    debugger_->SetDevToolPlatformFacade(platform);
-    debugger_->SetDebugInfoUrl("test");
-    EXPECT_EQ(platform->debug_info_url_, "test");
-  }
-
-  debugger_->SetDebugInfoUrl("test");
+  debugger_->SetDebugInfoUrl("test-url", "test-name");
+  EXPECT_EQ(debugger_->GetDebugInfoUrl("test-name"), "test-url");
 }
 
 TEST_F(InspectorLepusDebuggerImplTest, OnInspectorInited) {

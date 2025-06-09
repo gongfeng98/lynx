@@ -290,16 +290,9 @@ public class DevToolPlatformAndroidDelegate {
     }
   }
 
-  @CalledByNative
-  public void setLepusDebugInfoUrl(String url) {
-    if (mLepusDebugInfoHelper != null) {
-      mLepusDebugInfoHelper.setDebugInfoUrl(url);
-    }
-  }
-
-  public String getLepusDebugInfoUrl() {
-    if (mLepusDebugInfoHelper != null) {
-      return mLepusDebugInfoHelper.getDebugInfoUrl();
+  public String getLepusDebugInfoUrl(String fileName) {
+    if (mFacadePtr != 0) {
+      return nativeGetLepusDebugInfoUrl(mFacadePtr, fileName);
     }
     return "";
   }
@@ -403,4 +396,5 @@ public class DevToolPlatformAndroidDelegate {
   private native void nativeSendConsoleEvent(
       long facadePtr, String text, int level, long timestamp);
   private native void nativeSendLayerTreeDidChangeEvent(long facadePtr);
+  private native String nativeGetLepusDebugInfoUrl(long facadePtr, String fileName);
 }

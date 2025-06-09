@@ -14,6 +14,7 @@ NSString* const ERR_NAMESPACE = @"lynx";
   DevToolLogBoxProxy* _logBoxProxy;
   __weak LynxView* _lynxView;
   __weak UIViewController* _pageViewController;
+  __weak LynxDevtool* _devtool;
   NSString* _url;
 }
 
@@ -31,6 +32,10 @@ NSString* const ERR_NAMESPACE = @"lynx";
 }
 
 #pragma mark - LynxLogBoxProtocol
+
+- (void)setLynxDevTool:(LynxDevtool*)devtool {
+  _devtool = devtool;
+}
 
 - (void)showLogMessage:(LynxError*)error {
   if (!error) {
@@ -83,6 +88,27 @@ NSString* const ERR_NAMESPACE = @"lynx";
 - (NSDictionary*)logSources {
   __strong typeof(_lynxView) lynxView = _lynxView;
   return [lynxView getAllJsSource];
+}
+
+- (NSString*)logSourceWithFileName:(NSString*)fileName {
+  if ([fileName hasSuffix:@"main-thread.js"]) {
+    __strong typeof(_devtool) devtool = _devtool;
+    if (devtool != nil) {
+      return [devtool debugInfoUrl:fileName];
+    }
+  } else {
+    NSDictionary* logSources = [self logSources];
+    NSString* value = @"";
+    int matchLength = 0;
+    for (NSString* key in logSources) {
+      if ([fileName hasSuffix:key] && key.length > matchLength) {
+        matchLength = key.length;
+        value = logSources[key];
+      }
+    }
+    return value;
+  }
+  return @"";
 }
 
 @end

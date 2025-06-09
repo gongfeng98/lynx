@@ -5,14 +5,6 @@
 import { DEFAULT_CONTEXT_SIZE, parseJsonStringSafely, E_CODE_BTS, MAX_STACK_FRAME_LEN } from './base';
 import type { IErrorProps, IErrorRecord, IErrorParser } from '@lynx-dev/logbox-types';
 
-function resourceNameMapping(name: string): string {
-  if (name.indexOf('lynx_core.js') !== -1) {
-    return 'core.js';
-  }
-  const lastSlashIndex: number = name.lastIndexOf('/');
-  return name.substring(lastSlashIndex + 1);
-}
-
 export class BTSErrorParser implements IErrorParser {
   async parse(rawError: any): Promise<IErrorRecord | null> {
     const errorProps: IErrorProps = {
@@ -37,8 +29,7 @@ export class BTSErrorParser implements IErrorParser {
     // get the real stack line and col number
     const parsedFrames = await window.logBoxCore.map(rawFrames, DEFAULT_CONTEXT_SIZE, {
       async getResource(name: string): Promise<string> {
-        const resName = resourceNameMapping(name);
-        const res = await window.logBoxCore.queryResource(resName);
+        const res = await window.logBoxCore.queryResource(name);
         return res ?? '';
       },
     });

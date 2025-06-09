@@ -56,6 +56,7 @@ void LepusInspectorManagerImpl::SetDebugInfo(const std::string& debug_info_url,
     debug_info_id = cur_debug_info_id++;
     debug_info_url_to_id_[debug_info_url] = debug_info_id;
     if (sp->IsDebugEnabled()) {
+      // Get the content of debug-info.json by the specified URL.
       debug_info = sp->GetDebugInfo(debug_info_url);
     }
   } else {
@@ -63,6 +64,9 @@ void LepusInspectorManagerImpl::SetDebugInfo(const std::string& debug_info_url,
   }
   inspector_client_->SetDebugInfo(file_name, debug_info, debug_info_id);
   sp->PrepareForScriptEval(inspector_name_);
+  // Associate and record the file name with the corresponding debug-info.json
+  // URL.
+  sp->SetDebugInfoUrl(debug_info_url, file_name);
 }
 
 void LepusInspectorManagerImpl::DestroyInspector() {

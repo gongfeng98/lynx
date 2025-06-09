@@ -14,26 +14,16 @@ public class LepusDebugInfoHelper {
   private static final String TAG = "LepusDebugInfoHelper";
 
   private AtomicBoolean mIsLoading;
-  private String mDebugInfoUrl;
   private String mDebugInfo;
 
   public LepusDebugInfoHelper() {
     mIsLoading = new AtomicBoolean(false);
   }
 
-  public void setDebugInfoUrl(String url) {
-    mDebugInfoUrl = url;
-  }
-
-  public String getDebugInfoUrl() {
-    return mDebugInfoUrl;
-  }
-
   public String getDebugInfo(String url) {
     LLog.i(TAG, "lepus debug: debug info url: " + url);
-    setDebugInfoUrl(url);
     mIsLoading.set(true);
-    downloadDebugInfo();
+    downloadDebugInfo(url);
 
     try {
       // Wait for downloading
@@ -47,8 +37,8 @@ public class LepusDebugInfoHelper {
     return mDebugInfo;
   }
 
-  private void downloadDebugInfo() {
-    new DevToolDownloader(mDebugInfoUrl, new DownloadCallback() {
+  private void downloadDebugInfo(String url) {
+    new DevToolDownloader(url, new DownloadCallback() {
       @Override
       public void onResponse(int status, int contentLength) {}
       @Override

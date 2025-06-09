@@ -433,8 +433,8 @@
   }
 }
 
-- (NSString*)debugInfoUrl {
-  return [_platform getLepusDebugInfoUrl];
+- (NSString*)debugInfoUrl:(NSString*)filename {
+  return [_platform getLepusDebugInfoUrl:filename];
 }
 
 - (CGPoint)getViewLocationOnScreen {

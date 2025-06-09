@@ -456,9 +456,8 @@ void Context::DestroyInspector() {
 
 void Context::SetDebugInfoURL(const std::string& url,
                               const std::string& file_name) {
-  debug_info_url_ = url;  // TODO(lqy): change to map
   if (inspector_manager_ != nullptr) {
-    inspector_manager_->SetDebugInfo(debug_info_url_, file_name);
+    inspector_manager_->SetDebugInfo(url, file_name);
   }
 }
 

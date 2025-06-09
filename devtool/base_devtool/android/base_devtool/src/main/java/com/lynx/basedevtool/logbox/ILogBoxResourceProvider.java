@@ -8,4 +8,5 @@ import java.util.Map;
 public interface ILogBoxResourceProvider {
   String getEntryUrlForLogSrc();
   Map<String, Object> getLogSources();
+  String getLogSourceWithFileName(String fileName);
 }

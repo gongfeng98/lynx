@@ -49,7 +49,6 @@ class DevToolPlatformAndroid : public DevToolPlatformFacade {
   void OnConsoleMessage(const std::string& message) override;
   void OnConsoleObject(const std::string& detail, int callback_id) override;
   std::string GetLepusDebugInfo(const std::string& url) override;
-  void SetLepusDebugInfoUrl(const std::string& url) override;
 
   void Destroy();
 

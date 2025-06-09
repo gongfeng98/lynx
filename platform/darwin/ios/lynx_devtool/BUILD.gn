@@ -337,7 +337,7 @@ subspec_target("UnitTests") {
   test_subspec = true
   sources = [
     "ConsoleDelegateManagerUnitTest.mm",
-    "Helper/LepusDebugInfoHelperUnitTest.m",
+    "Helper/LepusDebugInfoHelperUnitTest.mm",
     "Helper/LynxUITreeHelperUnitTest.m",
     "LynxDevToolErrorUtilsUnitTest.m",
     "Memory/LynxMemoryControllerUnitTest.m",

@@ -21,9 +21,8 @@
 
 - (std::string)getDebugInfo:(const std::string&)url {
   LLogInfo(@"lepus debug: debug info url: %s", url.c_str());
-  [self setDebugInfoUrl:[NSString stringWithUTF8String:url.c_str()]];
   _waitFlag = YES;
-  [self downloadDebugInfo];
+  [self downloadDebugInfo:[NSString stringWithUTF8String:url.c_str()]];
 
   // Wait for downloading
   while (_waitFlag) {
@@ -33,9 +32,9 @@
   return [_debugInfo UTF8String];
 }
 
-- (void)downloadDebugInfo {
+- (void)downloadDebugInfo:(NSString*)url {
   __weak typeof(self) weakSelf = self;
-  [DevToolDownloader download:_debugInfoUrl
+  [DevToolDownloader download:url
                  withCallback:^(NSData* _Nullable data, NSError* _Nullable error) {
                    __strong typeof(weakSelf) strongSelf = weakSelf;
                    if (strongSelf == nil) {

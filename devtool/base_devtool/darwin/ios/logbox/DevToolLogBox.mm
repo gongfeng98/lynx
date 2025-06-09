@@ -96,6 +96,7 @@ NSString *const BRIDGE_JS =
 @optional
 - (void)dismiss;
 - (NSDictionary *)getLogSources;
+- (NSString *)getLogSourceWithFileName:(NSString *)fileName;
 @end
 
 #pragma mark - DevToolLogBoxWindow
@@ -497,23 +498,31 @@ NSString *const BRIDGE_JS =
     return;
   }
 
-  NSDictionary *logSources = nil;
-  if (!_isLogBoxDestroyed) {
-    logSources = [_actionDelegate getLogSources];
-  } else {
-    logSources = _logBoxCache.logSources;
-  }
-
-  for (NSString *key in logSources) {
-    if ([key containsString:name]) {
-      NSString *value = logSources[key];
-      NSDictionary *data = [NSDictionary
-          dictionaryWithObjectsAndKeys:callbackId, @"callbackId", value, @"data", nil];
-      [self sendJsResult:data];
-      return;
+  NSString *value = [_actionDelegate getLogSourceWithFileName:name];
+  if (!value || !value.length) {
+    NSDictionary *logSources = nil;
+    if (!_isLogBoxDestroyed) {
+      logSources = [_actionDelegate getLogSources];
+    } else {
+      logSources = _logBoxCache.logSources;
     }
+
+    for (NSString *key in logSources) {
+      if ([key containsString:name]) {
+        value = logSources[key];
+        break;
+      }
+    }
+  } else if ([value hasPrefix:@"http"]) {
+    [self download:value withCallbackId:callbackId];
+    return;
   }
-  [self sendJsResult:emptyData];
+  NSDictionary *data = emptyData;
+  if (value) {
+    data =
+        [NSDictionary dictionaryWithObjectsAndKeys:callbackId, @"callbackId", value, @"data", nil];
+  }
+  [self sendJsResult:data];
 }
 
 - (void)loadErrorParser:(NSString *)errNamespace withCallbackId:(NSNumber *)callbackId {
@@ -805,6 +814,11 @@ NSString *const BRIDGE_JS =
 - (NSDictionary *)getLogSources {
   __strong typeof(_currentProxy) currentProxy = _currentProxy;
   return [currentProxy logSources];
+}
+
+- (NSString *)getLogSourceWithFileName:(NSString *)fileName {
+  __strong typeof(_currentProxy) currentProxy = _currentProxy;
+  return [currentProxy logSourceWithFileName:fileName];
 }
 
 - (void)copySnapShotToWindow {

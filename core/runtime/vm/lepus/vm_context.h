@@ -211,6 +211,10 @@ class VMContext : public Context {
 
   std::string BuildBackTrace(const base::Vector<int>& pcs,
                              Frame* exception_frame_);
+
+  void SetDebugInfoURL(const std::string& url,
+                       const std::string& file_name) override;
+
   Heap heap_;
   Frame* current_frame_;
   base::Stack<long> current_context_;  // Used by code generator only.
@@ -218,6 +222,7 @@ class VMContext : public Context {
   // for debug
   std::weak_ptr<DebugDelegate> debug_delegate_;
   bool is_debug_enabled_{false};
+  std::string debug_info_url_;
 
  protected:
   friend class CodeGenerator;

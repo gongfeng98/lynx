@@ -556,9 +556,9 @@ public class LynxInspectorOwner implements LynxBaseInspectorOwnerNG {
     }
   }
 
-  public String getDebugInfoUrl() {
+  public String getDebugInfoUrl(String fileName) {
     if (mPlatform != null) {
-      return mPlatform.getLepusDebugInfoUrl();
+      return mPlatform.getLepusDebugInfoUrl(fileName);
     }
     return "";
   }

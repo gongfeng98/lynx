@@ -1775,9 +1775,19 @@ void TemplateAssembler::GetDecodedJSSource(
     for (const auto& [url, source] : sources) {
       if (source.IsSourceCode()) {
         auto buffer = source.GetBuffer();
-        js_source.emplace(url, std::string(reinterpret_cast<const char*>(
-                                               source.GetBuffer()->data()),
-                                           buffer->size()));
+        std::string full_url = url;
+        // JS sources with the same name from different entries will cause
+        // insertion failures. Therefore, for non-card items, we add the entry
+        // name as a prefix to the URL, following the same naming convention as
+        // the App::GenerateDynamicComponentSourceUrl() function.
+        if (!entry->IsCard()) {
+          std::stringstream ss;
+          ss << entry->GetName() << '/' << url;
+          full_url = ss.str();
+        }
+        js_source.emplace(full_url, std::string(reinterpret_cast<const char*>(
+                                                    source.GetBuffer()->data()),
+                                                buffer->size()));
       }
     }
   });

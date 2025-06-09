@@ -52,7 +52,7 @@ TEST_F(InspectorLepusObserverImplTest, GetDebugInfo) {
 }
 
 TEST_F(InspectorLepusObserverImplTest, SetDebugInfoUrl) {
-  observer_->SetDebugInfoUrl("test");
+  observer_->SetDebugInfoUrl("test-url", "test-name");
 }
 
 TEST_F(InspectorLepusObserverImplTest, OnInspectorInited) {
