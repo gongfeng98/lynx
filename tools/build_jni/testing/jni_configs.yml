@@ -22,7 +22,7 @@ gn_configs:
   output_path: tools/build_jni/testing/BUILD.gn
   template_name: lynx_source_set
   custom_headers:
-    - //core/Lynx.gni
+    - core/Lynx.gni
 # jni files configs.
 jni_class_configs:
   output_dir: tools/build_jni/testing/gen
