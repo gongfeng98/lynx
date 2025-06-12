@@ -4552,6 +4552,19 @@ public class com::lynx::tasm::utils::LynxFrameRateControl :  {
   public void com.lynx.tasm.utils.LynxFrameRateControl.onScreenOn();
 }
 
+public class com::lynx::tasm::behavior::ui::frame::LynxFrameRender : com.lynx.tasm.ILynxEngine, com.lynx.tasm.ILynxErrorReceiver {
+  public void com.lynx.tasm.behavior.ui.frame.LynxFrameRender.loadTemplate(final LynxLoadMeta metaData);
+  public void com.lynx.tasm.behavior.ui.frame.LynxFrameRender.updateMetaData(LynxUpdateMeta meta);
+  public void com.lynx.tasm.behavior.ui.frame.LynxFrameRender.updateViewport(int widthMeasureSpec, int heightMeasureSpec);
+  public void com.lynx.tasm.behavior.ui.frame.LynxFrameRender.destroy();
+  public void com.lynx.tasm.behavior.ui.frame.LynxFrameRender.onErrorOccurred(LynxError error);
+}
+
+public class com::lynx::tasm::behavior::ui::frame::LynxFrameView : com.lynx.tasm.behavior.ui.UIBody.UIBodyView {
+  public com.lynx.tasm.behavior.ui.frame.LynxFrameView.LynxFrameView(Context context);
+  public com.lynx.tasm.behavior.ui.frame.LynxFrameView.LynxFrameView(Context context, AttributeSet attrs);
+}
+
 public interface com::lynx::tasm::behavior::LynxGeneratorName {
   public String com.lynx.tasm.behavior.LynxGeneratorName.packageName();
 }
@@ -8862,6 +8875,10 @@ public class com::lynx::tasm::behavior::ui::UIExposure : com.lynx.tasm.behavior.
   public void com.lynx.tasm.behavior.ui.UIExposure.removeUIFromExposedMap(LynxBaseUI ui, @Nullable String uniqueID);
   public void com.lynx.tasm.behavior.ui.UIExposure.setRootUI(UIBody ui);
   public void com.lynx.tasm.behavior.ui.UIExposure.clear();
+}
+
+public class com::lynx::tasm::behavior::ui::frame::UIFrame : com::lynx::tasm::behavior::ui::LynxUI< LynxFrameView > {
+  public com.lynx.tasm.behavior.ui.frame.UIFrame.UIFrame(LynxContext context);
 }
 
 public class abstract com::lynx::tasm::behavior::ui::UIGroup : com.lynx.tasm.behavior.ui.LynxUI< T >, com.lynx.tasm.behavior.ui.UIParent, com.lynx.tasm.behavior.ui.IDrawChildHook {
