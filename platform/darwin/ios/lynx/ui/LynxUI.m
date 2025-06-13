@@ -140,12 +140,12 @@ static const CGFloat OFFSET_ROTATE_AUTO = -1024.f;
         [ui insertChild:[obj copy] atIndex:idx];
       }];
 
-  if (self.lynxProps && self.lynxProps.count != 0) {
-    for (NSString* key in self.lynxProps) {
-      [LynxPropsProcessor updateProp:self.lynxProps[key] withKey:key forUI:ui];
+  if (self->_lynxProps != nil && self->_lynxProps.count != 0) {
+    for (NSString* key in self->_lynxProps) {
+      [LynxPropsProcessor updateProp:self->_lynxProps[key] withKey:key forUI:ui];
     }
+    [ui.lynxProps addEntriesFromDictionary:self->_lynxProps];
   }
-  [ui.lynxProps addEntriesFromDictionary:self.lynxProps];
   [ui propsDidUpdate];
 
   [ui updateFrameWithoutLayoutAnimation:self.frame
@@ -160,7 +160,6 @@ static const CGFloat OFFSET_ROTATE_AUTO = -1024.f;
 }
 
 - (void)initProperties {
-  _lynxProps = [NSMutableDictionary dictionary];
   _sign = NSNotFound;
   _backgroundManager = [[LynxBackgroundManager alloc] initWithUI:self];
   _fontSize = 14;
@@ -989,6 +988,13 @@ static const CGFloat OFFSET_ROTATE_AUTO = -1024.f;
 
 - (float)scaleY {
   return [[[self getPresentationLayer] valueForKeyPath:@"transform.scale.y"] floatValue];
+}
+
+- (NSMutableDictionary*)lynxProps {
+  if (!_lynxProps) {
+    _lynxProps = [NSMutableDictionary dictionary];
+  }
+  return _lynxProps;
 }
 
 - (NSMutableArray*)readyBlockArray {

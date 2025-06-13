@@ -703,9 +703,10 @@ extern NSString* const kDefaultComponentID;
       }
     }
     [ui animationPropsDidUpdate];
-  }
-  if (ui.copyable) {
-    [ui.lynxProps addEntriesFromDictionary:props];
+
+    if (ui.copyable) {
+      [ui.lynxProps addEntriesFromDictionary:props];
+    }
   }
 }
 
