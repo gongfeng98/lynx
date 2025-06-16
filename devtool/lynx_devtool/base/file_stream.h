@@ -16,7 +16,7 @@ class FileStream {
  public:
   FileStream() = delete;
   static int Open(const std::string& file,
-                  std::ios::openmode mode = std::ios::in);
+                  std::ios::openmode mode = std::ios::in | std::ios::binary);
   static void Close(int handle);
   static int Read(int handle, char* buf, size_t size);
   static int Read(int handle, std::ostream& oss, size_t size);
