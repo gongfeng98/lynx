@@ -1131,15 +1131,6 @@ void PaintingContextAndroid::EnqueueHighPriorityUIOperation(
 void PaintingContextAndroid::BeforeFlush() {
   // Pop all scheduled AsyncCreateUI tasks and initialize iterable container
   {
-    EnqueueHighPriorityUIOperation([impl = impl_] {
-      base::android::ScopedLocalJavaRef<jobject> local_ref(*impl);
-      if (local_ref.IsNull()) {
-        return;
-      }
-      JNIEnv* env = base::android::AttachCurrentThread();
-      Java_PaintingContext_rebuildViewTree(env, local_ref.Get());
-    });
-
     if (config_.enable_native_schedule_create_view_async &&
         !scheduled_create_node_async_task_queue_.Empty()) {
       EnqueueHighPriorityUIOperation(

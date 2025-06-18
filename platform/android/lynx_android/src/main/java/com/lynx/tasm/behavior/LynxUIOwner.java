@@ -319,10 +319,6 @@ public class LynxUIOwner {
     mIsRootLayoutAnimationRunning = true;
   }
 
-  public void rebuildViewTree() {
-    mUIBody.rebuildViewTree();
-  }
-
   public void updateLayout(int tag, int x, int y, int width, int height, int paddingLeft,
       int paddingTop, int paddingRight, int paddingBottom, int marginLeft, int marginTop,
       int marginRight, int marginBottom, int borderLeftWidth, int borderTopWidth,

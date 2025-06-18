@@ -103,11 +103,6 @@ public final class PaintingContext {
   }
 
   @CalledByNative
-  public void rebuildViewTree() {
-    mUIOwner.rebuildViewTree();
-  }
-
-  @CalledByNative
   public void updateLayout(int sign, float x, float y, float width, float height, float paddingLeft,
       float paddingTop, float paddingRight, float paddingBottom, float marginLeft, float marginTop,
       float marginRight, float marginBottom, float borderLeftWidth, float borderTopWidth,

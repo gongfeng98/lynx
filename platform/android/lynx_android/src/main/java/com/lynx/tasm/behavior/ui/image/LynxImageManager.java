@@ -32,7 +32,6 @@ import com.lynx.tasm.behavior.PropsConstants;
 import com.lynx.tasm.behavior.StylesDiffMap;
 import com.lynx.tasm.behavior.shadow.ShadowNode;
 import com.lynx.tasm.behavior.ui.LynxBaseUI;
-import com.lynx.tasm.behavior.ui.ViewInfo;
 import com.lynx.tasm.behavior.ui.utils.BackgroundDrawable;
 import com.lynx.tasm.core.LynxThreadPool;
 import com.lynx.tasm.event.EventsListener;
@@ -186,8 +185,6 @@ public class LynxImageManager implements Drawable.Callback {
   private boolean mNeedRetryAutoSize;
 
   private LynxBaseUI mUI;
-
-  private ViewInfo mViewInfo;
 
   private final boolean mAsyncRedirect;
 
@@ -478,10 +475,6 @@ public class LynxImageManager implements Drawable.Callback {
 
   public void setLynxBaseUI(LynxBaseUI ui) {
     mUI = ui;
-  }
-
-  public void setViewInfo(ViewInfo viewInfo) {
-    mViewInfo = viewInfo;
   }
 
   void setIsPixelated(boolean isPixelated) {
@@ -913,10 +906,6 @@ public class LynxImageManager implements Drawable.Callback {
     if (mUI != null) {
       mUI.invalidate();
     }
-
-    if (mViewInfo != null) {
-      mViewInfo.invalidate();
-    }
   }
 
   public void setEvents(Map<String, EventsListener> events) {
@@ -1125,9 +1114,5 @@ public class LynxImageManager implements Drawable.Callback {
 
   public Drawable getSrcImageDrawable() {
     return mImageDrawable;
-  }
-
-  public Boolean getHasContent() {
-    return mImageDrawable != null || mPlaceholderDrawable != null;
   }
 }

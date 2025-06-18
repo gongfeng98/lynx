@@ -11,14 +11,12 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import com.lynx.tasm.LynxBooleanOption;
 import com.lynx.tasm.PageConfig;
-import com.lynx.tasm.base.LLog;
 import com.lynx.tasm.base.TraceEvent;
 import com.lynx.tasm.base.trace.TraceEventDef;
 import com.lynx.tasm.behavior.LynxContext;
@@ -29,17 +27,12 @@ import com.lynx.tasm.performance.TimingCollector;
 import com.lynx.tasm.performance.longtasktiming.LynxLongTaskMonitor;
 import com.lynx.tasm.utils.LynxConstants;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class UIBody extends UIGroup<UIBodyView> {
-  private final static String TAG = "UIBody";
-
   @Nullable private UIBodyView mBodyView;
   @Nullable private EventTarget mParentLynxPageUI;
   @Nullable private HashMap<String, EventTarget> mChildrenLynxPageUI;
-
-  private ArrayList<LynxUI> mCreateViewUI;
 
   private LynxAccessibilityWrapper mA11yWrapper;
 
@@ -52,7 +45,6 @@ public class UIBody extends UIGroup<UIBodyView> {
   public UIBodyView getBodyView() {
     return mBodyView;
   }
-
   /**
    * when async render, we should attach LynxView
    * @param view
@@ -60,44 +52,14 @@ public class UIBody extends UIGroup<UIBodyView> {
   public void attachUIBodyView(UIBodyView view) {
     mBodyView = view;
     initialize();
-
-    if (!mContext.isEmbeddedModeOn()) {
-      return;
-    }
-
-    if (mBodyView == null) {
-      LLog.e(TAG, "attachUIBodyView failed since mBodyView is null.");
-      return;
-    }
-
-    mCreateViewUI = new ArrayList<>();
-    attachToView();
-    mBodyView.removeExistingViews();
   }
 
   public void detachUIBodyView() {
     // process view info
     processViewInfo();
     // detach
-    detachWithViewInfo(mViewInfo);
+    detachWithView();
   }
-
-  public void appendUIWithCreateViewAsync(LynxUI ui) {
-    mCreateViewUI.add(ui);
-  }
-
-  public void rebuildViewTree() {
-    for (LynxUI ui : mCreateViewUI) {
-      ui.ensureCreateView();
-    }
-    mCreateViewUI.clear();
-  }
-
-  @Override
-  protected void createViewAsync() {}
-
-  @Override
-  protected void ensureCreateView() {}
 
   @Override
   public void initialize() {
@@ -194,8 +156,6 @@ public class UIBody extends UIGroup<UIBodyView> {
 
   public static class UIBodyView
       extends FrameLayout implements IDrawChildHook.IDrawChildHookBinding {
-    private HashMap<Integer, View> mViewMap = new HashMap<>();
-
     private IDrawChildHook mDrawChildHook;
     private long mMeaningfulPaintTiming;
     private boolean mHasMeaningfulLayout;
@@ -222,26 +182,6 @@ public class UIBody extends UIGroup<UIBodyView> {
 
     public UIBodyView(Context context, AttributeSet attrs) {
       super(context, attrs);
-    }
-
-    public View obtainViewAccordingToNodeIndex(int nodeIndex) {
-      View result = mViewMap.get(nodeIndex);
-      mViewMap.remove(nodeIndex);
-      return result;
-    }
-
-    public void registerViewAccordingToNodeIndex(int nodeIndex, View view) {
-      mViewMap.put(nodeIndex, view);
-    }
-
-    public void removeExistingViews() {
-      for (HashMap.Entry<Integer, View> entry : mViewMap.entrySet()) {
-        View view = entry.getValue();
-        if (view.getParent() instanceof ViewGroup) {
-          ((ViewGroup) view.getParent()).removeView(view);
-        }
-      }
-      mViewMap.clear();
     }
 
     @Override

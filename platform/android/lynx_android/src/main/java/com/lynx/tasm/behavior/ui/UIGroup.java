@@ -17,9 +17,7 @@ import androidx.annotation.Nullable;
 import com.lynx.tasm.base.LLog;
 import com.lynx.tasm.behavior.LynxContext;
 import com.lynx.tasm.behavior.event.EventTarget;
-import com.lynx.tasm.behavior.ui.image.FlattenUIImage;
 import com.lynx.tasm.behavior.ui.list.UIList;
-import com.lynx.tasm.behavior.ui.text.FlattenUIText;
 import com.lynx.tasm.behavior.ui.utils.BackgroundDrawable;
 import com.lynx.tasm.behavior.ui.view.AndroidView;
 import com.lynx.tasm.rendernode.compat.RenderNodeCompat;
@@ -57,12 +55,7 @@ public abstract class UIGroup<T extends ViewGroup>
     super.initialize();
     mDrawingOrderHelper = new ViewGroupDrawingOrderHelper(getView());
     if (mView instanceof IDrawChildHookBinding) {
-      if (mContext.isEmbeddedModeOn()) {
-        mViewInfo = new ViewInfo(this, mView);
-        ((IDrawChildHookBinding) mView).bindDrawChildHook(mViewInfo);
-      } else {
-        ((IDrawChildHookBinding) mView).bindDrawChildHook(this);
-      }
+      ((IDrawChildHookBinding) mView).bindDrawChildHook(this);
     }
   }
 
@@ -142,10 +135,8 @@ public abstract class UIGroup<T extends ViewGroup>
         }
       } else if (ui.isFlatten()) {
         RenderNodeCompat renderNode = ((LynxFlattenUI) ui).updateRenderNode();
-        ViewInfo.SubDrawInfo subDrawInfo =
-            new ViewInfo.SubDrawInfo(false, ui.getBound(), renderNode);
-        tryAddInfoForSubDraw(subDrawInfo, ui);
-        info.addSubDrawInfo(mCurrentDrawIndex, subDrawInfo);
+        info.addSubDrawInfo(
+            mCurrentDrawIndex, new ViewInfo.SubDrawInfo(false, ui.getBound(), renderNode));
       }
     }
   }
@@ -157,10 +148,8 @@ public abstract class UIGroup<T extends ViewGroup>
     for (ui = mCurrentDrawUI; ui != null; ui = ui.mNextDrawUI, mCurrentDrawIndex++) {
       if (ui.isFlatten() && !(ui instanceof UIShadowProxy)) {
         RenderNodeCompat renderNode = ((LynxFlattenUI) ui).updateRenderNode();
-        ViewInfo.SubDrawInfo subDrawInfo =
-            new ViewInfo.SubDrawInfo(false, ui.getBound(), renderNode);
-        tryAddInfoForSubDraw(subDrawInfo, ui);
-        info.addSubDrawInfo(mCurrentDrawIndex, subDrawInfo);
+        info.addSubDrawInfo(
+            mCurrentDrawIndex, new ViewInfo.SubDrawInfo(false, ui.getBound(), renderNode));
       }
     }
   }
@@ -175,19 +164,6 @@ public abstract class UIGroup<T extends ViewGroup>
     performMeasureChildrenUI();
   }
 
-  private void tryAddInfoForSubDraw(ViewInfo.SubDrawInfo subDrawInfo, LynxBaseUI ui) {
-    if (ui instanceof FlattenUIImage) {
-      FlattenUIImage image = (FlattenUIImage) ui;
-      subDrawInfo.setImageManager(image.getLynxImageManagerForViewInfo());
-      subDrawInfo.setDrawPosition(ui.getLeft(), ui.getTop());
-    }
-    if (ui instanceof FlattenUIText) {
-      FlattenUIText text = (FlattenUIText) ui;
-      subDrawInfo.setTextLayout(text.getTextLayout());
-      subDrawInfo.setDrawPosition(text.getDrawPositionLeft(), text.getDrawPositionTop());
-    }
-  }
-
   protected View getRealParentView() {
     return mView;
   }
@@ -196,24 +172,6 @@ public abstract class UIGroup<T extends ViewGroup>
     child.setOffsetDescendantRectToLynxView(getOffsetDescendantRectToLynxView());
     mChildren.add(index, child);
     child.setParent(this);
-  }
-
-  public void insertChildWhenRebuildView(LynxBaseUI child) {
-    if (!(child instanceof LynxUI)) {
-      return;
-    }
-
-    LynxBaseUI ui = mDrawHead;
-    int nonFlattenIndex = 0;
-
-    while (ui != null && child != ui) {
-      if (ui instanceof LynxUI) {
-        nonFlattenIndex++;
-      }
-      ui = mDrawHead.mNextDrawUI;
-    }
-
-    mView.addView(((LynxUI<?>) child).getView(), nonFlattenIndex);
   }
 
   @Override

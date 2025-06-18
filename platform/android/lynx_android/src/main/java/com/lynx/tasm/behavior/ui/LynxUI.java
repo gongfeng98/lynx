@@ -59,7 +59,6 @@ import com.lynx.tasm.animation.keyframe.LynxKeyframeAnimator;
 import com.lynx.tasm.animation.layout.LayoutAnimationManager;
 import com.lynx.tasm.animation.transition.TransitionAnimationManager;
 import com.lynx.tasm.base.LLog;
-import com.lynx.tasm.base.OnceTask;
 import com.lynx.tasm.base.TraceEvent;
 import com.lynx.tasm.base.trace.TraceEventDef;
 import com.lynx.tasm.behavior.LynxContext;
@@ -79,7 +78,6 @@ import com.lynx.tasm.behavior.ui.utils.BackgroundManager;
 import com.lynx.tasm.behavior.ui.utils.PlatformLength;
 import com.lynx.tasm.behavior.ui.utils.TransformRaw;
 import com.lynx.tasm.behavior.ui.view.AndroidView;
-import com.lynx.tasm.core.LynxThreadPool;
 import com.lynx.tasm.featurecount.LynxFeatureCounter;
 import com.lynx.tasm.service.ILynxSystemInvokeService;
 import com.lynx.tasm.service.LynxServiceCenter;
@@ -89,7 +87,6 @@ import com.lynx.tasm.utils.FloatUtils;
 import com.lynx.tasm.utils.UnitUtils;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Responsible for rendering the view
@@ -98,7 +95,6 @@ public abstract class LynxUI<T extends View> extends LynxBaseUI implements IProc
   private static final String TAG = "LynxUI";
   protected T mView;
   protected ViewInfo mViewInfo;
-  protected OnceTask<T> mOnceTask;
 
   private float mGrayscaleAmount = 1.0f;
   private static final float OFFSET_ROTATE_AUTO = -1024.0f;
@@ -238,82 +234,11 @@ public abstract class LynxUI<T extends View> extends LynxBaseUI implements IProc
   }
 
   @Override
-  protected void detachWithViewInfo(ViewInfo parentViewInfo) {
-    mContext.getLynxView().registerViewAccordingToNodeIndex(mNodeIndex, mView);
-
+  protected void detachWithView() {
     mViewInfo.detachFromUI();
     mViewInfo = null;
     mView = null;
-    super.detachWithViewInfo(mViewInfo != null ? mViewInfo : parentViewInfo);
-  }
-
-  @Override
-  protected void attachToView() {
-    if (mView == null) {
-      View view = mContext.getLynxView().obtainViewAccordingToNodeIndex(mNodeIndex);
-      if (view != null) {
-        mView = (T) view;
-        mViewInfo = new ViewInfo(this, mView);
-        ((IDrawChildHook.IDrawChildHookBinding) mView).bindDrawChildHook(mViewInfo);
-      } else {
-        createViewAsync();
-      }
-    }
-    super.attachToView();
-  }
-
-  @Override
-  protected void createViewAsync() {
-    super.createViewAsync();
-    mOnceTask = new OnceTask<>(new Callable<T>() {
-      @Override
-      public T call() {
-        try {
-          T result = createView(mContext, mParam);
-          if (result == null) {
-            return createView(mContext);
-          }
-        } catch (Throwable e) {
-          LLog.e(TAG, e.toString());
-        }
-        return null;
-      }
-    });
-
-    LynxThreadPool.postUIOperationTask(new Runnable() {
-      @Override
-      public void run() {
-        mOnceTask.run();
-      }
-    });
-    mContext.getUIBody().appendUIWithCreateViewAsync(this);
-  }
-
-  protected void ensureCreateView() {
-    if (mOnceTask != null) {
-      mOnceTask.run();
-      try {
-        mView = mOnceTask.get();
-      } catch (Throwable e) {
-        LLog.e(TAG, e.toString());
-      }
-
-      mOnceTask = null;
-    }
-
-    if (mView == null) {
-      mView = createView(mContext, mParam);
-      if (mView == null) {
-        mView = createView(mContext);
-      }
-    }
-
-    mViewInfo = new ViewInfo(this, mView);
-    ((IDrawChildHook.IDrawChildHookBinding) mView).bindDrawChildHook(mViewInfo);
-
-    if (mDrawParent instanceof UIGroup) {
-      ((UIGroup) mDrawParent).insertChildWhenRebuildView(this);
-    }
+    super.detachWithView();
   }
 
   @Override

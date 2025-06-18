@@ -54,13 +54,12 @@ public class LynxFlattenUI extends LynxBaseUI {
   }
 
   @Override
-  protected void detachWithViewInfo(ViewInfo parentViewInfo) {
+  protected void detachWithView() {
     if (enableRenderNode()) {
       mRenderNode = RenderNodeFactory.getInstance().createRenderNodeCompat();
     }
-    super.detachWithViewInfo(parentViewInfo);
+    super.detachWithView();
   }
-
   @Override
   public boolean isFlatten() {
     return true;
