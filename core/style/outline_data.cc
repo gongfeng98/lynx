@@ -12,7 +12,7 @@ namespace starlight {
 
 OutLineData::OutLineData()
     : width(DefaultComputedStyle::DEFAULT_FLOAT),
-      style(DefaultComputedStyle::DEFAULT_OUTLINE_STYLE),
-      color(DefaultColor::DEFAULT_OUTLINE_COLOR) {}
+      color(DefaultColor::DEFAULT_OUTLINE_COLOR),
+      style(DefaultComputedStyle::DEFAULT_OUTLINE_STYLE) {}
 }  // namespace starlight
 }  // namespace lynx

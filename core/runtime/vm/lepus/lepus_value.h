@@ -656,6 +656,9 @@ class BASE_EXPORT_FOR_DEVTOOL Value {
 
   static void ForEachLepusValue(const Value& value, LepusValueIterator func);
 
+  // A flag telling `base::flex_optional<>` to save memory.
+  using AlwaysUseFlexOptionalMemSave = bool;
+
  private:
   void Copy(const Value& value);
 

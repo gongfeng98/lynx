@@ -21,6 +21,9 @@ struct PerspectiveData {
   bool operator==(const PerspectiveData& rhs) const {
     return length_ == rhs.length_ && pattern_ == rhs.pattern_;
   }
+
+  // A flag telling `base::flex_optional<>` to save memory.
+  using AlwaysUseFlexOptionalMemSave = bool;
 };
 
 }  // namespace starlight

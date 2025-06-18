@@ -27,6 +27,9 @@ struct TransformOriginData {
   bool operator==(const TransformOriginData& rhs) const {
     return std::tie(x, y) == std::tie(rhs.x, rhs.y);
   }
+
+  // A flag telling `base::flex_optional<>` to save memory.
+  using AlwaysUseFlexOptionalMemSave = bool;
 };
 
 }  // namespace starlight

@@ -450,6 +450,15 @@ operator>=(const _Tp& __v, const flex_optional_mem_save<_Up>& __x) {
   return static_cast<bool>(__x) ? __v >= *__x : true;
 }
 
+// Check if T has declared flag `AlwaysUseFlexOptionalMemSave`.
+template <typename T, typename = void>
+struct has_always_use_flex_optional_mem_save : std::false_type {};
+
+template <typename T>
+struct has_always_use_flex_optional_mem_save<
+    T, std::void_t<typename T::AlwaysUseFlexOptionalMemSave>> : std::true_type {
+};
+
 // switching between std::optional and flex_optional_mem_save
 template <class T, typename Enable = void>
 struct flex_optional_type {
@@ -457,14 +466,11 @@ struct flex_optional_type {
 };
 
 template <class T>
-struct flex_optional_type<T, typename std::enable_if_t<(sizeof(T) <= 32)>> {
+struct flex_optional_type<
+    T, std::enable_if_t<(sizeof(T) <= 32) &&
+                        !has_always_use_flex_optional_mem_save<T>::value>> {
   using Type = std::optional<T>;
 };
-
-// template <class T>
-// struct flex_optional_type<std::vector<T>> {
-//   using Type = std::optional<T>;
-// };
 
 }  // namespace optional
 

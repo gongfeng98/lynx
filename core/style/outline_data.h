@@ -14,12 +14,15 @@ struct OutLineData {
   OutLineData();
   ~OutLineData() = default;
   float width;
-  BorderStyleType style;
   unsigned int color;
+  BorderStyleType style;
   bool operator==(const OutLineData& rhs) const {
     return std::tie(width, style, color) ==
            std::tie(rhs.width, rhs.style, rhs.color);
   }
+
+  // A flag telling `base::flex_optional<>` to save memory.
+  using AlwaysUseFlexOptionalMemSave = bool;
 };
 }  // namespace starlight
 }  // namespace lynx

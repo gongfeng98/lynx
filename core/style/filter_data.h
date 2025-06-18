@@ -29,6 +29,9 @@ struct FilterData {
   bool operator!=(const FilterData& rhs) const { return !(*this == rhs); }
 
   void Reset();
+
+  // A flag telling `base::flex_optional<>` to save memory.
+  using AlwaysUseFlexOptionalMemSave = bool;
 };
 
 }  // namespace starlight

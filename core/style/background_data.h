@@ -34,6 +34,9 @@ struct BackgroundData {
 
   uint32_t color{DefaultColor::DEFAULT_COLOR};
   base::flex_optional<BackgroundImageData> image_data;
+
+  // A flag telling `base::flex_optional<>` to save memory.
+  using AlwaysUseFlexOptionalMemSave = bool;
 };
 }  // namespace starlight
 }  // namespace lynx

@@ -21,6 +21,16 @@ struct s32 {
   uint64_t d;
 };
 
+struct s32_mem_save {
+  uint64_t a;
+  uint64_t b;
+  uint64_t c;
+  uint64_t d;
+
+  // A flag telling `base::flex_optional<>` to save memory.
+  using AlwaysUseFlexOptionalMemSave = bool;
+};
+
 struct s40Convertible {
   uint64_t a;
   uint64_t b;
@@ -62,8 +72,10 @@ struct s40MoveOnly {
 TEST(FlexOptional, ChooseFromType) {
   auto small = base::flex_optional<s32>();
   ASSERT_EQ(sizeof(small), sizeof(std::optional<s32>));
+  auto small_mem_save = base::flex_optional<s32_mem_save>();
+  ASSERT_EQ(sizeof(small_mem_save), sizeof(void*));
   auto big = base::flex_optional<s40>();
-  ASSERT_EQ(sizeof(big), 8u);
+  ASSERT_EQ(sizeof(big), sizeof(void*));
 
   ASSERT_TRUE(!big);
   ASSERT_FALSE(big.has_value());
