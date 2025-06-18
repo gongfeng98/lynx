@@ -6,9 +6,11 @@ package com.lynx.tasm.behavior.ui;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.text.Layout;
 import android.view.View;
 import com.lynx.tasm.behavior.ui.IDrawChildHook;
 import com.lynx.tasm.behavior.ui.IProcessViewInfoHook;
+import com.lynx.tasm.behavior.ui.image.LynxImageManager;
 import com.lynx.tasm.behavior.ui.shapes.BasicShape;
 import com.lynx.tasm.behavior.ui.utils.MaskDrawable;
 import com.lynx.tasm.rendernode.compat.RenderNodeCompat;
@@ -18,16 +20,19 @@ import java.util.ArrayList;
 // rendering metadata (e.g., layout coordinates, clipping boundaries). After decoupling the
 // Platform View from LynxUI (the cross-platform UI abstraction layer), ViewInfo acts as a
 // platform-agnostic data layer to coordinate drawing operations.
-class ViewInfo implements IDrawChildHook {
+public class ViewInfo implements IDrawChildHook {
   public ViewInfo(IProcessViewInfoHook hook, View view) {
     mProcessHook = hook;
     mView = view;
   }
+
   public void detachFromUI() {
     mProcessHook = null;
   }
+
   IProcessViewInfoHook mProcessHook;
   View mView;
+
   // beforeDraw
   int mWidth;
   int mHeight;
@@ -36,60 +41,93 @@ class ViewInfo implements IDrawChildHook {
   BasicShape mClipPath;
   int[] mOrder;
   boolean mHasOverlappingRendering;
-  public void processViewInfo() {}
+
   public void detachWithUI() {}
+
   public void setWidth(int width) {
     mWidth = width;
   }
+
   public void setHeight(int height) {
     mHeight = height;
   }
+
   public void setSkewX(float x) {
     mSkewX = x;
   }
+
   public void setSkewY(float y) {
     mSkewY = y;
   }
+
   public void setClipPath(BasicShape path) {
     mClipPath = path;
   }
+
   public void setDrawingOrder(int[] order) {
     mOrder = order;
   }
+
   public void setHasOverlappingRendering(boolean enable) {
     mHasOverlappingRendering = enable;
   }
+
   // beforeDispatchDraw
   boolean clipToRadius;
   Path mClipPathInBeforeDispatchDraw;
   Rect mClipRectInBeforeDispatchDraw;
   Rect mOverflowClipRect;
+
   public void setClipToRadius(boolean enable) {
     clipToRadius = enable;
   }
+
   public void setClipPathInBeforeDispatchDraw(Path path) {
     mClipPathInBeforeDispatchDraw = path;
   }
+
   public void setClipRectInBeforeDispatchDraw(Rect rect) {
     mClipRectInBeforeDispatchDraw = rect;
   }
+
   public void setOverflowClipRect(Rect rect) {
     mOverflowClipRect = rect;
   }
+
   // beforeDrawChild
   public static class SubDrawInfo {
     boolean mIsView;
     Rect mBound;
     RenderNodeCompat mRenderNode;
+    LynxImageManager mLynxImageManager = null;
+    Layout mTextLayout = null;
+    int mLeft = 0;
+    int mTop = 0;
+
     public SubDrawInfo(boolean isView, Rect bound, RenderNodeCompat renderNode) {
       mIsView = isView;
       mBound = bound;
       mRenderNode = renderNode;
     }
+
+    public void setImageManager(LynxImageManager imageManager) {
+      mLynxImageManager = imageManager;
+    }
+
+    public void setTextLayout(Layout textLayout) {
+      mTextLayout = textLayout;
+    }
+
+    public void setDrawPosition(int left, int top) {
+      mLeft = left;
+      mTop = top;
+    }
   }
+
   int mCurrentDrawIndex = 0;
   // index same with the UI index in parent's children
   ArrayList<SubDrawInfo> mSubDrawInfoArray = new ArrayList<>();
+
   public void addSubDrawInfo(int index, SubDrawInfo info) {
     if (index < 0) {
       return;
@@ -106,24 +144,30 @@ class ViewInfo implements IDrawChildHook {
       mSubDrawInfoArray.add(index, info);
     }
   }
+
   public void clearSubDrawInfo() {
     mSubDrawInfoArray.clear();
   }
+
   // afterDrawChild
   // Nothing now
   // afterDraw
   int mBoundsWidth;
   int mBoundsHeight;
   MaskDrawable mMaskDrawable;
+
   public void setBoundsWidth(int width) {
     mBoundsWidth = width;
   }
+
   public void setBoundsHeight(int height) {
     mBoundsHeight = height;
   }
+
   public void setMaskDrawable(MaskDrawable drawable) {
     mMaskDrawable = drawable;
   }
+
   @Override
   public void beforeDraw(Canvas canvas) {
     if (mProcessHook != null) {
@@ -145,6 +189,7 @@ class ViewInfo implements IDrawChildHook {
       }
     }
   }
+
   @Override
   public void beforeDispatchDraw(Canvas canvas) {
     if (mProcessHook != null) {
@@ -162,6 +207,7 @@ class ViewInfo implements IDrawChildHook {
       canvas.clipRect(mOverflowClipRect);
     }
   }
+
   @Override
   public Rect beforeDrawChild(Canvas canvas, View child, long drawingTime) {
     if (mProcessHook != null) {
@@ -174,25 +220,45 @@ class ViewInfo implements IDrawChildHook {
         bound = info.mBound;
         mCurrentDrawIndex++;
       } else {
-        Rect childBound = info.mBound;
-        canvas.save();
-        if (childBound != null) {
-          canvas.clipRect(childBound);
-        }
-        if (info.mRenderNode != null) {
-          info.mRenderNode.drawRenderNode(canvas);
-        }
-        canvas.restore();
+        drawWithSubDrawInfo(info, canvas);
       }
     }
     return bound;
   }
+
+  private void drawWithSubDrawInfo(SubDrawInfo info, Canvas canvas) {
+    Rect childBound = info.mBound;
+    canvas.save();
+
+    if (childBound != null) {
+      canvas.clipRect(childBound);
+    }
+
+    if (info.mRenderNode != null) {
+      info.mRenderNode.drawRenderNode(canvas);
+    }
+
+    if (info.mTextLayout != null) {
+      if (info.mLeft != 0 || info.mTop != 0) {
+        canvas.translate(info.mLeft, info.mTop);
+      }
+      info.mTextLayout.draw(canvas);
+    }
+
+    if (info.mLynxImageManager != null) {
+      info.mLynxImageManager.onDraw(canvas);
+    }
+
+    canvas.restore();
+  }
+
   @Override
   public void afterDrawChild(Canvas canvas, View child, long drawingTime) {
     if (mProcessHook != null) {
       mProcessHook.afterProcessChildViewInfo(this, child, drawingTime);
     }
   }
+
   @Override
   public void afterDispatchDraw(Canvas canvas) {
     if (mProcessHook != null) {
@@ -200,17 +266,10 @@ class ViewInfo implements IDrawChildHook {
     }
     for (; mCurrentDrawIndex < mSubDrawInfoArray.size(); ++mCurrentDrawIndex) {
       SubDrawInfo info = mSubDrawInfoArray.get(mCurrentDrawIndex);
-      Rect childBound = info.mBound;
-      canvas.save();
-      if (childBound != null) {
-        canvas.clipRect(childBound);
-      }
-      if (info.mRenderNode != null) {
-        info.mRenderNode.drawRenderNode(canvas);
-      }
-      canvas.restore();
+      drawWithSubDrawInfo(info, canvas);
     }
   }
+
   @Override
   public void afterDraw(Canvas canvas) {
     if (mProcessHook != null) {
@@ -221,6 +280,7 @@ class ViewInfo implements IDrawChildHook {
       mMaskDrawable.draw(canvas);
     }
   }
+
   @Override
   public int getChildDrawingOrder(int childCount, int index) {
     if (mOrder == null || index >= mOrder.length) {
@@ -228,6 +288,7 @@ class ViewInfo implements IDrawChildHook {
     }
     return mOrder[index];
   }
+
   @Override
   public boolean hasOverlappingRendering() {
     return mHasOverlappingRendering;
@@ -238,10 +299,18 @@ class ViewInfo implements IDrawChildHook {
       mProcessHook.processLayoutChildren();
     }
   }
+
   @Override
   public void performMeasureChildrenUI() {
     if (mProcessHook != null) {
       mProcessHook.processMeasureChildren();
     }
+  }
+
+  public void invalidate() {
+    if (mView == null) {
+      return;
+    }
+    mView.invalidate();
   }
 }

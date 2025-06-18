@@ -172,7 +172,7 @@ public abstract class LynxBaseUI
   private String mRefId; // ref id selector used in reactLynx
   private ReadableMap mDataset = new JavaOnlyMap();
   private int mSign;
-  private int mNodeIndex = 0;
+  protected int mNodeIndex = 0;
   private int mPseudoStatus;
   private String mTagName;
   private String mTestTagName;
@@ -244,11 +244,21 @@ public abstract class LynxBaseUI
   private int mBorderSpacingIndex;
   private int mBorderWidth;
 
-  protected void detachWithView() {
+  protected void detachWithViewInfo(ViewInfo parentViewInfo) {
     for (LynxBaseUI ui : mChildren) {
-      ui.detachWithView();
+      ui.detachWithViewInfo(parentViewInfo);
     }
   }
+
+  protected void attachToView() {
+    for (LynxBaseUI ui : mChildren) {
+      ui.attachToView();
+    }
+  }
+
+  protected void createViewAsync() {}
+
+  protected void ensureCreateView(View parentView) {}
 
   public float getSkewX() {
     return mSkewX;

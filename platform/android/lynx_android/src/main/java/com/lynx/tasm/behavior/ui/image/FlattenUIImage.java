@@ -13,6 +13,7 @@ import com.lynx.tasm.behavior.LynxContext;
 import com.lynx.tasm.behavior.LynxUIMethod;
 import com.lynx.tasm.behavior.StylesDiffMap;
 import com.lynx.tasm.behavior.ui.LynxFlattenUI;
+import com.lynx.tasm.behavior.ui.ViewInfo;
 import com.lynx.tasm.behavior.ui.utils.BackgroundDrawable;
 import com.lynx.tasm.event.EventsListener;
 import java.util.Map;
@@ -88,6 +89,27 @@ public class FlattenUIImage extends LynxFlattenUI {
   public void onDraw(Canvas canvas) {
     super.onDraw(canvas);
     mLynxImageManager.onDraw(canvas);
+  }
+
+  public LynxImageManager getLynxImageManagerForViewInfo() {
+    // we should call getLynxImageManagerForViewInfo after onDraw in the same call stack, to make
+    // sure the getHasContent is correct!
+    if (mLynxImageManager != null && !mLynxImageManager.getHasContent()) {
+      return mLynxImageManager;
+    }
+    return null;
+  }
+
+  @Override
+  public void detachWithViewInfo(ViewInfo parentViewInfo) {
+    if (mLynxImageManager != null) {
+      mLynxImageManager.setLynxBaseUI(null);
+      mLynxImageManager.setViewInfo(parentViewInfo);
+      // TODO(songshourui.null): We can nullify LynxImageManager upon src changes or layout updates
+      // to optimize performance.
+      mLynxImageManager = null;
+    }
+    super.detachWithViewInfo(parentViewInfo);
   }
 
   @Override
