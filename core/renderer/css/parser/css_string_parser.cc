@@ -1879,20 +1879,89 @@ bool CSSStringParser::RGBAColor() {
 }
 
 bool CSSStringParser::RGBColor() {
-  Token rgb[4] = {[0] = previous_token_};
-  if (Consume(TokenType::LEFT_PAREN)      // (
-      && NumberOrPercentValue(rgb[1])     // Number 1
-      && Consume(TokenType::COMMA)        // ,
-      && NumberOrPercentValue(rgb[2])     // Number 2
-      && Consume(TokenType::COMMA)        // ,
-      && NumberOrPercentValue(rgb[3])     // Number 3
-      && Consume(TokenType::RIGHT_PAREN)  // )
-  ) {
-    PushValue(MakeColorValue(rgb));
-    return true;
-  } else {
+  // 'rgb(' has been consumed, and previous_token_ is 'rgb'.
+  if (!Consume(TokenType::LEFT_PAREN)) {
     return false;
   }
+
+  Token r_token, g_token, b_token, a_token;
+  bool r_is_none = false, g_is_none = false, b_is_none = false,
+       a_is_none = false;
+  bool has_alpha = false;
+
+  // We need to decide if it's legacy or modern syntax.
+  // A simple way is to parse the first value, and then check for a comma.
+  if (Consume(TokenType::NONE)) {
+    r_is_none = true;
+  } else if (!NumberOrPercentValue(r_token)) {
+    return false;
+  }
+
+  bool is_legacy = Check(TokenType::COMMA);
+
+  if (is_legacy) {
+    if (r_is_none) return false;  // 'none' not allowed in legacy rgb
+    Consume(TokenType::COMMA);
+    if (!NumberOrPercentValue(g_token)) return false;
+    Consume(TokenType::COMMA);
+    if (!NumberOrPercentValue(b_token)) return false;
+
+    if (Check(TokenType::COMMA)) {
+      Consume(TokenType::COMMA);
+      has_alpha = true;
+      if (!NumberOrPercentValue(a_token)) return false;
+    }
+  } else {  // Modern syntax
+    if (Consume(TokenType::NONE)) {
+      g_is_none = true;
+    } else if (!NumberOrPercentValue(g_token)) {
+      return false;
+    }
+
+    if (Consume(TokenType::NONE)) {
+      b_is_none = true;
+    } else if (!NumberOrPercentValue(b_token)) {
+      return false;
+    }
+
+    if (Consume(TokenType::SLASH)) {
+      has_alpha = true;
+      if (Consume(TokenType::NONE)) {
+        a_is_none = true;
+      } else if (!NumberOrPercentValue(a_token)) {
+        return false;
+      }
+    }
+  }
+
+  if (!Consume(TokenType::RIGHT_PAREN)) {
+    return false;
+  }
+
+  auto get_color_value = [](const Token &token, bool is_none) {
+    if (is_none) return 0.0;
+    if (token.type == TokenType::PERCENTAGE) {
+      return TokenToDouble(token) / 100.0 * 255.0;
+    }
+    return TokenToDouble(token);
+  };
+
+  auto get_alpha_value = [](const Token &token, bool is_none) {
+    if (is_none) return 1.0;
+    if (token.type == TokenType::PERCENTAGE) {
+      return TokenToDouble(token) / 100.0;
+    }
+    return TokenToDouble(token);
+  };
+
+  double r_val = get_color_value(r_token, r_is_none);
+  double g_val = get_color_value(g_token, g_is_none);
+  double b_val = get_color_value(b_token, b_is_none);
+  double a_val = has_alpha ? get_alpha_value(a_token, a_is_none) : 1.0;
+
+  CSSColor color = CSSColor::CreateFromRGBA(r_val, g_val, b_val, a_val);
+  PushValue(StackValue(TokenType::NUMBER, color.Cast()));
+  return true;
 }
 
 bool CSSStringParser::HSLAColor() {

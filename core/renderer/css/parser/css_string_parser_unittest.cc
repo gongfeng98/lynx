@@ -1020,6 +1020,116 @@ TEST(CSSStringParser, gap_value) {
             CSSValuePattern::PERCENT);
 }
 
+TEST(CSSStringParser, RGBColor) {
+  CSSParserConfigs configs;
+
+  // Test legacy syntax: rgb(R, G, B)
+  {
+    std::string rgb = "rgb(255, 128, 0)";
+    CSSStringParser parser{rgb.c_str(), static_cast<uint32_t>(rgb.size()),
+                           configs};
+    CSSValue result;
+    parser.ParseCSSColorTo(result);
+    EXPECT_FALSE(result.IsEmpty());
+    EXPECT_EQ(result.GetPattern(), CSSValuePattern::NUMBER);
+
+    uint32_t color = result.GetValue().UInt32();
+    EXPECT_EQ((color >> 16) & 0xFF, 255);  // R
+    EXPECT_EQ((color >> 8) & 0xFF, 128);   // G
+    EXPECT_EQ(color & 0xFF, 0);            // B
+    EXPECT_EQ((color >> 24) & 0xFF, 255);  // A (default 1.0)
+  }
+
+  // Test legacy syntax with alpha: rgb(R, G, B, A)
+  {
+    std::string rgba = "rgb(255, 128, 0, 0.5)";
+    CSSStringParser parser{rgba.c_str(), static_cast<uint32_t>(rgba.size()),
+                           configs};
+    CSSValue result;
+    parser.ParseCSSColorTo(result);
+
+    uint32_t color = result.GetValue().UInt32();
+    EXPECT_EQ((color >> 24) & 0xFF, 127);  // A (0.5 * 255)
+  }
+
+  // Test modern syntax: rgb(R G B)
+  {
+    std::string rgb = "rgb(255 128 0)";
+    CSSStringParser parser{rgb.c_str(), static_cast<uint32_t>(rgb.size()),
+                           configs};
+    CSSValue result;
+    parser.ParseCSSColorTo(result);
+
+    uint32_t color = result.GetValue().UInt32();
+    EXPECT_EQ((color >> 16) & 0xFF, 255);
+    EXPECT_EQ((color >> 8) & 0xFF, 128);
+    EXPECT_EQ(color & 0xFF, 0);
+  }
+
+  // Test modern syntax with alpha: rgb(R G B / A)
+  {
+    std::string rgba = "rgb(255 128 0 / 0.5)";
+    CSSStringParser parser{rgba.c_str(), static_cast<uint32_t>(rgba.size()),
+                           configs};
+    CSSValue result;
+    parser.ParseCSSColorTo(result);
+
+    uint32_t color = result.GetValue().UInt32();
+    EXPECT_EQ((color >> 24) & 0xFF, 127);
+  }
+
+  // Test percentage values
+  {
+    std::string rgb = "rgb(100% 50% 0%)";
+    CSSStringParser parser{rgb.c_str(), static_cast<uint32_t>(rgb.size()),
+                           configs};
+    CSSValue result;
+    parser.ParseCSSColorTo(result);
+
+    uint32_t color = result.GetValue().UInt32();
+    EXPECT_EQ((color >> 16) & 0xFF, 255);  // 100% of 255
+    EXPECT_EQ((color >> 8) & 0xFF, 128);   // 50% of 255
+    EXPECT_EQ(color & 0xFF, 0);            // 0% of 255
+  }
+
+  // Test 'none' values (modern syntax only)
+  {
+    std::string rgb = "rgb(none 128 none / 0.5)";
+    CSSStringParser parser{rgb.c_str(), static_cast<uint32_t>(rgb.size()),
+                           configs};
+    CSSValue result;
+    parser.ParseCSSColorTo(result);
+
+    uint32_t color = result.GetValue().UInt32();
+    EXPECT_EQ((color >> 16) & 0xFF, 0);  // none -> 0
+    EXPECT_EQ((color >> 8) & 0xFF, 128);
+    EXPECT_EQ(color & 0xFF, 0);            // none -> 0
+    EXPECT_EQ((color >> 24) & 0xFF, 127);  // alpha 0.5
+  }
+
+  // Test invalid syntax
+  {
+    // Missing closing parenthesis
+    std::string invalid = "rgb(255, 128, 0";
+    CSSStringParser parser{invalid.c_str(),
+                           static_cast<uint32_t>(invalid.size()), configs};
+    CSSValue result;
+    parser.ParseCSSColorTo(result);
+    EXPECT_TRUE(result.IsEmpty());
+  }
+
+  // Test invalid legacy syntax with 'none'
+  {
+    // 'none' not allowed in legacy syntax
+    std::string invalid = "rgb(none, 128, 0)";
+    CSSStringParser parser{invalid.c_str(),
+                           static_cast<uint32_t>(invalid.size()), configs};
+    CSSValue result;
+    parser.ParseCSSColorTo(result);
+    EXPECT_TRUE(result.IsEmpty());
+  }
+}
+
 }  // namespace test
 }  // namespace tasm
 }  // namespace lynx
