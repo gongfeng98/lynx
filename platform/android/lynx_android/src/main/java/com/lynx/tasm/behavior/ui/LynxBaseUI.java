@@ -239,6 +239,9 @@ public abstract class LynxBaseUI
   private String mExposureUIMarginLeft;
   private String mExposureUIMarginRight;
   private String mExposureArea;
+  // Used to control whether the viewport clipping of this node is considered during exposure
+  // detection.
+  private EnableStatus mEnableExposureUIClip = EnableStatus.Undefined;
 
   private boolean mEnableBitmapGradient;
 
@@ -1430,6 +1433,15 @@ public abstract class LynxBaseUI
 
   public String getExposureArea() {
     return mExposureArea;
+  }
+
+  @LynxProp(name = PropsConstants.ENABLE_EXPOSURE_UI_CLIP)
+  public void setEnableExposureUIClip(boolean enableExposureUIClip) {
+    mEnableExposureUIClip = enableExposureUIClip ? EnableStatus.Enable : EnableStatus.Disable;
+  }
+
+  public EnableStatus getEnableExposureUIClip() {
+    return mEnableExposureUIClip;
   }
 
   @Deprecated

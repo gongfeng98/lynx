@@ -116,6 +116,7 @@ std::unordered_map<std::string, UIBase::PropSetter> UIBase::prop_setters_ = {
     {"exposure-ui-margin-top", &UIBase::SetExposureUIMarginTop},
     {"exposure-ui-margin-bottom", &UIBase::SetExposureUIMarginBottom},
     {"exposure-area", &UIBase::SetExposureArea},
+    {"enable-exposure-ui-clip", &UIBase::SetEnableExposureUIClip},
     {"dataset", &UIBase::SetDataset},
     {"clip-path", &UIBase::SetClipPath},
     {"perspective", &UIBase::SetPerspective},
@@ -1244,6 +1245,14 @@ void UIBase::SetExposureArea(const lepus::Value& value) {
   new_exposure_props_["exposure-area"] = value;
 }
 
+void UIBase::SetEnableExposureUIClip(const lepus::Value& value) {
+  if (value.IsBool()) {
+    enable_exposure_ui_clip_ = value.Bool() ? LynxEventPropStatus::kEnable
+                                            : LynxEventPropStatus::kDisable;
+  }
+  new_exposure_props_["enable-exposure-ui-clip"] = value;
+}
+
 void UIBase::SetDataset(const lepus::Value& value) {
   dataset_ = std::move(value);
 }
@@ -1739,7 +1748,10 @@ bool UIBase::IsVisibleForExposure(
     if (current->IsOverlay()) {
       break;
     }
-    if (current->IsScrollable() || current->IsRoot()) {
+    if (current->EnableExposureUIClip() == LynxEventPropStatus::kEnable ||
+        (current->EnableExposureUIClip() == LynxEventPropStatus::kUndefined &&
+         current->IsScrollable()) ||
+        current->IsRoot()) {
       parent_array.push_back(current);
       int sign = current->Sign();
       parent_rect[0] = 0;

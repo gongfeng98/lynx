@@ -3683,6 +3683,7 @@ public class LynxUI : <__covariant V UIView> {
   public NSString* LynxUI()::exposureUIMarginLeft exposureUIMarginLeft;
   public NSString* LynxUI()::exposureUIMarginRight exposureUIMarginRight;
   public NSString* LynxUI()::exposureArea exposureArea;
+  public enum LynxEventPropStatus LynxUI()::enableExposureUIClip enableExposureUIClip;
   public CGFloat LynxUI()::hitSlopTop hitSlopTop;
   public CGFloat LynxUI()::hitSlopBottom hitSlopBottom;
   public CGFloat LynxUI()::hitSlopLeft hitSlopLeft;

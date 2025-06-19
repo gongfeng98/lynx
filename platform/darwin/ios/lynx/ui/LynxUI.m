@@ -172,6 +172,7 @@ static const CGFloat OFFSET_ROTATE_AUTO = -1024.f;
   _enableTouchPseudoPropagation = YES;
   _ignoreFocus = kLynxEventPropUndefined;
   _eventThrough = kLynxEventPropUndefined;
+  _enableExposureUIClip = kLynxEventPropUndefined;
   // touch slop's default value is 8 the same as Android.
   _touchSlop = 8;
   _onResponseChain = NO;
@@ -2970,6 +2971,14 @@ LYNX_PROP_SETTER("exposure-area", setExposureArea, NSString*) {
     value = nil;
   }
   _exposureArea = value;
+}
+
+LYNX_PROP_SETTER("enable-exposure-ui-clip", setEnableExposureUIClip, BOOL) {
+  if (requestReset) {
+    _enableExposureUIClip = kLynxEventPropUndefined;
+    return;
+  }
+  _enableExposureUIClip = value ? kLynxEventPropEnable : kLynxEventPropDisable;
 }
 
 LYNX_PROP_SETTER("block-list-event", setBlockListEvent, BOOL) { self.blockListEvent = value; }

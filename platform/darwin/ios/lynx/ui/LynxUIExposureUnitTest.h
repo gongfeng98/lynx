@@ -7,8 +7,6 @@
 #import <XCTest/XCTest.h>
 
 @interface LynxUI ()
-@property(nonatomic, weak) LynxUIContext *context;
-
 - (BOOL)isVisible;
 @end
 

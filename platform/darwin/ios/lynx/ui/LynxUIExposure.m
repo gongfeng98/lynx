@@ -327,7 +327,8 @@
     if (![parent isVisible]) {
       return NO;
     }
-    if ([parent isScrollContainer]) {
+    if (parent.enableExposureUIClip == kLynxEventPropEnable ||
+        (parent.enableExposureUIClip == kLynxEventPropUndefined && [parent isScrollContainer])) {
       [parentAry addObject:parent];
     }
     LynxUI *uiParent = parent.parent;

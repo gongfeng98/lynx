@@ -179,6 +179,8 @@ public class PropsConstants {
   public static final String EXPOSURE_UI_MARGIN_LEFT = "exposure-ui-margin-left";
   public static final String EXPOSURE_UI_MARGIN_RIGHT = "exposure-ui-margin-right";
   public static final String EXPOSURE_AREA = "exposure-area";
+
+  public static final String ENABLE_EXPOSURE_UI_CLIP = "enable-exposure-ui-clip";
   public static final String SUSPENDABLE = "suspendable";
   public static final String PERSPECTIVE = "perspective";
   public static final String RENDER_TO_HARDWARE_TEXTURE = "hardware-layer";

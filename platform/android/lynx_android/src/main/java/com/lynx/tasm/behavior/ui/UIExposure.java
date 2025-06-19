@@ -16,6 +16,7 @@ import com.lynx.tasm.base.LLog;
 import com.lynx.tasm.behavior.LynxContext;
 import com.lynx.tasm.behavior.LynxObserverManager;
 import com.lynx.tasm.behavior.LynxUIOwner;
+import com.lynx.tasm.behavior.event.EventTarget;
 import com.lynx.tasm.event.LynxDetailEvent;
 import com.lynx.tasm.utils.UIThreadUtils;
 import com.lynx.tasm.utils.UnitUtils;
@@ -336,7 +337,9 @@ public class UIExposure extends LynxObserverManager {
       if (parent instanceof LynxUI && !((LynxUI) parent).isVisible()) {
         return false;
       }
-      if (parent.isScrollContainer()) {
+      if (parent.getEnableExposureUIClip() == EventTarget.EnableStatus.Enable
+          || (parent.getEnableExposureUIClip() == EventTarget.EnableStatus.Undefined
+              && parent.isScrollContainer())) {
         parentList.add(parent);
       }
       if (parent.isOverlay()) {

@@ -167,6 +167,9 @@ class BASE_EXPORT
   float ExposureUIMarginTop() { return exposure_ui_margin_top_; }
   float ExposureUIMarginBottom() { return exposure_ui_margin_bottom_; }
   float ExposureArea() { return exposure_area_; }
+  LynxEventPropStatus EnableExposureUIClip() {
+    return enable_exposure_ui_clip_;
+  }
   const lepus::Value& Dataset() { return dataset_; }
   bool HasAppearEvent() { return has_appear_event_; }
   bool HasDisappearEvent() { return has_disappear_event_; }
@@ -241,6 +244,9 @@ class BASE_EXPORT
   bool need_clip_{false};
   std::unique_ptr<NativeNodeContent> node_content_{nullptr};
   LynxEventPropStatus event_through_{LynxEventPropStatus::kUndefined};
+  /** Used to control whether the viewport clipping of this node is considered
+   * during exposure detection.  */
+  LynxEventPropStatus enable_exposure_ui_clip_{LynxEventPropStatus::kUndefined};
 
   std::unique_ptr<BackgroundDrawable> background_drawable_{nullptr};
   std::vector<std::string> events_;
@@ -335,6 +341,7 @@ class BASE_EXPORT
   void SetExposureUIMarginTop(const lepus::Value& value);
   void SetExposureUIMarginBottom(const lepus::Value& value);
   void SetExposureArea(const lepus::Value& value);
+  void SetEnableExposureUIClip(const lepus::Value& value);
   void SetDataset(const lepus::Value& value);
   void SetClipPath(const lepus::Value& value);
   void SetPerspective(const lepus::Value& value);

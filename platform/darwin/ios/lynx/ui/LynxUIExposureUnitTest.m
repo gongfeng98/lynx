@@ -4,6 +4,8 @@
 
 #import "LynxUIExposureUnitTest.h"
 #import <Lynx/LynxPropsProcessor.h>
+#import <Lynx/LynxUI+Internal.h>
+#import <Lynx/LynxUIScroller.h>
 #import <Lynx/LynxUIView.h>
 
 @implementation LynxUIExposureUnitTest
@@ -134,6 +136,47 @@
   [mockExposure exposureHandler:nil];
   XCTAssertTrue(mockExposure.uiInWindowMapBefore.count == 1);
   OCMVerifyAll(mockOverlay);
+}
+
+- (void)testClipExposure {
+  LynxUIExposure *mockExposure = OCMPartialMock([[LynxUIExposure alloc] init]);
+  LynxRootUI *mockRoot =
+      OCMPartialMock([[LynxRootUI alloc] initWithLynxView:(LynxView *)[UIView new]]);
+  OCMStub([mockRoot isVisible]).andReturn(YES);
+  OCMStub([mockRoot getBoundingClientRectToScreen]).andReturn(CGRectMake(0, 0, 300, 500));
+  mockExposure.rootUI = mockRoot;
+  LynxUIView *mockScrollUI =
+      OCMPartialMock([[LynxUIScroller alloc] initWithView:[UIScrollView new]]);
+  OCMStub([mockScrollUI isVisible]).andReturn(YES);
+  OCMStub([mockScrollUI getBoundingClientRectToScreen]).andReturn(CGRectMake(0, 0, 300, 100));
+  LynxUIView *mockClipUI = OCMPartialMock([[LynxUIView alloc] initWithView:[UIView new]]);
+  OCMStub([mockClipUI isVisible]).andReturn(YES);
+  mockClipUI.enableExposureUIClip = kLynxEventPropEnable;
+  OCMStub([mockClipUI getBoundingClientRectToScreen]).andReturn(CGRectMake(0, 150, 300, 100));
+  LynxUIView *mockExposeTarget = OCMPartialMock([[LynxUIView alloc] initWithView:[UIView new]]);
+  mockExposeTarget.exposureID = @"1";
+  OCMStub([mockExposeTarget isVisible]).andReturn(YES);
+  OCMStub([mockExposeTarget getBoundingClientRectToScreen]).andReturn(CGRectMake(0, 300, 300, 50));
+  OCMStub([mockExposure borderOfExposureScreen:mockExposeTarget])
+      .andReturn(CGRectMake(0, 0, 300, 500));
+
+  [mockRoot insertChild:mockScrollUI atIndex:0];
+  [mockScrollUI insertChild:mockClipUI atIndex:0];
+  [mockClipUI insertChild:mockExposeTarget atIndex:0];
+
+  mockExposeTarget.frame = CGRectMake(0, 150, 300, 50);
+  [mockExposure addLynxUI:mockExposeTarget withUniqueIdentifier:nil extraData:nil useOptions:nil];
+  [mockExposure stopExposure:@{@"sendEvent" : @YES}];
+  mockExposure.isStopExposure = NO;
+
+  [mockExposure exposureHandler:nil];
+  XCTAssertTrue(mockExposure.uiInWindowMapBefore.count == 0);
+  mockScrollUI.enableExposureUIClip = kLynxEventPropDisable;
+  [mockExposure exposureHandler:nil];
+  XCTAssertTrue(mockExposure.uiInWindowMapBefore.count == 0);
+  mockClipUI.enableExposureUIClip = kLynxEventPropDisable;
+  [mockExposure exposureHandler:nil];
+  XCTAssertTrue(mockExposure.uiInWindowMapBefore.count == 1);
 }
 
 @end

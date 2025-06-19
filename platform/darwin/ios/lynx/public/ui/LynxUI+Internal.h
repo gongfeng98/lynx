@@ -50,6 +50,9 @@ FOUNDATION_EXPORT short const OVERFLOW_HIDDEN_VAL;
 @property(nonatomic) NSString *exposureUIMarginRight;
 
 @property(nonatomic) NSString *exposureArea;
+/** Used to control whether the viewport clipping of this node is considered during exposure
+ * detection.  */
+@property(nonatomic) enum LynxEventPropStatus enableExposureUIClip;
 
 @property(nonatomic, readonly) CGFloat hitSlopTop;
 @property(nonatomic, readonly) CGFloat hitSlopBottom;

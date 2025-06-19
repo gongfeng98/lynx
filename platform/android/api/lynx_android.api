@@ -3690,6 +3690,8 @@ public class abstract com::lynx::tasm::behavior::ui::LynxBaseUI : com.lynx.tasm.
   public String com.lynx.tasm.behavior.ui.LynxBaseUI.getExposureUIMarginRight();
   public void com.lynx.tasm.behavior.ui.LynxBaseUI.setExposureArea(String exposureArea);
   public String com.lynx.tasm.behavior.ui.LynxBaseUI.getExposureArea();
+  public void com.lynx.tasm.behavior.ui.LynxBaseUI.setEnableExposureUIClip(boolean enableExposureUIClip);
+  public EnableStatus com.lynx.tasm.behavior.ui.LynxBaseUI.getEnableExposureUIClip();
   public void com.lynx.tasm.behavior.ui.LynxBaseUI.setBorderRadius(int index, @Nullable String borderRadius);
   public void com.lynx.tasm.behavior.ui.LynxBaseUI.setBorderWidth(int index, String borderWidth);
   public void com.lynx.tasm.behavior.ui.LynxBaseUI.setBorderColor(@Nullable String borderColor);
@@ -7577,6 +7579,7 @@ public class com::lynx::tasm::behavior::PropsConstants :  {
   public final String com.lynx.tasm.behavior.PropsConstants.EXPOSURE_UI_MARGIN_LEFT EXPOSURE_UI_MARGIN_LEFT;
   public final String com.lynx.tasm.behavior.PropsConstants.EXPOSURE_UI_MARGIN_RIGHT EXPOSURE_UI_MARGIN_RIGHT;
   public final String com.lynx.tasm.behavior.PropsConstants.EXPOSURE_AREA EXPOSURE_AREA;
+  public final String com.lynx.tasm.behavior.PropsConstants.ENABLE_EXPOSURE_UI_CLIP ENABLE_EXPOSURE_UI_CLIP;
   public final String com.lynx.tasm.behavior.PropsConstants.SUSPENDABLE SUSPENDABLE;
   public final String com.lynx.tasm.behavior.PropsConstants.PERSPECTIVE PERSPECTIVE;
   public final String com.lynx.tasm.behavior.PropsConstants.RENDER_TO_HARDWARE_TEXTURE RENDER_TO_HARDWARE_TEXTURE;
