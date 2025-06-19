@@ -270,6 +270,20 @@ void TasmMediator::ReportElementMemoryInfo(float mem_size_byte,
   });
 }
 
+void TasmMediator::OnRuntimeGC(
+    std::unordered_map<std::string, std::string> mem_info) {
+  if (!perf_actor_) {
+    return;
+  }
+  perf_actor_->ActAsync(
+      [memory_info = std::move(mem_info)](auto& performance) mutable {
+        memory_info.emplace(tasm::performance::kCategory,
+                            tasm::performance::kCategoryMTSEngine);
+        performance->GetMemoryMonitor().UpdateScriptingEngineMemoryUsage(
+            std::move(memory_info));
+      });
+}
+
 void TasmMediator::RequestVsync(
     uintptr_t id, base::MoveOnlyClosure<void, int64_t, int64_t> callback) {
   InitVSyncMonitorIfNeeded();
