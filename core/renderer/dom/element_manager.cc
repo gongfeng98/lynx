@@ -990,38 +990,35 @@ void ElementManager::NotifyElementDestroy(Element *element) {
 
 void ElementManager::TickAllElement(fml::TimePoint &frame_time) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_MANAGER_TICK_ALL_ELEMENT);
-  if (element_vsync_proxy_) {
+  if (element_vsync_proxy_ && !animation_element_set_.empty()) {
     auto options = std::make_shared<PipelineOptions>();
-    auto temp_element_set = std::unordered_set<Element *>();
-    // We should swap all element to a temporary set before when we tick them.
-    temp_element_set.swap(animation_element_set_);
-    if (!temp_element_set.empty()) {
-      bool has_layout_animated_style = false;
-      for (auto iter : temp_element_set) {
-        if (iter->is_fiber_element() &&
-            static_cast<FiberElement *>(iter)->IsDetached()) {
-          continue;
-        }
-        // tick element, for List.
-        iter->TickElement(frame_time);
-
-        // tick element, for Animation.
-        if (iter->TickAllAnimation(frame_time, options)) {
-          has_layout_animated_style = true;
-        }
+    auto temp_element_set = animation_element_set_;
+    animation_element_set_.clear_keep_buffer();
+    bool has_layout_animated_style = false;
+    for (auto iter : temp_element_set) {
+      if (iter->is_fiber_element() &&
+          static_cast<FiberElement *>(iter)->IsDetached()) {
+        continue;
       }
-      if (!has_layout_animated_style) {
-        painting_context()->UpdateNodeReadyPatching();
-        painting_context()->Flush();
+      // tick element, for List.
+      iter->TickElement(frame_time);
+
+      // tick element, for Animation.
+      if (iter->TickAllAnimation(frame_time, options)) {
+        has_layout_animated_style = true;
+      }
+    }
+    if (!has_layout_animated_style) {
+      painting_context()->UpdateNodeReadyPatching();
+      painting_context()->Flush();
+    } else {
+      // Optimization: If there is only an element need to be ticked, take
+      // it as root to flush action.
+      if (temp_element_set.size() == 1) {
+        OnPatchFinish(options, static_cast<tasm::FiberElement *>(
+                                   *temp_element_set.begin()));
       } else {
-        // Optimization: If there is only an element need to be ticked, take
-        // it as root to flush action.
-        if (temp_element_set.size() == 1) {
-          OnPatchFinish(options, static_cast<tasm::FiberElement *>(
-                                     *temp_element_set.begin()));
-        } else {
-          OnPatchFinish(options);
-        }
+        OnPatchFinish(options);
       }
     }
   }

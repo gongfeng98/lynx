@@ -1562,6 +1562,7 @@ struct KeyValueArray : protected MapStatisticsBase<Stat> {
     // We should also free memory so `array_.clear()` is not feasible.
     array_.clear_and_shrink();
   }
+  void clear_keep_buffer() { array_.clear(); }
 
   bool reserve(size_t count) { return array_.reserve(count); }
 

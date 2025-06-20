@@ -1284,9 +1284,9 @@ class ElementManager : public ElementContextDelegate {
   // Animation proxy class
   std::shared_ptr<ElementVsyncProxy> element_vsync_proxy_;
 
-  // TODO(yuyang), optimize these two to reduce memory repeatedly allocations.
-  std::unordered_set<tasm::Element *> animation_element_set_;
-  std::unordered_set<tasm::Element *> paused_animation_element_set_;  // paused
+  base::OrderedFlatSet<tasm::Element *> animation_element_set_;
+  base::OrderedFlatSet<tasm::Element *>
+      paused_animation_element_set_;  // paused
 
   std::list<base::OnceTaskRefptr<ParallelFlushReturn>> parallel_task_queue_;
 
