@@ -1224,6 +1224,50 @@ TEST_P(FiberElementTest, TestComponentElement) {
   EXPECT_EQ(comp->ComponentStrId(), "21");
 }
 
+TEST_P(FiberElementTest, TestMarkLayoutDirty) {
+  manager->enable_layout_in_element_mode_ = true;
+
+  auto page = manager->CreateFiberPage("page", 11);
+
+  auto parent = manager->CreateFiberNode("view");
+  EXPECT_EQ(static_cast<int>(parent->GetChildCount()), 0);
+  page->InsertNode(parent);
+
+  auto element = manager->CreateFiberNode("view");
+  element->SetStyleInternal(
+      CSSPropertyID::kPropertyIDOverflow,
+      tasm::CSSValue(lepus::Value("visible"),
+                     lynx::tasm::CSSValuePattern::STRING));
+  parent->InsertNode(element);
+
+  auto element0 = manager->CreateFiberNode("view");
+  element->InsertNode(element0);
+
+  page->FlushActionsAsRoot();
+
+  EXPECT_TRUE(page->sl_node_ != nullptr);
+  EXPECT_TRUE(page->sl_node_->is_dirty_);
+  EXPECT_TRUE(parent->sl_node_ != nullptr);
+  EXPECT_TRUE(parent->sl_node_->is_dirty_);
+  EXPECT_TRUE(element->sl_node_ != nullptr);
+  EXPECT_TRUE(element->sl_node_->is_dirty_);
+  EXPECT_TRUE(element0->sl_node_ != nullptr);
+  EXPECT_TRUE(element0->sl_node_->is_dirty_);
+
+  page->Layout(std::make_shared<PipelineOptions>());
+
+  EXPECT_FALSE(page->sl_node_->is_dirty_);
+  EXPECT_FALSE(parent->sl_node_->is_dirty_);
+  EXPECT_FALSE(element->sl_node_->is_dirty_);
+  EXPECT_FALSE(element0->sl_node_->is_dirty_);
+
+  element0->RequestLayout();
+  EXPECT_TRUE(page->sl_node_->is_dirty_);
+  EXPECT_TRUE(parent->sl_node_->is_dirty_);
+  EXPECT_TRUE(element->sl_node_->is_dirty_);
+  EXPECT_TRUE(element0->sl_node_->is_dirty_);
+}
+
 TEST_P(FiberElementTest, InsertNode) {
   auto parent = manager->CreateFiberNode("view");
   EXPECT_EQ(static_cast<int>(parent->GetChildCount()), 0);

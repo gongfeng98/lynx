@@ -240,6 +240,21 @@ TEST_F(TextElementTest, TestSetTextOverflow) {
       lepus::Value(static_cast<int>(starlight::TextOverflowType::kClip)));
 }
 
+TEST_F(TextElementTest, TestConvertContent) {
+  EXPECT_EQ(TextElement::ConvertContent(lepus::Value("test")),
+            base::String("test"));
+  EXPECT_EQ(TextElement::ConvertContent(lepus::Value((int32_t)1)),
+            base::String("1"));
+  EXPECT_EQ(TextElement::ConvertContent(lepus::Value((int64_t)11231212121212)),
+            base::String("11231212121212"));
+  EXPECT_EQ(TextElement::ConvertContent(lepus::Value(1.00)), base::String("1"));
+  EXPECT_EQ(TextElement::ConvertContent(lepus::Value(1.10)),
+            base::String("1.1"));
+  EXPECT_EQ(TextElement::ConvertContent(lepus::Value(1.1)),
+            base::String("1.1"));
+  EXPECT_EQ(TextElement::ConvertContent(lepus::Value()), base::String("null"));
+}
+
 }  // namespace testing
 }  // namespace tasm
 }  // namespace lynx
