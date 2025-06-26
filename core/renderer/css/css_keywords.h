@@ -370,6 +370,9 @@ enum class TokenType {
 
   TOKEN_TRUE,
   TOKEN_FALSE,
+
+  ON,
+  OFF,
 };
 
 struct TokenValue {

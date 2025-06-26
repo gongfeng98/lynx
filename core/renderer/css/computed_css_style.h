@@ -527,7 +527,10 @@ class ComputedCSSStyle {
   V(XHandleColor)                        \
   V(OffsetDistance)                      \
   V(OffsetPath)                          \
-  V(OffsetRotate)
+  V(OffsetRotate)                        \
+  V(FontVariationSettings)               \
+  V(FontFeatureSettings)                 \
+  V(FontOpticalSizing)
 
 #define GETTER_STYLE_STRING(name) lepus_value name##ToLepus();
   FOREACH_PLATFORM_PROPERTY(GETTER_STYLE_STRING)

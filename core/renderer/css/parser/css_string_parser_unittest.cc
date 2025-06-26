@@ -1129,6 +1129,149 @@ TEST(CSSStringParser, RGBColor) {
     EXPECT_TRUE(result.IsEmpty());
   }
 }
+TEST(CSSStringParser, open_type_tag) {
+  EXPECT_TRUE(CSSStringParser::IsValidOpenTypeTag("aBcD"));
+  EXPECT_TRUE(CSSStringParser::IsValidOpenTypeTag("1234"));
+  EXPECT_TRUE(CSSStringParser::IsValidOpenTypeTag("ab12"));
+  EXPECT_FALSE(CSSStringParser::IsValidOpenTypeTag(""));
+  EXPECT_FALSE(CSSStringParser::IsValidOpenTypeTag("abc"));
+  EXPECT_FALSE(CSSStringParser::IsValidOpenTypeTag("abcde"));
+  EXPECT_FALSE(CSSStringParser::IsValidOpenTypeTag("ab,.c"));
+}
+
+TEST(CSSStringParser, font_variation_settings) {
+  CSSParserConfigs configs;
+
+  // Normal cases
+  {
+    std::string raw = R"('wght' 800)";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_TRUE(parser.ParseFontVariationSettings(arr));
+    EXPECT_EQ(arr->size(), 2);
+    EXPECT_EQ(arr->get(0).ToString(), "wght");
+    EXPECT_FLOAT_EQ(arr->get(1).Number(), 800.0);
+  }
+  {
+    std::string raw = R"("wdth" 125.0, 'wght' 750)";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_TRUE(parser.ParseFontVariationSettings(arr));
+    EXPECT_EQ(arr->size(), 4);
+    EXPECT_EQ(arr->get(0).ToString(), "wdth");
+    EXPECT_FLOAT_EQ(arr->get(1).Number(), 125.0);
+    EXPECT_EQ(arr->get(2).ToString(), "wght");
+    EXPECT_FLOAT_EQ(arr->get(3).Number(), 750.0);
+  }
+  {
+    std::string raw = R"(normal)";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_TRUE(parser.ParseFontVariationSettings(arr));
+    EXPECT_EQ(arr->size(), 0);
+  }
+  // Error cases
+  {
+    std::string raw = R"('wght')";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_FALSE(parser.ParseFontVariationSettings(arr));
+  }
+  {
+    std::string raw = R"('wght', 100)";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_FALSE(parser.ParseFontVariationSettings(arr));
+  }
+  {
+    std::string raw = R"('badtagname' 100)";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_FALSE(parser.ParseFontVariationSettings(arr));
+  }
+}
+
+TEST(CSSStringParser, font_feature_settings) {
+  CSSParserConfigs configs;
+
+  // Normal cases
+  {
+    std::string raw = R"('dlig')";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_TRUE(parser.ParseFontFeatureSettings(arr));
+    EXPECT_EQ(arr->size(), 2);
+    EXPECT_EQ(arr->get(0).ToString(), "dlig");
+    EXPECT_EQ(arr->get(1).Int32(), 1);
+  }
+  {
+    std::string raw = R"(dlig on, smcp off, c2sc 2,aalt 1)";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_TRUE(parser.ParseFontFeatureSettings(arr));
+    EXPECT_EQ(arr->size(), 8);
+    EXPECT_EQ(arr->get(0).ToString(), "dlig");
+    EXPECT_EQ(arr->get(1).Int32(), 1);
+    EXPECT_EQ(arr->get(2).ToString(), "smcp");
+    EXPECT_EQ(arr->get(3).Int32(), 0);
+    EXPECT_EQ(arr->get(4).ToString(), "c2sc");
+    EXPECT_EQ(arr->get(5).Int32(), 2);
+    EXPECT_EQ(arr->get(6).ToString(), "aalt");
+    EXPECT_EQ(arr->get(7).Int32(), 1);
+  }
+  {
+    std::string raw = R"('dlig' on, "smcp" off, 'c2sc' 2)";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_TRUE(parser.ParseFontFeatureSettings(arr));
+    EXPECT_EQ(arr->size(), 6);
+    EXPECT_EQ(arr->get(0).ToString(), "dlig");
+    EXPECT_EQ(arr->get(1).Int32(), 1);
+    EXPECT_EQ(arr->get(2).ToString(), "smcp");
+    EXPECT_EQ(arr->get(3).Int32(), 0);
+    EXPECT_EQ(arr->get(4).ToString(), "c2sc");
+    EXPECT_EQ(arr->get(5).Int32(), 2);
+  }
+  {
+    std::string raw = R"(normal)";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_TRUE(parser.ParseFontFeatureSettings(arr));
+    EXPECT_EQ(arr->size(), 0);
+  }
+  // Error cases
+  {
+    std::string raw = R"('dlig' , on off)";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_FALSE(parser.ParseFontFeatureSettings(arr));
+  }
+  {
+    std::string raw = R"('badtagname')";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_FALSE(parser.ParseFontFeatureSettings(arr));
+  }
+  {
+    std::string raw = R"('dlig',, 'smcp')";
+    CSSStringParser parser{raw.c_str(), static_cast<uint32_t>(raw.size()),
+                           configs};
+    auto arr = lepus::CArray::Create();
+    EXPECT_FALSE(parser.ParseFontFeatureSettings(arr));
+  }
+}
 
 }  // namespace test
 }  // namespace tasm

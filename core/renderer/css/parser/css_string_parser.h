@@ -249,6 +249,9 @@ class CSSStringParser final {
   bool ParseAnimationPlayState(bool single, CSSValue& ret);
   bool ParseAnimationName(bool single, CSSValue& ret);
   bool ParseAnimation(bool single, lepus::Value arr[8]);
+  bool ParseFontVariationSettings(fml::RefPtr<lepus::CArray>& arr);
+  bool ParseFontFeatureSettings(fml::RefPtr<lepus::CArray>& arr);
+  bool ConsumeOpenTypeTag(fml::RefPtr<lepus::CArray>& arr);
 
   const char* content() const { return scanner_.content(); }
 
@@ -463,6 +466,7 @@ class CSSStringParser final {
   static void ClampColorAndStopListAtBack(base::Vector<uint32_t>& colors,
                                           base::Vector<float>& stops,
                                           uint32_t tail_position);
+  static bool IsValidOpenTypeTag(const std::string& tag);
   void SkipWhitespaceToken();
   bool ConsumeAndSave(TokenType tokenType, Token& token);
   bool LengthOrPercentageValue(Token& token);

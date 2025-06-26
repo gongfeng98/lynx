@@ -1,0 +1,23 @@
+{
+  "name": "font-optical-sizing",
+  "id": 219,
+  "type": "enum",
+  "default_value": "none",
+  "version": "3.4",
+  "author": "zhouzhuangzhuang",
+  "consumption_status": "layout-wanted",
+  "desc": "",
+  "values": [
+    {
+      "value": "none",
+      "version": "3.4",
+      "desc": ""
+    },
+    {
+      "value": "auto",
+      "version": "3.4",
+      "desc": ""
+    }
+  ],
+  "is_shorthand": false
+}

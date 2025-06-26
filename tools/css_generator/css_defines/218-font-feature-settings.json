@@ -1,0 +1,11 @@
+{
+  "name": "font-feature-settings",
+  "id": 218,
+  "type": "complex",
+  "default_value": "normal",
+  "version": "3.4",
+  "author": "zhouzhuangzhuang",
+  "consumption_status": "layout-wanted",
+  "desc": "",
+  "is_shorthand": false
+}

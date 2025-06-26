@@ -41,6 +41,9 @@ void TextAttributes::Apply(const TextAttributes& rhs) {
                                     ? *rhs.auto_font_size_preset_sizes
                                     : auto_font_size_preset_sizes;
   hyphens = rhs.hyphens;
+  font_variation_settings = rhs.font_variation_settings;
+  font_feature_settings = rhs.font_feature_settings;
+  font_optical_sizing = rhs.font_optical_sizing;
 }
 
 }  // namespace starlight

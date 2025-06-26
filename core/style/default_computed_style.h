@@ -62,6 +62,8 @@ struct DefaultComputedStyle {
         base::InlineVector<float, 1>()};
     return *l;
   }
+  static constexpr FontOpticalSizingType DEFAULT_FONT_OPTICAL_SIZING =
+      FontOpticalSizingType::kNone;
 
   static AnimationData DEFAULT_ANIMATION() {
     static base::NoDestructor<AnimationData> l{AnimationData()};

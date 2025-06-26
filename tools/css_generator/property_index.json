@@ -1,6 +1,6 @@
 [
     {
-        "count": 216
+        "count": 219
     },
     {
         "id": 1,
@@ -865,5 +865,17 @@
     {
         "id": 216,
         "name": "offset-rotate"
+    },
+    {
+        "id": 217,
+        "name": "font-variation-settings"
+    },
+    {
+        "id": 218,
+        "name": "font-feature-settings"
+    },
+    {
+        "id": 219,
+        "name": "font-optical-sizing"
     }
 ]

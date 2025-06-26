@@ -1,0 +1,11 @@
+{
+  "name": "font-variation-settings",
+  "id": 217,
+  "type": "complex",
+  "default_value": "normal",
+  "version": "3.4",
+  "author": "zhouzhuangzhuang",
+  "consumption_status": "layout-wanted",
+  "desc": "",
+  "is_shorthand": false
+}

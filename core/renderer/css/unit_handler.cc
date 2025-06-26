@@ -41,7 +41,9 @@
 #include "core/renderer/css/parser/filter_handler.h"
 #include "core/renderer/css/parser/flex_flow_handler.h"
 #include "core/renderer/css/parser/flex_handler.h"
+#include "core/renderer/css/parser/font_feature_settings_handler.h"
 #include "core/renderer/css/parser/font_length_handler.h"
+#include "core/renderer/css/parser/font_variation_settings_handler.h"
 #include "core/renderer/css/parser/four_sides_shorthand_handler.h"
 #include "core/renderer/css/parser/gap_handler.h"
 #include "core/renderer/css/parser/grid_position_handler.h"
@@ -248,6 +250,8 @@ UnitHandler::UnitHandler() {
   AutoFontSizePresetSizesHandler::Register(interceptors_);
   GapHandler::Register(interceptors_);
   OffsetRotateHandler::Register(interceptors_);
+  FontVariationSettingsHandler::Register(interceptors_);
+  FontFeatureSettingsHandler::Register(interceptors_);
 }
 
 }  // namespace tasm

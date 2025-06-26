@@ -77,7 +77,9 @@ void PropBundleStyleWriter::PushStyleToBundle(
   V(Perspective)                         \
   V(TextIndent)                          \
   V(XAutoFontSize)                       \
-  V(XAutoFontSizePresetSizes)
+  V(XAutoFontSizePresetSizes)            \
+  V(FontVariationSettings)               \
+  V(FontFeatureSettings)
 
 #define NAME_TO_LEPUS(name) name##ToLepus
 #define WRITE_STYLE_IMPL(name)                                               \
@@ -819,6 +821,18 @@ void PropBundleStyleWriter::WriteXHandleColor(
     PropBundle* bundle, starlight::ComputedCSSStyle* style) {
   bundle->SetPropsByID(CSSPropertyID::kPropertyIDXHandleColor,
                        style->GetHandleColor());
+}
+
+void PropBundleStyleWriter::WriteFontOpticalSizing(
+    PropBundle* bundle, starlight::ComputedCSSStyle* style) {
+  auto& text_attributes = style->GetTextAttributes();
+  if (text_attributes) {
+    bundle->SetPropsByID(
+        CSSPropertyID::kPropertyIDFontOpticalSizing,
+        static_cast<uint32_t>(text_attributes->font_optical_sizing));
+  } else {
+    bundle->SetNullPropsByID(CSSPropertyID::kPropertyIDFontOpticalSizing);
+  }
 }
 
 const std::array<PropBundleStyleWriter::WriterFunc, kPropertyEnd>&

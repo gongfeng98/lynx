@@ -3950,5 +3950,86 @@ lepus_value ComputedCSSStyle::XHandleSizeToLepus() {
   return lepus_value(handle_size_);
 }
 
+bool ComputedCSSStyle::SetFontVariationSettings(const tasm::CSSValue& value,
+                                                const bool reset) {
+  PrepareOptionalForTextAttributes();
+
+  auto old_value = text_attributes_->font_variation_settings;
+  if (reset) {
+    if (old_value) {
+      old_value = nullptr;
+      return true;
+    }
+    return false;
+  }
+
+  CSS_HANDLER_FAIL_IF_NOT(
+      value.IsArray(), parser_configs_.enable_css_strict_mode,
+      tasm::TYPE_MUST_BE,
+      tasm::CSSProperty::GetPropertyName(tasm::kPropertyIDFontVariationSettings)
+          .c_str(),
+      tasm::ARRAY_TYPE)
+  text_attributes_->font_variation_settings = value.GetValue().Array();
+
+  return old_value.get() == nullptr ||
+         *old_value != *text_attributes_->font_variation_settings;
+}
+
+lepus_value ComputedCSSStyle::FontVariationSettingsToLepus() {
+  if (text_attributes_ && text_attributes_->font_variation_settings.get()) {
+    return lepus::Value(text_attributes_->font_variation_settings);
+  }
+  return lepus::Value(lepus::CArray::Create());
+}
+
+bool ComputedCSSStyle::SetFontFeatureSettings(const tasm::CSSValue& value,
+                                              const bool reset) {
+  PrepareOptionalForTextAttributes();
+
+  auto old_value = text_attributes_->font_feature_settings;
+  if (reset) {
+    if (old_value) {
+      old_value = nullptr;
+      return true;
+    }
+    return false;
+  }
+
+  CSS_HANDLER_FAIL_IF_NOT(
+      value.IsArray(), parser_configs_.enable_css_strict_mode,
+      tasm::TYPE_MUST_BE,
+      tasm::CSSProperty::GetPropertyName(tasm::kPropertyIDFontFeatureSettings)
+          .c_str(),
+      tasm::ARRAY_TYPE)
+  text_attributes_->font_feature_settings = value.GetValue().Array();
+
+  return old_value.get() == nullptr ||
+         *old_value != *text_attributes_->font_feature_settings;
+}
+
+lepus_value ComputedCSSStyle::FontFeatureSettingsToLepus() {
+  if (text_attributes_ && text_attributes_->font_feature_settings.get()) {
+    return lepus::Value(text_attributes_->font_feature_settings);
+  }
+  return lepus::Value(lepus::CArray::Create());
+}
+
+bool ComputedCSSStyle::SetFontOpticalSizing(const tasm::CSSValue& value,
+                                            const bool reset) {
+  PrepareOptionalForTextAttributes();
+  return CSSStyleUtils::ComputeEnumStyle<FontOpticalSizingType>(
+      value, reset, text_attributes_->font_optical_sizing,
+      DefaultComputedStyle::DEFAULT_FONT_OPTICAL_SIZING,
+      "font-optical-sizing must be an enum!", parser_configs_);
+}
+
+lepus_value ComputedCSSStyle::FontOpticalSizingToLepus() {
+  if (text_attributes_) {
+    return lepus_value(static_cast<int>(text_attributes_->font_optical_sizing));
+  } else {
+    return lepus_value();
+  }
+}
+
 }  // namespace starlight
 }  // namespace lynx

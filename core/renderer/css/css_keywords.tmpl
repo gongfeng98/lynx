@@ -325,6 +325,8 @@ running, TokenType::RUNNING
 true, TokenType::TOKEN_TRUE
 false, TokenType::TOKEN_FALSE
 fr, TokenType::FR
+on, TokenType::ON
+off, TokenType::OFF
 %%
 const struct TokenValue* GetTokenValue(const char *str, unsigned len) {
   return CSSKeywordsHash::GetTokenValue(str, len);

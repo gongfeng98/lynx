@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 3.4.3
+- Add `font-variation-settings`,`font-feature-settings` and `font-optical-sizing` CSS properties.
+
 ## 3.4.2
 - And `lynx.fetchBundle` api defines.
 - And `ResponseHandler` defines.

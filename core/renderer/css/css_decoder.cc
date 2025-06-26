@@ -252,6 +252,8 @@ std::string CSSDecoder::CSSValueEnumToString(
     case lynx::tasm::kPropertyIDXAnimationColorInterpolation:
       return ToXAnimationColorInterpolationType(
           value.GetEnum<XAnimationColorInterpolationType>());
+    case lynx::tasm::kPropertyIDFontOpticalSizing:
+      return ToFontOpticalSizingType(value.GetEnum<FontOpticalSizingType>());
       // TODO(liyanbo): this will support when parser support.
       //    case lynx::tasm::kPropertyIDBackgroundPosition:
       //      break;
@@ -1511,6 +1513,10 @@ std::string CSSDecoder::CSSValueArrayToString(
       return ToXAutoFontSizeProperty(value);
     case kPropertyIDXAutoFontSizePresetSizes:
       return ToXAutoFontSizePresetSizesProperty(value);
+    case kPropertyIDFontVariationSettings:
+      return value.AsJsonString();
+    case kPropertyIDFontFeatureSettings:
+      return value.AsJsonString();
     default:
       return value.AsJsonString();
   }

@@ -591,6 +591,8 @@ public interface com::lynx::tasm::behavior::AutoGenStyleConstants {
   public final int com.lynx.tasm.behavior.AutoGenStyleConstants.XANIMATIONCOLORINTERPOLATION_AUTO XANIMATIONCOLORINTERPOLATION_AUTO;
   public final int com.lynx.tasm.behavior.AutoGenStyleConstants.XANIMATIONCOLORINTERPOLATION_SRGB XANIMATIONCOLORINTERPOLATION_SRGB;
   public final int com.lynx.tasm.behavior.AutoGenStyleConstants.XANIMATIONCOLORINTERPOLATION_LINEARRGB XANIMATIONCOLORINTERPOLATION_LINEARRGB;
+  public final int com.lynx.tasm.behavior.AutoGenStyleConstants.FONTOPTICALSIZING_NONE FONTOPTICALSIZING_NONE;
+  public final int com.lynx.tasm.behavior.AutoGenStyleConstants.FONTOPTICALSIZING_AUTO FONTOPTICALSIZING_AUTO;
 }
 
 public class com::lynx::tasm::image::AutoSizeImage : com.lynx.tasm.behavior.shadow.ShadowNode, com.lynx.tasm.behavior.shadow.MeasureFunc {

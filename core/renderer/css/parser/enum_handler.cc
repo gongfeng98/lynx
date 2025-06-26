@@ -508,6 +508,20 @@ static bool ToXAnimationColorInterpolationType(std::string_view str,
   return true;
 }
 
+using starlight::FontOpticalSizingType;
+static bool ToFontOpticalSizingType(std::string_view str, int& result) {
+  FontOpticalSizingType type = FontOpticalSizingType::kNone;
+  if (str == "none") {
+    type = FontOpticalSizingType::kNone;
+  } else if (str == "auto") {
+    type = FontOpticalSizingType::kAuto;
+  } else {
+    return false;
+  }
+  result = static_cast<int>(type);
+  return true;
+}
+
 // AUTO INSERT END, DON'T CHANGE IT!
 
 using starlight::FlexAlignType;
@@ -696,6 +710,9 @@ HANDLER_IMPL() {
     case kPropertyIDXAnimationColorInterpolation:
       success = ToXAnimationColorInterpolationType(str, result);
       break;
+    case kPropertyIDFontOpticalSizing:
+      success = ToFontOpticalSizingType(str, result);
+      break;
     // AUTO INSERT END, DON'T CHANGE IT!
     case kPropertyIDLinearDirection:
       success = ToLinearOrientationType(str, result);
@@ -753,6 +770,7 @@ HANDLER_REGISTER_IMPL() {
   array[kPropertyIDHyphens] = &Handle;
   array[kPropertyIDXAppRegion] = &Handle;
   array[kPropertyIDXAnimationColorInterpolation] = &Handle;
+  array[kPropertyIDFontOpticalSizing] = &Handle;
   // AUTO INSERT END, DON'T CHANGE IT!
   array[kPropertyIDLinearDirection] = &Handle;
   array[kPropertyIDAlignItems] = &Handle;

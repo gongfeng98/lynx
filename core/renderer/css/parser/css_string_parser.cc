@@ -4038,5 +4038,100 @@ bool CSSStringParser::ParseAnimation(bool single, lepus::Value arr[8]) {
   }
 }
 
+bool CSSStringParser::ConsumeOpenTypeTag(fml::RefPtr<lepus::CArray> &arr) {
+  SkipWhitespaceToken();
+  std::string open_type_tag_str =
+      std::string(current_token_.start, current_token_.length);
+
+  if (open_type_tag_str.size() >= 2) {
+    char first = open_type_tag_str.front();
+    char last = open_type_tag_str.back();
+    if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+      open_type_tag_str =
+          open_type_tag_str.substr(1, open_type_tag_str.size() - 2);
+    }
+  } else {
+    return false;
+  }
+
+  if (!IsValidOpenTypeTag(open_type_tag_str)) {
+    return false;
+  }
+  arr->emplace_back(open_type_tag_str);
+  Advance();
+  return true;
+}
+
+bool CSSStringParser::IsValidOpenTypeTag(const std::string &tag) {
+  if (tag.length() != 4) {
+    return false;
+  }
+
+  for (char c : tag) {
+    if (c < 0x20 || c > 0x7E) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool CSSStringParser::ParseFontVariationSettings(
+    fml::RefPtr<lepus::CArray> &arr) {
+  Advance();
+  if (Check(TokenType::TOKEN_EOF)) {
+    return true;
+  }
+
+  if (Consume(TokenType::NORMAL)) {
+    return true;
+  }
+  do {
+    if (!ConsumeOpenTypeTag(arr)) {
+      return false;
+    }
+
+    Token number_token;
+    if (!ConsumeAndSave(TokenType::NUMBER, number_token)) {
+      return false;
+    }
+    arr->emplace_back(TokenToDouble(number_token));
+  } while (Consume(TokenType::COMMA));
+
+  return true;
+}
+
+bool CSSStringParser::ParseFontFeatureSettings(
+    fml::RefPtr<lepus::CArray> &arr) {
+  Advance();
+  if (Check(TokenType::TOKEN_EOF)) {
+    return true;
+  }
+
+  if (Consume(TokenType::NORMAL)) {
+    return true;
+  }
+  do {
+    if (!ConsumeOpenTypeTag(arr)) {
+      return false;
+    }
+
+    if (Consume(TokenType::ON)) {
+      arr->emplace_back(1);
+    } else if (Consume(TokenType::OFF)) {
+      arr->emplace_back(0);
+    } else {
+      Token number_token;
+      if (ConsumeAndSave(TokenType::NUMBER, number_token)) {
+        arr->emplace_back(static_cast<int32_t>(TokenToInt(number_token)));
+      } else {
+        arr->emplace_back(1);
+      }
+    }
+  } while (Consume(TokenType::COMMA));
+
+  return true;
+}
+
 }  // namespace tasm
 }  // namespace lynx
