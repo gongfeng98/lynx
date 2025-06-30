@@ -35,7 +35,7 @@ runs:
         source tools/envsetup.sh
         pushd explorer/android
         if [ "$BUILD_TYPE" = "release" ]; then
-          ./gradlew :LynxExplorer:assembleNoasanRelease -Penable_trace=none -PabiList=armeabi-v7a,x86,x86_64,arm64-v8a -no-daemon ${{ inputs.build-params }}
+          ./gradlew :LynxExplorer:assembleNoasanRelease -Penable_trace=perfetto -PabiList=armeabi-v7a,x86,x86_64,arm64-v8a -no-daemon ${{ inputs.build-params }}
         elif [ "$BUILD_TYPE" = "dry-run" ]; then
           ./gradlew :LynxExplorer:assembleNoasanRelease -Penable_trace=none -PabiList=x86,arm64-v8a -no-daemon ${{ inputs.build-params }}
         fi
