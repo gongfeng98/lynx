@@ -2905,6 +2905,19 @@ public class com::lynx::tasm::animation::layout::LayoutUpdateAnimation : com.lyn
   public com.lynx.tasm.animation.layout.LayoutUpdateAnimation.LayoutUpdateAnimation();
 }
 
+public class com::lynx::tasm::performance::performanceobserver::LazyBundleEntry : com.lynx.tasm.performance.performanceobserver.PerformanceEntry {
+  public String com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.componentUrl componentUrl;
+  public String com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.mode mode;
+  public double com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.size size;
+  public boolean com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.sync sync;
+  public boolean com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.loadSuccess loadSuccess;
+  public double com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.requireStart requireStart;
+  public double com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.requireEnd requireEnd;
+  public double com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.decodeStart decodeStart;
+  public double com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.decodeEnd decodeEnd;
+  public com.lynx.tasm.performance.performanceobserver.LazyBundleEntry.LazyBundleEntry(HashMap< String, Object > props);
+}
+
 public interface com::lynx::tasm::behavior::shadow::text::TypefaceCache::LazyProvider {
   public Typeface com.lynx.tasm.behavior.shadow.text.TypefaceCache.LazyProvider.getTypeface(String fontFamilyName, int style);
 }

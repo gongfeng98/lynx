@@ -1,0 +1,25 @@
+LazyBundleEntry:
+  x-type: resource
+  x-name: lazyBundle
+  allOf:
+    - $ref: 'PerformanceEntry.yml#/PerformanceEntry'
+    - type: object
+      properties:
+        componentUrl:
+          type: string
+        mode:
+          type: string
+        size:
+          type: number
+        sync:
+          type: boolean
+        loadSuccess:
+          type: boolean
+        requireStart:
+          type: number
+        requireEnd:
+          type: number
+        decodeStart:
+          type: number
+        decodeEnd:
+          type: number

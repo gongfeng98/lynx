@@ -17,22 +17,20 @@ namespace lynx {
 namespace tasm {
 namespace test {
 
-TEST(LazyBundleTest, SendTrackEvent) {
-  // settings is true, send a timing event
-  tasm::LynxEnv::GetInstance().external_env_map_
-      [tasm::LynxEnv::Key::ENABLE_REPORT_DYNAMIC_COMPONENT_EVENT] = "true";
+TEST(LazyBundleTest, GetLazyBundleEntry) {
   constexpr int32_t kInstanceId = 1;
-  LazyBundleLifecycleOption("lynx", kInstanceId, true);
-
-  // flush tasks
-  tasm::report::EventTracker::Flush(kInstanceId);
-  tasm::report::EventTrackerPlatformImpl::GetReportTaskRunner()->PostSyncTask(
-      []() {});
+  auto option = LazyBundleLifecycleOption("lynx", kInstanceId, true);
 
   // check event
-  auto const& all_events = tasm::report::EventTrackerWaitableEvent::stack_;
-  ASSERT_EQ(all_events.size(), static_cast<size_t>(1));
-  ASSERT_EQ(all_events.front().GetName(), "lynxsdk_lazy_bundle_timing");
+  auto performance_entry = option.GetLazyBundleEntry();
+  int len = performance_entry->Length();
+  std::string type =
+      performance_entry->GetValueForKey(timing::kEntryType)->str();
+  std::string name =
+      performance_entry->GetValueForKey(timing::kEntryName)->str();
+  EXPECT_EQ(type, "resource");
+  EXPECT_EQ(name, "lazyBundle");
+  EXPECT_EQ(len, 9);
 }
 
 TEST(LazyBundleTest, ConstructSuccessMessageForMTS) {

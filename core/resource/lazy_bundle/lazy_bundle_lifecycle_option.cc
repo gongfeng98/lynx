@@ -8,6 +8,7 @@
 
 #include "core/renderer/template_assembler.h"
 #include "core/services/event_report/event_tracker.h"
+#include "core/services/timing_handler/timing_constants.h"
 
 namespace lynx {
 namespace tasm {
@@ -15,14 +16,7 @@ namespace tasm {
 LazyBundleLifecycleOption::LazyBundleLifecycleOption(const std::string& url,
                                                      int instance_id,
                                                      bool enable_event_reporter)
-    : component_url(url), instance_id(instance_id) {
-  // to prevent from reading Env too frequently
-  static bool enable_report_event_from_env =
-      lynx::tasm::LynxEnv::GetInstance().GetBoolEnv(
-          lynx::tasm::LynxEnv::Key::ENABLE_REPORT_DYNAMIC_COMPONENT_EVENT,
-          enable_report_event_);
-  enable_report_event_ = enable_report_event_from_env && enable_event_reporter;
-};
+    : component_url(url), instance_id(instance_id){};
 
 bool LazyBundleLifecycleOption::HandleLoadFailure(TemplateAssembler* tasm) {
   if (sync && component_instance) {
@@ -141,31 +135,34 @@ lepus::Value LazyBundleLifecycleOption::GetPerfInfo() {
   return perf_info_;
 }
 
-LazyBundleLifecycleOption::~LazyBundleLifecycleOption() {
-  if (!enable_report_event_) {
-    return;
-  }
-  // mode is cache means that this lifecycle did not really send a request, so
-  // do not report event in this case
+std::unique_ptr<pub::Value> LazyBundleLifecycleOption::GetLazyBundleEntry() {
   if (mode == LazyBundleState::STATE_CACHE) {
-    return;
+    return nullptr;
   }
-  // do some reporter.
-  report::EventTracker::OnEvent(
-      [component_url = std::move(component_url), mode = mode,
-       is_success = is_success, binary_size = (double)binary_size, sync = sync,
-       decode_time = (double)(end_decode_time - start_decode_time),
-       require_time = (double)(end_require_time - start_require_time)](
-          report::MoveOnlyEvent& event) {
-        event.SetName("lynxsdk_lazy_bundle_timing");
-        event.SetProps("component_url", component_url);
-        event.SetProps("mode", lazy_bundle::GenerateModeInfo(mode));
-        event.SetProps("is_success", is_success);
-        event.SetProps("size", binary_size);
-        event.SetProps("sync", sync);
-        event.SetProps("decode_time", decode_time);
-        event.SetProps("require_time", require_time);
-      });
+
+  constexpr const static char kTypeResource[] = "resource";
+  constexpr const static char kNameLazyBundle[] = "lazyBundle";
+  constexpr const static char kComponentUrl[] = "componentUrl";
+  constexpr const static char kSize[] = "size";
+  constexpr const static char kMode[] = "mode";
+  constexpr const static char kDecodeStartTime[] = "decodeStart";
+  constexpr const static char kDecodeEndTime[] = "decodeEnd";
+  constexpr const static char kRequireStartTime[] = "requireStart";
+  constexpr const static char kRequireEndTime[] = "requireEnd";
+
+  auto performance_entry = value_factory_->CreateMap();
+  performance_entry->PushStringToMap(tasm::timing::kEntryType, kTypeResource);
+  performance_entry->PushStringToMap(tasm::timing::kEntryName, kNameLazyBundle);
+  performance_entry->PushStringToMap(kComponentUrl, component_url);
+  performance_entry->PushInt64ToMap(kSize, binary_size);
+  performance_entry->PushStringToMap(kMode,
+                                     lazy_bundle::GenerateModeInfo(mode));
+  performance_entry->PushUInt64ToMap(kDecodeStartTime, start_decode_time);
+  performance_entry->PushUInt64ToMap(kDecodeEndTime, end_decode_time);
+  performance_entry->PushUInt64ToMap(kRequireStartTime, start_require_time);
+  performance_entry->PushUInt64ToMap(kRequireEndTime, end_require_time);
+
+  return performance_entry;
 }
 
 void LazyBundleLifecycleOption::SyncOption(

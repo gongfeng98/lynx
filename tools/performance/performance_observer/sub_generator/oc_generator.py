@@ -65,7 +65,12 @@ def generate_objc_interface(class_name, definition, file_imports):
                     
         else:
             prop_type = process_primary_type(origin_type)[0]
-        objc_header += f'@property(nonatomic, strong) {prop_type} {prop};\n'
+        property_attribute = 'nonatomic, strong'
+        # the type of input param is NSDictionary*, so the type of value is id _Null_unspecified.
+        # therefore, we have to process the value which is not a object.
+        if prop_type == 'BOOL':
+            property_attribute = 'nonatomic, assign'
+        objc_header += f'@property({property_attribute}) {prop_type} {prop};\n'
     # If this is a base class, add a rawDictionary to store the original data.
     if class_name == 'PerformanceEntry':
         objc_header += f'@property(nonatomic, strong) NSDictionary* rawDictionary;\n'
@@ -145,8 +150,13 @@ def generate_objc_implementation(class_name, definition, file_imports):
                     update_import_statements(file_imports, ref_type)
         else:
             prop_type, default_value = process_primary_type(origin_type)
+            # the type of input param is NSDictionary*, so the type of value is id _Null_unspecified.
+            # therefore, we have to process the value which is not a object.
             if prop_type is not None:
-                objc_implementation += f'        self.{prop} = dictionary[@"{prop}"]?: {default_value};\n'
+                if (prop_type == 'BOOL'):
+                    objc_implementation += f'        self.{prop} = [dictionary[@"{prop}"] boolValue];\n'
+                else:
+                    objc_implementation += f'        self.{prop} = dictionary[@"{prop}"]?: {default_value};\n'
     # If this is a base class, add a rawDictionary to store the original data.
     if class_name == 'PerformanceEntry':
         objc_implementation += f'        self.rawDictionary = dictionary;\n'

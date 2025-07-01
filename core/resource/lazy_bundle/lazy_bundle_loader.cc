@@ -178,6 +178,17 @@ bool LazyBundleLoader::DispatchOnComponentLoaded(TemplateAssembler* tasm,
   bool need_dispatch = false;
   for (const auto& option : option_handle.mapped()) {
     need_dispatch = option->OnLazyBundleLifecycleEnd(tasm) || need_dispatch;
+    // send LazyBundleEntry
+    if (perf_controller_actor_ != nullptr) {
+      auto lazyBundleEntry = option->GetLazyBundleEntry();
+      if (lazyBundleEntry != nullptr) {
+        perf_controller_actor_->ActAsync(
+            [entry = std::move(lazyBundleEntry)](auto& performance) mutable {
+              performance->OnPerformanceEvent(std::move(entry),
+                                              tasm::performance::kEventTypeAll);
+            });
+      }
+    }
   }
 
   return need_dispatch;

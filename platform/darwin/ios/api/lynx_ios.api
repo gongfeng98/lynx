@@ -2121,6 +2121,19 @@ public class LynxLayoutTick : NSObject {
   public void LynxLayoutTick::cancelLayoutRequest();
 }
 
+public class LynxLazyBundleEntry : LynxPerformanceEntry {
+  public NSString* LynxLazyBundleEntry::componentUrl componentUrl;
+  public NSString* LynxLazyBundleEntry::mode mode;
+  public NSNumber* LynxLazyBundleEntry::size size;
+  public BOOL LynxLazyBundleEntry::sync sync;
+  public BOOL LynxLazyBundleEntry::loadSuccess loadSuccess;
+  public NSNumber* LynxLazyBundleEntry::requireStart requireStart;
+  public NSNumber* LynxLazyBundleEntry::requireEnd requireEnd;
+  public NSNumber* LynxLazyBundleEntry::decodeStart decodeStart;
+  public NSNumber* LynxLazyBundleEntry::decodeEnd decodeEnd;
+  public instancetype LynxLazyBundleEntry::initWithDictionary:(NSDictionary *dictionary);
+}
+
 public struct LynxLengthContext {
   public float LynxLengthContext::screen_width screen_width;
   public float LynxLengthContext::layouts_unit_per_px layouts_unit_per_px;

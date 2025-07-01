@@ -235,6 +235,9 @@ LynxShell* LynxShellBuilder::build() {
     shell->perf_controller_actor_->Impl()->SetPlatformImpl(
         std::move(this->performance_controller_platform_));
   }
+  if (loader_ != nullptr) {
+    loader_->SetPerfControllerActor(shell->perf_controller_actor_);
+  }
 
   if (lynx_engine_wrapper_ && lynx_engine_wrapper_->HasInit()) {
     TRACE_EVENT_BEGIN(LYNX_TRACE_CATEGORY, LYNX_SHELL_BUILDER_ATTACH_ENGINE);

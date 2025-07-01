@@ -124,7 +124,13 @@ class LazyBundleLoader : public std::enable_shared_from_this<LazyBundleLoader> {
   virtual ~LazyBundleLoader() = default;
   inline void SetEngineActor(
       std::shared_ptr<shell::LynxActor<shell::LynxEngine>> actor) {
-    engine_actor_ = actor;
+    engine_actor_ = std::move(actor);
+  }
+  inline void SetPerfControllerActor(
+      std::shared_ptr<
+          shell::LynxActor<tasm::performance::PerformanceController>>
+          actor) {
+    perf_controller_actor_ = std::move(actor);
   }
 
   virtual void RequireTemplate(RadonLazyComponent* lazy_bundle,
@@ -183,6 +189,8 @@ class LazyBundleLoader : public std::enable_shared_from_this<LazyBundleLoader> {
 
  private:
   std::shared_ptr<shell::LynxActor<shell::LynxEngine>> engine_actor_;
+  std::shared_ptr<shell::LynxActor<tasm::performance::PerformanceController>>
+      perf_controller_actor_;
   std::shared_ptr<pub::LynxResourceLoader> resource_loader_ = nullptr;
 
   std::set<std::string> requiring_urls_{};

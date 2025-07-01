@@ -27,13 +27,15 @@ struct LazyBundleLifecycleOption {
   LazyBundleLifecycleOption(LazyBundleLifecycleOption &&) = default;
   LazyBundleLifecycleOption &operator=(LazyBundleLifecycleOption &&) = default;
 
-  ~LazyBundleLifecycleOption();
+  ~LazyBundleLifecycleOption() = default;
 
   bool OnLazyBundleLifecycleEnd(TemplateAssembler *tasm);
 
   void SyncOption(const LazyBundleLifecycleOption &option);
 
+  // Deprecated. Use GetLazyBundleEntry instead.
   lepus::Value GetPerfInfo();
+  std::unique_ptr<pub::Value> GetLazyBundleEntry();
 
   std::string component_url{};
   uint32_t component_uid{0};
@@ -71,8 +73,10 @@ struct LazyBundleLifecycleOption {
 
   lepus::Value GetPerfEventMessage();
 
-  bool enable_report_event_{false};
   lepus::Value perf_info_{};
+
+  std::shared_ptr<pub::PubValueFactory> value_factory_ =
+      std::make_shared<pub::PubValueFactoryDefault>();
 };
 
 }  // namespace tasm
