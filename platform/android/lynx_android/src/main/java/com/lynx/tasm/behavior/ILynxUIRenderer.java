@@ -25,7 +25,7 @@ import com.lynx.tasm.behavior.ui.UIBody.UIBodyView;
 import com.lynx.tasm.behavior.ui.UIGroup;
 
 public interface ILynxUIRenderer {
-  public void onInitLynxView(LynxView lynxView, Context context, LynxGroup group);
+  public void onInitBodyView(UIBodyView bodyView, Context context, LynxGroup group);
 
   public void onInitLynxTemplateRender(LynxContext context, BehaviorRegistry behaviorRegistry,
       @Nullable UIBodyView body, @Nullable LynxBooleanOption longTaskMonitorEnabled);
@@ -34,7 +34,7 @@ public interface ILynxUIRenderer {
       ThreadStrategyForRendering threadStrategy, BehaviorRegistry behaviorRegistry,
       LayoutTick layoutTick);
 
-  public void attachLynxView(LynxView lynxView, LynxContext lynxContext, Context context);
+  public void attachBodyView(UIBodyView bodyView, LynxContext lynxContext, Context context);
 
   public void attachNativeFacade(NativeFacade nativeFacade);
 

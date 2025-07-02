@@ -435,7 +435,7 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
       // Successfully retrieved an engine from the pool.
       mLynxEngineRef.setLynxEngineState(LynxEngine.LynxEngineState.ON_REUSING);
       mLynxUIRender = mLynxEngineRef.getLynxUIRenderer();
-      mLynxUIRender.attachLynxView(mLynxView, mLynxContext, mContext);
+      mLynxUIRender.attachBodyView(mLynxView, mLynxContext, mContext);
     }
 
     // Setup for reused or new engine wrapper.
@@ -2488,7 +2488,7 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
       mViewLayoutTick.attach(mLynxView);
     }
     mLynxView.setTimingCollector(mPerformanceController);
-    lynxUIRenderer.attachLynxView(lynxView, mLynxContext, mContext);
+    lynxUIRenderer.attachBodyView(lynxView, mLynxContext, mContext);
     if (curActivity != null) {
       lynxUIRenderer.setContextFree(false);
       nativeSetContextHasAttached(mNativePtr, mNativeLifecycle);

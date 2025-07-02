@@ -105,7 +105,7 @@ public class LynxView extends UIBodyView {
     }
 
     LLog.i(TAG, "new lynxview detail " + this.toString());
-    mLynxUIRender.onInitLynxView(this, getContext(), builder.lynxRuntimeOptions.getLynxGroup());
+    mLynxUIRender.onInitBodyView(this, getContext(), builder.lynxRuntimeOptions.getLynxGroup());
     initialize(getContext(), builder);
   }
 
@@ -1378,6 +1378,7 @@ public class LynxView extends UIBodyView {
     LLog.i("Lynx", "setVisibility:" + hashCode() + " " + visibility);
   }
 
+  @Override
   public void runOnTasmThread(Runnable runnable) {
     checkAccessFromNonUiThread("runOnTasmThread");
     if (mLynxTemplateRender == null) {
@@ -1564,6 +1565,7 @@ public class LynxView extends UIBodyView {
     }
   }
 
+  @Override
   public ILynxUIRenderer lynxUIRenderer() {
     if (mLynxTemplateRender != null) {
       return mLynxTemplateRender.lynxUIRenderer();

@@ -35,6 +35,7 @@ import com.lynx.tasm.behavior.shadow.ShadowNode;
 import com.lynx.tasm.behavior.ui.LynxBaseUI;
 import com.lynx.tasm.behavior.ui.LynxFlattenUI;
 import com.lynx.tasm.behavior.ui.UIBody;
+import com.lynx.tasm.behavior.ui.UIBody.UIBodyView;
 import com.lynx.tasm.behavior.ui.UIExposure;
 import com.lynx.tasm.behavior.ui.accessibility.LynxAccessibilityWrapper;
 import com.lynx.tasm.core.JSProxy;
@@ -81,7 +82,7 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
   private String mJSGroupThreadName = null;
   private Map<String, Object> mSharedData;
   private LynxViewClient mLynxViewClient = null;
-  private WeakReference<LynxView> mLynxView = null;
+  private WeakReference<UIBodyView> mBodyView = null;
   private WeakReference<ShadowNodeOwner> mShadowNodeOwnerRef;
   private DisplayMetrics mVirtualScreenMetrics;
   private Boolean mEnableAsyncLoadImage;
@@ -444,10 +445,10 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
     return mLynxViewClient;
   }
 
-  private void updateLynxSessionID(LynxView lynxView) {
+  private void updateLynxSessionID(UIBodyView bodyView) {
     TraceEvent.beginSection(TraceEventDef.LYNX_CONTEXT_UPDATE_SESSION_ID);
     String currentTimestamp = String.valueOf(System.currentTimeMillis());
-    String lynxViewIdentify = String.valueOf(System.identityHashCode(lynxView));
+    String lynxViewIdentify = String.valueOf(System.identityHashCode(bodyView));
     // sessionID would be like "$currentTimestamp-$lynxViewIdentify"
     // Use StringBuilder to replace String format for String format is significantly slower than
     // StringBuilder in this case.
@@ -459,12 +460,20 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
     TraceEvent.endSection(TraceEventDef.LYNX_CONTEXT_UPDATE_SESSION_ID);
   }
 
+  /**
+   * use {@link #setUIBodyView(UIBodyView)} instead
+   */
+  @Deprecated
   public void setLynxView(LynxView lynxview) {
-    setHasLynxViewAttached(lynxview != null);
-    this.mLynxView = new WeakReference<>(lynxview);
+    setUIBodyView(lynxview);
+  }
+
+  public void setUIBodyView(UIBodyView bodyView) {
+    setHasLynxViewAttached(bodyView != null);
+    this.mBodyView = new WeakReference<>(bodyView);
     // Prevent generate lynxSessionID multiple times
     if (TextUtils.isEmpty(mLynxSessionId)) {
-      updateLynxSessionID(lynxview);
+      updateLynxSessionID(bodyView);
     }
   }
 
@@ -483,10 +492,12 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
   }
 
   public LynxView getLynxView() {
-    if (mLynxView == null) {
-      return null;
-    }
-    return mLynxView.get();
+    UIBodyView bodyView = getUIBodyView();
+    return bodyView instanceof LynxView ? (LynxView) bodyView : null;
+  }
+
+  private UIBodyView getUIBodyView() {
+    return mBodyView != null ? mBodyView.get() : null;
   }
 
   /**
@@ -891,7 +902,8 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
   }
 
   public LynxBaseInspectorOwner getBaseInspectorOwner() {
-    return mLynxView.get() != null ? mLynxView.get().getBaseInspectorOwner() : null;
+    LynxView lynxView = getLynxView();
+    return lynxView != null ? lynxView.getBaseInspectorOwner() : null;
   }
 
   public void setProviderRegistry(LynxProviderRegistry providerRegistry) {
@@ -954,10 +966,9 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
   }
 
   public void runOnTasmThread(Runnable runnable) {
-    LynxView lynxView = mLynxView.get();
-
-    if (lynxView != null) {
-      lynxView.runOnTasmThread(runnable);
+    UIBodyView bodyView = getUIBodyView();
+    if (bodyView != null) {
+      bodyView.runOnTasmThread(runnable);
     }
   }
 
@@ -1387,11 +1398,11 @@ public abstract class LynxContext extends LynxBaseContext implements ExceptionHa
     if (mTouchEventDispatcher != null) {
       return;
     }
-    LynxView lynxView = mLynxView.get();
-    if (lynxView == null) {
+    UIBodyView bodyView = getUIBodyView();
+    if (bodyView == null) {
       return;
     }
-    ILynxUIRenderer lynxUIRenderer = lynxView.lynxUIRenderer();
+    ILynxUIRenderer lynxUIRenderer = bodyView.lynxUIRenderer();
     if (lynxUIRenderer != null && lynxUIRenderer instanceof LynxUIRenderer) {
       ((LynxUIRenderer) lynxUIRenderer).EnsureEventDispatcher();
       ;

@@ -22,6 +22,7 @@ import com.lynx.tasm.base.LLog;
 import com.lynx.tasm.base.OnceTask;
 import com.lynx.tasm.base.TraceEvent;
 import com.lynx.tasm.base.trace.TraceEventDef;
+import com.lynx.tasm.behavior.ILynxUIRenderer;
 import com.lynx.tasm.behavior.LynxContext;
 import com.lynx.tasm.behavior.event.EventTarget;
 import com.lynx.tasm.behavior.ui.UIBody.UIBodyView;
@@ -526,5 +527,12 @@ public class UIBody extends UIGroup<UIBodyView> {
     }
 
     public void setAttachLynxPageUICallback(attachLynxPageUICallback callback) {}
+
+    // run task on engine thread
+    public void runOnTasmThread(Runnable runnable) {}
+
+    public ILynxUIRenderer lynxUIRenderer() {
+      return null;
+    }
   }
 }

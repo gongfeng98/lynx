@@ -2227,10 +2227,10 @@ public interface com::lynx::tasm::service::ILynxTrailService {
 }
 
 public interface com::lynx::tasm::behavior::ILynxUIRenderer {
-  public void com.lynx.tasm.behavior.ILynxUIRenderer.onInitLynxView(LynxView lynxView, Context context, LynxGroup group);
+  public void com.lynx.tasm.behavior.ILynxUIRenderer.onInitBodyView(UIBodyView bodyView, Context context, LynxGroup group);
   public void com.lynx.tasm.behavior.ILynxUIRenderer.onInitLynxTemplateRender(LynxContext context, BehaviorRegistry behaviorRegistry, @Nullable UIBodyView body, @Nullable LynxBooleanOption longTaskMonitorEnabled);
   public void com.lynx.tasm.behavior.ILynxUIRenderer.onCreateTemplateRenderer(LynxContext context, LynxPageLoadListener pageLoadListener, ThreadStrategyForRendering threadStrategy, BehaviorRegistry behaviorRegistry, LayoutTick layoutTick);
-  public void com.lynx.tasm.behavior.ILynxUIRenderer.attachLynxView(LynxView lynxView, LynxContext lynxContext, Context context);
+  public void com.lynx.tasm.behavior.ILynxUIRenderer.attachBodyView(UIBodyView bodyView, LynxContext lynxContext, Context context);
   public void com.lynx.tasm.behavior.ILynxUIRenderer.attachNativeFacade(NativeFacade nativeFacade);
   public void com.lynx.tasm.behavior.ILynxUIRenderer.onReloadAndInitUIThreadPart();
   public void com.lynx.tasm.behavior.ILynxUIRenderer.onReloadAndInitAnyThreadPart();
@@ -3840,6 +3840,7 @@ public class abstract com::lynx::tasm::behavior::LynxContext : com.lynx.tasm.beh
   public void com.lynx.tasm.behavior.LynxContext.setLynxViewClient(LynxViewClient lynxViewClient);
   public LynxViewClient com.lynx.tasm.behavior.LynxContext.getLynxViewClient();
   public void com.lynx.tasm.behavior.LynxContext.setLynxView(LynxView lynxview);
+  public void com.lynx.tasm.behavior.LynxContext.setUIBodyView(UIBodyView bodyView);
   public String com.lynx.tasm.behavior.LynxContext.getLynxSessionID();
   public LynxView com.lynx.tasm.behavior.LynxContext.getLynxView();
   public void com.lynx.tasm.behavior.LynxContext.reportResourceError(String errMsg);
@@ -6044,9 +6045,9 @@ public class com::lynx::tasm::behavior::LynxUIRenderCreator : com.lynx.tasm.IUIR
 
 public class com::lynx::tasm::behavior::LynxUIRenderer : com.lynx.tasm.behavior.ILynxUIRenderer {
   public static synchronized void com.lynx.tasm.behavior.LynxUIRenderer.startPixelCopyHandlerThreadIfNecessary();
-  public void com.lynx.tasm.behavior.LynxUIRenderer.onInitLynxView(LynxView lynxView, Context context, LynxGroup group);
+  public void com.lynx.tasm.behavior.LynxUIRenderer.onInitBodyView(UIBodyView bodyView, Context context, LynxGroup group);
   public void com.lynx.tasm.behavior.LynxUIRenderer.onInitLynxTemplateRender(LynxContext lynxContext, BehaviorRegistry behaviorRegistry, @Nullable UIBodyView body, LynxBooleanOption longTaskMonitorEnabled);
-  public void com.lynx.tasm.behavior.LynxUIRenderer.attachLynxView(LynxView lynxView, LynxContext lynxContext, Context context);
+  public void com.lynx.tasm.behavior.LynxUIRenderer.attachBodyView(UIBodyView bodyView, LynxContext lynxContext, Context context);
   public void com.lynx.tasm.behavior.LynxUIRenderer.attachNativeFacade(NativeFacade nativeFacade);
   public void com.lynx.tasm.behavior.LynxUIRenderer.onCreateTemplateRenderer(LynxContext context, LynxPageLoadListener pageLoadListener, ThreadStrategyForRendering threadStrategy, BehaviorRegistry behaviorRegistry, LayoutTick layoutTick);
   public long com.lynx.tasm.behavior.LynxUIRenderer.getUIDelegatePtr();
@@ -9016,6 +9017,8 @@ public class com::lynx::tasm::behavior::ui::UIBody::UIBodyView : FrameLayout, co
   public boolean com.lynx.tasm.behavior.ui.UIBody.UIBodyView.isChildLynxPageUI();
   public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.setIsChildLynxPageUI(boolean isChildLynxPageUI);
   public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.setAttachLynxPageUICallback(attachLynxPageUICallback callback);
+  public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.runOnTasmThread(Runnable runnable);
+  public ILynxUIRenderer com.lynx.tasm.behavior.ui.UIBody.UIBodyView.lynxUIRenderer();
 }
 
 public class com::lynx::tasm::behavior::ui::scroll::UIBounceView : com::lynx::tasm::behavior::ui::view::UISimpleView< AndroidView > {

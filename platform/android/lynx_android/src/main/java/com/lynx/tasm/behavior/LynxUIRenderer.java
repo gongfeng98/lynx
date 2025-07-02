@@ -105,7 +105,7 @@ public class LynxUIRenderer implements ILynxUIRenderer {
   }
 
   @Override
-  public void onInitLynxView(LynxView lynxView, Context context, LynxGroup group) {}
+  public void onInitBodyView(UIBodyView bodyView, Context context, LynxGroup group) {}
 
   @Override
   public void onInitLynxTemplateRender(LynxContext lynxContext, BehaviorRegistry behaviorRegistry,
@@ -130,16 +130,16 @@ public class LynxUIRenderer implements ILynxUIRenderer {
   }
 
   @Override
-  public void attachLynxView(LynxView lynxView, LynxContext lynxContext, Context context) {
+  public void attachBodyView(UIBodyView bodyView, LynxContext lynxContext, Context context) {
     if (lynxContext != null) {
       lynxContext.setBaseContext(context);
-      lynxContext.setLynxView(lynxView);
+      lynxContext.setUIBodyView(bodyView);
       if (mEventDispatcher != null) {
         mEventDispatcher.attachContext(context);
       }
     }
     if (mLynxUIOwner != null) {
-      mLynxUIOwner.attachUIBodyView(lynxView);
+      mLynxUIOwner.attachUIBodyView(bodyView);
     }
   }
 
