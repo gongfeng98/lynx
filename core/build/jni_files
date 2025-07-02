@@ -57,4 +57,5 @@ com/lynx/tasm/featurecount/LynxFeatureCounter.java
 com/lynx/tasm/LynxBackgroundRuntime.java
 com/lynx/jsbridge/RuntimeLifecycleListenerDelegate.java
 com/lynx/tasm/core/LynxLayoutProxy.java
+com/lynx/tasm/behavior/shadow/TextLayout.java
 

@@ -110,6 +110,8 @@ lynx_core_source_set("build") {
     "gen/TemplateBundle_register_jni.h",
     "gen/TemplateData_jni.h",
     "gen/TemplateData_register_jni.h",
+    "gen/TextLayout_jni.h",
+    "gen/TextLayout_register_jni.h",
     "gen/TextUtils_jni.h",
     "gen/TextUtils_register_jni.h",
     "gen/VSyncMonitor_jni.h",

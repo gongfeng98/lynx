@@ -75,32 +75,16 @@ public class TextMeasurer {
 
   private LynxContext mContext;
   private SparseArray<Object> mExtraDatas;
+  private SparseArray<Object> mAttributedTextBundles;
   private long mNativePtr;
   public TextMeasurer(LynxContext context) {
     mContext = context;
     mExtraDatas = new SparseArray<>();
+    mAttributedTextBundles = new SparseArray<>();
     mNativePtr = 0;
   }
 
-  public float[] measureText(int sign, ReadableCompactArrayBuffer valueArray, float width,
-      int widthMode, float height, int heightMode) {
-    float[] result = measureTextInternal(sign, valueArray, width, MeasureMode.fromInt(widthMode),
-        height, MeasureMode.fromInt(heightMode), new TextMeasurer.TypefaceListener(sign, this));
-
-    return result;
-  }
-
-  TextAttributes ensureTextAttributes(TextAttributes attributes) {
-    if (attributes == null) {
-      attributes = buildTextAttributes();
-    }
-    return attributes;
-  }
-
-  private float[] measureTextInternal(int sign, ReadableCompactArrayBuffer valueArray, float width,
-      MeasureMode widthMode, float height, MeasureMode heightMode,
-      TextMeasurer.TypefaceListener typefaceListener) {
-    float[] result = new float[3];
+  public void dispatchLayoutBefore(int sign, ReadableCompactArrayBuffer valueArray) {
     CharSequence span;
     boolean mHasImageSpan = false;
     List<BaseTextShadowNode.SetSpanOperation> ops = new ArrayList<>();
@@ -329,13 +313,41 @@ public class TextMeasurer {
 
     span = spannableString;
     if (span == null || textAttributes == null) {
-      return result;
+      return;
     }
 
     textAttributes.setHasImageSpan(mHasImageSpan);
+    AttributedTextBundle attributedTextBundle = new AttributedTextBundle(span, textAttributes);
+    mAttributedTextBundles.put(sign, attributedTextBundle);
+  }
 
-    TextRendererKey key = new TextRendererKey(
-        span, textAttributes, widthMode, heightMode, width, height, 0, false, true, true);
+  public float[] measureText(int sign, float width, int widthMode, float height, int heightMode) {
+    float[] result = measureTextInternal(sign, width, MeasureMode.fromInt(widthMode), height,
+        MeasureMode.fromInt(heightMode), new TextMeasurer.TypefaceListener(sign, this));
+
+    return result;
+  }
+
+  TextAttributes ensureTextAttributes(TextAttributes attributes) {
+    if (attributes == null) {
+      attributes = buildTextAttributes();
+    }
+    return attributes;
+  }
+
+  private float[] measureTextInternal(int sign, float width, MeasureMode widthMode, float height,
+      MeasureMode heightMode, TextMeasurer.TypefaceListener typefaceListener) {
+    float[] result = new float[3];
+
+    AttributedTextBundle attributedTextBundle =
+        (AttributedTextBundle) mAttributedTextBundles.get(sign);
+    if (attributedTextBundle == null) {
+      return result;
+    }
+
+    TextRendererKey key = new TextRendererKey(attributedTextBundle.getSpan(),
+        attributedTextBundle.getTextAttributes(), widthMode, heightMode, width, height, 0, false,
+        true, true);
     TextRenderer renderer = new TextRenderer(mContext, key);
     float measuredHeight = renderer.getTextLayoutHeight();
     float measuredWidth = renderer.getLayoutWidth();
@@ -345,13 +357,15 @@ public class TextMeasurer {
     result[1] = measuredHeight;
     result[2] = baseline;
 
-    TextUpdateBundle bundle = new TextUpdateBundle(renderer.getTextLayout(), mHasImageSpan, null,
+    TextUpdateBundle bundle = new TextUpdateBundle(renderer.getTextLayout(),
+        attributedTextBundle.getTextAttributes().hasImageSpan(), null,
         false
-            && (textAttributes != null
-                && textAttributes.getTextAlign() == StyleConstants.TEXTALIGN_JUSTIFY));
+            && (attributedTextBundle.getTextAttributes() != null
+                && attributedTextBundle.getTextAttributes().getTextAlign()
+                    == StyleConstants.TEXTALIGN_JUSTIFY));
     bundle.setTextTranslateOffset(renderer.getTextTranslateOffset());
 
-    bundle.setOriginText(spannableString);
+    bundle.setOriginText(attributedTextBundle.getSpan());
 
     if (bundle != null) {
       mExtraDatas.put(sign, bundle);
@@ -484,16 +498,19 @@ public class TextMeasurer {
     Object value = mExtraDatas.get(sign);
     if (value != null) {
       mExtraDatas.remove(sign);
+      mAttributedTextBundles.remove(sign);
     }
     return value;
   }
 
   public void releaseLayoutObject(int sign) {
     mExtraDatas.remove(sign);
+    mAttributedTextBundles.remove(sign);
   }
 
   public void removeLayoutObjects() {
     mExtraDatas.clear();
+    mAttributedTextBundles.clear();
   }
 
   public class TypefaceListener implements TypefaceCache.TypefaceListener {

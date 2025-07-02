@@ -174,6 +174,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSDictionary<NSString*, LynxMemoryRecord*>*)getMemoryUsage;
 
+- (Boolean)isLayoutInElementModeOn;
+
 #pragma mark - A11y
 - (NSArray<LynxUI*>*)uiWithA11yID:(NSString*)a11yID;
 - (NSArray<UIView*>*)viewsWithA11yID:(NSString*)a11yID;

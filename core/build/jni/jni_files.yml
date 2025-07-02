@@ -48,6 +48,7 @@ inputs:
   - java: com/lynx/tasm/LynxEngine.java
   - java: com/lynx/tasm/utils/TextUtils.java
   - java: com/lynx/tasm/base/LynxNativeMemoryTracer.java
+  - java: com/lynx/tasm/behavior/shadow/TextLayout.java
     macro: MEMORY_TRACING
   - java: com/lynx/tasm/core/VSyncMonitor.java
   - java: com/lynx/tasm/utils/ColorUtils.java

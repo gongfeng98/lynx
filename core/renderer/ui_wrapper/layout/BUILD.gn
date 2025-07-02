@@ -26,6 +26,8 @@ if (!enable_unittests) {
       "android/layout_node_android.h",
       "android/layout_node_manager_android.cc",
       "android/layout_node_manager_android.h",
+      "android/text_layout_android.cc",
+      "android/text_layout_android.h",
     ]
   } else if (is_harmony) {
     ui_wrapper_layout_shared_sources += [
@@ -36,6 +38,8 @@ if (!enable_unittests) {
     ui_wrapper_layout_shared_sources += [
       "ios/layout_context_darwin.h",
       "ios/layout_context_darwin.mm",
+      "ios/text_layout_darwin.h",
+      "ios/text_layout_darwin.mm",
     ]
   }
 }

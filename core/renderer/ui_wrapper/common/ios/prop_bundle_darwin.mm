@@ -324,27 +324,5 @@ fml::RefPtr<PropBundle> PropBundleCreatorDarwin::CreatePropBundle() {
   return fml::AdoptRef(new PropBundleDarwin());
 }
 
-std::unique_ptr<PropArray> PropBundleCreatorDarwin::CreatePropArray() {
-  return std::make_unique<PropArrayDarwin>();
-}
-
-PropArrayDarwin::PropArrayDarwin() { propArray = [NSMutableArray arrayWithCapacity:6]; }
-
-void PropArrayDarwin::AddProp(int value) { [propArray addObject:[NSNumber numberWithInt:value]]; }
-
-void PropArrayDarwin::AddProp(unsigned int value) {
-  [propArray addObject:[NSNumber numberWithUnsignedInt:value]];
-}
-
-void PropArrayDarwin::AddProp(const char* value) {
-  [propArray addObject:[[NSString alloc] initWithUTF8String:value]];
-}
-
-void PropArrayDarwin::AddProp(bool value) { [propArray addObject:[NSNumber numberWithBool:value]]; }
-
-void PropArrayDarwin::AddProp(double value) {
-  [propArray addObject:[NSNumber numberWithDouble:value]];
-}
-
 }  // namespace tasm
 }  // namespace lynx

@@ -101,17 +101,6 @@ class PropBundle : public fml::RefCountedThreadSafeStorage {
   }
 };
 
-class PropArray {
- public:
-  PropArray() = default;
-  virtual ~PropArray() = default;
-  virtual void AddProp(int value) {}
-  virtual void AddProp(unsigned int value) {}
-  virtual void AddProp(const char* value) {}
-  virtual void AddProp(bool value) {}
-  virtual void AddProp(double value) {}
-};
-
 class PropBundleCreator {
  public:
   PropBundleCreator() = default;
@@ -126,8 +115,6 @@ class PropBundleCreator {
   virtual fml::RefPtr<PropBundle> CreatePropBundle(bool use_map_buffer) {
     return CreatePropBundle();
   };
-
-  virtual std::unique_ptr<PropArray> CreatePropArray() { return nullptr; }
 };
 
 }  // namespace tasm

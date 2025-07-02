@@ -67,8 +67,8 @@ class PaintingContextAndroidRef : public PaintingCtxPlatformRef {
 
 class PaintingContextAndroid : public PaintingCtxPlatformImpl {
  public:
-  PaintingContextAndroid(JNIEnv* env, jobject impl, jint thread_strategy,
-                         bool enable_context_free);
+  PaintingContextAndroid(JNIEnv* env, jobject impl, jobject text_layout,
+                         jint thread_strategy, bool enable_context_free);
   ~PaintingContextAndroid() override = default;
   virtual void SetUIOperationQueue(
       const std::shared_ptr<shell::DynamicUIOperationQueue>& queue) override;
@@ -157,10 +157,6 @@ class PaintingContextAndroid : public PaintingCtxPlatformImpl {
   bool HasEnableUIOperationBatching() override {
     return ui_operation_batch_builder_.has_value();
   }
-
-  LayoutResult MeasureText(int sign, PropArray* array, int width,
-                           int width_mode, int height,
-                           int height_mode) override;
 
  private:
   enum class IntValueIndex {

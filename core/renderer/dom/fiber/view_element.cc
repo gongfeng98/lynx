@@ -35,19 +35,5 @@ void ViewElement::AttachToElementManager(
   SetDefaultOverflow(element_manager_->GetDefaultOverflowVisible());
 }
 
-void ViewElement::BuildAttributedStringProps(size_t start, size_t end,
-                                             PropArray* props) {
-  // range start
-  props->AddProp(kPropInlineStart);
-  props->AddProp(static_cast<int>(start));
-
-  props->AddProp(kPropInlineView);
-
-  // TODO(linxs): width, height...
-  // range end
-  props->AddProp(kPropInlineEnd);
-  props->AddProp(static_cast<int>(end));
-}
-
 }  // namespace tasm
 }  // namespace lynx

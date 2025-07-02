@@ -13,6 +13,7 @@
 #include "core/renderer/dom/ios/lepus_value_converter.h"
 #include "core/renderer/ui_wrapper/common/ios/platform_extra_bundle_darwin.h"
 #include "core/renderer/ui_wrapper/common/ios/prop_bundle_darwin.h"
+#include "core/renderer/ui_wrapper/layout/ios/text_layout_darwin.h"
 #include "core/renderer/ui_wrapper/painting/ios/painting_context_darwin.h"
 #include "core/renderer/utils/ios/text_utils_ios.h"
 #include "core/runtime/bindings/jsi/modules/ios/lynx_module_darwin.h"
@@ -259,6 +260,9 @@ std::unique_ptr<pub::Value> PaintingContextDarwin::GetTextInfo(const std::string
 PaintingContextDarwin::PaintingContextDarwin(LynxUIOwner* owner, bool enable_create_ui_async)
     : uiOwner_(owner), enable_create_ui_async_(enable_create_ui_async) {
   platform_ref_ = std::make_shared<PaintingContextDarwinRef>(owner);
+  if ([owner isLayoutInElementModeOn]) {
+    text_layout_impl_ = std::make_unique<TextLayoutDarwin>();
+  }
 }
 
 PaintingContextDarwin::~PaintingContextDarwin() {}
@@ -700,15 +704,6 @@ shell::UIOperation PaintingContextDarwin::ExecuteOperationSafely(shell::UIOperat
       ExecuteSafely(func);
     }
   };
-}
-
-LayoutResult PaintingContextDarwin::MeasureText(int sign, PropArray* array, int width,
-                                                int width_mode, int height, int height_mode) {
-  float measured_width = 0;   // esult[0];
-  float measured_height = 0;  // result[1];
-  float base_line = 0;        // result[2];
-
-  return LayoutResult{measured_width, measured_height, base_line};
 }
 
 }  // namespace tasm

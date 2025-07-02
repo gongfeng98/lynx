@@ -4021,6 +4021,30 @@ void FiberElement::SetMeasureFunc(void *context,
   sl_node_->SetSLMeasureFunc(std::move(measure_func));
 }
 
+void FiberElement::SetAlignmentFunc(void *context,
+                                    starlight::SLAlignmentFunc alignment_func) {
+  sl_node_->SetSLAlignmentFunc(std::move(alignment_func));
+}
+
+/**
+ * Reference {@link LayoutContext#DispatchLayoutBeforeRecursively }
+ */
+void FiberElement::DispatchLayoutBeforeRecursively() {
+  if (!is_wrapper()) {
+    if (sl_node_ == nullptr || !(sl_node_->IsDirty())) {
+      return;
+    }
+
+    if (sl_node_->GetSLMeasureFunc()) {
+      DispatchLayoutBefore();
+    }
+  }
+
+  for (auto &child : scoped_children_) {
+    child->DispatchLayoutBeforeRecursively();
+  }
+}
+
 #if ENABLE_TRACE_PERFETTO
 void FiberElement::UpdateTraceDebugInfo(TraceEvent *event) {
   auto *tagInfo = event->add_debug_annotations();

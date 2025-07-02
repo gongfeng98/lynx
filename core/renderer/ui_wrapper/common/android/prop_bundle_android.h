@@ -22,8 +22,6 @@ class PropBundleCreatorAndroid : public PropBundleCreator {
   fml::RefPtr<PropBundle> CreatePropBundle() override;
 
   fml::RefPtr<PropBundle> CreatePropBundle(bool use_map_buffer) override;
-
-  std::unique_ptr<PropArray> CreatePropArray() override;
 };
 
 class PropBundleAndroid : public PropBundle {
@@ -108,15 +106,15 @@ class PropBundleAndroid : public PropBundle {
   PropBundleAndroid& operator=(const PropBundleAndroid&) = delete;
 };
 
-class PropArrayAndroid : public PropArray {
+class PropArrayAndroid {
  public:
   PropArrayAndroid();
 
-  void AddProp(int value) override;
-  void AddProp(unsigned int value) override;
-  void AddProp(const char* value) override;
-  void AddProp(bool value) override;
-  void AddProp(double value) override;
+  void AddProp(int value);
+  void AddProp(unsigned int value);
+  void AddProp(const char* value);
+  void AddProp(bool value);
+  void AddProp(double value);
 
   std::optional<base::android::CompactArrayBuffer> GetArrayBuffer() {
     return ui_operation_batch_builder_->build();

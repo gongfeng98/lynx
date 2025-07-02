@@ -1546,4 +1546,8 @@ extern NSString* const kDefaultComponentID;
   LYNX_TRACE_END_SECTION(LYNX_TRACE_CATEGORY_WRAPPER);
 }
 
+- (Boolean)isLayoutInElementModeOn {
+  return (_embeddedMode & LynxEmbeddedModeLayoutInElement) > 0;
+}
+
 @end

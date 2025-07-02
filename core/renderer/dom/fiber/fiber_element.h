@@ -926,9 +926,6 @@ class FiberElement : public Element,
   inline bool IsAsyncFlushRoot() const { return is_async_flush_root_; }
   inline void MarkAsyncFlushRoot(bool value) { is_async_flush_root_ = value; }
 
-  virtual void BuildAttributedStringProps(size_t start, size_t end,
-                                          PropArray* props) {}
-
  protected:
   FiberElement(const FiberElement& element, bool clone_resolved_props);
 
@@ -984,7 +981,11 @@ class FiberElement : public Element,
 
   void UpdateLayoutInfoRecursively();
 
+  void DispatchLayoutBeforeRecursively();
+
   void SetMeasureFunc(void* context, starlight::SLMeasureFunc measure_func);
+  void SetAlignmentFunc(void* context,
+                        starlight::SLAlignmentFunc alignment_func);
 
   virtual void OnLayoutObjectCreated() {}
 
@@ -1059,6 +1060,8 @@ class FiberElement : public Element,
   bool IfNeedsUpdateLayoutInfo();
 
   void EnsureSLNode();
+
+  virtual void DispatchLayoutBefore(){};
 
   // relevant to hierarchy
   base::InlineVector<fml::RefPtr<FiberElement>, kChildrenInlineVectorSize>

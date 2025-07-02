@@ -1920,9 +1920,12 @@ public class LynxUIOwner {
     updateViewExtraData(tag, bundle);
   }
 
-  public float[] measureText(int sign, ReadableCompactArrayBuffer valueArray, float width,
-      int widthMode, float height, int heightMode) {
-    return mTextMeasurer.measureText(sign, valueArray, width, widthMode, height, heightMode);
+  public void dispatchLayoutBefore(int sign, ReadableCompactArrayBuffer valueArray) {
+    mTextMeasurer.dispatchLayoutBefore(sign, valueArray);
+  }
+
+  public float[] measureText(int sign, float width, int widthMode, float height, int heightMode) {
+    return mTextMeasurer.measureText(sign, width, widthMode, height, heightMode);
   }
   public Object takeTextLayout(int sign) {
     return mTextMeasurer != null ? mTextMeasurer.takeTextLayout(sign) : null;

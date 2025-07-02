@@ -932,11 +932,19 @@ bool ElementManager::IsShadowNodeVirtual(const base::String &tag_name) {
   return GetNodeInfoByTag(tag_name) & LayoutNodeType::VIRTUAL;
 }
 
-LayoutResult ElementManager::MeasureText(int id, PropArray *prop_array,
-                                         int width, int width_mode, int height,
+LayoutResult ElementManager::MeasureText(Element *element, float width,
+                                         int width_mode, float height,
                                          int height_mode) {
-  return painting_context()->MeasureText(id, prop_array, width, width_mode,
-                                         height, height_mode);
+  return painting_context()->MeasureText(element, width, width_mode, height,
+                                         height_mode);
+}
+
+void ElementManager::DispatchLayoutBefore(Element *element) {
+  painting_context()->DispatchLayoutBefore(element);
+}
+
+void ElementManager::AlignText(Element *element) {
+  painting_context()->AlignText(element);
 }
 
 void ElementManager::MarkLayoutDirty(int32_t id) {

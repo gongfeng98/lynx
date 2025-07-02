@@ -91,12 +91,6 @@ class PaintingContextPlatformImpl : public PaintingCtxPlatformImpl {
 
   virtual bool NeedAnimationProps() override { return false; }
 
-  virtual LayoutResult MeasureText(int id, PropArray* array, int width,
-                                   int width_mode, int height,
-                                   int height_mode) override {
-    return LayoutResult{0, 0, 0};
-  }
-
  private:
   std::vector<float> floats_;
 };

@@ -544,6 +544,12 @@ public class com::lynx::jsbridge::AttributeDescriptor :  {
   public JavaOnlyArray com.lynx.jsbridge.AttributeDescriptor.getValue();
 }
 
+public class com::lynx::tasm::behavior::shadow::text::AttributedTextBundle :  {
+  public com.lynx.tasm.behavior.shadow.text.AttributedTextBundle.AttributedTextBundle(CharSequence span, TextAttributes textAttributes);
+  public CharSequence com.lynx.tasm.behavior.shadow.text.AttributedTextBundle.getSpan();
+  public TextAttributes com.lynx.tasm.behavior.shadow.text.AttributedTextBundle.getTextAttributes();
+}
+
 public interface com::lynx::tasm::behavior::AutoGenStyleConstants {
   public final int com.lynx.tasm.behavior.AutoGenStyleConstants.WHITESPACE_NORMAL WHITESPACE_NORMAL;
   public final int com.lynx.tasm.behavior.AutoGenStyleConstants.WHITESPACE_NOWRAP WHITESPACE_NOWRAP;
@@ -6062,7 +6068,8 @@ public class com::lynx::tasm::behavior::LynxUIOwner :  {
   public void com.lynx.tasm.behavior.LynxUIOwner.reportCreateAsyncSuccessEvent(int sign, String tagName, boolean isSuccess, int status);
   public void com.lynx.tasm.behavior.LynxUIOwner.reportCreateViewConfig(int sign, String tagName, boolean createAsync);
   public void com.lynx.tasm.behavior.LynxUIOwner.setAttachLynxPageUICallback(UIBodyView.attachLynxPageUICallback callback);
-  public float[] com.lynx.tasm.behavior.LynxUIOwner.measureText(int sign, ReadableCompactArrayBuffer valueArray, float width, int widthMode, float height, int heightMode);
+  public void com.lynx.tasm.behavior.LynxUIOwner.dispatchLayoutBefore(int sign, ReadableCompactArrayBuffer valueArray);
+  public float[] com.lynx.tasm.behavior.LynxUIOwner.measureText(int sign, float width, int widthMode, float height, int heightMode);
   public Object com.lynx.tasm.behavior.LynxUIOwner.takeTextLayout(int sign);
 }
 
@@ -7056,7 +7063,6 @@ public class com::lynx::tasm::behavior::PaintingContext :  {
   public void com.lynx.tasm.behavior.PaintingContext.insertListItemNode(int listSign, int childSign);
   public void com.lynx.tasm.behavior.PaintingContext.updateContentSizeAndOffset(int listSign, float contentSize, float deltaX, float deltaY);
   public void com.lynx.tasm.behavior.PaintingContext.updateScrollInfo(int containerID, boolean smooth, float estimatedOffset, boolean scrolling);
-  public float[] com.lynx.tasm.behavior.PaintingContext.measureText(int sign, ReadableCompactArrayBuffer buffer, float width, int widthMode, float height, int heightMode);
 }
 
 public class com::lynx::tasm::gesture::handler::PanGestureHandler : com.lynx.tasm.gesture.handler.BaseGestureHandler {
@@ -8607,6 +8613,13 @@ public class com::lynx::tasm::behavior::shadow::text::TextIndent :  {
   public int com.lynx.tasm.behavior.shadow.text.TextIndent.hashCode();
 }
 
+public class com::lynx::tasm::behavior::shadow::TextLayout :  {
+  public com.lynx.tasm.behavior.shadow.TextLayout.TextLayout(LynxUIOwner uiOwner);
+  public float[] com.lynx.tasm.behavior.shadow.TextLayout.measureText(int sign, float width, int widthMode, float height, int heightMode);
+  public void com.lynx.tasm.behavior.shadow.TextLayout.dispatchLayoutBefore(int sign, ReadableCompactArrayBuffer buffer);
+  public void com.lynx.tasm.behavior.shadow.TextLayout.align();
+}
+
 public class com::lynx::tasm::behavior::shadow::text::TextLayoutWarmer : HandlerThread {
   public static TextLayoutWarmer com.lynx.tasm.behavior.shadow.text.TextLayoutWarmer.warmer();
   public void com.lynx.tasm.behavior.shadow.text.TextLayoutWarmer.warmLayout(Layout layout);
@@ -8614,7 +8627,8 @@ public class com::lynx::tasm::behavior::shadow::text::TextLayoutWarmer : Handler
 
 public class com::lynx::tasm::behavior::shadow::text::TextMeasurer :  {
   public com.lynx.tasm.behavior.shadow.text.TextMeasurer.TextMeasurer(LynxContext context);
-  public float[] com.lynx.tasm.behavior.shadow.text.TextMeasurer.measureText(int sign, ReadableCompactArrayBuffer valueArray, float width, int widthMode, float height, int heightMode);
+  public void com.lynx.tasm.behavior.shadow.text.TextMeasurer.dispatchLayoutBefore(int sign, ReadableCompactArrayBuffer valueArray);
+  public float[] com.lynx.tasm.behavior.shadow.text.TextMeasurer.measureText(int sign, float width, int widthMode, float height, int heightMode);
   public Object com.lynx.tasm.behavior.shadow.text.TextMeasurer.takeTextLayout(int sign);
   public void com.lynx.tasm.behavior.shadow.text.TextMeasurer.releaseLayoutObject(int sign);
   public void com.lynx.tasm.behavior.shadow.text.TextMeasurer.removeLayoutObjects();

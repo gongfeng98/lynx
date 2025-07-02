@@ -44,23 +44,33 @@ class TextElement : public FiberElement {
   LayoutResult Measure(float width, int32_t width_mode, float height,
                        int32_t height_mode, bool final_measure);
 
+  void Align();
+
   void OnLayoutObjectCreated() override;
 
   void UpdateLayoutNodeFontSize(double cur_node_font_size,
                                 double root_node_font_size) override;
 
-  static void ResolveAttributes(const char* str, TextProps* attributes,
-                                int image_id, PropArray* props);
+  void DispatchLayoutBefore() override;
 
-  void BuildAttributedStringProps(size_t start, size_t end,
-                                  PropArray* props) override;
+  TextProps* text_props() { return text_props_.get(); };
+
+  base::String& content() { return content_; };
+
+  void set_need_layout_children(bool value) { need_layout_children_ = value; }
+
+  bool need_layout_children() { return need_layout_children_; }
+
+  bool has_inline_child() { return has_inline_child_; }
+
+  size_t content_utf16_length() { return content_utf16_length_; }
+
+  CSSIDBitset& property_bits() { return property_bits_; }
 
  protected:
   void OnNodeAdded(FiberElement* child) override;
   void SetAttributeInternal(const base::String& key,
                             const lepus::Value& value) override;
-  void BuildTextPropsBuffer(std::string& output, size_t& current_length,
-                            bool use_utf16, PropArray* prop);
 
   static base::String ConvertContent(const lepus::Value);
 
@@ -83,6 +93,7 @@ class TextElement : public FiberElement {
   std::unique_ptr<TextProps> text_props_;
   CSSIDBitset property_bits_;
   bool has_inline_child_{false};
+  bool need_layout_children_{false};
 };
 
 }  // namespace tasm

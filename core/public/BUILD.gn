@@ -28,6 +28,7 @@ lynx_core_source_set("public") {
     "prop_bundle.h",
     "pub_value.h",
     "runtime_lifecycle_observer.h",
+    "text_layout_impl.h",
     "text_utils.h",
     "timing_key.h",
     "ui_delegate.h",

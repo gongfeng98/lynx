@@ -234,11 +234,17 @@ class PaintingContext {
     perf_controller_actor_ = perf_controller_actor;
   };
 
-  LayoutResult MeasureText(int id, PropArray* array, int width, int width_mode,
-                           int height, int height_mode) {
-    return platform_impl_->MeasureText(id, array, width, width_mode, height,
+  LayoutResult MeasureText(Element* element, float width, int width_mode,
+                           float height, int height_mode) {
+    return platform_impl_->MeasureText(element, width, width_mode, height,
                                        height_mode);
   }
+
+  void DispatchLayoutBefore(Element* element) {
+    platform_impl_->DispatchLayoutBefore(element);
+  };
+
+  void AlignText(Element* element) { platform_impl_->AlignText(element); };
 
  private:
   void Enqueue(shell::UIOperation op, bool high_priority = false);

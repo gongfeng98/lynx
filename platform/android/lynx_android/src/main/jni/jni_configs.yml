@@ -64,6 +64,7 @@ jni_class_configs:
     - java: platform/android/lynx_android/src/main/java/com/lynx/tasm/LynxEngine.java
     # - java: platform/android/lynx_android/src/main/java/com/lynx/tasm/core/ResourceLoader.java
     - java: platform/android/lynx_android/src/main/java/com/lynx/tasm/utils/TextUtils.java
+    - java: platform/android/lynx_android/src/main/java/com/lynx/tasm/behavior/shadow/TextLayout.java
     - java: platform/android/lynx_android/src/main/java/com/lynx/tasm/base/LynxNativeMemoryTracer.java
       macro: MEMORY_TRACING
     - java: platform/android/lynx_android/src/main/java/com/lynx/tasm/core/VSyncMonitor.java

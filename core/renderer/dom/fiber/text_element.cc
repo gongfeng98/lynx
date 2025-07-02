@@ -13,7 +13,6 @@
 #include "core/renderer/dom/fiber/image_element.h"
 #include "core/renderer/dom/fiber/raw_text_element.h"
 #include "core/renderer/dom/fiber/view_element.h"
-#include "core/renderer/starlight/types/nlength.h"
 
 namespace lynx {
 namespace tasm {
@@ -186,43 +185,12 @@ bool TextElement::ResetCSSValue(CSSPropertyID id) {
   return has_processed;
 }
 
-void TextElement::BuildTextPropsBuffer(std::string& output,
-                                       size_t& current_length, bool use_utf16,
-                                       PropArray* props) {
-  size_t start = current_length;
-  if (!content_.empty()) {
-    output += content_.str();
-    current_length += use_utf16 ? content_utf16_length_ : content_.length();
+void TextElement::DispatchLayoutBefore() {
+  if (is_inline_element()) {
+    return;
   }
 
-  auto* child = first_render_child();
-  while (child) {
-    if (static_cast<FiberElement*>(child)->is_raw_text()) {
-      auto* raw_text_child = static_cast<RawTextElement*>(child);
-      const auto& raw_content = raw_text_child->content();
-      if (!raw_content.empty()) {
-        output += raw_content.str();
-        current_length += use_utf16 ? raw_text_child->content_utf16_length()
-                                    : raw_content.length();
-      }
-    } else if (child->is_text()) {
-      // inline text
-      static_cast<TextElement*>(child)->BuildTextPropsBuffer(
-          output, current_length, use_utf16, props);
-    } else if (child->is_image() || child->is_view()) {
-      // inline image
-      output += kInlinePlaceHolder;
-      current_length += 1;  // placeholder's length is 1
-      static_cast<FiberElement*>(child)->BuildAttributedStringProps(
-          current_length - 1, current_length, props);
-    }
-    child = child->next_render_sibling();
-  }
-
-  auto end = current_length;
-  if (end > start) {
-    BuildAttributedStringProps(start, end, props);
-  }
+  element_manager_->DispatchLayoutBefore(this);
 }
 
 LayoutResult TextElement::Measure(float width, int32_t width_mode, float height,
@@ -230,21 +198,17 @@ LayoutResult TextElement::Measure(float width, int32_t width_mode, float height,
   if (is_inline_element()) {
     return LayoutResult(0, 0, 0);
   }
-  auto props = element_manager_->GetPropBundleCreator()->CreatePropArray();
-  if (!props) {
-    LOGE("TextElement: no PropArray defined!")
-    return LayoutResult(0, 0, 0);
+
+  return element_manager_->MeasureText(this, width, width_mode, height,
+                                       height_mode);
+}
+
+void TextElement::Align() {
+  if (is_inline_element() || !need_layout_children_) {
+    return;
   }
-  std::string output_str;
-  size_t current_length = 0;
-  bool use_utf16 = is_inline_element_ || has_inline_child_;
-  BuildTextPropsBuffer(output_str, current_length, use_utf16, props.get());
 
-  props->AddProp(kPropTextString);
-  props->AddProp(output_str.c_str());
-
-  return element_manager_->MeasureText(id_, props.get(), width, width_mode,
-                                       height, height_mode);
+  element_manager_->AlignText(this);
 }
 
 void TextElement::OnLayoutObjectCreated() {
@@ -268,6 +232,12 @@ void TextElement::OnLayoutObjectCreated() {
 
           return FloatSize(result.width_, result.height_, result.baseline_);
         });
+
+    SetAlignmentFunc(this, [](void* context) {
+      TextElement* element = static_cast<TextElement*>(context);
+      DCHECK(element);
+      element->Align();
+    });
   }
 }
 
@@ -278,104 +248,6 @@ void TextElement::UpdateLayoutNodeFontSize(double cur_node_font_size,
   } else {
     FiberElement::UpdateLayoutNodeFontSize(cur_node_font_size,
                                            root_node_font_size);
-  }
-}
-
-// static
-void TextElement::BuildAttributedStringProps(size_t pos_start, size_t pos_end,
-                                             PropArray* props) {
-  if (!text_props_ && !property_bits_.HasAny()) {
-    return;
-  }
-  // only inline text need the pass the range，   kPropRangeStart should be
-  // the first key
-  if (is_inline_element()) {
-    props->AddProp(kPropInlineStart);
-    props->AddProp(static_cast<int>(pos_start));
-  }
-
-  // styles
-  const auto& text_attributes = computed_css_style()->GetTextAttributes();
-  if (text_attributes.has_value()) {
-    for (CSSPropertyID id : property_bits_) {
-      switch (id) {
-        case kPropertyIDFontSize:
-          props->AddProp(kTextPropFontSize);
-          props->AddProp(
-              static_cast<float>(computed_css_style()->GetFontSize()));
-          break;
-
-        case kPropertyIDColor:
-          props->AddProp(kTextPropColor);
-          props->AddProp(static_cast<int>(text_attributes->color));
-          // FIXME(linxs): use another key to indicate color gradient
-          break;
-
-        case kPropertyIDWhiteSpace:
-          props->AddProp(kTextPropWhiteSpace);
-          props->AddProp(static_cast<int>(text_attributes->white_space));
-          break;
-
-        case kPropertyIDTextOverflow:
-          props->AddProp(kTextPropTextOverflow);
-          props->AddProp(static_cast<int>(text_attributes->text_overflow));
-          break;
-
-        case kPropertyIDFontWeight:
-          props->AddProp(kTextPropFontWeight);
-          props->AddProp(static_cast<int>(text_attributes->font_weight));
-          break;
-        case kPropertyIDFontStyle:
-          props->AddProp(kTextPropFontStyle);
-          props->AddProp(static_cast<int>(text_attributes->font_style));
-          break;
-
-        case kPropertyIDFontFamily:
-          props->AddProp(kTextPropFontFamily);
-          props->AddProp(text_attributes->font_family.c_str());
-          break;
-
-        case kPropertyIDLineHeight:
-          props->AddProp(kTextPropLineHeight);
-          props->AddProp(text_attributes->computed_line_height);
-          break;
-
-        case kPropertyIDLetterSpacing:
-          props->AddProp(kTextPropLetterSpacing);
-          props->AddProp(text_attributes->letter_spacing);
-          break;
-
-        case kPropertyIDTextAlign:
-          props->AddProp(kTextPropTextAlign);
-          props->AddProp(static_cast<int>(text_attributes->text_align));
-          break;
-
-        case kPropertyIDVerticalAlign:
-          props->AddProp(kTextPropVerticalAlign);
-          props->AddProp(static_cast<int>(text_attributes->vertical_align));
-          props->AddProp(text_attributes->vertical_align_length);
-          break;
-
-        default:
-          break;
-      }
-    }
-  }
-
-  // attributes
-  // text_maxline
-  if (text_props_) {
-    if (text_props_->text_max_line) {
-      props->AddProp(kTextPropTextMaxLine);
-      props->AddProp(*text_props_->text_max_line);
-    }
-  }
-
-  // only inline text need the pass the range, kPropRangeEnd should be the
-  // first key
-  if (is_inline_element()) {
-    props->AddProp(kPropInlineEnd);
-    props->AddProp(static_cast<int>(pos_end));
   }
 }
 

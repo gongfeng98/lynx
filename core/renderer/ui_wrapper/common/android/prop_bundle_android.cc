@@ -486,10 +486,6 @@ fml::RefPtr<PropBundle> PropBundleCreatorAndroid::CreatePropBundle(
   return fml::AdoptRef(new PropBundleAndroid(use_map_buffer));
 }
 
-std::unique_ptr<PropArray> PropBundleCreatorAndroid::CreatePropArray() {
-  return std::make_unique<PropArrayAndroid>();
-}
-
 base::android::ScopedLocalJavaRef<jobject>
 PropBundleAndroid::GetStyleMapBuffer() {
   if (use_map_buffer_) {

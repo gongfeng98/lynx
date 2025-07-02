@@ -15,6 +15,7 @@
 #include "core/public/pipeline_option.h"
 #include "core/public/platform_extra_bundle.h"
 #include "core/public/prop_bundle.h"
+#include "core/public/text_layout_impl.h"
 #include "core/public/timing_key.h"
 
 namespace lynx {
@@ -172,14 +173,24 @@ class PaintingCtxPlatformImpl {
   // TODO(liting.src): remove this method after ui operation queue refactor.
   virtual base::closure ExecuteOperationSafely(base::closure op) { return op; }
 
-  virtual LayoutResult MeasureText(int id, PropArray* array, int width,
-                                   int width_mode, int height,
+  virtual LayoutResult MeasureText(Element* element, float width,
+                                   int width_mode, float height,
                                    int height_mode) {
-    return LayoutResult{0, 0, 0};
+    return text_layout_impl_->Measure(element, width, width_mode, height,
+                                      height_mode);
+  }
+
+  virtual void DispatchLayoutBefore(Element* element) {
+    text_layout_impl_->DispatchLayoutBefore(element);
+  }
+
+  virtual void AlignText(Element* element) {
+    text_layout_impl_->Align(element);
   }
 
  protected:
   std::shared_ptr<PaintingCtxPlatformRef> platform_ref_;
+  std::unique_ptr<TextLayoutImpl> text_layout_impl_;
   PaintingCtxPlatformImplConfig config_;
 };
 }  // namespace tasm

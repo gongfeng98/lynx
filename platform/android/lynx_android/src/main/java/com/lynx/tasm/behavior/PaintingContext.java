@@ -23,6 +23,7 @@ import com.lynx.tasm.base.LLog;
 import com.lynx.tasm.base.TraceEvent;
 import com.lynx.tasm.base.trace.TraceEventDef;
 import com.lynx.tasm.behavior.shadow.ShadowNodeType;
+import com.lynx.tasm.behavior.shadow.TextLayout;
 import com.lynx.tasm.behavior.ui.LynxBaseUI;
 import com.lynx.tasm.behavior.ui.list.container.UIListContainer;
 import com.lynx.tasm.behavior.ui.view.UIComponent;
@@ -81,6 +82,7 @@ class CreateViewAsyncStatus {
 public final class PaintingContext {
   private static final String TAG = "lynx_PaintingContext";
   private final LynxUIOwner mUIOwner;
+  private TextLayout mTextLayout;
   private boolean mDestroyed;
   private ConcurrentHashMap<String, Boolean> mNeedCreateNodeAsyncCache;
 
@@ -90,8 +92,11 @@ public final class PaintingContext {
     mUIOwner = uiOwner;
     mDestroyed = false;
     mNeedCreateNodeAsyncCache = new ConcurrentHashMap<String, Boolean>();
+    if (mUIOwner.getContext().isLayoutInElementModeOn()) {
+      mTextLayout = new TextLayout(uiOwner);
+    }
     mNativePaintingContextPtr =
-        nativeCreatePaintingContext(this, threadStrategy, mUIOwner.isContextFree());
+        nativeCreatePaintingContext(this, mTextLayout, threadStrategy, mUIOwner.isContextFree());
   }
 
   // this func will be execed on main thread.
@@ -745,11 +750,5 @@ public final class PaintingContext {
   private native void nativeInvokeCallback(long context, int callback, WritableArray array);
 
   private native long nativeCreatePaintingContext(
-      Object paintingContext, int threadStrategy, boolean isContextFree);
-
-  @CalledByNative
-  public float[] measureText(int sign, ReadableCompactArrayBuffer buffer, float width,
-      int widthMode, float height, int heightMode) {
-    return mUIOwner.measureText(sign, buffer, width, widthMode, height, heightMode);
-  }
+      Object paintingContext, Object textLayout, int threadStrategy, boolean isContextFree);
 }
