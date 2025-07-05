@@ -61,6 +61,8 @@ NS_ASSUME_NONNULL_BEGIN
   BOOL _enableJSGroupThread;
   BOOL _enableVSyncAlignedMessageLoop;
   BOOL _enableUnifiedPipeline;
+  BOOL _enableReuseEngine;
+  BOOL _isEngineInitFromReusePool;
 
   LynxConfig* _config;
   LynxContext* _context;
@@ -74,6 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
   PaintingContextProxy* _paintingContextProxy;
   LynxSSRHelper* _lynxSSRHelper;
   LynxPerformanceController* _performanceController;
+  LynxEngine* _lynxEngine;
   CGFloat _fontScale;
   CGSize _intrinsicContentSize;
   std::unique_ptr<lynx::shell::LynxShell> shell_;

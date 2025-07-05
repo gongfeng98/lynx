@@ -1171,6 +1171,30 @@ public protocol LynxDynamicComponentFetcher-p : <NSObject> {
   public void LynxDynamicComponentFetcher-p::loadDynamicComponent:withLoadedBlock:(NSString *url,[withLoadedBlock] onComponentLoaded block);
 }
 
+public class LynxEngine : NSObject {
+  public LynxTemplateRender* LynxEngine::lynxTemplateRender lynxTemplateRender;
+  public LynxTemplateBundle* LynxEngine::templateBundle templateBundle;
+  public LynxEngineState LynxEngine::engineState engineState;
+  public id<LynxUIRendererProtocol> LynxEngine::lynxUIRenderer lynxUIRenderer;
+  public LynxShadowNodeOwner* LynxEngine::shadowNodeOwner shadowNodeOwner;
+  public NSMutableArray<LynxEngine *>* LynxEngine::engineQueueRef engineQueueRef;
+  public instancetype LynxEngine::initWithTemplateRender:(LynxTemplateRender *render);
+  public lynx::shell::LynxEngineWrapper * LynxEngine::getEngineNative();
+  public BOOL LynxEngine::hasLoaded();
+  public BOOL LynxEngine::canBeReused();
+  public void LynxEngine::registerToReuse();
+  public BOOL LynxEngine::isRunOnCurrentTemplateRender:(LynxTemplateRender *render);
+  public void LynxEngine::attachTemplateRender:(LynxTemplateRender *render);
+  public void LynxEngine::detachEngine();
+  public void LynxEngine::destroy();
+}
+
+public class LynxEnginePool : NSObject {
+  public instancetype LynxEnginePool::sharedInstance();
+  public void LynxEnginePool::registerReuseEngine:(LynxEngine *engine);
+  public LynxEngine * LynxEnginePool::pollEngineWithRender:(LynxTemplateBundle *render);
+}
+
 public class LynxEngineProxy : NSObject {
   public void LynxEngineProxy::dispatchTaskToLynxEngine:(dispatch_block_t task);
   public void LynxEngineProxy::invokeLepusFunc:callbackID:(NSDictionary *data,[callbackID] int32_t callbackID);
@@ -3080,6 +3104,7 @@ public class LynxShadowNodeOwner : NSObject {
   public instancetype LynxShadowNodeOwner::NS_UNAVAILABLE();
   public instancetype LynxShadowNodeOwner::initWithUIOwner:layoutTick:isAsyncLayout:(LynxUIOwner *uiOwner,[layoutTick] nullable LynxLayoutTick *layoutTick,[isAsyncLayout] BOOL isAsyncLayout);
   public void LynxShadowNodeOwner::setDelegate:(id< LynxShadowNodeDelegate > delegate);
+  public void LynxShadowNodeOwner::setLayoutTick:(nullable LynxLayoutTick *layoutTick);
   public void LynxShadowNodeOwner::initLayoutNodeManager:(void *layoutNodeManagerPtr);
   public NSInteger LynxShadowNodeOwner::createNodeWithSign:tagName:props:eventSet:lepusEventSet:isParentInlineContainer:(NSInteger sign,[tagName] nonnull NSString *tagName,[props] nullable NSDictionary *props,[eventSet] nullable NSSet< NSString * > *eventSet,[lepusEventSet] nullable NSSet< NSString * > *lepusEventSet,[isParentInlineContainer] bool allowInline);
   public void LynxShadowNodeOwner::updateNodeWithSign:props:eventSet:lepusEventSet:(NSInteger sign,[props] nullable NSDictionary *props,[eventSet] nullable NSSet< NSString * > *eventSet,[lepusEventSet] nullable NSSet< NSString * > *lepusEventSet);
@@ -3197,6 +3222,7 @@ public class LynxTemplateRender : NSObject, <LynxTemplateRenderProtocol>, <Templ
   public BOOL LynxTemplateRender::isDestroyed isDestroyed;
   public BOOL LynxTemplateRender::hasRendered hasRendered;
   public NSString* LynxTemplateRender::url url;
+  public id LynxTemplateRender::templateBundle templateBundle;
   public BOOL LynxTemplateRender::enableJSRuntime enableJSRuntime;
   public LynxDevtool* LynxTemplateRender::devTool devTool;
   public BOOL LynxTemplateRender::enablePrePainting enablePrePainting;
@@ -3253,11 +3279,13 @@ public class LynxTemplateRender : NSObject, <LynxTemplateRenderProtocol>, <Templ
   public LynxEngineProxy * LynxTemplateRender()::getEngineProxy();
   public void LynxTemplateRender()::markDirty();
   public id< LynxUIRendererProtocol > LynxTemplateRender()::lynxUIRenderer();
+  public LynxShadowNodeOwner * LynxTemplateRender()::shadowNodeOwner();
   public LynxUIOwner * LynxTemplateRender()::uiOwner();
   public LynxPerformanceController * LynxTemplateRender()::performanceController();
   public void LynxTemplateRender()::setAttachLynxPageUICallback:(attachLynxPageUI callback);
   public void LynxTemplateRender()::updateFrame:(CGRect frame);
   public LynxViewBuilderBlock LynxTemplateRender()::getLynxViewBuilderBlock();
+  public void LynxTemplateRender()::detachLynxEngine();
   public lynx::piper::ModuleFactoryDarwin * LynxTemplateRender()::getModuleFactory();
   public LynxLifecycleDispatcher * LynxTemplateRender()::getLifecycleDispatcher();
   public void LynxTemplateRender(Helper)::setUpWithBuilder:screenSize:(LynxViewBuilder *builder, [screenSize] CGSize screenSize);
@@ -4797,6 +4825,7 @@ public class LynxViewBuilder : NSObject {
   public id<LynxGenericResourceFetcher> LynxViewBuilder::genericResourceFetcher genericResourceFetcher;
   public id<LynxMediaResourceFetcher> LynxViewBuilder::mediaResourceFetcher mediaResourceFetcher;
   public id<LynxTemplateResourceFetcher> LynxViewBuilder::templateResourceFetcher templateResourceFetcher;
+  public LynxTemplateBundle* LynxViewBuilder::lynxTemplateBundleForEngineReused lynxTemplateBundleForEngineReused;
   public id LynxViewBuilder::lynxModuleExtraData lynxModuleExtraData;
   public CGSize LynxViewBuilder::screenSize screenSize;
   public BOOL LynxViewBuilder::debuggable debuggable;
@@ -5929,6 +5958,14 @@ public enum LynxGestureFlingTriggerState {
   public const int LYNX_STATE_FAIL LYNX_STATE_FAIL;
   public const int LYNX_STATE_END LYNX_STATE_END;
   public const int LYNX_STATE_UNDETERMINED LYNX_STATE_UNDETERMINED;
+
+public enum LynxEngineState {
+  LynxEngineStateUnloaded
+  LynxEngineStateReadyToBeReused
+  LynxEngineStateOnReusing
+  LynxEngineStateDestroyed
+}
+
 
   typedef void(^ DidAnimationStop) (CAAnimation *__nullable animation, BOOL finished)
   public DidAnimationStart didStart didStart;

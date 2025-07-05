@@ -126,6 +126,7 @@ static const char* const TEMPLATE_RENDER_INIT_WITH_BUILDER_BLOCK =
 static const char* const TEMPLATE_RENDER_CUSTOM_BUILDER = "LynxTemplateRender::customBuilder";
 static const char* const TEMPLATE_RENDER_SETUP_SCREEN_SIZE =
     "LynxTemplateRender::setUpEnvWidthScreenSize";
+static const char* const TEMPLATE_RENDER_SETUP_FRAME = "LynxTemplateRender::setUpFrame";
 static const char* const TEMPLATE_RENDER_SETUP_EVENT_HANDLER =
     "LynxTemplateRender::setUpEventHandler";
 static const char* const TEMPLATE_RENDER_SETUP_SHELL = "LynxTemplateRender::setUpLynxShell";
@@ -182,6 +183,9 @@ static const char* const LYNX_VIEW_LIFECYCLE_STARTED_WITH_LYNX_VIEW =
 static const char* const LYNX_VIEW_BUILDER_INIT = "LynxViewBuilder::init";
 static const char* const LAYOUT_NODE_MEASURE = "LynxLayoutNode::measure";
 static const char* const IMAGE_FETCHER_LOAD_IMAGE = "LynxImageFetcher::loadImageWithURL";
+
+static const char* const LYNX_ENGINE_POOL_REGISTER_ENGINE = "LynxEnginePool::registerReuseEngine";
+static const char* const LYNX_ENGINE_POOL_POLL_ENGINE = "LynxEnginePool::pollEngineWithRender";
 #endif
 
 NS_ASSUME_NONNULL_END

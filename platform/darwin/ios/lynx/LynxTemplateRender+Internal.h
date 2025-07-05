@@ -13,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class LynxEngineProxy;
 @class LynxGestureArenaManager;
 @class LynxPerformanceController;
+@class LynxShadowNodeOwner;
 
 @protocol LynxUIRendererProtocol;
 
@@ -47,6 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (id<LynxUIRendererProtocol>)lynxUIRenderer;
 
+- (LynxShadowNodeOwner *)shadowNodeOwner;
+
 - (LynxUIOwner *)uiOwner;
 
 - (LynxPerformanceController *)performanceController;
@@ -59,6 +62,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)updateFrame:(CGRect)frame;
 
 - (LynxViewBuilderBlock)getLynxViewBuilderBlock;
+
+- (void)detachLynxEngine;
 
 @end
 

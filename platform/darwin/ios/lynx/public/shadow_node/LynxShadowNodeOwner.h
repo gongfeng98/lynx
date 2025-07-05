@@ -31,6 +31,8 @@ typedef NS_ENUM(NSInteger, LynxShadowNodeType) {
 
 - (void)setDelegate:(id<LynxShadowNodeDelegate>)delegate;
 
+- (void)setLayoutTick:(nullable LynxLayoutTick*)layoutTick;
+
 - (void)initLayoutNodeManager:(void*)layoutNodeManagerPtr;
 
 - (NSInteger)createNodeWithSign:(NSInteger)sign

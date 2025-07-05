@@ -8,6 +8,7 @@
 #import <Lynx/LynxConfig+Internal.h>
 #import <Lynx/LynxContext+Internal.h>
 #import <Lynx/LynxDevtool+Internal.h>
+#import <Lynx/LynxEngine.h>
 #import <Lynx/LynxEngineProxy+Native.h>
 #import <Lynx/LynxEngineProxy.h>
 #import <Lynx/LynxEnv+Internal.h>
@@ -51,6 +52,7 @@
 @implementation LynxTemplateRender (Helper)
 
 - (void)setUpShadowNodeOwner {
+  // FIXME(huangweiwu): fix layout tick both android.
   if (!_uilayoutTick) {
     __weak typeof(self) weakSelf = self;
     _uilayoutTick = [[LynxUILayoutTick alloc] initWithRoot:_containerView
@@ -60,17 +62,23 @@
                                                        strongSelf->shell_->TriggerLayout();
                                                      }];
   }
-
-  BOOL isAsyncLayout = _threadStrategyForRendering != LynxThreadStrategyForRenderAllOnUI;
-  _shadowNodeOwner = [[LynxShadowNodeOwner alloc] initWithUIOwner:[_lynxUIRenderer uiOwner]
-                                                       layoutTick:_uilayoutTick
-                                                    isAsyncLayout:isAsyncLayout];
+  if (!_isEngineInitFromReusePool) {
+    BOOL isAsyncLayout = _threadStrategyForRendering != LynxThreadStrategyForRenderAllOnUI;
+    _shadowNodeOwner = [[LynxShadowNodeOwner alloc] initWithUIOwner:[_lynxUIRenderer uiOwner]
+                                                         layoutTick:_uilayoutTick
+                                                      isAsyncLayout:isAsyncLayout];
+  } else {
+    [_shadowNodeOwner setLayoutTick:_uilayoutTick];
+  }
 }
 
 - (void)setUpUIDelegate {
-  lynx::tasm::UIDelegateDarwin* ui_delegate = new lynx::tasm::UIDelegateDarwin(
-      [_lynxUIRenderer uiOwner], [[LynxEnv sharedInstance] enableCreateUIAsync], _shadowNodeOwner);
-  [_lynxUIRenderer onSetupUIDelegate:ui_delegate];
+  if (!_isEngineInitFromReusePool) {
+    lynx::tasm::UIDelegateDarwin* ui_delegate = new lynx::tasm::UIDelegateDarwin(
+        [_lynxUIRenderer uiOwner], [[LynxEnv sharedInstance] enableCreateUIAsync],
+        _shadowNodeOwner);
+    [_lynxUIRenderer onSetupUIDelegate:ui_delegate];
+  }
 }
 
 - (void)setUpLynxShellWithLastInstanceId:(int32_t)lastInstanceId {
@@ -92,19 +100,21 @@
 
   // Build shell
   auto ui_delegate = [_lynxUIRenderer uiDelegate];
-  auto painting_context = ui_delegate->CreatePaintingContext();
-  if ([_lynxUIRenderer needPaintingContextProxy]) {
+  std::unique_ptr<lynx::tasm::PaintingCtxPlatformImpl> painting_context;
+  if (!_isEngineInitFromReusePool && [_lynxUIRenderer needPaintingContextProxy]) {
+    painting_context = ui_delegate->CreatePaintingContext();
     _paintingContextProxy = [[PaintingContextProxy alloc]
         initWithPaintingContext:reinterpret_cast<lynx::tasm::PaintingContextDarwin*>(
                                     painting_context.get())];
     [_shadowNodeOwner setDelegate:_paintingContextProxy];
+    auto* painting_context_ref = reinterpret_cast<lynx::tasm::PaintingContextDarwinRef*>(
+        painting_context->GetPlatformRef().get());
+    if (_embeddedMode == LynxEmbeddedModeUnset) {
+      _performanceController =
+          [[LynxPerformanceController alloc] initWithObserver:[self getLifecycleDispatcher]];
+      painting_context_ref->SetPerformanceController(_performanceController);
+    }
   }
-
-  _performanceController =
-      [[LynxPerformanceController alloc] initWithObserver:[self getLifecycleDispatcher]];
-  auto* a = reinterpret_cast<lynx::tasm::PaintingContextDarwinRef*>(
-      painting_context->GetPlatformRef().get());
-  a->SetPerformanceController(_performanceController);
 
   shell_.reset(
       lynx::shell::LynxShellBuilder()
@@ -118,7 +128,8 @@
           .SetEnableUnifiedPipeline(_enableUnifiedPipeline)
           .SetTasmLocale(std::string([[[LynxEnv sharedInstance] locale] UTF8String]))
           .SetEnablePreUpdateData(_enablePreUpdateData)
-          .SetLayoutContextPlatformImpl(ui_delegate->CreateLayoutContext())
+          .SetLayoutContextPlatformImpl(
+              _isEngineInitFromReusePool ? nullptr : ui_delegate->CreateLayoutContext())
           .SetStrategy(
               static_cast<lynx::base::ThreadStrategyForRendering>(_threadStrategyForRendering))
           .SetEngineActor([loader, lynxEngineProxy = _lynxEngineProxy](auto& actor) {
@@ -130,11 +141,14 @@
           .SetRuntimeActor(_runtime ? _runtime.runtimeActor : nullptr)
           .SetPerfControllerActor(_runtime ? _runtime.perfControllerActor : nullptr)
           .SetPerformanceControllerPlatform(
-              std::make_unique<lynx::tasm::performance::PerformanceControllerDarwin>(
-                  _performanceController))
+              _performanceController
+                  ? std::make_unique<lynx::tasm::performance::PerformanceControllerDarwin>(
+                        _performanceController)
+                  : nullptr)
           .SetShellOption([self setUpShellOption])
           .SetTasmPlatformInvoker(std::make_unique<lynx::shell::TasmPlatformInvokerDarwin>(self))
           .SetUseInvokeUIMethodFunction(_lynxUIRenderer.useInvokeUIMethodFunction)
+          .SetLynxEngineWrapper(_lynxEngine ? [_lynxEngine getEngineNative] : nullptr)
           .build());
 
   [_devTool onTemplateAssemblerCreated:(intptr_t)shell_.get()];

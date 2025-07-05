@@ -30,6 +30,8 @@
 #import "LynxCallStackUtil.h"
 #import "LynxConfig+Internal.h"
 #import "LynxContext+Internal.h"
+#import "LynxEngine.h"
+#import "LynxEnginePool.h"
 #import "LynxEngineProxy+Native.h"
 #import "LynxEnv+Internal.h"
 #import "LynxEventReporterUtils.h"
@@ -175,6 +177,21 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   return builder;
 }
 
+- (void)reuseLynxEngine {
+  _lynxEngine = [[LynxEnginePool sharedInstance] pollEngineWithRender:_templateBundle];
+  if (!_lynxEngine) {
+    _lynxEngine = [[LynxEngine alloc] initWithTemplateRender:self];
+    _isEngineInitFromReusePool = NO;
+  } else {
+    [_lynxEngine setEngineState:LynxEngineStateOnReusing];
+    _lynxUIRenderer = [_lynxEngine lynxUIRenderer];
+    _shadowNodeOwner = [_lynxEngine shadowNodeOwner];
+    // TODO(renzhongyue) : attachBodyView
+    _isEngineInitFromReusePool = YES;
+  }
+  [_lynxEngine attachTemplateRender:self];
+}
+
 - (void)setUpVariableWithBuilder:(LynxViewBuilder*)builder
                    containerView:(UIView<LUIBodyView>*)containerView
                       screenSize:(CGSize)screenSize {
@@ -202,7 +219,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   _enableTextNonContiguousLayout = [builder enableTextNonContiguousLayout];
   _enableLayoutOnly = [LynxEnv.sharedInstance getEnableLayoutOnly];
   _embeddedMode = [builder getEmbeddedMode];
-
+  _templateBundle = [builder lynxTemplateBundleForEngineReused];
   builder.config = builder.config ?: [LynxEnv sharedInstance].config;
   builder.config = builder.config ?: [[LynxConfig alloc] initWithProvider:nil];
   _config = builder.config;
@@ -218,6 +235,12 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   _lynxUIRenderer = builder.lynxUIRenderer;
 
   [self setUpContainerView:containerView builder:builder];
+
+  _enableReuseEngine = ((_embeddedMode & LynxEmbeddedModeEnginePool) != 0 &&
+                        builder.lynxTemplateBundleForEngineReused != nil);
+  if (_enableReuseEngine) {
+    [self reuseLynxEngine];
+  }
 }
 
 - (void)setUpContainerView:(UIView<LUIBodyView>*)containerView builder:(LynxViewBuilder*)builder {
@@ -281,7 +304,12 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 
 - (void)setUpFrame:(CGRect)frame {
   // update viewport when preset width and height
-  [self updateFrame:frame];
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_SETUP_FRAME);
+
+  // If the engine is from the pool, there's no need to update the viewport again.
+  if (!_isEngineInitFromReusePool) {
+    [self updateFrame:frame];
+  }
   _frameOfLynxView = frame;
   if (_containerView && !CGRectEqualToRect(_containerView.frame, _frameOfLynxView) &&
       !CGRectEqualToRect(CGRectZero, _frameOfLynxView)) {
@@ -321,7 +349,15 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   _lynxSSRHelper = nil;
 
   _globalProps = [_globalProps deepClone];
-  [_lynxUIRenderer reset];
+
+  if (_lynxEngine == nil) {
+    [_lynxUIRenderer reset];
+    [_shadowNodeOwner destroySelf];
+  } else if ([_lynxEngine isRunOnCurrentTemplateRender:self]) {
+    [_lynxUIRenderer reset];
+    [_shadowNodeOwner destroySelf];
+    [self destroyLynxEngine];
+  }
 
   shell_->ClearPipelineTimingInfo();
   // remove generic info
@@ -334,26 +370,41 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
     [_delegate templateRenderOnTransitionUnregister:self];
   }
 
-  if (_shadowNodeOwner) {
-    [_shadowNodeOwner destroySelf];
-  }
-
   [self reset:lastInstanceId];
 
   [self updateViewport];
   [self setUpTiming];
 }
 
+- (void)detachLynxEngine {
+  _lynxEngine = nil;
+}
+
+- (void)destroyLynxEngine {
+  if (_lynxEngine) {
+    [_lynxEngine destroy];
+    _lynxEngine = nil;
+  }
+}
+
+// TODO(huangweiwu): maybe we need remove this method..
 - (void)clearForDestroy {
   [_lynxUIRenderer reset];
-
   [LynxEventReporter clearCacheForInstanceId:_context.instanceId];
   _context.instanceId = kUnknownInstanceId;
   shell_->Destroy();
 }
 
 - (void)dealloc {
-  [_lynxUIRenderer reset];
+  if (_lynxEngine == nil) {
+    [_lynxUIRenderer reset];
+    [_shadowNodeOwner destroySelf];
+  } else {
+    [_lynxUIRenderer reset];
+    [_shadowNodeOwner destroySelf];
+    [self destroyLynxEngine];
+  }
+
   pageConfig_.reset();
   // ios block cannot capture std::unique_ptr, tricky...
   auto* shell = shell_.release();
@@ -495,6 +546,13 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 - (void)loadTemplateBundle:(LynxTemplateBundle*)bundle
                    withURL:(NSString*)url
                   initData:(LynxTemplateData*)data {
+  if (_enableReuseEngine && [_lynxEngine hasLoaded] &&
+      [_lynxEngine isRunOnCurrentTemplateRender:self]) {
+    // TODO(renzhongyue): attachUIBodyView
+    [self updateDataWithTemplateData:data];
+    [_lynxEngine registerToReuse];
+    return;
+  }
   TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_LOAD_TEMPLATE_BUNDLE, "url", [url UTF8String]);
   auto pipeline_options = std::make_shared<lynx::tasm::PipelineOptions>();
   pipeline_options->pipeline_origin = lynx::tasm::timing::kLoadBundle;
@@ -561,6 +619,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
                                          std::move(copied_bundle), pipeline_options, ptr,
                                          _enablePrePainting, _enableDumpElement);
         _hasStartedLoad = YES;
+        [_lynxEngine registerToReuse];
       }
       withErrorCallback:^(NSString* msg, NSString* stack) {
         __strong LynxTemplateRender* strongSelf = weakSelf;
@@ -2315,6 +2374,10 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 
 - (id<LynxUIRendererProtocol>)lynxUIRenderer {
   return _lynxUIRenderer;
+}
+
+- (LynxShadowNodeOwner*)shadowNodeOwner {
+  return _shadowNodeOwner;
 }
 
 - (void)onEventCapture:(NSInteger)targetID

@@ -52,6 +52,8 @@ static NSString* _Nonnull const KEY_LYNX_PLATFORM_CONFIG = @"platform_config";
 @property(nonatomic, nonnull) id<LynxMediaResourceFetcher> mediaResourceFetcher;
 @property(nonatomic, nonnull) id<LynxTemplateResourceFetcher> templateResourceFetcher;
 
+@property(nonatomic, assign, nullable) LynxTemplateBundle* lynxTemplateBundleForEngineReused;
+
 /**
  * Pass extra data to LynxModule, the usage of data depends on module's implementation
  */

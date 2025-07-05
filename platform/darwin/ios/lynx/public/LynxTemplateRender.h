@@ -17,6 +17,7 @@
 @class LynxTemplateBundle;
 @class LynxUIIntersectionObserverManager;
 @class LynxUI;
+@class LynxEngine;
 
 @interface LynxTemplateRender : NSObject <LynxTemplateRenderProtocol>
 
@@ -33,6 +34,7 @@
 @property(nonatomic, assign) BOOL isDestroyed;
 @property(nonatomic, assign) BOOL hasRendered;
 @property(nonatomic, strong, readonly, nullable) NSString* url;
+@property(nonatomic, strong, readonly, nullable) id templateBundle;
 @property(nonatomic, assign) BOOL enableJSRuntime;
 @property(nonatomic, strong, nonnull) LynxDevtool* devTool;
 

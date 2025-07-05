@@ -57,6 +57,10 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)init)
   _delegate = delegate;
 }
 
+- (void)setLayoutTick:(LynxLayoutTick* _Nullable)layoutTick {
+  _layoutTick = layoutTick;
+}
+
 - (void)initLayoutNodeManager:(void*)layoutNodeManagerPtr {
   _layoutNodeManager = [[LynxLayoutNodeManager alloc] initWithNativePtr:layoutNodeManagerPtr];
 }
