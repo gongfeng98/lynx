@@ -8,39 +8,49 @@ import { LynxStreamDelegate } from './LynxStreamDelegate';
 import { AsyncCallback } from '@ohos.base';
 
 /**
- * Generic Resource Provider for Lynx.
+ * `LynxGenericResourceFetcher` is defined inside `LynxEngine`
+ * and injected from outside to implement a general resource loading interface.
+ * It is used inside LynxEngine for resource loading capabilities of components such as `Text`
+ * @apidoc
  */
 export abstract class LynxGenericResourceFetcher implements LynxResourceProvider {
   /**
-   * fetch resource with contents.
+   * `LynxEngine` internally calls this method to obtain the general
+   * resource content, and the return result is required to be the resource content `byte[]` type.
    *
-   * @param request
-   * @param callback containing contents of the requiring resource
+   * @apidoc
+   * @param request Request to obtain the general resource content.
+   * @param callback Containing contents of the requiring resource.
    */
   abstract fetchResource(request: LynxResourceRequest, callback: AsyncCallback<ArrayBuffer>);
 
   /**
-   * fetch resource with resource path
+   * `LynxEngine` internally calls this method to obtain the path of the common resource
+   * on the local disk, and the return result is required to be of `String` type.
    *
-   * @param request
-   * @param callback with path on the disk of the requiring resource
+   * @apidoc
+   * @param request Request to obtain the path of the common resource on the local disk.
+   * @param callback with path on the disk of the requiring resource.
    */
   abstract fetchResourcePath(request: LynxResourceRequest, callback: AsyncCallback<string>);
 
   /**
-   * fetch resource with stream.
+   * `LynxEngine` internally calls this method to obtain resource content in a streaming
+   * manner.
    *
+   * @apidoc
    * @optional user may impl this method if stream loading is necessary.
-   * @param request
-   * @param delegate streaming of the requiring resource;
+   * @param request Request to obtain resource content in a streaming manner.
+   * @param delegate streaming of the requiring resource.
    */
   fetchStream(request: LynxResourceRequest, delegate: LynxStreamDelegate) {
   }
 
   /**
-   * cancel the request of the requiring resource.
+   * Cancel the request of the requiring resource.
    *
-   * @param request
+   * @apidoc
+   * @param request Request to be canceled.
    */
   abstract cancel(request: LynxResourceRequest);
 }

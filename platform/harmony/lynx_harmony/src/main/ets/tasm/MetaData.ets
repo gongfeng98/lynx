@@ -6,20 +6,41 @@ import { LLog } from '../base/LLog';
 
 const TAG = 'TemplateData';
 
+/**
+ * TemplateData is a data structure provided by Lynx.
+ * It is used to store the data types accepted by Lynx at runtime
+ * and can be constructed using either a string or a map type.
+ * @apidoc
+ */
 export class TemplateData {
   processor: string = '';
   private _data: string | Record<string, Object> | Object | undefined;
   readOnly: boolean = false;
 
+  /**
+   * Input data in string, key-value or json format and return the parsed `TemplateData` object.
+   * @apidoc
+   * @param input String, key-value or json type data.
+   * @param processor Data processor.
+   */
   constructor(input?: string | Record<string, Object> | Object, processor: string = '') {
     this._data = input;
     this.processor = processor;
   }
 
+  /**
+   * Get the data in `TemplateData` object.
+   * @apidoc
+   */
   get data() {
     return this._data;
   }
 
+  /**
+   * Merge the incoming data with the current data.
+   * @apidoc
+   * @param data Incoming data in string, key-value or json format.
+   */
   merge(data?: string | Record<string, Object> | Object) {
     if (data === undefined) {
       return;
@@ -44,10 +65,21 @@ export class TemplateData {
   }
 }
 
+/**
+ * LynxUpdateMeta is the metadata structure used by LynxView to update template data.
+ * It will serve as the input parameter for UpdateData. Users can specify various parameters
+ * required for the update through LynxUpdateMeta, such as template data and globalProps, among others.
+ * @apidoc
+ */
 export class MetaData {
   templateData?: TemplateData;
   globalProps?: TemplateData;
 
+  /**
+   * MetaData construction.
+   * @param templateData The content of the data to update the template.
+   * @param globalProps The globalProps content for updating the template.
+   */
   constructor(templateData?: TemplateData, globalProps?: TemplateData) {
     this.templateData = templateData;
     this.globalProps = globalProps;

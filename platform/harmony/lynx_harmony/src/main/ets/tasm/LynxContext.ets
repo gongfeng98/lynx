@@ -20,6 +20,11 @@ import { LynxExtensionModule } from '../extension/LynxExtensionModule';
 
 const TAG = 'LynxContext'
 
+/**
+ * LynxContext is a LynxView's core context, managing templates, data, and events. It connects the
+ * native platform to the Lynx engine, acting like a WebView for rendering templates.
+ * @apidoc
+ */
 export class LynxContext implements IContext {
   private renderer?: LynxTemplateRenderer;
   private _screenMetrics: LynxScreenMetrics;
@@ -67,6 +72,13 @@ export class LynxContext implements IContext {
     this.renderer = renderer;
   }
 
+  /**
+   * Send global events to the front end through the client,
+   * and the front end can listen to the event through `GlobalEventEmitter`.
+   * @apidoc
+   * @param name Global event name.
+   * @param params Parameters carried by global events.
+   */
   sendGlobalEvent(name: string, params: Object[]) {
     if (this.lynxView.enableAirStrictMode) {
       this.renderer?.triggerEventBus(name, params);
@@ -84,6 +96,12 @@ export class LynxContext implements IContext {
     this.renderer?.sendCustomEvent(name, id, params, paramName ? paramName : 'params');
   }
 
+  /**
+   * Using [LynxUpdateMeta](/api/lynx-native-api/lynx-update-meta) to update `LynxView`,
+   * it is the main entrance for the client to update template data.
+   * @apidoc
+   * @param data Lynx template update metadata, developers use this data structure to specify the optional data content of the update template.
+   */
   updateMetaData(data: MetaData) {
     if (this.lynxView.templateLoaded) {
       this.renderer?.updateMetaData(data.templateData?.processor, data.templateData?.data, data.templateData?.readOnly,
@@ -109,6 +127,14 @@ export class LynxContext implements IContext {
     return this._screenMetrics;
   }
 
+  /**
+   * The client updates the `LynxView` view size.
+   * @apidoc
+   * @param width Current `LynxView` width.
+   * @param widthMode The measure mode for width. 0: Indefinite, 1: Definite, 2: AtMost.
+   * @param height Current `LynxView` height.
+   * @param heightMode The measure mode for height. 0: Indefinite, 1: Definite, 2: AtMost.
+   */
   public updateViewport(width: number, widthMode: number, height: number, heightMode: number) {
     this.renderer?.updateViewport(width, widthMode, height, heightMode);
   }
@@ -163,6 +189,11 @@ export class LynxContext implements IContext {
     return timingInfo;
   }
 
+  /**
+   * Supplement key performance data before loading the Lynx page.
+   * @apidoc
+   * @param extraTiming Used to supplement key performance data before loading the Lynx page.
+   */
   public setExtraTiming(extraTiming: LynxExtraTiming) {
     this.renderer?.setExtraTiming(extraTiming);
   }
@@ -177,6 +208,11 @@ export class LynxContext implements IContext {
     }
   }
 
+  /**
+   * Changing the font scaling ratio in client settings will automatically change the text size.
+   * @apidoc
+   * @param scale Font scaling.
+   */
   updateFontScale(scale: number) {
     this.renderer?.updateFontScale(scale);
   }

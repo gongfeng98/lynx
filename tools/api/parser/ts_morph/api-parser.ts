@@ -96,6 +96,19 @@ function handleJSDoc(member: BaseMember | BaseObject, jsDocs: JSDoc[]): void {
   member.has_apidoc = jsDocs.some((doc) =>
     doc.getTags().some((tag) => tag.getTagName() === 'apidoc')
   );
+
+  if ('note' in member) {
+    jsDocs.forEach((doc) => {
+      doc.getTags().forEach((tag) => {
+        const tagName = tag.getTagName();
+        const comment = tag.getCommentText()?.toString() || '';
+        if (tagName === 'note') {
+          member.note.push(comment.replaceAll('\n', ''));
+        }
+      });
+    });
+  }
+
   if (!('params' in member) || !('returns' in member)) {
     return;
   }

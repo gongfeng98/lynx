@@ -8,6 +8,12 @@ import { ILynxSecurityService, LynxTasmType, SecurityResult } from './service/IL
 
 import { TemplateBundleOption } from './TemplateBundleOption';
 
+/**
+ * `TemplateBundle` is the output product of the PreDecode capability
+ * provided by the Lynx SDK. Client developers can parse the Lynx App Bundle product
+ * in advance to obtain the `TemplateBundle` object and consume the App Bundle product.
+ * @apidoc
+ */
 export class TemplateBundle extends lynx.TemplateBundle {
   private extraInfo: Map<string, Object> = new Map();
   private templateSize: number = 0;
@@ -22,6 +28,12 @@ export class TemplateBundle extends lynx.TemplateBundle {
     this.errMsg = errMsg;
   }
 
+  /**
+   * Input Lynx template binary content and return the parsed `TemplateBundle` object.
+   * @apidoc
+   * @param template Template binary content.
+   * @returns The `TemplateBundle` object.
+   */
   public static fromTemplate(template: ArrayBuffer): TemplateBundle {
     let bundle: TemplateBundle = new TemplateBundle(template.byteLength);
     let securityService = LynxServiceCenter.getService<ILynxSecurityService>(LynxServiceType.Security);
@@ -51,6 +63,13 @@ export class TemplateBundle extends lynx.TemplateBundle {
     this.nativeInitWithOption(option.getContextPoolSize(), option.getEnableContextAutoRefill());
   }
 
+  /**
+   * Read the content of the `extraInfo` field configured in the `pageConfig` of the
+   * front-end template.
+   * @apidoc
+   * @returns When the front-end does not configure extraInfo or is called on an empty TemplateBundle object,
+   * it returns null.
+   */
   public getExtraInfo(): Map<string, Object> {
     if (this.extraInfo.size == 0) {
       let extraInfoRecord = this.nativeGetExtraInfo();
@@ -63,20 +82,42 @@ export class TemplateBundle extends lynx.TemplateBundle {
     return this.extraInfo;
   }
 
+  /**
+   * Whether the TemplateBundle contains a Valid ElementBundle.
+   * @apidoc
+   * @returns True if valid, else false.
+   */
   public isElementBundleValid(): boolean {
     return this.nativeGetContainsElementTree();
   }
 
-  public getTemplateSize() {
+  /**
+   * Get the size of current template.
+   * @apidoc
+   * @returns Template size.
+   */
+  public getTemplateSize(): number {
     return this.templateSize;
   }
 
+  /**
+   * Start a sub-thread task to generate the `js code cache` of the current template.
+   * @apidoc
+   * @param bytecodeSourceUrl The url of the current template.
+   * @param useV8 Whether to generate V8 Code Cache, otherwise generate QuickJS Code Cache.
+   */
   public postJsCacheGenerationTask(bytecodeSourceUrl: string, useV8: boolean): void {
     if (bytecodeSourceUrl.length > 0) {
       this.nativePostJsCacheGenerationTask(bytecodeSourceUrl, useV8);
     }
   }
 
+  /**
+   * When `TemplateBundle` is an invalid object, use this method to
+   * obtain the exception information that occurred during template parsing.
+   * @apidoc
+   * @returns The exception information during template parsing.
+   */
   public getErrorMessage(): string {
     return this.errMsg;
   }

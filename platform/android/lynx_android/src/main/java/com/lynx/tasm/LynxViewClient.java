@@ -162,7 +162,7 @@ public abstract class LynxViewClient
   /**
    * @apidoc
    * @brief If there is no need to update the UI after calling
-   * [`updateData`](../lynx-view/update-data.mdx), this method is called back.
+   * [`updateData`](../lynx-view/update-meta-data.mdx), this method is called back.
    */
   public void onUpdateDataWithoutChange() {}
 

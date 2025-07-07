@@ -57,51 +57,102 @@ export class LynxPipelineInfo {
 }
 
 /**
- * Give the host application a chance to take control when a lynx template is about to be loaded in
- * the current LynxView.
+ * A client that provides callbacks for `LynxView`'s lifecycle and other events.
+ * @apidoc
  */
 export abstract class LynxViewClient implements IPerformanceObserver {
   /**
-   * Notify that a lynx template has started loading. It will be call at both `loadTemplate` and
-   * `reloadTemplate`.
-   *
-   * Note: this method will be executed before the main process of lynx so do not execute overly
+   * Called when page start loading.
+   * @apidoc
+   * @note This method will be executed before the main process of lynx so do not execute overly
    * complex logic in this method.
    *
-   * @param lynxView the LynxView which has started loading
-   * @param pipelineInfo the information about the pixel pipeline
+   * @param lynxContext The LnxContext which has started loading
+   * @param pipelineInfo The information about the pixel pipeline
    *
    */
   public onPageStarted(lynxContext: LynxContext, pipelineInfo: LynxPipelineInfo): void {
   }
 
+  /**
+   * Called when page load finish.
+   * @apidoc
+   * @param url The page url.
+   */
   public onLoadSuccess(url: string): void {
   }
 
+  /**
+   * Called when first screen layout completed.
+   * @apidoc
+   */
   public onFirstScreen(): void {
   }
 
+  /**
+   * Called when page update.
+   * @apidoc
+   */
   public onPageUpdate(): void {
   }
 
+  /**
+   * Called when data update, but the view may not be updated.
+   * @apidoc
+   */
   public onDataUpdated(): void {
   }
 
+  /**
+   * Called when JS environment preparation completed.
+   * @apidoc
+   */
   public onRuntimeReady(): void {
   }
 
+  /**
+   * Called when error received.
+   * @apidoc
+   * @param error The type and information of the error.
+   */
   public onReceivedError(error: LynxError): void {
   }
 
+  /**
+   * Called after the page is destroyed.
+   * @apidoc
+   */
   public onDestroy(): void {
   }
 
+  /**
+   * If there is no need to update the UI after calling
+   * [`updateData`](../lynx-view/update-data.mdx), this method is called back.
+   * @apidoc
+   */
   public onUpdateDataWithoutChange(): void {
   }
 
+  /**
+   * Provide a reusable TemplateBundle after template is decode.
+   * @apidoc
+   * @note This callback is disabled by default, and you can enable it through the
+   * DUMP_ELEMENT option or RECYCLE_TEMPLATE_BUNDLE option in LynxLoadMeta.
+   * @param bundle The recycled template bundle, it is nonnull but could be invalid.
+   */
   public onTemplateBundleReady(bundle: TemplateBundle): void {
   }
 
+  /**
+   * Notify the client that a performance event has been sent. It will be called every time a
+   * performance event is generated, including but not limited to container initialization, engine
+   * rendering, rendering metrics update, etc.
+   *
+   * @apidoc
+   * @param entry The [PerformanceEntry](../../lynx-api/performance-api/performance-entry.mdx)
+   * about the performance event.
+   *
+   */
   public onPerformanceEvent(entry: PerformanceEntry): void {
   }
 }

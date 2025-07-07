@@ -14,9 +14,7 @@ LYNX_ROOT_PATH = os.getcwd()
 TOOLS_PATH = os.path.join(LYNX_ROOT_PATH, "tools")
 ANDROID_API_PATH = os.path.join(LYNX_ROOT_PATH, "platform", "android", "api")
 IOS_API_PATH = os.path.join(LYNX_ROOT_PATH, "platform", "darwin", "ios", "api")
-HARMONY_API_PATH = os.path.join(
-    LYNX_ROOT_PATH, "oss_harmony", "platform", "harmony", "api"
-)
+HARMONY_API_PATH = os.path.join(LYNX_ROOT_PATH, "platform", "harmony", "api")
 ERROR_CODE_PACKAGE_DIR = os.path.join(LYNX_ROOT_PATH, "tools", "error_code")
 FEATURE_COUNT_PACKAGE_DIR = os.path.join(LYNX_ROOT_PATH, "tools", "feature_count")
 TOOLS_DIR_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))

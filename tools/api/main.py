@@ -25,12 +25,11 @@ def main():
 
     Command Line Arguments:
         --update (-u): Update mode - overwrites reference files
-        --platform (-p): Target platform(s) [both|ios|android]
+        --platform (-p): Target platform(s) [all|ios|android|harmony]
         --doc: Generate API documentation
 
     Usage Examples:
-        python main.py -u -p both    # Update both platforms
-        python main.py -d -p ios     # Show iOS differences
+        python main.py -u -p all    # Update all platforms
         python main.py -u -p android # Update Android only
     """
     # Initialize argument parser
@@ -41,8 +40,8 @@ def main():
     parser.add_argument(
         "-p",
         "--platform",
-        choices=["both", "ios", "android"],
-        default="both",
+        choices=["all", "ios", "android", "harmony"],
+        default="all",
         help="Specify the platform",
     )
     parser.add_argument(
@@ -53,32 +52,40 @@ def main():
     args = parser.parse_args()
     ios_result = True
     android_result = True
+    harmony_result = True
 
     # Handle update operation
     if args.update:
         # Ensure generated files are up-to-date
         guarantee_generated_files()
         # iOS platform update
-        if args.platform == "both" or args.platform == "ios":
+        if args.platform == "all" or args.platform == "ios":
             ios_result = update_api_metadata(
                 os.path.dirname(os.path.abspath(__file__)), "ios"
             )
         # Android platform update
-        if args.platform == "both" or args.platform == "android":
+        if args.platform == "all" or args.platform == "android":
             android_result = update_api_metadata(
                 os.path.dirname(os.path.abspath(__file__)), "android"
             )
-        sys.exit(0 if (ios_result and android_result) else 1)
+        # Harmony platform update
+        if args.platform == "all" or args.platform == "harmony":
+            harmony_result = update_api_metadata(
+                os.path.dirname(os.path.abspath(__file__)), "harmony"
+            )
+        sys.exit(0 if (ios_result and android_result and harmony_result) else 1)
 
     # Handle doc operation
     if args.doc:
         # Ensure generated files are up-to-date
         guarantee_generated_files()
         platform_list = []
-        if args.platform == "both" or args.platform == "android":
+        if args.platform == "all" or args.platform == "android":
             platform_list.append("android")
-        if args.platform == "both" or args.platform == "ios":
+        if args.platform == "all" or args.platform == "ios":
             platform_list.append("ios")
+        if args.platform == "all" or args.platform == "harmony":
+            platform_list.append("harmony")
         result = generate_website_api_doc(platform_list)
         sys.exit(0 if result else 1)
 

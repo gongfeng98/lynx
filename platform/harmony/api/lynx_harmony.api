@@ -1,0 +1,1099 @@
+/*
+ * This file is generated, do not edit.
+ * @generated
+ *
+ * @generate-command: python3 tools/api/main.py -u
+ *
+ */
+
+export class TemplateData {
+  constructor(input: string | Record<string, Object> | Object, processor: string);
+  merge(data: string | Record<string, Object> | Object): void;
+  processor: string; = ''
+  readOnly: boolean; = false
+  data(): void;
+}
+
+export class MetaData {
+  constructor(templateData: TemplateData, globalProps: TemplateData);
+  merge(data: MetaData): void;
+  templateData?: TemplateData;
+  globalProps?: TemplateData;
+}
+
+export abstract class LynxNodeController extends NodeController {
+  updateNode(renderer: LynxUIRenderer, fitContentHeight: boolean): void;
+  dispose(): void;
+  renderer?: LynxUIRenderer;
+  fitContentHeight?: boolean;
+  builderNode: BuilderNode<[ESObject]> | undefined | null;
+}
+
+@Component export class LynxView {
+  reInitTemplateRenderer(): void;
+  aboutToAppear(): void;
+  aboutToDisappear(): void;
+  aboutToReuse(params: Record<string, ESObject>): void;
+  aboutToRecycle(): void;
+  override onMeasureSize(selfLayoutInfo: GeometryInfo, children: Measurable[], constraint: ConstraintSizeOptions): void;
+  override onPlaceChildren(selfLayoutInfo: GeometryInfo, children: Layoutable[], constraint: ConstraintSizeOptions): void;
+  reload(): void;
+  loadTemplate(): void;
+  build(): void;
+  setEnableBytecode(enable: boolean, sourceUrl: string): void;
+  setupExtensionModules(): void;
+  genericResourceFetcher?: LynxGenericResourceFetcher;
+  mediaResourceFetcher?: LynxMediaResourceFetcher;
+  templateResourceFetcher?: LynxTemplateResourceFetcher;
+  modules: Map<string, ModuleClassWrapper>; = new Map()
+  sendableModules: Map<string, SendableModuleClassWrapper>; = new Map()
+  metaData: MetaData; = new MetaData()
+  behaviors: BehaviorRegistryMap; = new Map()
+  templateBundle?: TemplateBundle;
+  loadOption?: LynxLoadOption;
+  uiRendererCreator?: LynxUIRendererCreator;
+  uri?: url.URL;
+  platformConfig?: string;
+  logBox: ILogBox | null; = null
+  @Prop fitContentHeight: boolean; = false
+  experimentalFixFitContent?: boolean; = false
+  onCreate: (context: LynxContext) => void; = ((context: LynxContext) => {
+  })
+  onReuse: (context: LynxContext) => boolean; = ((context: LynxContext) => {
+    return true;
+  })
+  beforeLoadTemplate: (context: LynxContext) => void; = ((context: LynxContext) => {
+  })
+  @State rootSize: Size; = { width: 0, height: 0 }
+  @State logBoxTitle: string; = ''
+  templateLoaded: boolean; = false
+  threadMode: ThreadStrategyForRendering; = ThreadStrategyForRendering.ALL_ON_UI
+  backgroundRuntimeOptions: LynxBackgroundRuntimeOptions; = new LynxBackgroundRuntimeOptions()
+  enableAirStrictMode?: any; = false
+}
+
+export enum MeasureMode {
+  INDEFINITE = 0
+  DEFINITE = 1
+  AT_MOST = 2
+}
+
+export enum ThreadStrategyForRendering {
+  ALL_ON_UI = 0
+  MOST_ON_TASM = 1
+}
+
+export class LynxContext implements IContext {
+  constructor(view: LynxView);
+  findJSShadowNodeBySign(sign: number): Object | undefined;
+  public setShadowNodeOwner(nodeOwner: ShadowNodeOwner): void;
+  public setUIOwner(uiOwner: UIOwner): void;
+  public measureNativeNode(sign: number, width: number, widthMode: number, height: number, heightMode: number, finalMeasure: boolean): void;
+  public alignNativeNode(sign: number, left: number, top: number): void;
+  setRenderer(renderer: LynxTemplateRenderer): void;
+  sendGlobalEvent(name: string, params: Object[]): void;
+  public callJSFunction(moduleName: string, method: string, params: Object[]): void;
+  sendCustomEvent(name: string, id: number, params: Object, paramName: string): void;
+  updateMetaData(data: MetaData): void;
+  scrollByListContainer(containerSign: number, x: number, y: number): void;
+  scrollToPosition(containerSign: number, position: number, offset: number, align: number, smooth: boolean): void;
+  scrollStopped(containerSign: number): void;
+  public updateViewport(width: number, widthMode: number, height: number, heightMode: number): void;
+  public onEnterForeground(): void;
+  public onEnterBackground(): void;
+  public updateScreenMetrics(width: number, height: number): void;
+  updateCustomData(data: Record<string, Object>): void;
+  public loadTemplate(): void;
+  public reload(data: MetaData): void;
+  public getAllTimingInfo(): void;
+  public setExtraTiming(extraTiming: LynxExtraTiming): void;
+  public putParamsForReportingEvents(params: ReadonlyMap<string, LynxReportEventPropValue>): void;
+  updateFontScale(scale: number): void;
+  public setContextData(data: Record<string, Object>): void;
+  public getContextData(): Record<string, Object> | undefined;
+  public setMediaResourceFetcher(mediaResourceFetcher: LynxMediaResourceFetcher): void;
+  public setGenericResourceFetcher(genericResourceFetcher: LynxGenericResourceFetcher): void;
+  public getGenericResourceFetcher(): LynxGenericResourceFetcher | undefined;
+  public getMediaResourceFetcher(): LynxMediaResourceFetcher | undefined;
+  public getDensity(): number;
+  public getRectangleById(id: string): void;
+  public canConsumeTouchEvent(x: number, y: number): boolean;
+  public getPageDataByKey(keys: string[]): void;
+  public setExtensionModule(module: LynxExtensionModule): void;
+  public getExtensionModule(): LynxExtensionModule | undefined;
+  screenMetrics(): LynxScreenMetrics;
+}
+
+export class LynxModule {
+  constructor(context: LynxContext, param: Object);
+}
+
+@Sendable export class SendableLynxModule {
+  constructor(param: ISendable);
+}
+
+@Sendable export class SendableModuleClassWrapper {
+  constructor(moduleClass: ISendable, params: ISendable);
+  moduleClass?: ISendable;
+  param?: ISendable;
+}
+
+export interface ModuleClassWrapper {
+  moduleClass: Function;
+  param?: Object;
+}
+
+export class LynxHttpRequest {
+  constructor(httpMethod: string, url: string, originUrl: string, httpBody: ArrayBuffer, httpHeaders: Record<string, string>, customConfig: Record<string, Object>);
+  public httpMethod: string;
+  public url: string;
+  public originUrl: string;
+  public httpBody: ArrayBuffer;
+  public httpHeaders: Record<string, string>;
+  public customConfig: Record<string, Object>;
+}
+
+export class LynxHttpResponse {
+  public url: string; = ''
+  public statusCode: number; = 0
+  public statusText: string; = 'OK'
+  public httpBody: ArrayBuffer; = new ArrayBuffer(0)
+  public httpHeaders: Record<string, string>; = {}
+  public customInfo: Record<string, Object>; = {}
+}
+
+export class LynxUIMethodConstants {
+  public static SUCCESS: any; = 0
+  public static UNKNOWN: any; = 1
+  public static NODE_NOT_FOUND: any; = 2
+  public static METHOD_NOT_FOUND: any; = 3
+  public static PARAM_INVALID: any; = 4
+  public static SELECTOR_NOT_SUPPORTED: any; = 5
+  public static NO_UI_FOR_NODE: any; = 6
+  public static INVALID_STATE_ERROR: any; = 7
+  public static OPERATION_ERROR: any; = 8
+}
+
+export const LynxEnv: LynxEnvironment {
+  public initialize(context: common.Context): void;
+  setAppInfo(appInfo: Map<string, string>): void;
+  public enableLynxDebug(enabled: boolean): void;
+  public isLynxDebugEnabled(): void;
+  public isDevtoolComponentAttach(): void;
+  public isDevtoolEnabled(): void;
+  public enableDevtool(enabled: boolean): void;
+  public quickjsDebugEnabled(): void;
+  public setQuickjsDebugEnabled(enabled: boolean): void;
+  public setTracingDirPath(tracingDirPath: string): void;
+  public getTracingDirPath(): string;
+  public static setCacheDirPath(cacheDirPath: string): void;
+  public isDebugModeEnabled(): boolean;
+  public setLogBoxEnabled(enabled: boolean): void;
+  public isLogBoxEnabled(): void;
+  public parserTestBenchRecordData(source: string): string;
+  public getLynxVersion(): string;
+  public setPerformanceEnable(isOpen: boolean): void;
+  public setDefaultDensityEnabled(enabled: boolean): void;
+  public getDefaultDensityEnabled(): void;
+  public getDisplayInfo(): void;
+  public updateDisplayInfo(width: number, height: number, densityPixels: number, densityDPI: number, refreshRate: number): void;
+}
+
+export interface LynxResourceProvider {
+}
+
+export abstract class LynxGenericResourceFetcher implements LynxResourceProvider {
+  abstract fetchResource(request: LynxResourceRequest, callback: AsyncCallback<ArrayBuffer>): void;
+  abstract fetchResourcePath(request: LynxResourceRequest, callback: AsyncCallback<string>): void;
+  fetchStream(request: LynxResourceRequest, delegate: LynxStreamDelegate): void;
+  abstract cancel(request: LynxResourceRequest): void;
+}
+
+export abstract class LynxMediaResourceFetcher implements LynxResourceProvider {
+  abstract shouldRedirectUrl(request: LynxResourceRequest): string;
+  isLocalResource(url: string): LynxOptionalBool;
+}
+
+export enum LynxOptionalBool {
+  TRUE
+  FALSE
+  UNDEFINED
+}
+
+export abstract class LynxTemplateResourceFetcher implements LynxResourceProvider {
+  abstract fetchTemplate(request: LynxResourceRequest, callback: AsyncCallback<TemplateProviderResult>): void;
+  abstract fetchSSRData(request: LynxResourceRequest, callback: AsyncCallback<ArrayBuffer>): void;
+}
+
+export interface TemplateProviderResult {
+  binary?: ArrayBuffer;
+}
+
+export class LynxResourceRequest {
+  constructor(url: string, type: LynxResourceType);
+  url: string;
+  type: LynxResourceType;
+  params?: Record<string, Object>;
+  mode?: LynxResourceAsyncMode;
+}
+
+export enum LynxResourceType {
+  LYNX_RESOURCE_TYPE_GENERIC = 0
+  LYNX_RESOURCE_TYPE_IMAGE = 1
+  LYNX_RESOURCE_TYPE_FONT = 2
+  LYNX_RESOURCE_TYPE_LOTTIE = 3
+  LYNX_RESOURCE_TYPE_VIDEO = 4
+  LYNX_RESOURCE_TYPE_SVG = 5
+  LYNX_RESOURCE_TYPE_TEMPLATE = 6
+  LYNX_RESOURCE_TYPE_DYNAMIC_COMPONENT = 7
+  LYNX_RESOURCE_TYPE_LYNX_CORE_JS = 8
+  LYNX_RESOURCE_TYPE_EXTERNAL_JS_SOURCE = 9
+  LYNX_RESOURCE_TYPE_TEMPLATE_DYNAMIC_COMPONENT = 10
+  LYNX_RESOURCE_TYPE_ASSETS = 11
+  LYNX_RESOURCE_TYPE_I18N_TEXT = 12
+  LYNX_RESOURCE_TYPE_GRAPHICS = 13
+  LYNX_RESOURCE_TYPE_THEME = 14
+}
+
+export enum LynxResourceAsyncMode {
+  EXACTLY_ASYNC = 1
+  EXACTLY_SYNC = 2
+  MOST_SYNC = 3
+}
+
+export class Behavior {
+  constructor(uiClass: Function, shadowNodeClass: Function, customData: Object, type: NodeType);
+  public createUI(context: IContext): UIBase | undefined;
+  public createShadowNode(context: IContext): ShadowNode | undefined;
+  uiClass?: Function;
+  shadowNodeClass?: Function;
+  customData?: Object;
+  type?: NodeType;
+}
+
+export enum NodeType {
+  UNKNOWN = 0
+  COMMON = 1
+  VIRTUAL = 1 << 1
+  CUSTOM = 1 << 2
+}
+
+export type BehaviorRegistryMap = Map<string, Behavior> {
+}
+
+export abstract class UIBase {
+  constructor(context: IContext, param: Object);
+  onCreate(): void;
+  setSign(sign: number, tag: string): void;
+  hasCustomizedLayout(): boolean;
+  focusable(): boolean;
+  updateExtraData(data: Object): void;
+  attachToNative(uiContext: UIContext, context: number[]): void;
+  sendGlobalEvent(name: string, params: Object[]): void;
+  sendCustomEvent(name: string, params: Object, paramName: string): void;
+  update(props: Object, events: EventHandlerArray[]): void;
+  invokeMethod(method: string, params: Object, callback: (code: number, res: Object) => void): boolean;
+  dispose(): void;
+  focusChange(focus: boolean, isFocusTransition: boolean): void;
+  onNodeReady(): void;
+  setFocusedUI(): void;
+  unsetFocusedUI(): void;
+  px2vpIfNeeded(px: number, defaultValue: number): number;
+  value2vpIfNeeded(value: number | string, defaultValue: number): number;
+  abstract layout(x: number, y: number, width: number, height: number, paddingLeft: number, paddingTop: number, paddingRight: number, paddingBottom: number, marginLeft: number, marginTop: number, marginRight: number, marginBottom: number, sticky: number[]): void;
+  static getUIFromNativeContent(nativeContent: lynx.NativeContent): void;
+  uiContext?: UIContext;
+  nativeUI?: lynx.UIBase;
+  lynxContext: IContext;
+  sign: number;
+  tag: string;
+  density?: number;
+  width: number; = 0
+  height: number; = 0
+  x: number; = 0
+  y: number; = 0
+  eventMap?: Map<string, EventHandler>;
+  builder?: WrappedBuilder<[UIBase]>;
+  builderNode?: BuilderNode<[UIBase]>;
+  logicalPixels: boolean; = false
+}
+
+export abstract class ShadowNode {
+  constructor(context: IContext);
+  setSign(sign: number, tag: string): void;
+  createNativeNode(): void;
+  setMeasureFunc(measureFunc: JSMeasureFunc | null, alignFunc: JSAlignLayoutFunc | null): void;
+  markDirty(): void;
+  getChildren(): ArrayBuffer;
+  setExtraDataFunc(func: () => Object): void;
+  updateProps(props: Record<string, Object>): void;
+  requestLayout(): void;
+  px2vpIfNeeded(px: number): number;
+  nativeShadowNode?: lynx.ShadowNode;
+  sign: number;
+  tag: string;
+  context: IContext;
+  props?: Record<string, Object>;
+  logicalPixels: boolean; = true
+  measureFunc: JSMeasureFunc | null; = null
+  alignFunc: JSAlignLayoutFunc | null; = null
+  extraDataFunc?: () => Object;
+}
+
+export class UIGroup extends UIBase {
+  onCreate(): void;
+  layout(x: number, y: number, width: number, height: number, paddingLeft: number, paddingTop: number, paddingRight: number, paddingBottom: number, marginLeft: number, marginTop: number, marginRight: number, marginBottom: number, sticky: number[] | undefined): void;
+  insertChild(nativeContent: lynx.NativeContent, index: number): void;
+  removeChild(nativeContent: lynx.NativeContent): void;
+  getContentSize(content: lynx.NativeContent): [number, number];
+  children: lynx.NativeContent[]; = []
+  hasCustomLayout: boolean; = true
+}
+
+export class ShadowNodeOwner {
+  constructor(ref: Object, create: Function);
+  findJSShadowNodeBySign(sign: number): Object | undefined;
+  measureNativeNode(sign: number, width: number, widthMode: number, height: number, heightMode: number, finalMeasure: boolean): ArrayBuffer;
+  alignNativeNode(sign: number, top: number, left: number): void;
+  destroy(): void;
+}
+
+export class ShadowNode {
+  constructor(ref: Object, sign: number, tag: string);
+  setMeasureFunc(measureFunc: JSMeasureFunc | null, alignFunc: JSAlignLayoutFunc | null): void;
+  markDirty(): void;
+  requestLayout(): void;
+  getChildren(): ArrayBuffer;
+  setExtraDataFunc(func: () => Object): void;
+}
+
+export class UIOwner {
+  constructor(ref: Object, create: Function, uiContext: UIContext, createNodeContent: Function, startFluencyTrace: Function, stopFluencyTrace: Function, getNodeType: (string) => number, postDrawEndTimingFrameCallback: Function);
+  attachPageRoot(content: NativeContent): void;
+  getId(): string;
+  destroy(id: string): void;
+  requestLayout(): void;
+  canConsumeTouchEvent(x: number, y: number): boolean;
+}
+
+export class UIBase {
+  constructor(ref: Object, context: number[], node: FrameNode | null, sign: number, tag: string, update: Function, layout: Function, invokeUIMethod: Function, dispose: Function, focusChange: Function, focusable: Function, onNodeReady: Function, customLayout: boolean, updateExtraData: Function);
+  static getUIFromNativeContent(nativeContent: NativeContent): Object | undefined;
+  static getContentSize(nativeContent: NativeContent): [number, number];
+  getChildren(): ArrayBuffer;
+  setFrameNode(node: FrameNode): void;
+  sendGlobalEvent(name: string, params: Object[]): void;
+  sendCustomEvent(name: string, params: Object, paramName: string): void;
+  findJSShadowNodeBySign(sign: number): Object | undefined;
+  findShadowNodeBySign(sign: number): number[] | undefined;
+  setFocusedUI(): void;
+  unsetFocusedUI(): void;
+  setChildrenManagementFuncs(insertChild: Function, removeChild: Function): void;
+}
+
+export class NativeContent {
+  constructor(content: NodeContent);
+  readonly content: NodeContent;
+}
+
+export class ExtensionModule {
+  constructor(uiDelegate: number[]);
+  nativeSetup(): void;
+  nativeGetExtensionDelegatePtr(): number[];
+  nativeDestroy(): void;
+}
+
+export interface EventHandler {
+  name: string;
+  type: string;
+  jsEvent: boolean;
+  function: string;
+}
+
+export type EventHandlerArray = (string | boolean) [] {
+}
+
+export class LynxPipelineInfo {
+  constructor(url: string);
+  public addPipelineOrigin(pipelineOrigin: LynxPipelineOrigin): void;
+  public isFromFirstScreen(): boolean;
+  public isFromReload(): boolean;
+  toString(): string;
+  public url: string; = ''
+}
+
+export abstract class LynxViewClient implements IPerformanceObserver {
+  public onPageStarted(lynxContext: LynxContext, pipelineInfo: LynxPipelineInfo): void;
+  public onLoadSuccess(url: string): void;
+  public onFirstScreen(): void;
+  public onPageUpdate(): void;
+  public onDataUpdated(): void;
+  public onRuntimeReady(): void;
+  public onReceivedError(error: LynxError): void;
+  public onDestroy(): void;
+  public onUpdateDataWithoutChange(): void;
+  public onTemplateBundleReady(bundle: TemplateBundle): void;
+  public onPerformanceEvent(entry: PerformanceEntry): void;
+}
+
+export class LynxError extends LynxErrorCodeLegacy {
+  constructor(level: LynxErrorLevel, errorCode: number, errorMessage: string, fixSuggestion: string, errorType: number, customInfo: Record<string, Object>);
+  static createLynxError(code: number, message: string, customInfo: Record<string, Object>): LynxError;
+  isFatal(): void;
+  setTemplateUrl(url: string): void;
+  setCallStack(stack: string): void;
+  setUserDefineInfo(object: Object): void;
+  getSummaryMessage(): void;
+  getLevel(): void;
+  getErrorCode(): void;
+  getSubCode(): void;
+  getType(): void;
+  getMsg(): void;
+  static LYNX_ERROR_KEY_PREFIX_CONTEXT: any; = 'lynx_context_'
+  static LYNX_ERROR_KEY_CONTEXT: any; = 'context'
+  public static LYNX_ERROR_SUGGESTION_REF_OFFICIAL_SITE: any; = 'Please refer to the solution in Doc "LynxError FAQ" on the official website.'
+  public static LYNX_ERROR_KEY_RESOURCE_TYPE: any; = 'type'
+  public static LYNX_ERROR_KEY_RESOURCE_URL: any; = 'src'
+  public static LYNX_ERROR_KEY_IMAGE_CATEGORIZED_CODE: any; = 'image_categorized_code'
+  public static LYNX_THROWABLE: any; = 'throwable'
+  public static PLATFORM_ERROR: any; = -3
+  public static JS_ERROR: any; = -2
+  public static NATIVE_ERROR: any; = -1
+}
+
+export class LynxSubErrorCode {
+  public static readonly E_SUCCESS: number; = 0
+  public static readonly E_APP_BUNDLE_LOAD_RENDER_FAILED: number; = 10201
+  public static readonly E_APP_BUNDLE_LOAD_ENV_NOT_READY: number; = 10202
+  public static readonly E_APP_BUNDLE_LOAD_BAD_RESPONSE: number; = 10203
+  public static readonly E_APP_BUNDLE_LOAD_PARSE_FAILED: number; = 10204
+  public static readonly E_APP_BUNDLE_LOAD_BAD_BUNDLE: number; = 10205
+  public static readonly E_APP_BUNDLE_LOAD_EXCEPTION: number; = 10299
+  public static readonly E_APP_BUNDLE_RELOAD_EARLY_RELOAD: number; = 10501
+  public static readonly E_APP_BUNDLE_VERIFY_INVALID_SIGNATURE: number; = 10701
+  public static readonly E_BTS_RUNTIME_ERROR: number; = 20100
+  public static readonly E_BTS_RUNTIME_ERROR_SCRIPT_ERROR: number; = 20101
+  public static readonly E_BTS_RUNTIME_ERROR_BYTECODE_SCRIPT_ERROR: number; = 20102
+  public static readonly E_BTS_RUNTIME_ERROR_BINDINGS_ERROR: number; = 20103
+  public static readonly E_BTS_PLATFORM_CALL_JS_FUNCTION_TOO_FREQUENCY: number; = 20201
+  public static readonly E_BTS_LIFECYCLE_LISTENER_ERROR_EXCEPTION: number; = 20301
+  public static readonly E_RESOURCE_IMAGE_BIG_IMAGE: number; = 30101
+  public static readonly E_RESOURCE_IMAGE_PIC_SOURCE: number; = 30102
+  public static readonly E_RESOURCE_IMAGE_FROM_USER_OR_DESIGN: number; = 30103
+  public static readonly E_RESOURCE_IMAGE_FROM_NETWORK_OR_OTHERS: number; = 30196
+  public static readonly E_RESOURCE_IMAGE_EXCEPTION: number; = 30199
+  public static readonly E_RESOURCE_FONT: number; = 30200
+  public static readonly E_RESOURCE_FONT_SRC_FORMAT_ERROR: number; = 30201
+  public static readonly E_RESOURCE_FONT_RESOURCE_LOAD_ERROR: number; = 30202
+  public static readonly E_RESOURCE_FONT_BASE64_PARSING_ERROR: number; = 30203
+  public static readonly E_RESOURCE_FONT_FILE_FORMAT_NOT_SUPPORTED: number; = 30204
+  public static readonly E_RESOURCE_FONT_REGISTER_FAILED: number; = 30205
+  public static readonly E_RESOURCE_EXTERNAL_RESOURCE_REQUEST_FAILED: number; = 30301
+  public static readonly E_RESOURCE_EXTERNAL_RESOURCE_LOCAL_RESOURCE_LOAD_FAIL: number; = 30302
+  public static readonly E_RESOURCE_I18N: number; = 30400
+  public static readonly E_RESOURCE_MODULE_PARAMS_ERROR: number; = 32101
+  public static readonly E_RESOURCE_MODULE_IMG_PREFETCH_HELPER_NOT_EXIST: number; = 32102
+  public static readonly E_RESOURCE_MODULE_RESOURCE_SERVICE_NOT_EXIST: number; = 32103
+  public static readonly E_RESOURCE_CUSTOM: number; = 39800
+  public static readonly E_RESOURCE_EXCEPTION: number; = 39900
+  public static readonly E_DATA_FLOW_UPDATE_INVALID_PROCESSOR: number; = 40101
+  public static readonly E_DATA_FLOW_UPDATE_INVALID_TYPE: number; = 40102
+  public static readonly E_DATA_FLOW_UPDATE_EXCEPTION: number; = 40199
+  public static readonly E_ELEMENT_API_FATAL: number; = 50101
+  public static readonly E_ELEMENT_API_ERROR: number; = 50102
+  public static readonly E_ELEMENT_UPDATE_NODE_IS_NULL: number; = 50201
+  public static readonly E_LAYOUT_INTERNAL: number; = 60100
+  public static readonly E_LAYOUT_PERF_INFINITE_LOOP: number; = 60201
+  public static readonly E_LAYOUT_UPDATE_UI_NOT_FOUND: number; = 60301
+  public static readonly E_LAYOUT_PLATFORM_NODE_NULL: number; = 60401
+  public static readonly E_NATIVE_MODULES_COMMON_MODULE_NOT_FOUND: number; = 90101
+  public static readonly E_NATIVE_MODULES_COMMON_FUNCTION_NOT_FOUND: number; = 90102
+  public static readonly E_NATIVE_MODULES_COMMON_WRONG_PARAM_NUM: number; = 90103
+  public static readonly E_NATIVE_MODULES_COMMON_WRONG_PARAM_TYPE: number; = 90104
+  public static readonly E_NATIVE_MODULES_COMMON_AUTHORIZATION_ERROR: number; = 90105
+  public static readonly E_NATIVE_MODULES_COMMON_SYSTEM_AUTHORIZATION_ERROR: number; = 90106
+  public static readonly E_NATIVE_MODULES_COMMON_RETURN_ERROR: number; = 90107
+  public static readonly E_NATIVE_MODULES_COMMON_DEPRECATED: number; = 90108
+  public static readonly E_NATIVE_MODULES_NETWORK_BAD_RESPONSE: number; = 90801
+  public static readonly E_NATIVE_MODULES_CUSTOM_ERROR: number; = 99800
+  public static readonly E_NATIVE_MODULES_EXCEPTION: number; = 99900
+  public static readonly E_EVENT_EXCEPTION: number; = 109900
+  public static readonly E_MTS_RUNTIME_ERROR: number; = 110100
+  public static readonly E_MTS_RENDERER_FUNCTION_FATAL: number; = 111101
+  public static readonly E_MTS_RENDERER_FUNCTION_ERROR: number; = 111102
+  public static readonly E_THREAD_WRONG_THREAD_DESTROY_ERROR: number; = 120201
+  public static readonly E_THREAD_WRONG_THREAD_SYNC_FLUSH_ERROR: number; = 120202
+  public static readonly E_CSS: number; = 130100
+  public static readonly E_CSS_UNKNOWN_PROPERTY: number; = 130101
+  public static readonly E_CSS_UNSUPPORTED_VALUE: number; = 130102
+  public static readonly E_CSS_COMPUTED_CSS_VALUE_UNKNOWN_SETTER: number; = 130201
+  public static readonly E_CSS_COMPUTED_CSS_VALUE_UNKNOWN_GETTER: number; = 130202
+  public static readonly E_CSS_COMPUTED_CSS_VALUE_UNSUPPORTED_INHERITANCE: number; = 130203
+  public static readonly E_CSS_PARSER: number; = 130300
+  public static readonly E_SSR_DECODE: number; = 140100
+  public static readonly E_SSR_DECODE_API_VERSION_NOT_SUPPORTED: number; = 140101
+  public static readonly E_SSR_DECODE_SCRIPT: number; = 140102
+  public static readonly E_SSR_LOAD_UNINITIALIZED: number; = 140201
+  public static readonly E_SSR_HYDRATE_DOM_DEVIATE_FROM_SSR_RESULT: number; = 140401
+  public static readonly E_LAZY_BUNDLE_LOAD_BAD_RESPONSE: number; = 160101
+  public static readonly E_LAZY_BUNDLE_LOAD_EMPTY_FILE: number; = 160102
+  public static readonly E_LAZY_BUNDLE_LOAD_DECODE_FAILED: number; = 160103
+  public static readonly E_LAZY_BUNDLE_LOAD_BAD_BUNDLE: number; = 160104
+  public static readonly E_WORKLET_MTS_CALL_EXCEPTION: number; = 190100
+  public static readonly E_WORKLET_RAF_CALL_EXCEPTION: number; = 190200
+  public static readonly E_WORKLET_MODULE_EXCEPTION: number; = 190300
+  public static readonly E_MTS_BRIDGE_MODULE_WRONG_PARAM: number; = 200101
+  public static readonly E_COMPONENT_API_DEPRECATED: number; = 220101
+  public static readonly E_COMPONENT_LIST_ILLEGAL_ITEM_KEY: number; = 220201
+  public static readonly E_COMPONENT_LIST_DUPLICATED_CELL: number; = 220202
+  public static readonly E_COMPONENT_LIST_CELL_NOT_FOUND: number; = 220203
+  public static readonly E_COMPONENT_LIST_DYNAMIC_CHANGE_ORIENTATION: number; = 220204
+  public static readonly E_COMPONENT_LIST_INVALID_PROPS_ARG: number; = 220205
+  public static readonly E_COMPONENT_LIST_CHILD_COMPONENT_NOT_EXIST: number; = 220206
+  public static readonly E_COMPONENT_LIST_UNSUPPORTED_THREAD_STRATEGY: number; = 220207
+  public static readonly E_COMPONENT_LIST_DUPLICATE_ITEM_KEY: number; = 220208
+  public static readonly E_COMPONENT_IMAGE_UNSUPPORTED_PROP: number; = 220301
+  public static readonly E_COMPONENT_CUSTOM: number; = 229800
+  public static readonly E_EXCEPTION_PLATFORM: number; = 990100
+  public static readonly E_EXCEPTION_JNI: number; = 990200
+}
+
+export enum LynxErrorLevel {
+  Fatal = "fatal"
+  Error = "error"
+  Warn = "warn"
+  Undecided = "undecided"
+}
+
+export class LynxErrorBehavior {
+  public static readonly EB_SUCCESS: number; = 0
+  public static readonly EB_APP_BUNDLE_LOAD: number; = 102
+  public static readonly EB_APP_BUNDLE_RELOAD: number; = 105
+  public static readonly EB_APP_BUNDLE_VERIFY: number; = 107
+  public static readonly EB_BTS_RUNTIME_ERROR: number; = 201
+  public static readonly EB_BTS_PLATFORM_CALL_JS_FUNCTION: number; = 202
+  public static readonly EB_BTS_LIFECYCLE_LISTENER_ERROR: number; = 203
+  public static readonly EB_RESOURCE_IMAGE: number; = 301
+  public static readonly EB_RESOURCE_FONT: number; = 302
+  public static readonly EB_RESOURCE_EXTERNAL_RESOURCE: number; = 303
+  public static readonly EB_RESOURCE_I18N: number; = 304
+  public static readonly EB_RESOURCE_MODULE: number; = 321
+  public static readonly EB_RESOURCE_CUSTOM: number; = 398
+  public static readonly EB_RESOURCE_EXCEPTION: number; = 399
+  public static readonly EB_DATA_FLOW_UPDATE: number; = 401
+  public static readonly EB_ELEMENT_API: number; = 501
+  public static readonly EB_ELEMENT_UPDATE: number; = 502
+  public static readonly EB_LAYOUT_INTERNAL: number; = 601
+  public static readonly EB_LAYOUT_PERF: number; = 602
+  public static readonly EB_LAYOUT_UPDATE: number; = 603
+  public static readonly EB_LAYOUT_PLATFORM: number; = 604
+  public static readonly EB_NATIVE_MODULES_COMMON: number; = 901
+  public static readonly EB_NATIVE_MODULES_NETWORK: number; = 908
+  public static readonly EB_NATIVE_MODULES_CUSTOM_ERROR: number; = 998
+  public static readonly EB_NATIVE_MODULES_EXCEPTION: number; = 999
+  public static readonly EB_EVENT_EXCEPTION: number; = 1099
+  public static readonly EB_MTS_RUNTIME_ERROR: number; = 1101
+  public static readonly EB_MTS_RENDERER_FUNCTION: number; = 1111
+  public static readonly EB_THREAD_WRONG_THREAD: number; = 1202
+  public static readonly EB_CSS: number; = 1301
+  public static readonly EB_CSS_COMPUTED_CSS_VALUE: number; = 1302
+  public static readonly EB_CSS_PARSER: number; = 1303
+  public static readonly EB_SSR_DECODE: number; = 1401
+  public static readonly EB_SSR_LOAD: number; = 1402
+  public static readonly EB_SSR_HYDRATE: number; = 1404
+  public static readonly EB_LAZY_BUNDLE_LOAD: number; = 1601
+  public static readonly EB_WORKLET_MTS_CALL_EXCEPTION: number; = 1901
+  public static readonly EB_WORKLET_RAF_CALL_EXCEPTION: number; = 1902
+  public static readonly EB_WORKLET_MODULE_EXCEPTION: number; = 1903
+  public static readonly EB_MTS_BRIDGE_MODULE: number; = 2001
+  public static readonly EB_COMPONENT_API: number; = 2201
+  public static readonly EB_COMPONENT_LIST: number; = 2202
+  public static readonly EB_COMPONENT_IMAGE: number; = 2203
+  public static readonly EB_COMPONENT_CUSTOM: number; = 2298
+  public static readonly EB_EXCEPTION_PLATFORM: number; = 9901
+  public static readonly EB_EXCEPTION_JNI: number; = 9902
+}
+
+export class TraceEvent {
+  static beginSection(traceCategory: TraceCategory, name: string, args: Record<string, string>): void;
+  static endSection(traceCategory: TraceCategory, name: string): void;
+  static instant(traceCategory: TraceCategory, name: string, args: Record<string, string>): void;
+  static enableTrace(): boolean;
+}
+
+export enum TraceCategory {
+  Lynx = 'lynx'
+  Vitals = 'vitals'
+  Other = 'other'
+}
+
+export class LLog {
+  static useSysLog(useSysLog: boolean): void;
+  static initLynxLog(): void;
+  static setMinimumLoggingLevel(level: LogLevel): void;
+  static v(tag: string, message: string): void;
+  static d(tag: string, message: string): void;
+  static i(tag: string, message: string): void;
+  static w(tag: string, message: string): void;
+  static e(tag: string, message: string): void;
+  static r(tag: string, message: string): void;
+}
+
+export enum LogLevel {
+  VERBOSE = 0
+  DEBUG = 1
+  INFO = 2
+  WARN = 3
+  ERROR = 4
+}
+
+export class TraceController {
+  public static getInstance(): TraceController;
+  public startTracing(traceConfig: TraceConfig): void;
+  public stopTracing(): boolean;
+}
+
+export interface TraceConfig {
+  filePath: string | undefined;
+  bufferSize: number | undefined;
+}
+
+export type LynxReportEventPropValue = string | number | boolean {
+}
+
+export const LynxInfoReporterHelper: LynxInfoReporterHelperImpl {
+  public initialize(): void;
+  public isLynxTemplateEvent(eventKey: string): void;
+  public reportLynxTemplateEvent(type: LynxTemplateType, value: string): void;
+}
+
+export class LynxBackgroundRuntimeOptions {
+  constructor(options: LynxBackgroundRuntimeOptions);
+  useQuickJSEngine(): boolean;
+  getGroupID(): string;
+  getPreloadJSPath(): string[];
+  enableJSGroupThread(): boolean;
+  public enableBytecode: boolean; = false
+  public bytecodeSourceUrl: string; = ''
+  public lynxGroup?: LynxGroup;
+}
+
+export class LynxGroup {
+  public static copy(other: LynxGroup): LynxGroup | undefined;
+  static createSingleLynxGroup(): LynxGroup;
+  static createSharedLynxGroup(): LynxGroup;
+  public isSingleGroup(): boolean;
+  public getGroupID(): string;
+  public static SINGLE_GROUP: string; = "-1"
+  public preloadJSPaths: string[]; = []
+  public enableDynamicV8: boolean; = false
+  public enableJSGroupThread: boolean; = false
+}
+
+export class TemplateBundle extends lynx.TemplateBundle {
+  constructor(templateSize: number);
+  public setErrMsg(errMsg: string): void;
+  public static fromTemplate(template: ArrayBuffer): TemplateBundle;
+  public static fromTemplateWithOption(template: ArrayBuffer, option: TemplateBundleOption): TemplateBundle;
+  public getExtraInfo(): Map<string, Object>;
+  public isElementBundleValid(): boolean;
+  public getTemplateSize(): number;
+  public postJsCacheGenerationTask(bytecodeSourceUrl: string, useV8: boolean): void;
+  public getErrorMessage(): string;
+}
+
+export class TemplateBundleOption {
+  constructor(contextPoolSize: number, enableContextAutoRefill: boolean);
+  public getContextPoolSize(): number;
+  public getEnableContextAutoRefill(): boolean;
+}
+
+export class LynxLoadOption {
+  constructor(enableDumpElement: boolean, enableRecycleTemplateBundle: boolean);
+  public isEnableDumpElement(): boolean;
+  public isEnableRecycleTemplateBundle(): boolean;
+}
+
+export class LynxExtraTiming {
+  public static readonly OPEN_TIME: any; = 'openTime'
+  public static readonly CONTAINER_INIT_START: any; = 'containerInitStart'
+  public static readonly CONTAINER_INIT_END: any; = 'containerInitEnd'
+  public static readonly PREPARE_TEMPLATE_START: any; = 'prepareTemplateStart'
+  public static readonly PREPARE_TEMPLATE_END: any; = 'prepareTemplateEnd'
+  public openTime: number; = 0
+  public containerInitStart: number; = 0
+  public containerInitEnd: number; = 0
+  public prepareTemplateStart: number; = 0
+  public prepareTemplateEnd: number; = 0
+}
+
+export class PerformanceEntry {
+  constructor(props: Record<string, Object>);
+  public toRecord(): Record<string, Object>;
+  public name: string;
+  public entryType: string;
+  public rawRecord: Record<string, Object>;
+}
+
+export class PipelineEntry extends PerformanceEntry {
+  constructor(props: Record<string, Object>);
+  public identifier: string;
+  public pipelineStart: number;
+  public pipelineEnd: number;
+  public mtsRenderStart: number;
+  public mtsRenderEnd: number;
+  public resolveStart: number;
+  public resolveEnd: number;
+  public layoutStart: number;
+  public layoutEnd: number;
+  public paintingUiOperationExecuteStart: number;
+  public paintingUiOperationExecuteEnd: number;
+  public layoutUiOperationExecuteStart: number;
+  public layoutUiOperationExecuteEnd: number;
+  public paintEnd: number;
+  public frameworkRenderingTiming: Record<string, Object>;
+  public hostPlatformTiming: HostPlatformTiming;
+}
+
+export class LoadBundleEntry extends PipelineEntry {
+  constructor(props: Record<string, Object>);
+  public loadBundleStart: number;
+  public loadBundleEnd: number;
+  public parseStart: number;
+  public parseEnd: number;
+  public loadBackgroundStart: number;
+  public loadBackgroundEnd: number;
+  public verifyTasmStart: number;
+  public verifyTasmEnd: number;
+  public ffiStart: number;
+  public ffiEnd: number;
+}
+
+export class InitContainerEntry extends PerformanceEntry {
+  constructor(props: Record<string, Object>);
+  public openTime: number;
+  public containerInitStart: number;
+  public containerInitEnd: number;
+  public prepareTemplateStart: number;
+  public prepareTemplateEnd: number;
+  public extraTiming: Record<string, number>;
+}
+
+export class InitLynxviewEntry extends PerformanceEntry {
+  constructor(props: Record<string, Object>);
+  public createLynxStart: number;
+  public createLynxEnd: number;
+}
+
+export class InitBackgroundRuntimeEntry extends PerformanceEntry {
+  constructor(props: Record<string, Object>);
+  public loadCoreStart: number;
+  public loadCoreEnd: number;
+}
+
+export class MetricFcpEntry extends PerformanceEntry {
+  constructor(props: Record<string, Object>);
+  public fcp: PerformanceMetric;
+  public lynxFcp: PerformanceMetric;
+  public totalFcp: PerformanceMetric;
+}
+
+export class MetricActualFmpEntry extends PerformanceEntry {
+  constructor(props: Record<string, Object>);
+  public actualFmp: PerformanceMetric;
+  public lynxActualFmp: PerformanceMetric;
+  public totalActualFmp: PerformanceMetric;
+}
+
+export class PerformanceMetric {
+  constructor(props: Record<string, Object>);
+  public name: string;
+  public duration: number;
+  public startTimestampName: string;
+  public startTimestamp: number;
+  public endTimestampName: string;
+  public endTimestamp: number;
+}
+
+export interface LynxStreamDelegate {
+  onStart(contentOffset: number): void;
+  onData(data: ArrayBuffer, offset: number, length: number): void;
+  onEnd(): void;
+  onError(error: string): void;
+}
+
+export interface IContext {
+  setContextData(data: Record<string, Object>): void;
+  getContextData(): Record<string, Object> | undefined;
+  sendCustomEvent(name: string, id: number, params: Object, paramName: string): void;
+  findJSShadowNodeBySign(sign: number): Object | undefined;
+  sendGlobalEvent(name: string, params: Object[]): void;
+  measureNativeNode(sign: number, width: number, widthMode: number, height: number, heightMode: number, finalMeasure: boolean): [number, number, number] | undefined;
+  getGenericResourceFetcher(): LynxGenericResourceFetcher | undefined;
+  getMediaResourceFetcher(): LynxMediaResourceFetcher | undefined;
+  getDensity(): number;
+}
+
+export class LynxTrailHub {
+  public static getInstance(): LynxTrailHub;
+  public init(context: common.ApplicationContext): void;
+  public stringValueForTrailKey(key: LynxTrailKey): string | undefined;
+  public setTrailMap(trailValues: Record<string, string>): void;
+}
+
+export enum LynxTrailKey {
+  ENABLE_QUICKJS_CACHE = 'enable_quickjs_cache'
+  ANDROID_DISABLE_QUICKJS_CODE_CACHE = 'ANDROID_DISABLE_QUICKJS_CODE_CACHE'
+  DISABLE_TRACING_GC = 'DISABLE_TRACING_GC'
+  LAYOUT_PERFORMANCE_ENABLE = 'layout_performance_enable'
+  ENABLE_V8 = 'enable_v8'
+  ENABLE_PIPER_MONITOR = 'enablePiperMonitor'
+  ENABLE_DOM_TREE = 'enable_dom_tree'
+  ENABLE_VSYNC_ALIGNED_FLUSH = 'enable_vsync_aligned_flush'
+  ENABLE_VSYNC_ALIGNED_FLUSH_LOCAL = 'enable_vsync_aligned_flush_local'
+  ENABLE_GLOBAL_FEATURE_SWITCH_STATISTIC = 'ENABLE_GLOBAL_FEATURE_SWITCH_STATISTIC'
+  ENABLE_JSB_TIMING = 'enable_jsb_timing'
+  ENABLE_FEATURE_COUNTER = 'ENABLE_FEATURE_COUNTER'
+  ENABLE_ASYNC_JSB_TIMING = 'enable_async_jsb_timing'
+  ENABLE_LONG_TASK_TIMING = 'enable_long_task_timing'
+  ENABLE_QUICKJS_DEBUG = 'enable_quickjs_debug'
+  ENABLE_TABLE_DEEP_CHECK = 'enable_table_deep_check'
+  DISABLE_LEPUSNG_OPTIMIZE = 'DISABLE_LEPUSNG_OPTIMIZE'
+  FORCE_LYNX_NETWORK = 'FORCE_LYNX_NETWORK'
+  FORCE_LYNX_NETWORK_ALLOWLIST = 'FORCE_LYNX_NETWORK_ALLOWLIST'
+  FORCE_LYNX_NETWORK_BLOCKLIST = 'FORCE_LYNX_NETWORK_BLOCKLIST'
+  TRAIL_ASYNC_HYDRATION = 'trail_async_hydration'
+  DISABLE_LAZY_CSS_DECODE = 'disable_lazy_css_decode'
+  DECOUPLE_LAYOUTNODE_FROM_ELEMENT = 'decouple_layoutnode_from_element'
+  TRAIL_REMOVE_COMPONENT_EXTRA_DATA = 'trialRemoveComponentExtraData'
+  REACT_LYNX_SETTINGS = 'lynxsdk_react_lynx_settings'
+  TRAIL_LYNX_RESOURCE_SERVICE_PROVIDER = 'trialLynxResourceServiceProvider'
+  ENABLE_COMPONENT_ASYNC_DECODE = 'enableComponentAsyncDecode'
+  V8_HEAP_SIZE = 'V8_HEAP_SIZE'
+  ENABLE_ASYNC_THREAD_CACHE = 'enable_async_thread_cache'
+  MULTI_TASM_THREAD_SIZE = 'multi_tasm_thread_size'
+  MULTI_LAYOUT_THREAD_SIZE = 'multi_layout_thread_size'
+  ENABLE_FLUENCY_TRACE = 'ENABLE_FLUENCY_TRACE'
+  ENABLE_REPORT_THREADED_ELEMENT_FLUSH_STATISTIC = 'enable_report_threaded_element_flush_statistic'
+  GLOBAL_QUICK_CONTEXT_POOL_SIZE = 'global_quick_context_pool_size'
+  CLIP_RADIUS_FLATTEN = 'clip_radius_flatten'
+  ENABLE_UI_OP_BATCH = 'enable_ui_op_batch'
+  ENABLE_LAYOUT_ONLY_STATISTIC = 'enable_layout_only_statistic'
+  DISABLE_PERF_COLLECTOR = 'disable_perf_collector'
+  VSYNC_TRIGGERED_FROM_UI_THREAD_ANDROID = 'lynx_vsync_triggered_from_ui_thread_android'
+  VSYNC_POST_TASK_BY_EMERGENCY = 'lynx_vsync_post_task_by_emergency'
+  ENABLE_USE_MAP_BUFFER_FOR_UI_PROPS = 'use_map_buffer_for_ui_props'
+  ENABLE_LAZY_IMPORT_CSS = 'enable_lazy_import_css'
+  DISABLE_ONCE_DYNAMIC_CSS = 'disable_once_dynamic_css'
+  ENABLE_REPORT_DYNAMIC_COMPONENT_EVENT = 'enable_report_dynamic_component_event'
+  BYTECODE_MAX_SIZE = 'bytecode_max_size'
+  ENABLE_NEW_ANIMATOR_FIBER = 'enable_new_animator_fiber'
+  POST_DATA_BEFORE_UPDATE = 'post_data_before_update'
+  ENABLE_REPORT_LIST_ITEM_LIFE_STATISTIC = 'enable_report_list_item_life_statistic'
+  ENABLE_ASYNC_DESTROY_ENGINE = 'enable_async_destroy_engine'
+  CONCURRENT_LOOP_HIGH_PRIORITY_WORKER_COUNT_PERCENT = 'concurrent_loop_high_priority_worker_count_percent'
+  ENABLE_USE_CONTEXT_POOL = 'enable_use_context_pool'
+}
+
+export interface LynxUIRenderer {
+  getUIDelegate(): number[];
+  aboutToDisappear(): void;
+  updateRefreshRate(updateRefreshRate: number): void;
+  updateViewport(width: number, height: number): void;
+  requestLayout(): void;
+}
+
+export abstract class LynxUIRendererCreator {
+  abstract createUIRenderer(context: LynxContext, rootSize: Size, providers: (LynxResourceProvider | undefined)[], behaviors: BehaviorRegistryMap, fitContentHeight: boolean): LynxUIRenderer | undefined;
+  abstract createNodeController(): LynxNodeController;
+}
+
+export class LynxModuleManager {
+  constructor(context: LynxContext);
+  registerModule(name: string, wrapper: ModuleClassWrapper): void;
+  getModulesMap(): void;
+  getModule(name: string): LynxModule | undefined;
+}
+
+@Sendable export class SendableLynxModuleManager {
+  registerModule(name: string, wrapper: SendableModuleClassWrapper): void;
+  getModulesMap(): void;
+  getModule(name: string): SendableLynxModule | undefined;
+}
+
+export class LynxDebugger {
+  public static connectDevtools(remoteDebugUrl: string, appInfo: Map<string, string>): boolean;
+  public static setSwitch(key: string, value: boolean): void;
+  public static getSwitch(key: string): boolean;
+  public static setAppInfo(optionKeys: Array<string>, optionValues: Array<string>): void;
+}
+
+export interface LynxBaseInspectorOwner {
+  onLoaded(lynxView: LynxView): void;
+  destroy(lynxView: LynxView): void;
+}
+
+export interface ILogBox {
+  reportError(err: LynxError): void;
+  onLoaded(url: string): void;
+}
+
+export type OnErrorCallback = (msg: string) => void {
+}
+
+export type GetJSSourceCallback = () => Record<string, string> {
+}
+
+export class LynxInspectorOwner implements LynxBaseInspectorOwner {
+  constructor(embedderProxy: number[]);
+  public onLoaded(lynxView: LynxView): void;
+  public destroy(lynxView: LynxView): void;
+}
+
+export class LynxDebugBridge {
+  public static getInstance(): LynxDebugBridge;
+  public connectDevtools(remoteDebugUrl: string, appInfo: Map<string, string>): boolean;
+}
+
+export interface HarmonyGlobalHandler {
+  onOpenCard: (url: string) => void;
+  onMessage: (message: string, type: string) => void;
+}
+
+export interface HarmonySessionHandler {
+  OnSessionCreate: (session_id: number, url: string) => void;
+  OnSessionDestroy: (session_id: number) => void;
+  OnMessage: (message: string, type: string, session_id: number) => void;
+}
+
+export class LynxDevToolEnv {
+  public static setSwitch(key: string, value: boolean): void;
+  public static getSwitch(key: string): boolean;
+  public static setAppInfo(optionKeys: Array<string>, optionValues: Array<string>): void;
+  public static initDevToolSetModule(moduleManager: number[]): void;
+}
+
+export class DebugRouter {
+  public static getSessionIdByView(view: LynxView): number;
+  public static getViewBySessionId(sessionId: number): LynxView | null;
+  public static setSessionIdOfView(view: LynxView, sessionId: number): void;
+  public static removeView(view: LynxView): void;
+  public static addGlobalHandler(handler: HarmonyGlobalHandler): void;
+  public static removeGlobalHandler(handler: HarmonyGlobalHandler): void;
+  public static sendDataAsync(type: string, session: number, data: string): void;
+  public static addSessionHandler(handler: HarmonySessionHandler): void;
+  public static handleSchema(url: string): boolean;
+}
+
+export class LogBox implements ILogBox {
+  constructor(onError: OnErrorCallback, getJsSource: GetJSSourceCallback);
+  public reportError(err: LynxError): void;
+  public cleanError(): void;
+  public onLoaded(url: string): void;
+  onError: (msg: string) => void;
+  getJsSource: () => Record<string, string>;
+  nativeBridge: NativeBridge; = new NativeBridge()
+}
+
+export class LogBoxNodeController extends NodeController {
+  constructor(logBox: ILogBox, title: string);
+  makeNode(uiContext: UIContext): FrameNode | null;
+}
+
+export class LynxDevToolService implements ILynxDevToolService {
+  public isDevToolModuleLoaded(): boolean;
+  public connectDevtools(remoteDebugUrl: string, appInfo: Map<string, string>): boolean;
+  public initDevToolSetModule(moduleManager: number[]): void;
+  public devtoolEnvSetSwitch(key: string, value: boolean): void;
+  public devtoolEnvGetSwitch(key: string): boolean;
+  public devtoolEnvSetAppInfo(optionKeys: Array<string>, optionValues: Array<string>): void;
+  public createInspectorOwner(embedderProxy: number[]): LynxBaseInspectorOwner | null;
+  public createLogBox(onError: OnErrorCallback, getJsSource: GetJSSourceCallback): ILogBox | null;
+  public createLogBoxComponent(logBox: ILogBox, title: string): NodeController | null;
+  static instance: any; = new LynxDevToolService()
+}
+
+export class LynxLogService implements ILynxLogService {
+  logByPlatform(level: number, tag: string, message: string): void;
+  isLogOutputByPlatform(): boolean;
+  getDefaultWriteFunction(): number;
+  static instance: any; = new LynxLogService()
+  static logOutputChannel: LogOutputChannelType; = LogOutputChannelType.Platform
+}
+
+export enum LynxServiceType {
+  Trail
+  EventReporter
+  Http
+  Security
+  Extension
+  Log
+  DevTool
+}
+
+export const LynxServiceCenter: LynxServiceCenterImpl {
+  getService<T>(serviceType: LynxServiceType): T | undefined;
+  registerService(serviceType: LynxServiceType, instance: IServiceProvider): void;
+  unregisterService(serviceType: LynxServiceType): void;
+}
+
+export interface ILynxTrailService {
+  initialize(context: common.ApplicationContext): void;
+  parseLynxView(view: LynxView): void;
+}
+
+export interface ILynxEventReporterService {
+}
+
+export interface SecurityResult {
+  verified: boolean;
+  errMsg?: string;
+}
+
+export interface ILynxSecurityService {
+  verifyTASM(template: ArrayBuffer, url: string | undefined, type: LynxTasmType, lynxContext: LynxContext): SecurityResult;
+}
+
+export enum LynxTasmType {
+  TYPE_TEMPLATE = 0
+  TYPE_DYNAMIC_COMPONENT = 1
+}
+
+export interface ILynxHttpService {
+  request(request: LynxHttpRequest, callback: (resp: LynxHttpResponse) => void): void;
+}
+
+export interface ILynxLogService {
+  logByPlatform(level: number, tag: string, message: string): void;
+  isLogOutputByPlatform(): boolean;
+  getDefaultWriteFunction(): number;
+}
+
+export enum LogOutputChannelType {
+  Native
+  Platform
+}
+
+export interface ILynxExtensionService {
+  onLynxViewSetup(context: LynxContext, uiDelegate: number[], isHostRenderer: boolean): void;
+  onLynxViewDestroy(context: LynxContext): void;
+}
+
+export interface LynxExtensionModule {
+  getExtensionDelegatePtr(): number[];
+  setup(): void;
+  destroy(): void;
+}
+
+export interface ILynxDevToolService {
+  isDevToolModuleLoaded(): boolean;
+  connectDevtools(remoteDebugUrl: string, appInfo: Map<string, string>): boolean;
+  initDevToolSetModule(moduleManager: number[]): void;
+  devtoolEnvSetSwitch(key: string, value: boolean): void;
+  devtoolEnvGetSwitch(key: string): boolean;
+  devtoolEnvSetAppInfo(optionKeys: Array<string>, optionValues: Array<string>): void;
+  createInspectorOwner(embedderProxy: number[]): LynxBaseInspectorOwner | null;
+  createLogBox(onError: OnErrorCallback, getJsSource: GetJSSourceCallback): ILogBox | null;
+  createLogBoxComponent(logbox: ILogBox, title: string): NodeController | null;
+}
+

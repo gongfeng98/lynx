@@ -11,22 +11,30 @@ export enum LynxOptionalBool {
   UNDEFINED
 }
 
+/**
+ * `LynxMediaResourceFetcher` is defined inside LynxEngine and
+ * injected from outside to implement the path redirection capability
+ * of `Image` and other third-party resources.
+ * @apidoc
+ */
 export abstract class LynxMediaResourceFetcher implements LynxResourceProvider {
   /**
-   * redirect url path
+   * `LynxEngine` redirects the image path by calling this method internally,
+   * and the return result is required to be of `String` type
    *
-   * @param request
+   * @apidoc
+   * @param request Request to be redirected.
+   * @return The target url.
    */
   abstract shouldRedirectUrl(request: LynxResourceRequest): string;
 
   /**
-   * Quick check for a local path
+   * `LynxEngine` internally calls this method to determine whether the
+   * resource path exists on disk.
    *
-   * @param url input path
-   * @returns
-   *  TRUE if is a local path;
-   *  FALSE if not a local path;
-   *  UNDEFINED if not sure;
+   * @apidoc
+   * @param url Input path.
+   * @returns TRUE if is a local path, FALSE if not a local path, UNDEFINED if not sure.
    */
   isLocalResource(url: string): LynxOptionalBool {
     return LynxOptionalBool.UNDEFINED

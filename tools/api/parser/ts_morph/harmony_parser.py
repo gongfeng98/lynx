@@ -37,13 +37,25 @@ class HarmonyParser(Parser):
 
         self._need_to_parse = True
         self.command: list[str] = ["npx", "ts-node", self.arkts_parser_path, "--file"]
-        self._lynx_so_index_file = os.path.join(
-            LYNX_ROOT_PATH, API_CONFIG["harmony"]["lynx_so_index_file"]
-        )
+        if "lynx_so_index_file" in API_CONFIG["harmony"]:
+            self._lynx_so_index_file = os.path.join(
+                LYNX_ROOT_PATH, API_CONFIG["harmony"]["lynx_so_index_file"]
+            )
+        else:
+            self._lynx_so_index_file = None
+
+        if "lynx_devtool_so_index_file" in API_CONFIG["harmony"]:
+            self._lynx_devtool_so_index_file = os.path.join(
+                LYNX_ROOT_PATH, API_CONFIG["harmony"]["lynx_devtool_so_index_file"]
+            )
+        else:
+            self._lynx_devtool_so_index_file = None
+
         self.export_object_dict: dict = {}
-        self.metadata_path: str = os.path.join(
-            LYNX_ROOT_PATH, API_CONFIG["harmony"]["metadata_path"]
-        )
+        self.metadata_path: list[str] = [
+            os.path.join(LYNX_ROOT_PATH, path)
+            for path in API_CONFIG["harmony"]["metadata_path"]
+        ]
         self.api_file: str = os.path.join(HARMONY_API_PATH, "lynx_harmony.api")
 
     def _ensure_parser(self) -> bool:
@@ -131,6 +143,8 @@ class HarmonyParser(Parser):
         path_to_resolve = relative_import_path
         if "liblynx.so" in path_to_resolve:
             return self._lynx_so_index_file
+        if "liblynxdevtool.so" in path_to_resolve:
+            return self._lynx_devtool_so_index_file
 
         if (
             not path_to_resolve.endswith(".so")
@@ -199,11 +213,12 @@ class HarmonyParser(Parser):
 
     def _parse_ets_exports_recursive(self) -> dict:
         files_to_process_queue = deque()
-        if not os.path.isfile(self.metadata_path):
-            print(f"'{self.metadata_path}' not found.")
-            return {}
-
-        files_to_process_queue.append(self.metadata_path)
+        for path in self.metadata_path:
+            if os.path.isfile(path):
+                files_to_process_queue.append(path)
+            else:
+                print(f"'{path}' not found.")
+                return {}
 
         processed_abs_paths = set()
         final_exports_map = {}

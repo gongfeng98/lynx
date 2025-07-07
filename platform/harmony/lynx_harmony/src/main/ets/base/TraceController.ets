@@ -34,7 +34,6 @@ export class TraceController {
 
   /**
    * stopTracing. usage: TraceController.getInstance().stopTracing();
-   * @param sessionId
    */
   public stopTracing(): boolean {
     if (this.traceSessionId != -1) {

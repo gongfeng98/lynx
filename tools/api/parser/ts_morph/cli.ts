@@ -5,6 +5,7 @@
 import { Project } from 'ts-morph';
 import { parseSourceFile } from './api-parser';
 import { BaseObject } from './metadata-def';
+import * as fs from 'fs';
 
 interface MetadataObject {
   path: string;
@@ -14,7 +15,6 @@ interface MetadataObject {
 function main() {
   const args = process.argv.slice(2);
   const fileIndex = args.indexOf('--file');
-  let files: string[] = [];
 
   if (fileIndex !== -1 && fileIndex + 1 < args.length) {
     const metadatObjectList: MetadataObject[] = JSON.parse(args[fileIndex + 1]);
@@ -22,7 +22,15 @@ function main() {
     const allMetadata: BaseObject[] = [];
 
     metadatObjectList.forEach((metadataObject) => {
-      const sourceFile = project.addSourceFileAtPath(metadataObject.path);
+      const fileContent = fs.readFileSync(metadataObject.path, 'utf-8');
+      const modifiedContent = fileContent.replace(/\bstruct\b/g, 'class');
+
+      const sourceFile = project.createSourceFile(
+        metadataObject.path,
+        modifiedContent,
+        { overwrite: true }
+      );
+
       const metadata = parseSourceFile(sourceFile, metadataObject.exports);
       allMetadata.push(...metadata);
     });

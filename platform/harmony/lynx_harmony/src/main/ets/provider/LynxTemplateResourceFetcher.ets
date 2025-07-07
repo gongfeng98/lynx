@@ -11,12 +11,21 @@ export interface TemplateProviderResult {
   // TODO(nihao.royal): support returning TemplateBundle
 }
 
+/**
+ * `LynxTemplateResourceFetcher` is defined inside LynxEngine and
+ * injected from outside to implement the resource loading interface of
+ * [Bundle](/guide/spec.html#lynx-bundle-or-bundle) and [Lazy Bundle](/guide/spec.html#lazy-bundle)
+ * etc.
+ * @apidoc
+ */
 export abstract class LynxTemplateResourceFetcher implements LynxResourceProvider {
   /**
-   * fetch template resource of lynx & dynamic component etc.
+   * `LynxEngine` internally calls this method to obtain the contents of Bundle
+   * and Lazy Bundle. The returned result type can contain `byte[]` or `TemplateBundle`.
    *
-   * @param request
-   * @param callback response with the requiring content file: ArrayBuffer or TemplateBundle
+   * @apidoc
+   * @param request Request to obtain the contents of Bundle and Lazy Bundle
+   * @param callback Response with the requiring content file in ArrayBuffer type.
    */
   abstract fetchTemplate(request: LynxResourceRequest,
     callback: AsyncCallback<TemplateProviderResult>);
