@@ -11,18 +11,20 @@
 
 @implementation LynxFrameView {
   LynxTemplateRender *_render;
+  __weak UIView<LUIBodyView> *_rootView;
+  NSString *_url;
+  BOOL _isChildLynxPage;
 }
 
-- (instancetype)init {
-  if (self = [super init]) {
-    // TODO(zhoupeng.z): get build params for root view
-    _render = [[LynxTemplateRender alloc] initWithBuilderBlock:nil containerView:self];
-  }
-  return self;
+- (void)initWithRootView:(UIView<LUIBodyView> *)rootView {
+  _rootView = rootView;
+  _render = [[LynxTemplateRender alloc] initWithBuilderBlock:[rootView getLynxViewBuilderBlock]
+                                               containerView:self];
 }
 
 - (void)setAppBundle:(LynxTemplateBundle *)bundle {
   LynxLoadMeta *loadMeta = [[LynxLoadMeta alloc] init];
+  loadMeta.url = _url;
   loadMeta.templateBundle = bundle;
   [_render loadTemplate:loadMeta];
 }
@@ -30,6 +32,14 @@
 - (void)setFrame:(CGRect)frame {
   [super setFrame:frame];
   [_render updateFrame:frame];
+}
+
+- (void)updateMetaData:(LynxUpdateMeta *)meta {
+  [_render updateMetaData:meta];
+}
+
+- (void)setUrl:(NSString *)url {
+  _url = url;
 }
 
 // TODO(zhoupeng.z): implement following methods, some of them are useless for LynxFrameView.
@@ -58,7 +68,7 @@
 }
 
 - (NSString *)url {
-  return nil;
+  return _url;
 }
 
 - (int32_t)instanceId {
@@ -81,6 +91,22 @@
 // TODO(zhoupeng.z):implement it by frame render
 - (LynxThreadStrategyForRender)getThreadStrategyForRender {
   return LynxThreadStrategyForRenderAllOnUI;
+}
+
+- (void)setAttachLynxPageUICallback:(attachLynxPageUI _Nonnull)callback {
+  [_render setAttachLynxPageUICallback:callback];
+}
+
+- (void)setIsChildLynxPage:(BOOL)isChildLynxPage {
+  _isChildLynxPage = isChildLynxPage;
+}
+
+- (BOOL)isChildLynxPage {
+  return _isChildLynxPage;
+}
+
+- (LynxViewBuilderBlock)getLynxViewBuilderBlock {
+  return [_render getLynxViewBuilderBlock];
 }
 
 @end

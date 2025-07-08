@@ -135,6 +135,7 @@ public protocol LUIBodyView-p : <NSObject>, <LUIErrorHandling> {
   public void LUIBodyView-p::setAttachLynxPageUICallback:(attachLynxPageUI _Nonnull callback);
   public LynxThreadStrategyForRender LUIBodyView-p::getThreadStrategyForRender();
   public void LUIBodyView-p::runOnTasmThread:(dispatch_block_t _Nonnull task);
+  public LynxViewBuilderBlock LUIBodyView-p::getLynxViewBuilderBlock();
 }
 
 public protocol LUIConfig-p : <NSObject> {
@@ -1622,7 +1623,10 @@ public class LynxFPSRecord : NSObject, <NSCopying> {
 }
 
 public class LynxFrameView : UIView, <LUIBodyView> {
+  public void LynxFrameView::initWithRootView:(UIView< LUIBodyView > *rootView);
   public void LynxFrameView::setAppBundle:(LynxTemplateBundle *bundle);
+  public void LynxFrameView::updateMetaData:(LynxUpdateMeta *meta);
+  public void LynxFrameView::setUrl:(NSString *url);
 }
 
 public protocol LynxGenericResourceFetcher-p : <NSObject> {
@@ -3225,6 +3229,7 @@ public class LynxTemplateRender : NSObject, <LynxTemplateRenderProtocol>, <Templ
   public LynxPerformanceController * LynxTemplateRender()::performanceController();
   public void LynxTemplateRender()::setAttachLynxPageUICallback:(attachLynxPageUI callback);
   public void LynxTemplateRender()::updateFrame:(CGRect frame);
+  public LynxViewBuilderBlock LynxTemplateRender()::getLynxViewBuilderBlock();
   public lynx::piper::ModuleFactoryDarwin * LynxTemplateRender()::getModuleFactory();
   public LynxLifecycleDispatcher * LynxTemplateRender()::getLifecycleDispatcher();
   public void LynxTemplateRender(Helper)::setUpWithBuilder:screenSize:(LynxViewBuilder *builder, [screenSize] CGSize screenSize);
@@ -3279,7 +3284,7 @@ public protocol LynxTemplateRenderProtocol-p : <NSObject> {
   public NSString* LynxTemplateRenderProtocol-p::url url;
   public BOOL LynxTemplateRenderProtocol-p::enableJSRuntime enableJSRuntime;
   public NSMutableDictionary<NSString*, id>* LynxTemplateRenderProtocol-p::lepusModulesClasses lepusModulesClasses;
-  public nonnull instancetype LynxTemplateRenderProtocol-p::initWithBuilderBlock:lynxView:(void(^_Nullable block)(NS_NOESCAPE LynxViewBuilder *_Nonnull),[lynxView] LynxView *_Nullable lynxView);
+  public nonnull instancetype LynxTemplateRenderProtocol-p::initWithBuilderBlock:lynxView:(LynxViewBuilderBlock block,[lynxView] LynxView *_Nullable lynxView);
   public void LynxTemplateRenderProtocol-p::loadTemplateFromURL:initData:(NSString *_Nonnull url,[initData] LynxTemplateData *_Nullable data);
   public void LynxTemplateRenderProtocol-p::reset();
   public void LynxTemplateRenderProtocol-p::clearForDestroy();
@@ -4440,6 +4445,7 @@ public protocol LynxUIRendererProtocol-p : <NSObject> {
   public void LynxUIRendererProtocol-p::setEnableGenericResourceFetcher:(BOOL enable);
   public id< LynxTemplateResourceFetcher > LynxUIRendererProtocol-p::templateResourceFetcher();
   public id< LynxGenericResourceFetcher > LynxUIRendererProtocol-p::genericResourceFetcher();
+  public id< LynxMediaResourceFetcher > LynxUIRendererProtocol-p::mediaResourceFetcher();
   public void LynxUIRendererProtocol-p::setupResourceProvider:withBuilder:(id< LynxResourceProvider > resourceProvider,[withBuilder] LynxViewBuilder *builder);
   public void LynxUIRendererProtocol-p::reset();
   public LynxScreenMetrics * LynxUIRendererProtocol-p::getScreenMetrics();
@@ -4606,7 +4612,7 @@ public class LynxView : UIView, <LUIBodyView> {
   public void LynxView::setResourceFetcher:(nullable id< LynxResourceFetcher > resourceFetcher);
   public nonnull instancetype LynxView::init();
   public nonnull instancetype LynxView::initWithFrame:(CGRect frame);
-  public nonnull instancetype LynxView::initWithBuilderBlock:(void(^_Nullable builder)(NS_NOESCAPE LynxViewBuilder *_Nonnull));
+  public nonnull instancetype LynxView::initWithBuilderBlock:(LynxViewBuilderBlock builder);
   public instancetype _Nullable LynxView::initWithoutRender();
   public void LynxView::initLifecycleDispatcher();
   public void LynxView::clearForDestroy();
@@ -5846,6 +5852,7 @@ public enum LynxTASMType {
 
 
   typedef void(^ attachLynxPageUI) (__weak NSObject *_Nonnull ui)
+  typedef void(^ _Nullable) (__attribute__((noescape)) LynxViewBuilder *_Nonnull __strong)
 
 public enum LynxSizeValueType {
   LynxSizeValueTypeUnknown

@@ -7,6 +7,7 @@
 #import <Foundation/Foundation.h>
 
 #import <Lynx/JSModule.h>
+#import <Lynx/LUIBodyView.h>
 #import <Lynx/LynxBooleanOption.h>
 #import <Lynx/LynxLoadMeta.h>
 #import <Lynx/LynxTheme.h>
@@ -44,8 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Init
 
-- (nonnull instancetype)initWithBuilderBlock:
-                            (void (^_Nullable)(NS_NOESCAPE LynxViewBuilder* _Nonnull))block
+- (nonnull instancetype)initWithBuilderBlock:(LynxViewBuilderBlock)block
                                     lynxView:(LynxView* _Nullable)lynxView;
 
 - (void)loadTemplateFromURL:(NSString* _Nonnull)url initData:(LynxTemplateData* _Nullable)data;

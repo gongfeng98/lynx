@@ -5,7 +5,13 @@
 #import <Lynx/LynxUIFrame.h>
 
 #import <Lynx/LynxComponentRegistry.h>
+#import <Lynx/LynxEventHandler+Internal.h>
 #import <Lynx/LynxFrameView.h>
+#import <Lynx/LynxPropsProcessor.h>
+#import <Lynx/LynxRootUI.h>
+#import <Lynx/LynxUI+Internal.h>
+#import <Lynx/LynxUI+Private.h>
+#import <Lynx/LynxUIContext.h>
 
 @implementation LynxUIFrame
 
@@ -17,6 +23,11 @@ LYNX_REGISTER_UI("frame")
 
 - (UIView*)createView {
   return [[LynxFrameView alloc] init];
+}
+
+- (void)setContext:(LynxUIContext*)context {
+  [super setContext:context];
+  [[self view] initWithRootView:context.rootView];
 }
 
 - (void)onReceiveAppBundle:(LynxTemplateBundle*)bundle {
@@ -35,5 +46,32 @@ LYNX_REGISTER_UI("frame")
       withLayoutAnimation:with];
   [[self view] setFrame:frame];
 }
+
+- (void)onNodeReady {
+  [super onNodeReady];
+  __weak typeof(self) weakSelf = self;
+  [self.view setAttachLynxPageUICallback:^(NSObject* _Nonnull __weak ui) {
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    if (strongSelf.childrenLynxPageUI == nil) {
+      strongSelf.childrenLynxPageUI = [NSMutableDictionary new];
+    }
+    if ([ui isKindOfClass:[LynxRootUI class]]) {
+      LynxRootUI* rootUI = (LynxRootUI*)ui;
+      strongSelf.childrenLynxPageUI[[NSString stringWithFormat:@"%p", strongSelf]] = rootUI;
+      rootUI.parentLynxPageUI = strongSelf.context.rootUI;
+      rootUI.view.isChildLynxPage = YES;
+      [rootUI.context.eventHandler removeEventGestures];
+    }
+  }];
+}
+
+// TODO(zhoupeng.z): pass data on native directly
+LYNX_PROP_SETTER("data", updateData, NSDictionary*) {
+  LynxUpdateMeta* updateMeta = [[LynxUpdateMeta alloc] init];
+  [updateMeta setData:[[LynxTemplateData alloc] initWithDictionary:value useBoolLiterals:YES]];
+  [[self view] updateMetaData:updateMeta];
+}
+
+LYNX_PROP_SETTER("src", setUrl, NSString*) { [[self view] setUrl:value]; }
 
 @end

@@ -58,6 +58,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)updateFrame:(CGRect)frame;
 
+- (LynxViewBuilderBlock)getLynxViewBuilderBlock;
+
 @end
 
 NS_ASSUME_NONNULL_END

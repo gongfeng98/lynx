@@ -6,6 +6,7 @@
 #import <Lynx/LynxBaseInspectorOwner.h>
 #import <Lynx/LynxContext.h>
 #import <Lynx/LynxDevtool.h>
+#import <Lynx/LynxEngineProxy.h>
 #import <Lynx/LynxEnv.h>
 #import <Lynx/LynxError.h>
 #import <Lynx/LynxErrorBehavior.h>
@@ -15,6 +16,7 @@
 #import <Lynx/LynxLog.h>
 #import <Lynx/LynxService.h>
 #import <Lynx/LynxSubErrorCode.h>
+#import <Lynx/LynxTemplateRender+Internal.h>
 #import <Lynx/LynxTemplateRenderDelegate.h>
 #import <Lynx/LynxThreadManager.h>
 #import <Lynx/LynxTraceEvent.h>
@@ -22,7 +24,6 @@
 #import <Lynx/LynxUIKitAPIAdapter.h>
 #import <Lynx/LynxView.h>
 #import <Lynx/LynxWeakProxy.h>
-#import "LynxEngineProxy.h"
 #import "LynxFeatureCounter.h"
 #import "LynxTemplateRender+Internal.h"
 #import "LynxUIRendererProtocol.h"
@@ -69,7 +70,7 @@
   }];
 }
 
-- (instancetype)initWithBuilderBlock:(void (^)(NS_NOESCAPE LynxViewBuilder*))block {
+- (instancetype)initWithBuilderBlock:(LynxViewBuilderBlock)block {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_INIT_WITH_BUILDER_BLOCK);
   [LynxLazyRegister loadLynxInitTask];
   self = [super initWithFrame:CGRectZero];
@@ -962,6 +963,10 @@
 
 - (void)setIsChildLynxPage:(BOOL)isChildLynxPage {
   _isChildLynxPage = isChildLynxPage;
+}
+
+- (LynxViewBuilderBlock)getLynxViewBuilderBlock {
+  return [_templateRender getLynxViewBuilderBlock];
 }
 
 #pragma mark - Preload

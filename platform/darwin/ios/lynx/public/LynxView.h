@@ -80,8 +80,7 @@
 
 - (nonnull instancetype)init;
 - (nonnull instancetype)initWithFrame:(CGRect)frame;
-- (nonnull instancetype)initWithBuilderBlock:
-    (void (^_Nullable)(NS_NOESCAPE LynxViewBuilder* _Nonnull))builder;
+- (nonnull instancetype)initWithBuilderBlock:(LynxViewBuilderBlock)builder;
 - (instancetype _Nullable)initWithoutRender;
 
 - (void)initLifecycleDispatcher;

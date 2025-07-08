@@ -7,6 +7,10 @@
 
 typedef void (^attachLynxPageUI)(__weak NSObject* _Nonnull ui);
 
+@class LynxViewBuilder;
+typedef void (^_Nullable LynxViewBuilderBlock)(__attribute__((noescape))
+                                               LynxViewBuilder* _Nonnull __strong);
+
 /// This protocol is a collection of abilities a root view of Lynx UI tree is required.
 ///
 ///
@@ -66,5 +70,9 @@ typedef void (^attachLynxPageUI)(__weak NSObject* _Nonnull ui);
 /// run a task on Engine Thread
 @required
 - (void)runOnTasmThread:(dispatch_block_t _Nonnull)task;
+
+/// to build frame view
+@required
+- (LynxViewBuilderBlock)getLynxViewBuilderBlock;
 
 @end

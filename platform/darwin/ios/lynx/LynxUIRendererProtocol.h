@@ -93,6 +93,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (id<LynxGenericResourceFetcher>)genericResourceFetcher;
 
+- (id<LynxMediaResourceFetcher>)mediaResourceFetcher;
+
 - (void)setupResourceProvider:(id<LynxResourceProvider>)resourceProvider
                   withBuilder:(LynxViewBuilder *)builder;
 

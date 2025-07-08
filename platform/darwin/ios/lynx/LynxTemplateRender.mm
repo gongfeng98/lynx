@@ -91,15 +91,14 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   return enable == LynxBooleanOptionTrue;
 }
 
-- (instancetype)initWithBuilderBlock:(void (^_Nullable)(NS_NOESCAPE LynxViewBuilder* _Nonnull))block
+- (instancetype)initWithBuilderBlock:(LynxViewBuilderBlock)block
                             lynxView:(LynxView* _Nullable)lynxView {
   if (self = [self initWithBuilderBlock:block containerView:lynxView]) {
   }
   return self;
 }
 
-- (instancetype)initWithBuilderBlock:(void (^)(__attribute__((noescape))
-                                               LynxViewBuilder* _Nonnull))block
+- (instancetype)initWithBuilderBlock:(LynxViewBuilderBlock)block
                        containerView:(UIView<LUIBodyView>*)containerView {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_RENDER_INIT_WITH_BUILDER_BLOCK);
   if (self = [super init]) {
@@ -2285,6 +2284,24 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 
 - (void)onEventFire:(NSInteger)targetID withEventStop:(BOOL)isStop andEventID:(int64_t)eventID {
   [[_lynxUIRenderer.uiOwner findUIBySign:targetID] onEventFire:isStop withEventID:eventID];
+}
+
+- (LynxViewBuilderBlock)getLynxViewBuilderBlock {
+  // TODO(zhoupeng.z): provide with move params
+  return ^(LynxViewBuilder* builder) {
+    builder.fontScale = self->_fontScale;
+    builder.enablePreUpdateData = YES;
+    builder.fetcher = self->_fetcher;
+    builder.enableGenericResourceFetcher =
+        self->_enableGenericResourceFetcher ? LynxBooleanOptionTrue : LynxBooleanOptionFalse;
+    builder.genericResourceFetcher = [self->_lynxUIRenderer genericResourceFetcher];
+    builder.mediaResourceFetcher = [self->_lynxUIRenderer mediaResourceFetcher];
+    builder.templateResourceFetcher = [self->_lynxUIRenderer templateResourceFetcher];
+    builder.screenSize = [[self->_lynxUIRenderer getScreenMetrics] screenSize];
+    builder.lynxBackgroundRuntimeOptions =
+        [[LynxBackgroundRuntimeOptions alloc] initWithOptions:self->_runtimeOptions];
+    [builder setThreadStrategyForRender:self->_threadStrategyForRendering];
+  };
 }
 
 @end

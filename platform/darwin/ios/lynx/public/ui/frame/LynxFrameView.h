@@ -7,12 +7,19 @@
 
 #import <Lynx/LUIBodyView.h>
 #import <Lynx/LynxTemplateBundle.h>
+#import <Lynx/LynxUpdateMeta.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface LynxFrameView : UIView <LUIBodyView>
 
+- (void)initWithRootView:(UIView<LUIBodyView>*)rootView;
+
 - (void)setAppBundle:(LynxTemplateBundle*)bundle;
+
+- (void)updateMetaData:(LynxUpdateMeta*)meta;
+
+- (void)setUrl:(NSString*)url;
 
 @end
 

@@ -230,6 +230,13 @@
   return nil;
 }
 
+- (id<LynxMediaResourceFetcher>)mediaResourceFetcher {
+  if (_enableGenericResourceLoader) {
+    return _uiOwner.uiContext.mediaResourceFetcher;
+  }
+  return nil;
+}
+
 - (void)setupResourceProvider:(id<LynxResourceProvider>)resourceProvider
                   withBuilder:(LynxViewBuilder *)builder {
   _uiOwner.fontFaceContext.resourceProvider = resourceProvider;
