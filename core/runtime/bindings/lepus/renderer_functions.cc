@@ -7112,7 +7112,8 @@ RENDERER_FUNCTION_CC(CreateStyleObject) {
 static void PushStyleObjectToArray(const lepus::Value& value,
                                    style::StyleObject**& arr,
                                    style::StyleObject** global_style_object,
-                                   int& idx, int& capacity) {
+                                   int& idx, int& capacity,
+                                   TemplateAssembler* tasm) {
   if (idx >= capacity - 1) {
     int new_cap = capacity <<= 1;
     style::StyleObject** new_array = static_cast<style::StyleObject**>(
@@ -7134,11 +7135,21 @@ static void PushStyleObjectToArray(const lepus::Value& value,
     p->AddRef();
     arr[idx++] = p;
   } else if (value.IsArrayOrJSArray()) {
-    ForEachLepusValue(value, [&arr, &global_style_object, &idx, &capacity](
-                                 const lepus::Value&,
-                                 const lepus::Value& value) {
-      PushStyleObjectToArray(value, arr, global_style_object, idx, capacity);
+    ForEachLepusValue(value,
+                      [&arr, &global_style_object, &idx, &capacity, tasm](
+                          const lepus::Value&, const lepus::Value& value) {
+                        PushStyleObjectToArray(value, arr, global_style_object,
+                                               idx, capacity, tasm);
+                      });
+  } else if (value.IsObject()) {
+    StyleMap style_map;
+    ForEachLepusValue(value, [&style_map, tasm](const lepus::Value& key,
+                                                const lepus::Value& value) {
+      ParseSimpleStyleValueToMap(key, value, style_map, tasm);
     });
+    auto* style_object = new style::StyleObject(std::move(style_map));
+    style_object->AddRef();
+    arr[idx++] = style_object;
   }
 }
 
@@ -7161,7 +7172,7 @@ RENDERER_FUNCTION_CC(SetStyleObject) {
     int idx = 0;
 
     PushStyleObjectToArray(*arg1, style_object_raw_array, global_style_objects,
-                           idx, capacity);
+                           idx, capacity, tasm);
 
     // Reset the raw array here, because the array may be reallocated
     // in PushStyleObjectToArray.
