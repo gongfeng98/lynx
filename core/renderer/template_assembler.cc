@@ -3151,13 +3151,16 @@ void TemplateAssembler::RenderPageWithSSRData(
 
   Scope scope(this);
   page_proxy_.ResetHydrateInfo();
-
+  pipeline_context_manager_->CreateAndUpdateCurrentPipelineContext(
+      pipeline_options);
   if (!ssr::SSRRenderUtils::DecodeSSRData(this, std::move(ssr_byte_array),
                                           template_data, pipeline_options,
                                           GetInstanceId())) {
+    this->RunPixelPipeline();
     return;
   }
 
+  this->RunPixelPipeline();
   template_loaded_ = true;
 
   auto card = FindEntry(tasm::DEFAULT_ENTRY_NAME);
