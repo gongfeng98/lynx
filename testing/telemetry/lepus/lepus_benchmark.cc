@@ -15,6 +15,9 @@
 #include "third_party/benchmark/include/benchmark/benchmark.h"
 #include "third_party/googletest/googletest/include/gtest/gtest.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+
 constexpr char foo[] = "foo";
 constexpr char bar[] = "bar";
 constexpr char bar_other[] = "bar_other";
@@ -579,6 +582,136 @@ static void BM_ArrayEmplaceBack(benchmark::State& state) {
   }
 }
 
+static void BM_ArrayPushBackNoReserve(benchmark::State& state) {
+  for (auto _ : state) {
+    auto array = lepus::CArray::Create();
+    auto child_array = lepus::CArray::Create();
+    base::String sValue("benchmark");
+    for (int i = 0; i < 10000; i++) {
+      array->push_back(lepus::Value(i));
+    }
+    for (int i = 0; i < 10000; i++) {
+      array->push_back(lepus::Value(sValue));
+    }
+    for (int i = 0; i < 10000; i++) {
+      array->push_back(lepus::Value(child_array));
+    }
+  }
+}
+
+static void BM_ArrayEmplaceBackNoReserve(benchmark::State& state) {
+  for (auto _ : state) {
+    auto array = lepus::CArray::Create();
+    auto child_array = lepus::CArray::Create();
+    base::String sValue("benchmark");
+    for (int i = 0; i < 10000; i++) {
+      array->emplace_back(i);
+    }
+    for (int i = 0; i < 10000; i++) {
+      array->emplace_back(sValue);
+    }
+    for (int i = 0; i < 10000; i++) {
+      array->emplace_back(child_array);
+    }
+  }
+}
+
+// Test array of small size
+static void BM_ArrayPushBackNoReserveSmall(benchmark::State& state) {
+  for (auto _ : state) {
+    state.PauseTiming();
+    base::Vector<fml::RefPtr<lepus::CArray>> arrays;
+    for (int i = 0; i < 500; i++) {
+      arrays.push_back(lepus::CArray::Create());
+    }
+    auto child_array = lepus::CArray::Create();
+    base::String sValue("benchmark");
+
+    state.ResumeTiming();
+    for (int i = 0; i < 500; i++) {
+      auto& array = arrays[i];
+      for (int i = 0; i < 10; i++) {
+        array->push_back(lepus::Value(i));
+      }
+      for (int i = 0; i < 10; i++) {
+        array->push_back(lepus::Value(sValue));
+      }
+      for (int i = 0; i < 10; i++) {
+        array->push_back(lepus::Value(child_array));
+      }
+    }
+    state.PauseTiming();
+  }
+}
+
+static void BM_ArrayEmplaceBackNoReserveSmall(benchmark::State& state) {
+  for (auto _ : state) {
+    state.PauseTiming();
+    base::Vector<fml::RefPtr<lepus::CArray>> arrays;
+    for (int i = 0; i < 500; i++) {
+      arrays.push_back(lepus::CArray::Create());
+    }
+    auto child_array = lepus::CArray::Create();
+    base::String sValue("benchmark");
+
+    state.ResumeTiming();
+    for (int i = 0; i < 500; i++) {
+      auto& array = arrays[i];
+      for (int i = 0; i < 10; i++) {
+        array->emplace_back(i);
+      }
+      for (int i = 0; i < 10; i++) {
+        array->emplace_back(sValue);
+      }
+      for (int i = 0; i < 10; i++) {
+        array->emplace_back(child_array);
+      }
+    }
+    state.PauseTiming();
+  }
+}
+
+static void BM_ArrayInsert(benchmark::State& state) {
+  for (auto _ : state) {
+    auto array = lepus::CArray::Create();
+    auto child_array = lepus::CArray::Create();
+    base::String sValue("benchmark");
+    array->reserve(2000);
+    for (int i = 0; i < 300; i++) {
+      array->Insert(0, lepus::Value(i));
+    }
+    for (int i = 0; i < 300; i++) {
+      array->Insert(0, lepus::Value(sValue));
+    }
+    for (int i = 0; i < 300; i++) {
+      array->Insert(0, lepus::Value(child_array));
+    }
+  }
+}
+
+static void BM_ArrayErase(benchmark::State& state) {
+  for (auto _ : state) {
+    state.PauseTiming();
+    auto array = lepus::CArray::Create();
+    auto child_array = lepus::CArray::Create();
+    base::String sValue("benchmark");
+    array->reserve(2000);
+    for (int i = 0; i < 500; i++) {
+      array->emplace_back(i);
+    }
+    for (int i = 0; i < 500; i++) {
+      array->emplace_back(sValue);
+    }
+    for (int i = 0; i < 500; i++) {
+      array->emplace_back(child_array);
+    }
+    state.ResumeTiming();
+    while (array->size() > 0) {
+      array->Erase(0);
+    }
+  }
+}
+
 static void BM_TableSetValueNoEmplace(benchmark::State& state) {
   std::vector<base::String> keys;
   keys.reserve(30000);
@@ -699,9 +832,17 @@ BENCHMARK(BM_TestEmptyRenderNGFunction);
 BENCHMARK(BM_TestCollectLeak)->Iterations(5);
 BENCHMARK(BM_ArrayPushBack);
 BENCHMARK(BM_ArrayEmplaceBack);
+BENCHMARK(BM_ArrayPushBackNoReserve);
+BENCHMARK(BM_ArrayEmplaceBackNoReserve);
+BENCHMARK(BM_ArrayPushBackNoReserveSmall);
+BENCHMARK(BM_ArrayEmplaceBackNoReserveSmall);
+BENCHMARK(BM_ArrayInsert);
+BENCHMARK(BM_ArrayErase);
 BENCHMARK(BM_TableSetValueNoEmplace);
 BENCHMARK(BM_TableSetValueEmplace);
 BENCHMARK(BM_TableSetValueNoEmplaceKeyConflict);
 BENCHMARK(BM_TableSetValueEmplaceKeyConflict);
 }  // namespace lepusbenchmark
 }  // namespace lynx
+
+#pragma clang diagnostic pop
