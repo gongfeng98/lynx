@@ -764,7 +764,14 @@ class TemplateAssembler final : public TemplateEntryHolder,
   // In Embedded mode, we disable event reporter by now.
   bool EnableEventReporter() const { return !IsEmbeddedModeOn(); }
 
+  void RegisterOnLayoutReadyHook(base::closure closure) {
+    on_layout_ready_hooks_.emplace_back(std::move(closure));
+  }
+
  private:
+  void ExecuteOnLayoutReadyHooks();
+  void EnsureOnLayoutReadyHooksFinish();
+
   friend class TemplateBinaryReader;
   friend class TemplateBinaryReaderSSR;
   friend class TemplateEntry;
@@ -993,6 +1000,10 @@ class TemplateAssembler final : public TemplateEntryHolder,
 
   // Manage the lifecycle of all pilepine contexts in current lynx engine.
   std::unique_ptr<PipelineContextManager> pipeline_context_manager_{nullptr};
+
+  base::Vector<base::closure> on_layout_ready_hooks_;
+
+  base::OnceTaskRefptr<void> execute_on_layout_ready_hooks_{nullptr};
 };
 }  // namespace tasm
 }  // namespace lynx

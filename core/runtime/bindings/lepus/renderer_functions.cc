@@ -4616,6 +4616,15 @@ RENDERER_FUNCTION_CC(FiberFlushElementTree) {
         RETURN_UNDEFINED();
       }
     }
+
+    BASE_STATIC_STRING_DECL(kOnLayoutReady, "onLayoutReady");
+    if (auto on_layout_ready = arg1->GetProperty(kOnLayoutReady);
+        on_layout_ready.IsCallable()) {
+      GET_TASM_POINTER()->RegisterOnLayoutReadyHook(
+          [context = LEPUS_CONTEXT(), hook = on_layout_ready]() mutable {
+            context->CallClosure(hook);
+          });
+    }
   }
 
   tasm::TimingCollector::Scope<TemplateAssembler::Delegate> scope(

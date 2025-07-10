@@ -7,7 +7,9 @@
 
 #include <map>
 #include <memory>
+#include <utility>
 
+#include "base/include/closure.h"
 #include "core/renderer/pipeline/pipeline_context.h"
 #include "core/renderer/pipeline/pipeline_version.h"
 
@@ -29,12 +31,18 @@ class PipelineContextManager {
 
   void ResetCurrentPipelineContext() { current_pipeline_context_ = nullptr; }
 
+  void SetOnCreateHook(base::closure hook) {
+    on_create_hook_ = std::move(hook);
+  }
+
  private:
   std::map<PipelineVersion, const std::unique_ptr<PipelineContext>>
       pipeline_contexts_{};
   PipelineContext* current_pipeline_context_{nullptr};
   bool enable_unified_pixel_pipeline_{false};
   PipelineVersion current_version_;
+
+  base::closure on_create_hook_;
 };
 }  // namespace tasm
 }  // namespace lynx

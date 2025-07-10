@@ -226,6 +226,9 @@ TemplateAssembler::TemplateAssembler(Delegate& delegate,
           enable_unified_pipeline ||
           LynxEnv::GetInstance().EnableUnifiedPixelPipeline())) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_ASSEMBLER_CONSTRUCTOR);
+  pipeline_context_manager_->SetOnCreateHook(
+      [this]() { EnsureOnLayoutReadyHooksFinish(); });
+
   page_proxy()->element_manager()->SetElementManagerDelegate(
       &element_manager_delegate_);
   auto card = std::make_shared<TemplateEntry>();
@@ -3376,7 +3379,44 @@ void TemplateAssembler::RunPixelPipeline() {
   }
 }
 
+void TemplateAssembler::ExecuteOnLayoutReadyHooks() {
+  if (on_layout_ready_hooks_.empty()) {
+    return;
+  }
+  auto tasks = std::move(on_layout_ready_hooks_);
+  on_layout_ready_hooks_.clear();
+
+  std::promise<void> promise;
+  std::future<void> future = promise.get_future();
+
+  EnsureOnLayoutReadyHooksFinish();
+
+  execute_on_layout_ready_hooks_ = fml::MakeRefCounted<base::OnceTask<void>>(
+      [tasks = std::move(tasks), promise = std::move(promise)]() mutable {
+        for (auto& task : tasks) {
+          task();
+        }
+        promise.set_value();
+      },
+      std::move(future));
+
+  base::TaskRunnerManufactor::PostTaskToConcurrentLoop(
+      [once_task = execute_on_layout_ready_hooks_]() { once_task->Run(); },
+      base::ConcurrentTaskType::HIGH_PRIORITY);
+}
+
+void TemplateAssembler::EnsureOnLayoutReadyHooksFinish() {
+  if (execute_on_layout_ready_hooks_ == nullptr) {
+    return;
+  }
+  execute_on_layout_ready_hooks_->Run();
+  execute_on_layout_ready_hooks_->GetFuture().get();
+  execute_on_layout_ready_hooks_ = nullptr;
+}
+
 void TemplateAssembler::OnLayoutAfter(PipelineLayoutData& layout_data) {
+  ExecuteOnLayoutReadyHooks();
+
   auto* current_pipeline_context = GetCurrentPipelineContext();
   if (!current_pipeline_context ||
       !current_pipeline_context->GetOptions()->enable_unified_pixel_pipeline) {

@@ -20,6 +20,11 @@ PipelineContextManager::PipelineContextManager(
 PipelineContext* PipelineContextManager::CreateAndUpdateCurrentPipelineContext(
     const std::shared_ptr<PipelineOptions>& pipeline_options,
     bool is_major_updated) {
+  // TODO(yangguangzhao): optimize this logic, maybe can move to observer.
+  if (on_create_hook_) {
+    on_create_hook_();
+  }
+
   if (!enable_unified_pixel_pipeline_) {
     // Quick rejection for pixel pipeline.
     return nullptr;
