@@ -161,6 +161,7 @@ LYNX_REGISTER_SHADOW_NODE("image")
 @property(nonatomic, strong) NSString* cache_choice;
 @property(nonatomic, strong) NSDictionary* placeholder_hash_config;
 @property(nonatomic) LynxBooleanOption frameCacheAutomatically;
+@property(nonatomic) CGFloat superResolutionScale;
 @end
 
 @implementation LynxUIImage {
@@ -191,6 +192,7 @@ LYNX_REGISTER_UI("image")
   _enableImageEventReport = [LynxEnv.sharedInstance enableImageEventReport];
   _enableImageAsyncLayout = [LynxEnv.sharedInstance enableImageAsyncLayout];
   _frameCacheAutomatically = LynxBooleanOptionUnset;
+  _superResolutionScale = 0.0;
 }
 
 - (void)freeMemoryCache {
@@ -733,6 +735,7 @@ UIEdgeInsets LynxRoundInsetsToPixel(UIEdgeInsets edgeInsets) {
                  LynxImageEnableSR : @(_enableImageSR),
                  LynxImageCacheChoice : self.cache_choice ?: @"",
                  LynxImageRequestPriority : self.request_priority ?: @"",
+                 LynxImageSRScale : @(_superResolutionScale),
                }
                 processors:processors
               imageFetcher:[self shouldUseNewImage] ? nil : self.context.imageFetcher
@@ -1379,6 +1382,19 @@ LYNX_PROP_SETTER("enable-super-resolution", setEnableSuperResolution, BOOL) {
     value = NO;
   }
   _enableImageSR = value;
+}
+
+LYNX_PROP_SETTER("super-resolution-scale", setSuperResolutionScale, CGFloat) {
+  if (requestReset) {
+    value = 0.0;
+  }
+  if (value > 0) {
+    _enableImageSR = YES;
+    _superResolutionScale = value;
+  } else {
+    _enableImageSR = NO;
+    _superResolutionScale = 0;
+  }
 }
 
 LYNX_PROP_SETTER("request-priority", setRequestPriority, NSString*) {

@@ -24,6 +24,7 @@ FOUNDATION_EXPORT NSString* const LynxImageSkipRedirection;
 FOUNDATION_EXPORT NSString* const LynxImageFixNewImageDownsampling;
 FOUNDATION_EXPORT NSString* const LynxImageAdditionalCustomInfo;
 FOUNDATION_EXPORT NSString* const LynxImageEnableSR;
+FOUNDATION_EXPORT NSString* const LynxImageSRScale;
 FOUNDATION_EXPORT NSString* const LynxImageCacheChoice;
 FOUNDATION_EXPORT NSString* const LynxImageRequestPriority;
 FOUNDATION_EXPORT NSString* const LynxImagePlaceholderHashConfig;

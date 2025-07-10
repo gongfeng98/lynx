@@ -25,6 +25,7 @@ NSString* const LynxImageSkipRedirection = @"LynxImageSkipRedirection";
 NSString* const LynxImageFixNewImageDownsampling = @"LynxImageFixNewImageDownsampling";
 NSString* const LynxImageAdditionalCustomInfo = @"LynxImageAdditionalCustomInfo";
 NSString* const LynxImageEnableSR = @"LynxImageEnableSR";
+NSString* const LynxImageSRScale = @"LynxImageSRScale";
 NSString* const LynxImageCacheChoice = @"LynxImageCacheChoice";
 NSString* const LynxImageRequestPriority = @"LynxImageRequestPriority";
 NSString* const LynxImagePlaceholderHashConfig = @"LynxImagePlaceholderHashConfig";

@@ -6148,6 +6148,7 @@ public enum LynxRadialCenterType {
   public FOUNDATION_EXPORT NSString* const LynxImageFixNewImageDownsampling LynxImageFixNewImageDownsampling;
   public FOUNDATION_EXPORT NSString* const LynxImageAdditionalCustomInfo LynxImageAdditionalCustomInfo;
   public FOUNDATION_EXPORT NSString* const LynxImageEnableSR LynxImageEnableSR;
+  public FOUNDATION_EXPORT NSString* const LynxImageSRScale LynxImageSRScale;
   public FOUNDATION_EXPORT NSString* const LynxImageCacheChoice LynxImageCacheChoice;
   public FOUNDATION_EXPORT NSString* const LynxImageRequestPriority LynxImageRequestPriority;
   public FOUNDATION_EXPORT NSString* const LynxImagePlaceholderHashConfig LynxImagePlaceholderHashConfig;
