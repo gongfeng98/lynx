@@ -10,7 +10,6 @@
 #include <array>
 #include <memory>
 #include <optional>
-#include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -88,6 +87,13 @@ class LayoutObject : public ContainerNode {
            configs_.enable_fixed_new_;
   }
   inline bool GetEnableFixedNew() const { return configs_.enable_fixed_new_; }
+
+  bool HasExplicitDirectionStyle() const {
+    return has_explicit_direction_style_;
+  }
+  void SetHasExplicitDirectionStyle(bool has_explicit_direction_style) {
+    has_explicit_direction_style_ = has_explicit_direction_style;
+  }
 
   SLMeasureFunc GetSLMeasureFunc() const;
 
@@ -346,6 +352,7 @@ class LayoutObject : public ContainerNode {
   bool final_measure_ = false;
   bool is_list_ = false;
   bool is_fixed_before_ = false;
+  bool has_explicit_direction_style_ = false;
 
   bool inflow_sub_tree_in_sync_with_last_measurement_ = false;
 

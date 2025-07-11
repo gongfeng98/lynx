@@ -22,6 +22,7 @@ static constexpr uint16_t kLayoutBorderStartIndex = 12;
 
 static jclass g_starlightNodeClass = nullptr;
 static jmethodID g_measureMethod = nullptr;
+static jmethodID g_baselineMethod = nullptr;
 
 namespace lynx {
 namespace jni {
@@ -41,7 +42,10 @@ bool RegisterJNIForStarlightNode(JNIEnv* env) {
   g_measureMethod =
       env->GetMethodID(g_starlightNodeClass, "measure", "(FIFI)J");
 
-  if (!g_measureMethod) {
+  g_baselineMethod =
+      env->GetMethodID(g_starlightNodeClass, "baseline", "(FF)F");
+
+  if (!g_measureMethod || !g_baselineMethod) {
     if (env->ExceptionCheck()) {
       env->ExceptionClear();
     }
@@ -85,24 +89,39 @@ StarlightSize SLMeasureDelegateAndroid::Measure(float width,
   return StarlightSize{*measuredWidth, *measuredHeight};
 }
 
+float SLMeasureDelegateAndroid::Baseline(float width, float height) {
+  JNIEnv* env = lynx::base::android::AttachCurrentThread();
+  lynx::base::android::ScopedLocalJavaRef<jobject> local_java_ref(jni_object_);
+  if (local_java_ref.IsNull()) {
+    return 0.f;
+  }
+
+  if (!g_baselineMethod) {
+    return 0.f;
+  }
+
+  const jfloat result = env->CallFloatMethod(local_java_ref.Get(),
+                                             g_baselineMethod, width, height);
+
+  return result;
+}
+
 }  // namespace starlight
 
-StarlightSize StarlightMeasureFuncForAndroid(void* instance, float width,
+StarlightSize StarlightMeasureFuncForAndroid(void* manager_node, float width,
                                              SLNodeMeasureMode width_mode,
                                              float height,
                                              SLNodeMeasureMode height_mode) {
   starlight::SLMeasureDelegateAndroid* delegate =
-      static_cast<starlight::SLMeasureDelegateAndroid*>(instance);
+      static_cast<starlight::SLMeasureDelegateAndroid*>(manager_node);
   return delegate->Measure(width, width_mode, height, height_mode);
 }
 
-StarlightSize StarlightBaselineFuncForAndroid(void* instance, float width,
-                                              SLNodeMeasureMode width_mode,
-                                              float height,
-                                              SLNodeMeasureMode height_mode) {
+float StarlightBaselineFuncForAndroid(void* manager_node, float width,
+                                      float height) {
   starlight::SLMeasureDelegateAndroid* delegate =
-      static_cast<starlight::SLMeasureDelegateAndroid*>(instance);
-  return delegate->Measure(width, width_mode, height, height_mode);
+      static_cast<starlight::SLMeasureDelegateAndroid*>(manager_node);
+  return delegate->Baseline(width, height);
 }
 
 // transfer C++'s StarlightValue to java long, and will be transfered to Java's
@@ -123,9 +142,9 @@ jlong CreateMeasureDelegate(JNIEnv* env, jobject jcaller, jlong ptr) {
   starlight::SLMeasureDelegateAndroid* const delegate_android =
       new starlight::SLMeasureDelegateAndroid(env, jcaller);
   StarlightMeasureDelegate* const delegate = new StarlightMeasureDelegate();
-  delegate->instance_ = delegate_android;
+  delegate->manager_node_ = delegate_android;
   const SLNodeRef node = reinterpret_cast<SLNodeRef>(ptr);
-  SLNodeSetMeasureFunc(node, delegate);
+  SLNodeSetMeasureDelegate(node, delegate);
   return reinterpret_cast<jlong>(delegate);
 }
 
@@ -135,17 +154,34 @@ jlong CreateMeasureDelegateAndSetMeasureFunc(JNIEnv* env, jobject jcaller,
       new starlight::SLMeasureDelegateAndroid(env, jcaller);
   StarlightMeasureDelegate* const delegate = new StarlightMeasureDelegate();
   delegate->measure_func_ = StarlightMeasureFuncForAndroid;
-  delegate->instance_ = delegate_android;
+  delegate->manager_node_ = delegate_android;
   const SLNodeRef node = reinterpret_cast<SLNodeRef>(ptr);
-  SLNodeSetMeasureFunc(node, delegate);
+  SLNodeSetMeasureDelegate(node, delegate);
   return reinterpret_cast<jlong>(delegate);
 }
 
-void SetMeasureFunction(JNIEnv* env, jobject jcaller, jlong ptr,
-                        jlong delegatePtr) {
+void SetMeasureFunction(JNIEnv* env, jobject jcaller, jlong delegatePtr) {
   StarlightMeasureDelegate* const delegate =
       reinterpret_cast<StarlightMeasureDelegate*>(delegatePtr);
   delegate->measure_func_ = StarlightMeasureFuncForAndroid;
+}
+
+jlong CreateMeasureDelegateAndSetBaselineFunc(JNIEnv* env, jobject jcaller,
+                                              jlong ptr) {
+  starlight::SLMeasureDelegateAndroid* const delegate_android =
+      new starlight::SLMeasureDelegateAndroid(env, jcaller);
+  StarlightMeasureDelegate* const delegate = new StarlightMeasureDelegate();
+  delegate->baseline_func_ = StarlightBaselineFuncForAndroid;
+  delegate->manager_node_ = delegate_android;
+  const SLNodeRef node = reinterpret_cast<SLNodeRef>(ptr);
+  SLNodeSetMeasureDelegate(node, delegate);
+  return reinterpret_cast<jlong>(delegate);
+}
+
+void SetBaselineFunction(JNIEnv* env, jobject jcaller, jlong delegatePtr) {
+  StarlightMeasureDelegate* const delegate =
+      reinterpret_cast<StarlightMeasureDelegate*>(delegatePtr);
+  delegate->baseline_func_ = StarlightBaselineFuncForAndroid;
 }
 
 void Reset(JNIEnv* env, jobject jcaller, jlong nativePtr) {
@@ -203,18 +239,32 @@ void FreeNode(JNIEnv* env, jobject jcaller, jlong nativePtr) {
 
 void FreeMeasureDelegateAndNode(JNIEnv* env, jobject jcaller, jlong ptr,
                                 jlong delegatePtr) {
+  if (!delegatePtr) {
+    return;
+  }
   auto* delegate = reinterpret_cast<StarlightMeasureDelegate*>(delegatePtr);
   auto* delegate_android =
       reinterpret_cast<starlight::SLMeasureDelegateAndroid*>(
-          delegate->instance_);
-  delete delegate_android;
+          delegate->manager_node_);
+  if (delegate_android) {
+    delete delegate_android;
+  }
   delete delegate;
   SLNodeRef node = reinterpret_cast<SLNodeRef>(ptr);
   SLNodeFree(node);
 }
 
 void FreeMeasureDelegate(JNIEnv* env, jobject jcaller, jlong delegatePtr) {
+  if (!delegatePtr) {
+    return;
+  }
   auto* delegate = reinterpret_cast<StarlightMeasureDelegate*>(delegatePtr);
+  auto* delegate_android =
+      reinterpret_cast<starlight::SLMeasureDelegateAndroid*>(
+          delegate->manager_node_);
+  if (delegate_android) {
+    delete delegate_android;
+  }
   delete delegate;
 }
 

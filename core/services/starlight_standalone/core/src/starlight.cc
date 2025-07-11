@@ -40,9 +40,9 @@ static lynx::starlight::Direction ResolveEdgeToDirection(
   }
 }
 
-static struct StarlightValue NLengthToStarlightValue(
+static StarlightValue NLengthToStarlightValue(
     const lynx::starlight::NLength &length) {
-  struct StarlightValue result;
+  StarlightValue result;
   switch (length.GetType()) {
     case lynx::starlight::NLengthType::kNLengthAuto:
       result.unit_ = SLUnitAuto;
@@ -121,6 +121,20 @@ void SLNodeInsertChild(const SLNodeRef parent, const SLNodeRef child,
   parent_node->MarkDirty();
 }
 
+void SLNodeInsertChildBefore(const SLNodeRef parent, const SLNodeRef child,
+                             const SLNodeRef reference) {
+  lynx::starlight::LayoutObject *parent_node = GET_INNER_LAYOUT_NODE(parent);
+  lynx::starlight::LayoutObject *child_node = GET_INNER_LAYOUT_NODE(child);
+  lynx::starlight::LayoutObject *reference_node =
+      GET_INNER_LAYOUT_NODE(reference);
+  if (lynx::starlight::LayoutObject *original_parent =
+          child_node->ParentLayoutObject()) {
+    original_parent->RemoveChild(child_node);
+  }
+  parent_node->InsertChildBefore(child_node, reference_node);
+  parent_node->MarkDirty();
+}
+
 void SLNodeRemoveChild(const SLNodeRef parent, const SLNodeRef child) {
   lynx::starlight::LayoutObject *parent_node = GET_INNER_LAYOUT_NODE(parent);
   lynx::starlight::LayoutObject *child_node = GET_INNER_LAYOUT_NODE(child);
@@ -132,12 +146,17 @@ void SLNodeRemoveChild(const SLNodeRef parent, const SLNodeRef child) {
 
 void SLNodeRemoveAllChildren(const SLNodeRef parent) {
   lynx::starlight::LayoutObject *parent_node = GET_INNER_LAYOUT_NODE(parent);
+  parent_node->MarkDirty();
   while (parent_node->GetChildCount() > 0) {
     lynx::starlight::LayoutObject *child =
         static_cast<lynx::starlight::LayoutObject *>(parent_node->FirstChild());
-    SLNodeRemoveChild(GET_OUTER_LAYOUT_NODE(parent_node),
-                      GET_OUTER_LAYOUT_NODE(child));
+    parent_node->RemoveChild(child);
   }
+}
+
+void SLNodeReset(const SLNodeRef node) {
+  lynx::starlight::LayoutObject *inner_node = GET_INNER_LAYOUT_NODE(node);
+  inner_node->Reset(inner_node);
 }
 
 SLNodeRef SLNodeGetChild(const SLNodeRef node, int32_t index) {
@@ -158,10 +177,11 @@ SLNodeRef SLNodeGetParent(const SLNodeRef node) {
 }
 
 void SLNodeFree(const SLNodeRef node) {
-  lynx::starlight::LayoutObject *inner_node = GET_INNER_LAYOUT_NODE(node);
-  if (inner_node == nullptr) {
+  if (node == nullptr) {
     return;
   }
+  lynx::starlight::LayoutObject *inner_node = GET_INNER_LAYOUT_NODE(node);
+
   if (auto *css_style = inner_node->GetCSSMutableStyle()) {
     delete css_style;
   }
@@ -176,11 +196,6 @@ void SLNodeFreeRecursive(const SLNodeRef node) {
     SLNodeFreeRecursive(GET_OUTER_LAYOUT_NODE(child));
   }
   SLNodeFree(GET_OUTER_LAYOUT_NODE(inner_node));
-}
-
-void SLNodeReset(const SLNodeRef node) {
-  lynx::starlight::LayoutObject *inner_node = GET_INNER_LAYOUT_NODE(node);
-  inner_node->Reset(inner_node);
 }
 
 bool SLNodeIsDirty(const SLNodeRef node) {
@@ -209,9 +224,12 @@ static void SLNodeHandleRTLRecursive(lynx::starlight::LayoutObject *const node,
                                      bool is_rtl) {
   lynx::starlight::LayoutComputedStyle *const style =
       node->GetCSSMutableStyle();
-  if (style->GetDirection() == lynx::starlight::DirectionType::kNormal) {
+  // only the node not setting direction explicitly need update, but no need to
+  // update has_explicit_direction_style_.
+  if (!node->HasExplicitDirectionStyle()) {
     auto direction = is_rtl ? lynx::starlight::DirectionType::kRtl
                             : lynx::starlight::DirectionType::kLtr;
+
     style->SetDirection(direction);
   }
   lynx::starlight::LayoutObject *child =
@@ -245,27 +263,15 @@ void SLNodeCalculateLayout(const SLNodeRef node, float owner_width,
 
   // handle RTL, if the direction of node is not setting, set the
   // owner_direction to the node.
-  if (owner_direction == SLDirection::SLDirectionRTL) {
-    SLNodeHandleRTLRecursive(inner_node,
-                             owner_direction == SLDirection::SLDirectionRTL);
-  }
+  SLNodeHandleRTLRecursive(inner_node,
+                           owner_direction == SLDirection::SLDirectionRTL);
 
   inner_node->ReLayoutWithConstraints(constraints);
   SLNodeMarkNotDirtyRecursive(inner_node);
 }
 
-StarlightMeasureDelegate *SLNodeGetContext(const SLNodeRef node) {
-  return static_cast<StarlightMeasureDelegate *>(
-      GET_INNER_LAYOUT_NODE(node)->GetContext());
-}
-
-void SLNodeSetContext(const SLNodeRef node,
-                      StarlightMeasureDelegate *const delegate) {
-  GET_INNER_LAYOUT_NODE(node)->SetContext(static_cast<void *>(delegate));
-}
-
-void SLNodeSetMeasureFunc(const SLNodeRef node,
-                          StarlightMeasureDelegate *const delegate) {
+void SLNodeSetMeasureDelegate(const SLNodeRef node,
+                              StarlightMeasureDelegate *const delegate) {
   lynx::starlight::LayoutObject *const inner_node = GET_INNER_LAYOUT_NODE(node);
   inner_node->SetContext(delegate);
   if (delegate) {
@@ -297,20 +303,25 @@ void SLNodeSetMeasureFunc(const SLNodeRef node,
               size.height_ = height;
             } else {
               size = measure_delegate->measure_func_(
-                  measure_delegate->instance_, width, width_mode, height,
+                  measure_delegate->manager_node_, width, width_mode, height,
                   height_mode);
             }
           }
           if (measure_delegate->baseline_func_) {
             baseline = measure_delegate->baseline_func_(
-                measure_delegate->instance_, width, width_mode, height,
-                height_mode);
+                measure_delegate->manager_node_, width, height);
           }
           return FloatSize{size.width_, size.height_, baseline};
         });
   } else {
     inner_node->SetSLMeasureFunc(nullptr);
   }
+}
+
+StarlightMeasureDelegate *SLNodeGetMeasureDelegate(const SLNodeRef node) {
+  return node == nullptr ? nullptr
+                         : static_cast<StarlightMeasureDelegate *>(
+                               GET_INNER_LAYOUT_NODE(node)->GetContext());
 }
 
 bool SLNodeHasMeasureFunc(const SLNodeRef node) {
@@ -320,8 +331,12 @@ bool SLNodeHasMeasureFunc(const SLNodeRef node) {
 // Styles
 void SLNodeStyleSetDirection(const SLNodeRef node, SLDirection type) {
   lynx::starlight::LayoutObject *const inner_node = GET_INNER_LAYOUT_NODE(node);
+  // If the direction of node is changed by SLNodeHandleRTLRecursive, and then
+  // the direction actually set, should markdirty.
   if (inner_node->GetCSSMutableStyle()->SetDirection(
-          static_cast<lynx::starlight::DirectionType>(type))) {
+          static_cast<lynx::starlight::DirectionType>(type)) ||
+      !inner_node->HasExplicitDirectionStyle()) {
+    inner_node->SetHasExplicitDirectionStyle(true);
     inner_node->MarkDirty();
   }
 }
@@ -372,6 +387,9 @@ void SLNodeStyleSetJustifyContent(const SLNodeRef node,
       break;
     case SLJustifyContent::SLJustifyContentSpaceEvenly:
       type = lynx::starlight::JustifyContentType::kSpaceEvenly;
+      break;
+    case SLJustifyContent::SLJustifyContentStretch:
+      type = lynx::starlight::JustifyContentType::kStretch;
       break;
     case SLJustifyContent::SLJustifyContentStart:
       type = lynx::starlight::JustifyContentType::kFlexStart;
@@ -938,11 +956,11 @@ SUPPORTED_BASIC_TYPE_STYLE_GETTER(GET_BASIC_TYPE_STYLE)
 #undef GET_BASIC_TYPE_STYLE
 
 // get styles with length type getter, e.g., width, height.
-#define GET_LENGTH_STYLE(type_name, get_expr)                             \
-  struct StarlightValue SLNodeStyleGet##type_name(const SLNodeRef node) { \
-    lynx::starlight::LayoutObject *const inner_node =                     \
-        GET_INNER_LAYOUT_NODE(node);                                      \
-    return NLengthToStarlightValue(inner_node->GetCSSStyle()->get_expr);  \
+#define GET_LENGTH_STYLE(type_name, get_expr)                            \
+  StarlightValue SLNodeStyleGet##type_name(const SLNodeRef node) {       \
+    lynx::starlight::LayoutObject *const inner_node =                    \
+        GET_INNER_LAYOUT_NODE(node);                                     \
+    return NLengthToStarlightValue(inner_node->GetCSSStyle()->get_expr); \
   }
 
 #define SUPPORTED_LENGTH_STYLE_GETTER(V) \
@@ -961,8 +979,8 @@ SUPPORTED_LENGTH_STYLE_GETTER(GET_LENGTH_STYLE)
 
 // get padding, margin, position styles with edge type getter.
 #define DEFINE_EDGE_STYLE_GETTER(StyleType, GetterPrefix)                   \
-  struct StarlightValue SLNodeStyleGet##StyleType(const SLNodeRef node,     \
-                                                  SLEdge edge) {            \
+  StarlightValue SLNodeStyleGet##StyleType(const SLNodeRef node,            \
+                                           SLEdge edge) {                   \
     lynx::starlight::LayoutObject *const inner_node =                       \
         GET_INNER_LAYOUT_NODE(node);                                        \
     switch (edge) {                                                         \
@@ -991,7 +1009,7 @@ SUPPORTED_LENGTH_STYLE_GETTER(GET_LENGTH_STYLE)
                    : NLengthToStarlightValue(                               \
                          inner_node->GetCSSStyle()->GetterPrefix##Right()); \
       default:                                                              \
-        return (struct StarlightValue){0.0f, SLUnitPoint};                  \
+        return StarlightValue{0.0f, SLUnitPoint};                           \
     }                                                                       \
   }
 
@@ -1001,7 +1019,7 @@ DEFINE_EDGE_STYLE_GETTER(Padding, GetPadding)
 
 #undef DEFINE_EDGE_STYLE_GETTER
 
-struct StarlightValue SLNodeStyleGetGap(const SLNodeRef node, SLGap gap) {
+StarlightValue SLNodeStyleGetGap(const SLNodeRef node, SLGap gap) {
   lynx::starlight::LayoutObject *const inner_node = GET_INNER_LAYOUT_NODE(node);
   switch (gap) {
     case SLGapColumn:
@@ -1014,12 +1032,30 @@ struct StarlightValue SLNodeStyleGetGap(const SLNodeRef node, SLGap gap) {
       return NLengthToStarlightValue(
           inner_node->GetCSSStyle()->GetGridRowGap());
     default:
-      return (struct StarlightValue){0.0f, SLUnitPoint};
+      return StarlightValue{0.0f, SLUnitPoint};
   }
 }
 
 float SLNodeStyleGetBorder(const SLNodeRef node, SLEdge edge) {
-  return SLNodeLayoutGetBorder(node, edge);
+  auto *style = GET_INNER_LAYOUT_NODE(node)->GetCSSStyle();
+  switch (edge) {
+    case SLEdgeLeft:
+      return style->GetBorderLeftWidth();
+    case SLEdgeRight:
+      return style->GetBorderRightWidth();
+    case SLEdgeTop:
+      return style->GetBorderTopWidth();
+    case SLEdgeBottom:
+      return style->GetBorderBottomWidth();
+    case SLEdgeStart:
+      return style->IsRtl() ? style->GetBorderRightWidth()
+                            : style->GetBorderLeftWidth();
+    case SLEdgeEnd:
+      return style->IsRtl() ? style->GetBorderLeftWidth()
+                            : style->GetBorderRightWidth();
+    default:
+      return 0.0f;
+  }
 }
 
 float SLNodeLayoutGetLeft(const SLNodeRef node) {

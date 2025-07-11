@@ -19,8 +19,8 @@ void SLConfigSetPhysicalPixelsPerLayoutUnit(
   config->physical_pixels_per_layout_unit_ = physical_pixels_per_layout_unit;
 }
 
-float SLConfigGetPhysicalPixelsPerLayoutUnit(const StarlightConfig* config) {
+float SLConfigGetPhysicalPixelsPerLayoutUnit(StarlightConfig* const config) {
   return config ? config->physical_pixels_per_layout_unit_ : 1.0f;
 }
 
-void SLConfigFree(StarlightConfig* config) { delete config; }
+void SLConfigFree(StarlightConfig* const config) { delete config; }

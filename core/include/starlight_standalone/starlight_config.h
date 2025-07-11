@@ -5,9 +5,6 @@
 #ifndef CORE_INCLUDE_STARLIGHT_STANDALONE_STARLIGHT_CONFIG_H_
 #define CORE_INCLUDE_STARLIGHT_STANDALONE_STARLIGHT_CONFIG_H_
 
-#include "starlight.h"
-#include "starlight_value.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,9 +16,9 @@ StarlightConfig* SLConfigCreate();
 void SLConfigSetPhysicalPixelsPerLayoutUnit(
     StarlightConfig* const config, float physical_pixels_per_layout_unit);
 
-void SLConfigFree(const StarlightConfig* config);
+void SLConfigFree(StarlightConfig* const config);
 
-float SLConfigGetPhysicalPixelsPerLayoutUnit(const StarlightConfig* config);
+float SLConfigGetPhysicalPixelsPerLayoutUnit(StarlightConfig* const config);
 
 #ifdef __cplusplus
 }
