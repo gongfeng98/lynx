@@ -113,7 +113,7 @@ Value Cast(size_t v) {
     size_t total = 0;                                                      \
     for (auto _ : state) {                                                 \
       SetType* sets[kDestructionBatchCount];                               \
-      for (int i = 0; i < kDestructionBatchCount; i++) {                   \
+      for (size_t i = 0; i < kDestructionBatchCount; i++) {                \
         sets[i] = new SetType();                                           \
         for (const auto& key : data) {                                     \
           sets[i]->insert(key);                                            \
@@ -121,7 +121,7 @@ Value Cast(size_t v) {
         total += sets[i]->size();                                          \
       }                                                                    \
       state.PauseTiming();                                                 \
-      for (int i = 0; i < kDestructionBatchCount; i++) {                   \
+      for (size_t i = 0; i < kDestructionBatchCount; i++) {                \
         delete sets[i]; /* destruction time not measured */                \
       }                                                                    \
       state.ResumeTiming();                                                \
@@ -152,7 +152,7 @@ Value Cast(size_t v) {
     size_t total = 0;                                                      \
     for (auto _ : state) {                                                 \
       MapType* maps[kDestructionBatchCount];                               \
-      for (int i = 0; i < kDestructionBatchCount; i++) {                   \
+      for (size_t i = 0; i < kDestructionBatchCount; i++) {                \
         maps[i] = new MapType();                                           \
         for (auto it = data.begin(); it != data.end(); it++) {             \
           (*maps[i])[it->first] = it->second;                              \
@@ -160,7 +160,7 @@ Value Cast(size_t v) {
         total += maps[i]->size();                                          \
       }                                                                    \
       state.PauseTiming();                                                 \
-      for (int i = 0; i < kDestructionBatchCount; i++) {                   \
+      for (size_t i = 0; i < kDestructionBatchCount; i++) {                \
         delete maps[i]; /* destruction time not measured */                \
       }                                                                    \
       state.ResumeTiming();                                                \
