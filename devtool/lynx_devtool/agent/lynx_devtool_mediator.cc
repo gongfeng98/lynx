@@ -69,6 +69,8 @@ void LynxDevToolMediator::Init(
   if (lepus_debugger_ == nullptr) {
     lepus_debugger_ =
         std::make_shared<InspectorLepusDebuggerImpl>(shared_from_this());
+    int64_t record_id = reinterpret_cast<int64_t>(shell);
+    lepus_debugger_->SetRecordID(record_id);
   }
 
   // shell set element observer in tasm thread;

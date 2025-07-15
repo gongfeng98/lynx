@@ -14,6 +14,7 @@
 #include "core/renderer/dom/fiber/block_element.h"
 #include "core/renderer/utils/lynx_env.h"
 #include "core/services/recorder/recorder_controller.h"
+#include "core/services/recorder/testbench_base_recorder.h"
 #include "core/services/replay/replay_controller.h"
 #include "core/services/replay/testbench_test_replay.h"
 #include "devtool/base_devtool/native/test/message_sender_mock.h"

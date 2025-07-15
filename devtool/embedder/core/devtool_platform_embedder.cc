@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "core/public/devtool/lynx_devtool_proxy.h"
+#include "devtool/base_devtool/native/public/devtool_status.h"
 #include "devtool/embedder/core/env_embedder.h"
 #include "devtool/embedder/core/inspector_owner_embedder.h"
 #include "devtool/embedder/core/page_reload_helper_embedder.h"
@@ -32,6 +33,10 @@ class DevtoolPlatformImpl : public lynx::devtool::DevToolPlatformFacade {
     auto embedder = weak_embedder_.lock();
     CHECK_NULL_AND_LOG_RETURN_VALUE(embedder, "embedder is null", 0);
     return embedder->FindNodeIdForLocation(x, y);
+  }
+
+  std::string GetDebugInfoByUrl(const std::string& url) override {
+    return DevToolStatus::NO_DEBUG_INFO_FOUND_BY_URL;
   }
 
   void ScrollIntoView(int node_id) override {}

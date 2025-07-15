@@ -4,6 +4,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Lynx/LynxBaseInspectorOwnerNG.h>
+#import <Lynx/LynxDebugInfoRecorderProtocol.h>
 #import <Lynx/LynxPageReloadHelper.h>
 #import <Lynx/LynxView+Internal.h>
 
@@ -20,6 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init;
 - (nonnull instancetype)initWithLynxView:(nullable LynxView *)view;
 - (void)setReloadHelper:(nullable LynxPageReloadHelper *)reloadHelper;
+- (void)setDebugInfoInterceptor:(nonnull id<LynxDebugInfoRecorderProtocol>)debugInfoRecorder;
 - (void)call:(NSString *_Nonnull)function withParam:(NSString *_Nullable)params;
 
 - (void)onTemplateAssemblerCreated:(intptr_t)ptr;

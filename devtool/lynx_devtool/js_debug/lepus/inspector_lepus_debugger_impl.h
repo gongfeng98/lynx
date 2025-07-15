@@ -23,6 +23,7 @@ class InspectorLepusDebuggerImpl : public JavaScriptDebuggerNG {
 
   const std::shared_ptr<InspectorLepusObserverImpl>&
   GetInspectorLepusObserver();
+  void DecodeDebugInfo(const std::string& debug_info, std::string& result);
   std::string GetDebugInfo(const std::string& url);
   void SetDebugInfoUrl(const std::string& url, const std::string& file_name);
   std::string GetDebugInfoUrl(const std::string& file_name);
@@ -41,6 +42,8 @@ class InspectorLepusDebuggerImpl : public JavaScriptDebuggerNG {
 
   void UpdateTarget();
 
+  void SetRecordID(int64_t record_id);
+
  private:
   std::shared_ptr<InspectorLepusObserverImpl> observer_;
   // There may be multiple lepus contexts if the LynxView contains lazy
@@ -51,6 +54,8 @@ class InspectorLepusDebuggerImpl : public JavaScriptDebuggerNG {
   std::unordered_map<std::string, std::string> file_name_to_debug_info_url_;
 
   std::mutex mutex_;
+
+  ALLOW_UNUSED_TYPE int64_t record_id_ = 0;
 };
 
 }  // namespace devtool

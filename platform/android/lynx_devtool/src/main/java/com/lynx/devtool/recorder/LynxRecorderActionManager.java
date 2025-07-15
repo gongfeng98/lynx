@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.lynx.BuildConfig;
 import com.lynx.devtoolwrapper.LynxBaseInspectorOwner;
+import com.lynx.recorder.LynxDebugInfoRecorder;
 import com.lynx.tasm.LynxEnv;
 import com.lynx.tasm.LynxGroup;
 import com.lynx.tasm.LynxGroup.LynxGroupBuilder;
@@ -141,6 +142,24 @@ public class LynxRecorderActionManager {
     }
   }
 
+  private class LynxDebugInfoRecorderDelegate implements LynxDebugInfoRecorder {
+    private final Map<String, String> debugInfoDict;
+
+    public LynxDebugInfoRecorderDelegate() {
+      debugInfoDict = new HashMap<>();
+    }
+
+    @Override
+    public void setDebugInfo(String url, String debugInfo) {
+      debugInfoDict.put(url, debugInfo);
+    }
+
+    @Override
+    public String getDebugInfo(String url) {
+      return debugInfoDict.get(url);
+    }
+  }
+
   // store information of some function, which will be called when page reload
   private class ReloadAction {
     private JSONObject mParams;
@@ -213,6 +232,7 @@ public class LynxRecorderActionManager {
   private TemplateBundle mTemplateBundle;
   private TemplateBundleOption mTemplateBundleOptions;
   private LynxRecorderReplayDataProviderInternal mDataProvider;
+  private LynxDebugInfoRecorderDelegate mLynxDebugInfoRecorderDelegate;
 
   public static final int sEndForFirstScreen = 0;
   public static final int sEndForAll = 1;
@@ -301,6 +321,16 @@ public class LynxRecorderActionManager {
             mDataProvider.jsbSettings = mConfig.getJSONObject("jsbSettings");
           }
         }
+        if (json.has("Debug Info")) {
+          JSONArray debugInfo = json.getJSONArray("Debug Info");
+          Log.i("LynxRecorderActionManager", "debugInfo: " + debugInfo.toString());
+          for (int i = 0; i < debugInfo.length(); ++i) {
+            JSONObject info = debugInfo.getJSONObject(i);
+            String url = info.getString("url");
+            String content = info.getString("content");
+            mLynxDebugInfoRecorderDelegate.setDebugInfo(url, content);
+          }
+        }
         if (json.has("Invoked Method Data")) {
           mDataProvider.functionCall = json.getJSONArray("Invoked Method Data");
         }
@@ -370,6 +400,7 @@ public class LynxRecorderActionManager {
     mDelayEndInterval = 3500;
     mRawFontScale = -1;
     mDynamicFetcher = new LynxRecorderFetcher();
+    mLynxDebugInfoRecorderDelegate = new LynxDebugInfoRecorderDelegate();
     mLynxGroup = lynxGroup;
     Resources resources = mContext.getResources();
     DisplayMetrics dm = resources.getDisplayMetrics();
@@ -1031,6 +1062,7 @@ public class LynxRecorderActionManager {
       if (hasScreenSizeInfo() && mEnableSizeOptimization) {
         updateViewLayoutParams(measureSpec[2], measureSpec[3]);
       }
+      mLynxView.getBaseInspectorOwner().setDebugInfoInterceptor(mLynxDebugInfoRecorderDelegate);
     } catch (Exception e) {
       e.printStackTrace();
     }

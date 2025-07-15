@@ -38,6 +38,8 @@ class RecorderController {
                                                  float screen_height,
                                                  int64_t record_id);
   BASE_EXPORT_FOR_DEVTOOL static void* GetTestBenchBaseRecorderInstance();
+  BASE_EXPORT_FOR_DEVTOOL static void RecordDebugInfo(
+      int64_t record_id, const std::string& url, const std::string& debug_info);
 };
 }  // namespace recorder
 }  // namespace tasm

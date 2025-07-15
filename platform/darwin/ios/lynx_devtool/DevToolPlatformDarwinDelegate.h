@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 #import <Foundation/Foundation.h>
+#import <Lynx/LynxDebugInfoRecorderProtocol.h>
 #import <Lynx/LynxPageReloadHelper.h>
 #import <Lynx/LynxUIOwner.h>
 #import <Lynx/LynxView+Internal.h>
@@ -65,6 +66,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)onReceiveTemplateFragment:(const std::string &)data eof:(bool)eof;
 
 - (void)setReloadHelper:(nullable LynxPageReloadHelper *)reloadHelper;
+
+- (void)setDebugInfoInterceptor:(nonnull id<LynxDebugInfoRecorderProtocol>)debugInfoRecorder;
+
+- (NSString *)getDebugInfoByUrl:(NSString *)url;
 
 - (std::vector<int32_t>)getViewLocationOnScreen;
 

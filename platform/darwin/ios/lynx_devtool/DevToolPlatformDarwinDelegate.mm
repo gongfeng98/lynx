@@ -39,6 +39,15 @@ class DevToolPlatformDarwin : public DevToolPlatformFacade {
     }
   }
 
+  std::string GetDebugInfoByUrl(const std::string& url) override {
+    __strong typeof(_darwin) darwin = _darwin;
+    if (darwin) {
+      NSString* debugInfo = [darwin getDebugInfoByUrl:[NSString stringWithCString:url.c_str()]];
+      return [debugInfo UTF8String];
+    }
+    return DevToolStatus::NO_DEBUG_INFO_FOUND_BY_URL;
+  }
+
   void ScrollIntoView(int node_index) override {
     __strong typeof(_darwin) darwin = _darwin;
     if (darwin) {
@@ -279,6 +288,9 @@ class DevToolPlatformDarwin : public DevToolPlatformFacade {
   // EmulateTouch
   LynxEmulateTouchHelper* _touchHelper;
 
+  // DebugInfoRecorder
+  id<LynxDebugInfoRecorderProtocol> _debugInfoRecorder;
+
   // PageReload
   LynxPageReloadHelper* _reloadHelper;
 
@@ -296,6 +308,7 @@ class DevToolPlatformDarwin : public DevToolPlatformFacade {
   _uiTreeHelper = [[LynxUITreeHelper alloc] init];
 
   _lynxView = view;
+  _debugInfoRecorder = nil;
   _touchHelper = [[LynxEmulateTouchHelper alloc] initWithLynxView:view];
 
   _castHelper = [[LynxScreenCastHelper alloc] initWithLynxView:view withPlatformDelegate:self];
@@ -328,6 +341,13 @@ class DevToolPlatformDarwin : public DevToolPlatformFacade {
     return [_uiTreeHelper findNodeIdForLocationWithX:x withY:y mode:mode];
   }
   return 0;
+}
+
+- (NSString*)getDebugInfoByUrl:(NSString*)url {
+  if (_debugInfoRecorder) {
+    return [_debugInfoRecorder getDebugInfo:url];
+  }
+  return @"NO_DEBUG_INFO_FOUND_BY_URL";
 }
 
 - (NSArray<NSNumber*>*)getTransformValue:(NSInteger)sign
@@ -432,6 +452,10 @@ class DevToolPlatformDarwin : public DevToolPlatformFacade {
 
 - (void)setReloadHelper:(nullable LynxPageReloadHelper*)reloadHelper {
   _reloadHelper = reloadHelper;
+}
+
+- (void)setDebugInfoInterceptor:(nonnull id<LynxDebugInfoRecorderProtocol>)debugInfoRecorder {
+  _debugInfoRecorder = debugInfoRecorder;
 }
 
 - (std::vector<int32_t>)getViewLocationOnScreen {

@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 #import <Foundation/Foundation.h>
+#import <Lynx/LynxDebugInfoRecorderProtocol.h>
 #import <Lynx/LynxPageReloadHelper.h>
 #import <Lynx/LynxResourceProvider.h>
 #if TARGET_OS_IOS
@@ -22,6 +23,7 @@ typedef void (^CDPResultCallback)(NSString *result);
 - (nonnull instancetype)initWithLynxView:(nullable LynxView *)view;
 
 - (void)setReloadHelper:(nullable LynxPageReloadHelper *)reloadHelper;
+- (void)setDebugInfoInterceptor:(nonnull id<LynxDebugInfoRecorderProtocol>)debugInfoRecorder;
 
 #if TARGET_OS_IOS
 - (void)onBackgroundRuntimeCreated:(LynxBackgroundRuntime *)runtime

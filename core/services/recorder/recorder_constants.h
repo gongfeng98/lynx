@@ -31,6 +31,9 @@ constexpr uint32_t kFileDataBufferSize = 65536;
 constexpr int64_t kRecordIDForGlobalEvent = -1;
 constexpr const char* KJsbIgnoredInfo = "[]";
 constexpr const char* kStrict = "strict";
+constexpr const char* kDebugInfo = "Debug Info";
+constexpr const char* kParamDebugInfoUrl = "url";
+constexpr const char* kParamContent = "content";
 
 // for LynxViewInitRecorder
 constexpr const char* kParamThreadStrategy = "threadStrategy";

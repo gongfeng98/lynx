@@ -149,6 +149,16 @@ int DevToolPlatformAndroid::FindNodeIdForLocation(
       env, ref.Get(), x, y, jni_mode.Get());
 }
 
+std::string DevToolPlatformAndroid::GetDebugInfoByUrl(const std::string& url) {
+  JNIEnv* env = lynx::base::android::AttachCurrentThread();
+  auto jni_url =
+      lynx::base::android::JNIConvertHelper::ConvertToJNIStringUTF(env, url);
+  auto jni_debug_info = Java_DevToolPlatformAndroidDelegate_getDebugInfoByUrl(
+      env, weak_android_delegate_.Get(), jni_url.Get());
+  return lynx::base::android::JNIConvertHelper::ConvertToString(
+      env, jni_debug_info.Get());
+}
+
 void DevToolPlatformAndroid::ScrollIntoView(int node_id) {
   JNIEnv* env = lynx::base::android::AttachCurrentThread();
   lynx::base::android::ScopedLocalJavaRef<jobject> ref(weak_android_delegate_);

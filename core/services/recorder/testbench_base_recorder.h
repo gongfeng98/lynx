@@ -27,6 +27,9 @@ class TestBenchBaseRecorder {
 
   bool IsRecordingProcess();
 
+  void RecordDebugInfo(int64_t record_id, const std::string& url,
+                       const std::string& content);
+
   void RecordAction(const char* function_name, rapidjson::Value& params,
                     int64_t record_id);
   void RecordInvokedMethodData(const char* module_name, const char* method_name,

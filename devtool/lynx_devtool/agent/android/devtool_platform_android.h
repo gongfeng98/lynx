@@ -19,6 +19,7 @@ class DevToolPlatformAndroid : public DevToolPlatformFacade {
  public:
   DevToolPlatformAndroid(JNIEnv* env, jobject owner);
 
+  std::string GetDebugInfoByUrl(const std::string& url) override;
   void ScrollIntoView(int node_id) override;
   int FindNodeIdForLocation(float x, float y,
                             std::string screen_shot_mode) override;

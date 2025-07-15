@@ -595,6 +595,7 @@ public class LynxBaseGestureHandler : NSObject {
 public protocol LynxBaseInspectorOwner-p : <NSObject> {
   public nonnull instancetype LynxBaseInspectorOwner-p::initWithLynxView:(nullable LynxView *view);
   public void LynxBaseInspectorOwner-p::setReloadHelper:(nullable LynxPageReloadHelper *reloadHelper);
+  public void LynxBaseInspectorOwner-p::setDebugInfoInterceptor:(nonnull id< LynxDebugInfoRecorderProtocol > debugInfoRecorder);
   public void LynxBaseInspectorOwner-p::onTemplateAssemblerCreated:(intptr_t ptr);
   public void LynxBaseInspectorOwner-p::handleLongPress();
   public void LynxBaseInspectorOwner-p::stopCasting();
@@ -1123,6 +1124,11 @@ public protocol LynxDebuggerProtocol-p : <NSObject> {
   public instancetype LynxDebuggerProtocol-p::singleton();
   public BOOL LynxDebuggerProtocol-p::enable:withOptions:(NSURL *url,[withOptions] NSDictionary *options);
   public void LynxDebuggerProtocol-p::setOpenCardCallback:(LynxOpenCardCallback callback);
+}
+
+public protocol LynxDebugInfoRecorderProtocol-p : <NSObject> {
+  public void LynxDebugInfoRecorderProtocol-p::setDebugInfo:debugInfo:(NSString *url,[debugInfo] NSString *debugInfo);
+  public NSString * LynxDebugInfoRecorderProtocol-p::getDebugInfo:(NSString *url);
 }
 
 public class LynxDefaultGestureHandler : LynxBaseGestureHandler {

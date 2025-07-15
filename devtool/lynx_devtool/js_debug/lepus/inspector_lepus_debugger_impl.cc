@@ -4,7 +4,9 @@
 
 #include "devtool/lynx_devtool/js_debug/lepus/inspector_lepus_debugger_impl.h"
 
+#include "core/services/recorder/recorder_controller.h"
 #include "devtool/lynx_devtool/config/devtool_config.h"
+#include "devtool/lynx_devtool/recorder/test_bench_utils.h"
 
 namespace lynx {
 namespace devtool {
@@ -23,11 +25,34 @@ InspectorLepusDebuggerImpl::GetInspectorLepusObserver() {
   return observer_;
 }
 
+void InspectorLepusDebuggerImpl::SetRecordID(int64_t record_id) {
+  record_id_ = record_id;
+}
+
+void InspectorLepusDebuggerImpl::DecodeDebugInfo(const std::string &debug_info,
+                                                 std::string &result) {
+  std::string decode_debug_info = TestBenchDecode(debug_info);
+  std::vector<uint8_t> compressed_data(decode_debug_info.begin(),
+                                       decode_debug_info.end());
+  std::vector<uint8_t> decompressed_data = TestBenchDecompress(compressed_data);
+  result.assign(decompressed_data.begin(), decompressed_data.end());
+}
+
 std::string InspectorLepusDebuggerImpl::GetDebugInfo(const std::string &url) {
   auto sp = devtool_platform_facade_wp_.lock();
   CHECK_NULL_AND_LOG_RETURN_VALUE(
       sp, "lepus debug: devtool_platform_facade_ is null", "");
-  return sp->GetLepusDebugInfo(url);
+  std::string debug_info = sp->GetDebugInfoByUrl(url);
+  if (debug_info == DevToolStatus::NO_DEBUG_INFO_FOUND_BY_URL) {
+    debug_info = sp->GetLepusDebugInfo(url);
+  } else {
+    DecodeDebugInfo(debug_info, debug_info);
+  }
+  if (record_id_ != 0) {
+    tasm::recorder::RecorderController::RecordDebugInfo(record_id_, url,
+                                                        debug_info);
+  }
+  return debug_info;
 }
 
 void InspectorLepusDebuggerImpl::SetDebugInfoUrl(const std::string &url,

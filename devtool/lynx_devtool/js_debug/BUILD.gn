@@ -112,6 +112,7 @@ devtool_source_set("devtool_lepus_debug_sources") {
   deps = [
     ":devtool_common_js_debug",
     "../../../base/src:base_log_headers",
+    "../recorder:recorder",
   ]
   if (is_ios || is_android) {
     sources += [

@@ -7,6 +7,7 @@
 #import <Lynx/LynxResourceProvider.h>
 #import <Lynx/LynxTemplateBundle.h>
 #import <Lynx/LynxTemplateBundleOption.h>
+#import <LynxDevtool/LynxDebugInfoRecorderDelegate.h>
 #import <LynxDevtool/LynxInspectorOwner.h>
 #import <LynxDevtool/LynxRecorderActionManager.h>
 #import <LynxDevtool/LynxRecorderDynamicComponentFetcher.h>
@@ -78,6 +79,7 @@ static const int kVirtual = 1 << 2;
 @property int64_t startTime;
 @property NSMutableArray* moduleList;
 @property(nonnull) LynxView* lynxView;
+@property(nonnull) LynxDebugInfoRecorderDelegate* lynxDebugInfoRecorderDelegate;
 @property LynxTheme* lynxThemeCache;
 @property NSDictionary* threadStrategyData;
 @property NSDictionary* globalPropsCache;
@@ -108,6 +110,7 @@ static const int kVirtual = 1 << 2;
 - (id)init {
   if (self = [super init]) {
     self.actionCallbacks = [NSMutableArray array];
+    self.lynxDebugInfoRecorderDelegate = [[LynxDebugInfoRecorderDelegate alloc] init];
   }
 
   return self;
@@ -337,6 +340,14 @@ static const int kVirtual = 1 << 2;
 
     if ([_config objectForKey:@"jsbSettings"]) {
       self.dataProvider.jsbSettings = [_config objectForKey:@"jsbSettings"];
+    }
+  }
+  if ([json objectForKey:@"Debug Info"]) {
+    NSArray* debugInfoList = [json objectForKey:@"Debug Info"];
+    for (NSDictionary* infoDict in debugInfoList) {
+      NSString* url = infoDict[@"url"];
+      NSString* content = infoDict[@"content"];
+      [self.lynxDebugInfoRecorderDelegate setDebugInfo:url debugInfo:content];
     }
   }
   if ([json objectForKey:@"Invoked Method Data"]) {
@@ -648,6 +659,7 @@ static const int kVirtual = 1 << 2;
     [_lynxView updateViewportWithPreferredLayoutWidth:preferredLayoutWidth
                                 preferredLayoutHeight:preferredLayoutHeight];
   }
+  [_lynxView.baseInspectorOwner setDebugInfoInterceptor:self.lynxDebugInfoRecorderDelegate];
 }
 
 - (void)updateFontScale:(NSDictionary*)params {

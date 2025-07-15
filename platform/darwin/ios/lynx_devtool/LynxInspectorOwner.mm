@@ -107,6 +107,12 @@
   }
 }
 
+- (void)setDebugInfoInterceptor:(nonnull id<LynxDebugInfoRecorderProtocol>)debugInfoRecorder {
+  if (_platform) {
+    [_platform setDebugInfoInterceptor:debugInfoRecorder];
+  }
+}
+
 - (void)onBackgroundRuntimeCreated:(LynxBackgroundRuntime*)runtime
                    groupThreadName:(NSString*)groupThreadName {
   if (_devtoolNG != nil) {

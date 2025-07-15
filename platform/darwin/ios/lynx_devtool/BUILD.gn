@@ -363,6 +363,8 @@ lynx_recorder_public_headers = [
 
 subspec_target("LynxRecorder") {
   sources = [
+    "./lynx_recorder/LynxDebugInfoRecorderDelegate.h",
+    "./lynx_recorder/LynxDebugInfoRecorderDelegate.mm",
     "./lynx_recorder/LynxRecorderActionManager.mm",
     "./lynx_recorder/LynxRecorderDynamicComponentFetcher.h",
     "./lynx_recorder/LynxRecorderDynamicComponentFetcher.m",

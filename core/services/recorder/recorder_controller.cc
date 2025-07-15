@@ -57,6 +57,15 @@ void* RecorderController::GetTestBenchBaseRecorderInstance() {
 #endif
 }
 
+void RecorderController::RecordDebugInfo(int64_t record_id,
+                                         const std::string& url,
+                                         const std::string& debug_info) {
+#if ENABLE_TESTBENCH_RECORDER
+  lynx::tasm::recorder::TestBenchBaseRecorder::GetInstance().RecordDebugInfo(
+      record_id, url, debug_info);
+#endif
+}
+
 }  // namespace recorder
 }  // namespace tasm
 }  // namespace lynx

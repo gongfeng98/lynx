@@ -37,6 +37,24 @@ TEST_F(InspectorLepusDebuggerImplTest, GetInspectorLepusObserver) {
   EXPECT_EQ(observer1, observer2);
 }
 
+TEST_F(InspectorLepusDebuggerImplTest, NullDecodeDebugInfo) {
+  std::string debug_info = "eJWDAAAAAAE=";
+  std::string result;
+  debugger_->DecodeDebugInfo(debug_info, result);
+  EXPECT_EQ(result, "");
+}
+
+TEST_F(InspectorLepusDebuggerImplTest, SpecialCharDecodeDebugInfo) {
+  std::string debug_info =
+      "eJwFwcERgCAMBMBWrg7bsIIYg2QGAgPn+"
+      "LUOP7ZoCe6uUnsx7LadBzxSG1XoLXA5M2Y3dSnQLEOUNuYC2iS0BS2I733uH2JDGms=";
+  std::string result;
+  debugger_->DecodeDebugInfo(debug_info, result);
+  EXPECT_EQ(
+      result,
+      "Sample debug information with special characters: test content 🚀");
+}
+
 TEST_F(InspectorLepusDebuggerImplTest, GetDebugInfo) {
   std::string result;
 

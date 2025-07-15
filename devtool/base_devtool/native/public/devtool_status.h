@@ -27,6 +27,7 @@ class BASE_DEVTOOL_EXPORT DevToolStatus {
  public:
   static const char* SCREENSHOT_MODE_FULLSCREEN;
   static const char* SCREENSHOT_MODE_LYNXVIEW;
+  static const char* NO_DEBUG_INFO_FOUND_BY_URL;
 
  public:
   static DevToolStatus& GetInstance();

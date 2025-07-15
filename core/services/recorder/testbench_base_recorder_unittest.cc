@@ -44,7 +44,7 @@ void CheckLynxViewTable(TestBenchBaseRecorder& ark, int64_t record_id) {
   rapidjson::Value& recorded_file = ark.lynx_view_table_[record_id];
 
   ASSERT_TRUE(recorded_file.IsObject());
-  EXPECT_EQ(recorded_file.MemberCount(), 4);
+  EXPECT_EQ(recorded_file.MemberCount(), 5);
 
   rapidjson::Value& action_list = recorded_file[kActionList];
   ASSERT_TRUE(action_list.IsArray());
@@ -144,6 +144,39 @@ TEST(TestBenchBaseRecorder, StartRecord) {
   TestBenchBaseRecorder& ark = TestBenchBaseRecorder::GetInstance();
   ark.StartRecord();
   ASSERT_TRUE(ark.is_recording_);
+}
+
+TEST(TestBenchBaseRecorder, RecordDebugInfo) {
+  TestBenchBaseRecorder& ark = TestBenchBaseRecorder::GetInstance();
+  int64_t record_id = 1;
+  rapidjson::Value& debug_info_array =
+      ark.GetRecordedFile(record_id)[kDebugInfo];
+  EXPECT_EQ(debug_info_array.Size(), 0);
+  ark.StartRecord();
+
+  const char* test_url = "debug/test_url";
+  const char* test_content =
+      "Sample debug information with special characters: test content 🚀";
+
+  ark.RecordDebugInfo(record_id, test_url, test_content);
+  wait(ark.thread_);
+
+  debug_info_array = ark.GetRecordedFile(record_id)[kDebugInfo];
+  ASSERT_TRUE(debug_info_array.IsArray());
+  EXPECT_EQ(debug_info_array.Size(), 1);
+
+  rapidjson::Value& debug_entry = debug_info_array[0];
+  ASSERT_TRUE(debug_entry.IsObject());
+  EXPECT_STREQ(debug_entry[kParamDebugInfoUrl].GetString(), test_url);
+
+  std::string encoded_content = debug_entry[kParamContent].GetString();
+  EXPECT_FALSE(encoded_content.empty());
+  EXPECT_EQ(
+      encoded_content,
+      "eJwFwcERgCAMBMBWrg7bsIIYg2QGAgPn+"
+      "LUOP7ZoCe6uUnsx7LadBzxSG1XoLXA5M2Y3dSnQLEOUNuYC2iS0BS2I733uH2JDGms=");
+
+  ark.Clear();
 }
 
 TEST(TestBenchBaseRecorder, RecordAction) {

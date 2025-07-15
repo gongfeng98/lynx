@@ -14,6 +14,7 @@ import com.lynx.devtool.helper.UITreeHelper;
 import com.lynx.devtoolwrapper.IDevToolDelegate;
 import com.lynx.react.bridge.Callback;
 import com.lynx.react.bridge.JavaOnlyMap;
+import com.lynx.recorder.LynxDebugInfoRecorder;
 import com.lynx.tasm.LynxEnv;
 import com.lynx.tasm.LynxView;
 import com.lynx.tasm.base.CalledByNative;
@@ -24,6 +25,7 @@ import java.lang.ref.WeakReference;
 
 public class DevToolPlatformAndroidDelegate {
   private static final String TAG = "DevToolPlatformAndroidDelegate";
+  static final String NO_DEBUG_INFO_FOUND_BY_URL = "NO_DEBUG_INFO_FOUND_BY_URL";
   private long mFacadePtr;
 
   // UITree
@@ -50,6 +52,9 @@ public class DevToolPlatformAndroidDelegate {
 
   private boolean mNavigatePending;
 
+  // DebugInfo
+  private LynxDebugInfoRecorder mDebugInfoRecorder;
+
   @Keep
   public DevToolPlatformAndroidDelegate(LynxView lynxView) {
     mUITreeHelper = new UITreeHelper();
@@ -66,6 +71,8 @@ public class DevToolPlatformAndroidDelegate {
     mReloadHelper = null;
 
     mNavigatePending = false;
+
+    mDebugInfoRecorder = null;
   }
 
   public void attachLynxUIOwner(LynxUIOwner uiOwner) {
@@ -76,6 +83,18 @@ public class DevToolPlatformAndroidDelegate {
 
   public void setReloadHelper(PageReloadHelper reloadHelper) {
     mReloadHelper = reloadHelper;
+  }
+
+  public void setDebugInfoInterceptor(LynxDebugInfoRecorder debugInfoRecorder) {
+    mDebugInfoRecorder = debugInfoRecorder;
+  }
+
+  @CalledByNative
+  public String getDebugInfoByUrl(String url) {
+    if (mDebugInfoRecorder != null) {
+      return mDebugInfoRecorder.getDebugInfo(url);
+    }
+    return NO_DEBUG_INFO_FOUND_BY_URL;
   }
 
   public long getNativePtr() {

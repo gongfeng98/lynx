@@ -33,6 +33,7 @@ import com.lynx.devtoolwrapper.MessageHandler;
 import com.lynx.jsbridge.LynxModuleFactory;
 import com.lynx.react.bridge.Callback;
 import com.lynx.react.bridge.ReadableMap;
+import com.lynx.recorder.LynxDebugInfoRecorder;
 import com.lynx.tasm.LynxEnv;
 import com.lynx.tasm.LynxEnvKey;
 import com.lynx.tasm.LynxError;
@@ -145,6 +146,13 @@ public class LynxInspectorOwner implements LynxBaseInspectorOwnerNG {
     mReloadHelper = reloadHelper;
     if (mPlatform != null) {
       mPlatform.setReloadHelper(reloadHelper);
+    }
+  }
+
+  @Override
+  public void setDebugInfoInterceptor(LynxDebugInfoRecorder debugInfoRecorder) {
+    if (mPlatform != null) {
+      mPlatform.setDebugInfoInterceptor(debugInfoRecorder);
     }
   }
 

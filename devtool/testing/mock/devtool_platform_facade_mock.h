@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "devtool/base_devtool/native/public/devtool_status.h"
 #include "devtool/lynx_devtool/agent/devtool_platform_facade.h"
 #include "devtool/lynx_devtool/base/mouse_event.h"
 
@@ -42,6 +43,10 @@ class DevToolPlatformFacadeMock : public lynx::devtool::DevToolPlatformFacade {
   void OnAckReceived() override;
   void GetLynxScreenShot() override;
   void EmulateTouch(std::shared_ptr<lynx::devtool::MouseEvent> input) override {
+  }
+
+  std::string GetDebugInfoByUrl(const std::string& url) override {
+    return devtool::DevToolStatus::NO_DEBUG_INFO_FOUND_BY_URL;
   }
 
   void PageReload(bool ignore_cache, std::string template_binary = "",

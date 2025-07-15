@@ -39,6 +39,7 @@ class DevToolPlatformFacade
   virtual lynx::lepus::Value* GetLepusValueFromTemplateData() = 0;
   virtual std::string GetTemplateJsInfo(int32_t offset, int32_t size) = 0;
 
+  virtual std::string GetDebugInfoByUrl(const std::string& url) = 0;
   virtual void ScrollIntoView(int node_id) = 0;
   virtual int FindNodeIdForLocation(float x, float y,
                                     std::string screen_shot_mode) = 0;

@@ -9,6 +9,7 @@ import androidx.annotation.RestrictTo;
 import androidx.core.util.Consumer;
 import com.lynx.react.bridge.Callback;
 import com.lynx.react.bridge.ReadableMap;
+import com.lynx.recorder.LynxDebugInfoRecorder;
 import com.lynx.tasm.LynxError;
 import com.lynx.tasm.LynxView;
 import com.lynx.tasm.TemplateData;
@@ -18,6 +19,7 @@ import org.json.JSONObject;
 
 public interface LynxBaseInspectorOwner {
   void setReloadHelper(PageReloadHelper reloadHelper);
+  void setDebugInfoInterceptor(LynxDebugInfoRecorder debugInfoRecorder);
   void onTemplateAssemblerCreated(long ptr);
 
   long onBackgroundRuntimeCreated(String groupName);

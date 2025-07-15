@@ -3444,6 +3444,7 @@ public class com::lynx::tasm::group::LynxBaseConfigurator< T extends LynxBaseCon
 
 public interface com::lynx::devtoolwrapper::LynxBaseInspectorOwner {
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.setReloadHelper(PageReloadHelper reloadHelper);
+  public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.setDebugInfoInterceptor(LynxDebugInfoRecorder debugInfoRecorder);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.onTemplateAssemblerCreated(long ptr);
   public long com.lynx.devtoolwrapper.LynxBaseInspectorOwner.onBackgroundRuntimeCreated(String groupName);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.reload(boolean ignoreCache);
@@ -4104,6 +4105,11 @@ public class com::lynx::tasm::behavior::ui::accessibility::LynxNodeProvider::Lyn
   public void com.lynx.tasm.behavior.ui.accessibility.LynxNodeProvider.LynxCustomNodeInfo.invalid();
   public com.lynx.tasm.behavior.ui.accessibility.LynxNodeProvider.LynxCustomNodeInfo.LynxCustomNodeInfo(LynxBaseUI ui, UIGroup hostUI, Rect rectOnScreen);
   public com.lynx.tasm.behavior.ui.accessibility.LynxNodeProvider.LynxCustomNodeInfo.LynxCustomNodeInfo(View view, Rect rectOnScreen);
+}
+
+public interface com::lynx::recorder::LynxDebugInfoRecorder {
+  public void com.lynx.recorder.LynxDebugInfoRecorder.setDebugInfo(String url, String debugInfo);
+  public String com.lynx.recorder.LynxDebugInfoRecorder.getDebugInfo(String url);
 }
 
 public class com::lynx::tasm::event::LynxDetailEvent : com.lynx.tasm.event.LynxCustomEvent {

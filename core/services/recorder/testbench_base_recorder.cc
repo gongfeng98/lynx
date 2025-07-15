@@ -339,6 +339,47 @@ void TestBenchBaseRecorder::RecordComponent(const char* component_name,
   thread_.GetTaskRunner()->PostTask(std::move(record_component_task));
 }
 
+void TestBenchBaseRecorder::RecordDebugInfo(int64_t record_id,
+                                            const std::string& url,
+                                            const std::string& content) {
+  auto record_debug_info_task = [this, record_id, url, content]() {
+    if (!is_recording_) {
+      return;
+    }
+    if (lynx_view_table_.count(record_id) == 0) {
+      return;
+    }
+    rapidjson::Value& debug_info_value =
+        GetRecordedFileField(record_id, kDebugInfo);
+    rapidjson::Document::AllocatorType& allocator = GetAllocator();
+
+    rapidjson::Value url_val(rapidjson::kStringType);
+    url_val.SetString(url.c_str(), allocator);
+
+    rapidjson::Value content_val(rapidjson::kStringType);
+    // compress content for large data
+    unsigned long compressed_size;
+    std::unique_ptr<Byte[]> compressed_data =
+        Compress(content.c_str(), content.length(), &compressed_size);
+    if (compressed_data != nullptr) {
+      unsigned long base64_size;
+      std::unique_ptr<char[]> base64_data =
+          ModpB64Encode(reinterpret_cast<const char*>(compressed_data.get()),
+                        compressed_size, &base64_size);
+      content_val.SetString(base64_data.get(), allocator);
+    }
+
+    rapidjson::Value val;
+    val.SetObject();
+
+    val.AddMember(rapidjson::StringRef(kParamDebugInfoUrl), url_val, allocator);
+    val.AddMember(rapidjson::StringRef(kParamContent), content_val, allocator);
+
+    debug_info_value.PushBack(val, allocator);
+  };
+  thread_.GetTaskRunner()->PostTask(std::move(record_debug_info_task));
+}
+
 void TestBenchBaseRecorder::RecordScripts(const char* url, const char* source) {
   auto record_scripts_task = [this, url = std::string(url),
                               source = std::string(source)]() {
@@ -432,6 +473,12 @@ void TestBenchBaseRecorder::CreateRecordedFile(int64_t record_id) {
   component_list_value.SetArray();
   dump_document.AddMember(rapidjson::StringRef(kComponentList),
                           component_list_value, allocator);
+
+  // debug_info
+  rapidjson::Value debug_info_value;
+  debug_info_value.SetArray();
+  dump_document.AddMember(rapidjson::StringRef(kDebugInfo), debug_info_value,
+                          allocator);
 
   lynx_view_table_[record_id] = dump_document;
 }
