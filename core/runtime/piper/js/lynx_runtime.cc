@@ -179,6 +179,9 @@ void LynxRuntime::Init(
   app_ = js_executor_->createNativeAppInstance(
       GetRuntimeId(), delegate_.get(), std::make_unique<LynxApiHandler>(this),
       page_options_);
+#if ENABLE_TESTBENCH_RECORDER
+  app_->SetRecordId(record_id_);
+#endif
   LOGI(" lynxRuntime:" << this << " create APP " << app_.get());
   AddEventListeners();
 

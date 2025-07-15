@@ -15,6 +15,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSArray *)getJSbIgnoredInfo;
 @required
 - (NSDictionary *)getJsbSettings;
+
+@required
+- (NSDictionary *)getSharedData;
 @end
 
 @interface LynxRecorderReplayDataModule : NSObject <LynxModule>

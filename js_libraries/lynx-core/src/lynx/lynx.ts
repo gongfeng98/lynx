@@ -286,8 +286,19 @@ export class Lynx {
     nativeGlobal.shareDataSubject.notifyDataChange(variable);
   };
 
-  getSharedData = <T = unknown>(dataKey: string): T =>
-    nativeGlobal.sharedData[dataKey];
+  getSharedData = <T = unknown>(dataKey: string): T => {
+    let data = nativeGlobal.sharedData[dataKey];
+    if (NODE_ENV === 'development') {
+      if (data === undefined) {
+        data = this.getApp().NativeModules.LynxRecorderReplayDataModule?.getSharedData(
+          dataKey
+        ).value;
+      } else {
+        this.getNativeApp().recordSharedData(dataKey, data);
+      }
+    }
+    return data;
+  };
 
   registerSharedDataObserver = <T>(callback: (data: T) => void): void =>
     nativeGlobal.shareDataSubject.registerObserver(callback);

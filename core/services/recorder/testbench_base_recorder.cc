@@ -413,6 +413,34 @@ void TestBenchBaseRecorder::RecordScripts(const char* url, const char* source) {
   thread_.GetTaskRunner()->PostTask(std::move(record_scripts_task));
 }
 
+void TestBenchBaseRecorder::RecordSharedData(const std::string& key,
+                                             rapidjson::Value& value,
+                                             int64_t record_id) {
+  auto record_shared_data_task =
+      [this, key = key, value = rapidjson::Value(value, GetAllocator()),
+       record_id]() {
+        if (!is_recording_) {
+          return;
+        }
+        if (lynx_view_table_.count(record_id) == 0) {
+          return;
+        }
+        rapidjson::Value& shared_data_map =
+            GetRecordedFileField(record_id, kSharedData);
+
+        rapidjson::Document::AllocatorType& allocator = GetAllocator();
+
+        rapidjson::Value local_value(rapidjson::kObjectType);
+        local_value.CopyFrom(value, allocator);
+
+        rapidjson::Value json_key(rapidjson::kStringType);
+        json_key.SetString(key.c_str(), allocator);
+
+        shared_data_map.AddMember(json_key, local_value, allocator);
+      };
+  thread_.GetTaskRunner()->PostTask(std::move(record_shared_data_task));
+}
+
 void TestBenchBaseRecorder::RecordTime(rapidjson::Value& val) {
   rapidjson::Document::AllocatorType& allocator = GetAllocator();
   std::time_t now_time = std::time(nullptr);
@@ -478,6 +506,11 @@ void TestBenchBaseRecorder::CreateRecordedFile(int64_t record_id) {
   rapidjson::Value debug_info_value;
   debug_info_value.SetArray();
   dump_document.AddMember(rapidjson::StringRef(kDebugInfo), debug_info_value,
+                          allocator);
+  // sharedData
+  rapidjson::Value shared_data;
+  shared_data.SetObject();
+  dump_document.AddMember(rapidjson::StringRef(kSharedData), shared_data,
                           allocator);
 
   lynx_view_table_[record_id] = dump_document;

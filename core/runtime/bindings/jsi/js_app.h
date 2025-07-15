@@ -279,6 +279,11 @@ class App : public std::enable_shared_from_this<App> {
   const tasm::PageOptions& GetPageOptions() { return page_options_; }
   runtime::TemplateDelegate& GetDelegate() { return *delegate_; }
 
+#if ENABLE_TESTBENCH_RECORDER
+  int64_t record_id_ = 0;
+  void SetRecordId(int64_t record_id) { record_id_ = record_id; }
+#endif
+
  private:
   App(int64_t rt_id, std::weak_ptr<Runtime> rt,
       runtime::TemplateDelegate* delegate,

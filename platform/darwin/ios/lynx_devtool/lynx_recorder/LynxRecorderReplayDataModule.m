@@ -9,6 +9,7 @@
 @property NSDictionary *callbackData;
 @property NSArray *jsbIgnoredInfo;
 @property NSDictionary *jsbSettings;
+@property NSDictionary *sharedData;
 @end
 
 @implementation LynxRecorderReplayDataModule
@@ -20,6 +21,7 @@
 + (NSDictionary<NSString *, NSString *> *)methodLookup {
   return @{
     @"getData" : NSStringFromSelector(@selector(getData:)),
+    @"getSharedData" : NSStringFromSelector(@selector(getSharedData:)),
   };
 }
 
@@ -31,9 +33,15 @@
       _callbackData = [provider getCallbackData];
       _jsbSettings = [provider getJsbSettings];
       _jsbIgnoredInfo = [provider getJSbIgnoredInfo];
+      _sharedData = [provider getSharedData];
     }
   }
   return self;
+}
+
+- (NSDictionary *)getSharedData:(NSString *)key {
+  NSDictionary *result = @{@"value" : [_sharedData objectForKey:key]};
+  return result;
 }
 
 - (void)getData:(LynxCallbackBlock)callback {

@@ -38,6 +38,8 @@ class TestBenchBaseRecorder {
   void RecordCallback(const char* module_name, const char* method_name,
                       rapidjson::Value& params, int64_t callback_id,
                       int64_t record_id);
+  void RecordSharedData(const std::string& key, rapidjson::Value& value,
+                        int64_t record_id);
 
   void RecordComponent(const char* name, int type, int64_t record_id);
 

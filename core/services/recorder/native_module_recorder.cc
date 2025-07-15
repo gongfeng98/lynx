@@ -12,6 +12,21 @@ namespace lynx {
 namespace tasm {
 namespace recorder {
 
+void NativeModuleRecorder::RecordSharedData(const piper::Value* args,
+                                            piper::Runtime* rt,
+                                            int64_t record_id) {
+  if (!TestBenchBaseRecorder::GetInstance().IsRecordingProcess()) {
+    return;
+  }
+
+  piper::Scope scope(*rt);
+
+  rapidjson::Value value = ParsePiperValueToJsonValue(args[1], rt);
+
+  std::string key = args[0].getString(*rt).utf8(*rt);
+  TestBenchBaseRecorder::GetInstance().RecordSharedData(key, value, record_id);
+}
+
 void NativeModuleRecorder::RecordFunctionCall(
     const char* module_name, const char* js_method_name, uint32_t argc,
     const piper::Value* args, const int64_t* callbacks, uint32_t count,

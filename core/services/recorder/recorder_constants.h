@@ -34,6 +34,7 @@ constexpr const char* kStrict = "strict";
 constexpr const char* kDebugInfo = "Debug Info";
 constexpr const char* kParamDebugInfoUrl = "url";
 constexpr const char* kParamContent = "content";
+constexpr const char* kSharedData = "SharedData";
 
 // for LynxViewInitRecorder
 constexpr const char* kParamThreadStrategy = "threadStrategy";

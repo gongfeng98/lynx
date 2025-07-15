@@ -13,6 +13,9 @@ export interface NativeModule {
   LynxAccessibilityModule;
   LynxFetchModule;
   LynxSetModule;
+  LynxRecorderReplayDataModule?: {
+    getSharedData<T>(key: string): { value: T };
+  };
 }
 
 export type CallLynxSetModule = (functionName: string, args: any[]) => void;

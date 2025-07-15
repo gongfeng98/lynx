@@ -52,6 +52,7 @@ static const int kVirtual = 1 << 2;
 @property NSDictionary* callbackData;
 @property NSArray* jsbIgnoredInfo;
 @property NSDictionary* jsbSettings;
+@property NSDictionary* sharedData;
 @end
 
 @implementation LynxRecorderReplayDataProviderInternal
@@ -69,6 +70,11 @@ static const int kVirtual = 1 << 2;
 - (NSArray*)getJSbIgnoredInfo {
   return _jsbIgnoredInfo;
 }
+
+- (NSDictionary*)getSharedData {
+  return _sharedData;
+}
+
 @end
 
 @interface LynxRecorderActionManager ()
@@ -356,6 +362,11 @@ static const int kVirtual = 1 << 2;
   if ([json objectForKey:@"Callback"]) {
     self.dataProvider.callbackData = json[@"Callback"];
   }
+
+  if ([json objectForKey:@"SharedData"]) {
+    self.dataProvider.sharedData = json[@"SharedData"];
+  }
+
   if ([json objectForKey:@"Component List"]) {
     [self mockComponent:json[@"Component List"]];
   }

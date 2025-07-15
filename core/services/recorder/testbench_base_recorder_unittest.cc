@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 #include <condition_variable>
+
 #define private public
 #include "core/services/recorder/testbench_base_recorder.h"
 #undef private
@@ -44,7 +45,7 @@ void CheckLynxViewTable(TestBenchBaseRecorder& ark, int64_t record_id) {
   rapidjson::Value& recorded_file = ark.lynx_view_table_[record_id];
 
   ASSERT_TRUE(recorded_file.IsObject());
-  EXPECT_EQ(recorded_file.MemberCount(), 5);
+  EXPECT_EQ(recorded_file.MemberCount(), 6);
 
   rapidjson::Value& action_list = recorded_file[kActionList];
   ASSERT_TRUE(action_list.IsArray());
@@ -61,6 +62,14 @@ void CheckLynxViewTable(TestBenchBaseRecorder& ark, int64_t record_id) {
   rapidjson::Value& component_list_value = recorded_file[kComponentList];
   ASSERT_TRUE(component_list_value.IsArray());
   EXPECT_EQ(component_list_value.Size(), 0);
+
+  rapidjson::Value& debugInfo = recorded_file[kDebugInfo];
+  ASSERT_TRUE(debugInfo.IsArray());
+  EXPECT_EQ(debugInfo.Size(), 0);
+
+  rapidjson::Value& shared_data = recorded_file[kSharedData];
+  ASSERT_TRUE(shared_data.IsObject());
+  EXPECT_EQ(shared_data.MemberCount(), 0);
 }
 
 TEST(TestBenchBaseRecorder, Clear) {

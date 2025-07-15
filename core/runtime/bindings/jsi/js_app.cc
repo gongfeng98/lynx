@@ -51,6 +51,7 @@
 #include "third_party/rapidjson/writer.h"
 
 #if ENABLE_TESTBENCH_RECORDER
+#include "core/services/recorder/native_module_recorder.h"
 #include "core/services/recorder/testbench_base_recorder.h"
 #endif
 
@@ -1699,6 +1700,33 @@ Value AppProxy::get(Runtime* rt, const PropNameID& name) {
           return piper::Value(false);
 #endif
         });
+  } else if (methodName == "recordSharedData") {
+    return Function::createFromHostFunction(
+        *rt, PropNameID::forAscii(*rt, "recordSharedData"), 2,
+        [this](Runtime& rt, const piper::Value& this_val,
+               const piper::Value* args,
+               size_t count) -> base::expected<Value, JSINativeException> {
+#if ENABLE_TESTBENCH_RECORDER
+          auto ptr = native_app_.lock();
+          if (!ptr || ptr->IsDestroying()) {
+            return piper::Value::undefined();
+          }
+          if (count < 2) {
+            return base::unexpected(BUILD_JSI_NATIVE_EXCEPTION(
+                "recordSharedData args count must be 2"));
+          }
+          if (!(args[0].isString())) {
+            return base::unexpected(BUILD_JSI_NATIVE_EXCEPTION(
+                "recordSharedData args type is error"));
+          }
+          tasm::recorder::NativeModuleRecorder::GetInstance().RecordSharedData(
+              args, &rt, ptr->record_id_);
+#else
+          (void)this;  // To suppress unused variable/capture warnings during
+                       // compilation.
+#endif
+          return piper::Value::undefined();
+        });
   }
 
   return piper::Value::undefined();
@@ -1757,6 +1785,7 @@ std::vector<PropNameID> AppProxy::getPropertyNames(Runtime& rt) {
       runtime::kProfileMark,
       runtime::kProfileFlowId,
       runtime::kIsProfileRecording,
+      "recordSharedData",
   };
 
   static constexpr size_t kPropsCount = sizeof(kProps) / sizeof(kProps[0]);
