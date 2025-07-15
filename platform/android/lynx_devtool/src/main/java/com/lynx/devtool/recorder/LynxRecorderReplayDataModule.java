@@ -8,11 +8,13 @@ import android.content.Context;
 import com.lynx.jsbridge.LynxMethod;
 import com.lynx.jsbridge.LynxModule;
 import com.lynx.react.bridge.Callback;
+import com.lynx.react.bridge.PiperData;
 import com.lynx.tasm.base.LLog;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,6 +25,7 @@ public class LynxRecorderReplayDataModule extends LynxModule {
   private JSONObject mCallbackData;
   private JSONArray mJsbIgnoredInfo;
   private JSONObject mJsbSettings;
+  private JSONObject mSharedData;
 
   public LynxRecorderReplayDataModule(Context context) {
     super(context);
@@ -35,6 +38,23 @@ public class LynxRecorderReplayDataModule extends LynxModule {
     mCallbackData = provider.getCallbackData();
     mJsbIgnoredInfo = provider.getJsbIgnoredInfo();
     mJsbSettings = provider.getJsbSettings();
+    mSharedData = provider.getSharedData();
+  }
+
+  @LynxMethod
+  public PiperData getSharedData(String key) {
+    HashMap<String, Object> map = new HashMap<>();
+    Object value = null;
+    try {
+      if (mSharedData != null) {
+        value = mSharedData.get(key);
+      }
+    } catch (JSONException e) {
+      LLog.e("LynxRecorder", "SharedData with key: " + key + " not found!");
+    }
+    map.put("value", value);
+    PiperData data = PiperData.fromObject(map);
+    return data;
   }
 
   @LynxMethod

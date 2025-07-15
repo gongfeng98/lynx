@@ -35,6 +35,7 @@ class LynxJSIModuleBindingTestBench : public piper::HostObject {
   // these modules will be called by moduleBindingPtrLynx_
   std::set<std::string> lynxModuleSet{
       // clang-format off
+      "LynxRecorderReplayDataModule",
       "LynxUIMethodModule",
       "NavigationModule",
       "IntersectionObserverModule",

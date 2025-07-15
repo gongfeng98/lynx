@@ -111,6 +111,8 @@ public class LynxRecorderActionManager {
     // "jsbSettings" field from record json file
     public JSONObject jsbSettings;
 
+    public JSONObject sharedData;
+
     public JSONArray getFunctionCall() {
       return functionCall;
     }
@@ -122,6 +124,10 @@ public class LynxRecorderActionManager {
     }
     public JSONObject getJsbSettings() {
       return jsbSettings;
+    }
+
+    public JSONObject getSharedData() {
+      return sharedData;
     }
   }
 
@@ -331,6 +337,9 @@ public class LynxRecorderActionManager {
             mLynxDebugInfoRecorderDelegate.setDebugInfo(url, content);
           }
         }
+        if (json.has("SharedData")) {
+          mDataProvider.sharedData = json.getJSONObject("SharedData");
+        }
         if (json.has("Invoked Method Data")) {
           mDataProvider.functionCall = json.getJSONArray("Invoked Method Data");
         }
@@ -351,6 +360,7 @@ public class LynxRecorderActionManager {
           }
         }
       } catch (JSONException e) {
+        mStateView.setReplayState(LynxRecorderReplayStateView.INVALID_JSON_FILE);
         e.printStackTrace();
       }
     }

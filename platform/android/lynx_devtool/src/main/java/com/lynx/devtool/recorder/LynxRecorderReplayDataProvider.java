@@ -12,4 +12,5 @@ public interface LynxRecorderReplayDataProvider {
   JSONObject getCallbackData();
   JSONArray getJsbIgnoredInfo();
   JSONObject getJsbSettings();
+  JSONObject getSharedData();
 }
