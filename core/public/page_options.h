@@ -90,6 +90,10 @@ struct PageOptions {
     return embedded_mode_ & EmbeddedMode::EMBEDDED_MODE_BASE;
   }
 
+  bool IsLayoutInElementModeOn() const {
+    return embedded_mode_ & EmbeddedMode::LAYOUT_IN_ELEMENT;
+  }
+
  private:
   int32_t instance_id_{kUnknownInstanceID};
   bool long_task_disabled_{false};

@@ -147,7 +147,8 @@ ElementManager::ElementManager(
     std::unique_ptr<PaintingCtxPlatformImpl> platform_painting_context,
     Delegate *delegate, const LynxEnvConfig &lynx_env_config,
     int32_t instance_id,
-    const std::shared_ptr<base::VSyncMonitor> &vsync_monitor)
+    const std::shared_ptr<base::VSyncMonitor> &vsync_monitor,
+    std::unique_ptr<lynx::tasm::LayoutCtxPlatformImpl> platform_layout_context)
     : ElementContextDelegate(nullptr, nullptr),
       node_manager_(new NodeManager),
       air_node_manager_(new AirNodeManager),
@@ -162,6 +163,7 @@ ElementManager::ElementManager(
       lynx_env_config_(lynx_env_config),
       delegate_(delegate),
       vsync_monitor_(vsync_monitor),
+      platform_layout_context_(std::move(platform_layout_context)),
       platform_computed_css_(std::make_unique<starlight::ComputedCSSStyle>(
           lynx_env_config.LayoutsUnitPerPx(),
           lynx_env_config.PhysicalPixelsPerLayoutUnit())) {

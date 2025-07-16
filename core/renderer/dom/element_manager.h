@@ -299,7 +299,9 @@ class ElementManager : public ElementContextDelegate {
       std::unique_ptr<PaintingCtxPlatformImpl> platform_painting_context,
       Delegate *delegate, const LynxEnvConfig &lynx_env_config,
       int32_t instance_id = tasm::report::kUnknownInstanceId,
-      const std::shared_ptr<base::VSyncMonitor> &vsync_monitor = nullptr);
+      const std::shared_ptr<base::VSyncMonitor> &vsync_monitor = nullptr,
+      std::unique_ptr<lynx::tasm::LayoutCtxPlatformImpl>
+          platform_layout_context = nullptr);
 
   // avoid pImpl idiom type of compilation error when self inlclude
   // std::unique_ptr object
@@ -1153,6 +1155,10 @@ class ElementManager : public ElementContextDelegate {
     return enable_layout_in_element_mode_;
   }
 
+  LayoutCtxPlatformImpl *layout_context() {
+    return platform_layout_context_.get();
+  }
+
  protected:
   /**
    * call this function after exec OnPatchFinishForFiber
@@ -1267,7 +1273,8 @@ class ElementManager : public ElementContextDelegate {
 
   Delegate *delegate_;
   ElementManagerDelegate *element_manager_delegate_{nullptr};
-  std::shared_ptr<base::VSyncMonitor> vsync_monitor_;
+  std::shared_ptr<base::VSyncMonitor> vsync_monitor_{nullptr};
+  std::unique_ptr<LayoutCtxPlatformImpl> platform_layout_context_{nullptr};
 
   CSSFragment *preresolving_style_sheet_{nullptr};
   std::unique_ptr<starlight::ComputedCSSStyle> platform_computed_css_;

@@ -265,7 +265,10 @@ LynxShell* LynxShellBuilder::build() {
     }
     shell->layout_actor_ = std::make_shared<LynxActor<tasm::LayoutContext>>(
         std::make_unique<lynx::tasm::LayoutContext>(
-            std::move(layout_mediator), std::move(this->layout_context_),
+            std::move(layout_mediator),
+            (!shell_option_.page_options_.IsLayoutInElementModeOn()
+                 ? std::move(this->layout_context_)
+                 : nullptr),
             this->lynx_env_config_, shell_option_.page_options_),
         shell->runners_.GetLayoutTaskRunner(), shell->instance_id_);
 
@@ -281,7 +284,10 @@ LynxShell* LynxShellBuilder::build() {
     shell->engine_actor_ = std::make_shared<LynxActor<LynxEngine>>(
         CreateLynxEngine(std::move(tasm_mediator), shell->runners_,
                          shell->card_cached_data_mgr_, shell->instance_id_,
-                         shell),
+                         shell,
+                         (shell_option_.page_options_.IsLayoutInElementModeOn()
+                              ? std::move(this->layout_context_)
+                              : nullptr)),
         shell->runners_.GetTASMTaskRunner(), shell->instance_id_);
   }
 
@@ -366,7 +372,9 @@ std::unique_ptr<lynx::shell::LynxEngine> LynxShellBuilder::CreateLynxEngine(
     std::unique_ptr<TasmMediator> tasm_mediator,
     base::TaskRunnerManufactor& runners,
     const std::shared_ptr<LynxCardCacheDataManager>& card_cached_data_mgr,
-    int32_t instance_id, LynxShell* shell) {
+    int32_t instance_id, LynxShell* shell,
+    std::unique_ptr<lynx::tasm::LayoutCtxPlatformImpl>
+        platform_layout_context) {
   // lynx_engine_creator_ is nullptr by default, it is used only for
   // lynx_shell_unitests.
   if (this->lynx_engine_creator_ != nullptr) {
@@ -378,7 +386,8 @@ std::unique_ptr<lynx::shell::LynxEngine> LynxShellBuilder::CreateLynxEngine(
   }
   auto element_manager = std::make_unique<lynx::tasm::ElementManager>(
       std::move(painting_context_), tasm_mediator.get(), this->lynx_env_config_,
-      instance_id, this->element_manager_vsync_monitor_);
+      instance_id, this->element_manager_vsync_monitor_,
+      std::move(platform_layout_context));
   // Currently, tasm_mediator serves as the implementation of both
   // TemplateAssembler::Delegate and TemplateAssembler::LayoutScheduler,
   // so here passes *tasm_mediator twice.

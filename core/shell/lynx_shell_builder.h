@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include "core/public/layout_ctx_platform_impl.h"
 #include "core/renderer/ui_wrapper/common/prop_bundle_creator_default.h"
 #include "core/services/performance/performance_controller.h"
 #include "core/shell/lynx_shell.h"
@@ -104,7 +105,9 @@ class LynxShellBuilder {
       std::unique_ptr<TasmMediator> tasm_mediator,
       base::TaskRunnerManufactor& runners,
       const std::shared_ptr<LynxCardCacheDataManager>& card_cached_data_mgr,
-      int32_t instance_id, LynxShell* shell);
+      int32_t instance_id, LynxShell* shell,
+      std::unique_ptr<lynx::tasm::LayoutCtxPlatformImpl>
+          platform_layout_context);
   void AttachLynxEngine(LynxShell* shell);
   //  void DetachLynxEngine()
 
