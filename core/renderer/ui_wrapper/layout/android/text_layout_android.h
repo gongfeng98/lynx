@@ -34,7 +34,7 @@ class TextLayoutAndroid : public TextLayoutImpl {
 
  private:
   void BuildTextPropsBuffer(TextElement* element, std::string& output,
-                            size_t current_length, bool use_utf16,
+                            size_t& current_length, bool use_utf16,
                             PropArrayAndroid* props);
   static void AppendTextProps(TextElement* element, size_t pos_start,
                               size_t pos_end, PropArrayAndroid* props);

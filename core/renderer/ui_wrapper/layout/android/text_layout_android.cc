@@ -88,7 +88,7 @@ void TextLayoutAndroid::DispatchLayoutBefore(Element* element) {
 
 void TextLayoutAndroid::BuildTextPropsBuffer(TextElement* element,
                                              std::string& output,
-                                             size_t current_length,
+                                             size_t& current_length,
                                              bool use_utf16,
                                              PropArrayAndroid* props) {
   size_t start = current_length;
