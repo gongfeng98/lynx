@@ -35,7 +35,7 @@ void V8IsolateInstanceImpl::InitIsolate(const char* arg, bool useSnapshot) {
   std::call_once(flag, []() {
     v8::V8::InitializeICU();
 #if defined(OS_WIN)
-    auto [_, path] = lynx::base::GetExecutableDirectoryPath();
+    auto [_, path] = lynx::base::GetModuleDirectoryPath();
     std::string path_ansi = lynx::base::Utf8ToANSIOrOEM(path);
     v8::V8::InitializeExternalStartupData((path_ansi + "\\").c_str());
 #elif defined(OS_OSX)

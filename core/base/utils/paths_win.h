@@ -10,6 +10,7 @@
 namespace lynx {
 namespace base {
 std::pair<bool, std::string> GetExecutableDirectoryPath();
+std::pair<bool, std::string> GetModuleDirectoryPath();
 bool DirectoryExists(const std::string& path);
 std::string JoinPaths(std::initializer_list<std::string> components);
 bool CreateDir(const std::string& path);

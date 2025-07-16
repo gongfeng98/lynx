@@ -11,6 +11,12 @@
 
 #include "base/include/string/string_conversion_win.h"
 
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+
+// Returns the HMODULE of the dll the macro was expanded in.
+// Only use in cc files, not in h files.
+#define CURRENT_MODULE() reinterpret_cast<HMODULE>(&__ImageBase)
+
 namespace lynx {
 namespace base {
 
@@ -80,6 +86,15 @@ std::pair<bool, std::string> GetExecutableDirectoryPath() {
     return {false, ""};
   }
   return {true, GetDirectoryName(Utf8FromUtf16(std::wstring{path, read_size}))};
+}
+
+std::pair<bool, std::string> GetModuleDirectoryPath() {
+  wchar_t system_buffer[MAX_PATH];
+  system_buffer[0] = 0;
+  if (GetModuleFileName(CURRENT_MODULE(), system_buffer, MAX_PATH) == 0) {
+    return {false, ""};
+  }
+  return {true, GetDirectoryName(Utf8FromUtf16(std::wstring(system_buffer)))};
 }
 
 bool DirectoryExists(const std::string& path) {

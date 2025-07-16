@@ -134,7 +134,7 @@ std::string JsCacheManager::GetCacheDir() {
     return cache_path_;
   }
 #if defined(OS_WIN)
-  auto [result, cache_dir] = lynx::base::GetExecutableDirectoryPath();
+  auto [result, cache_dir] = lynx::base::GetModuleDirectoryPath();
   if (!result) {
     can_create_cache_ = false;
     cache_path_ = "";
