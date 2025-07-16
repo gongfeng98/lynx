@@ -121,24 +121,6 @@ void TimingHandler::SetTimingWithTimingFlag(
   timing_info_.SetTimingWithTimingFlag(timing_flag, polyfillKey, timestamp);
 }
 
-void TimingHandler::SetNeedMarkPaintEndTiming(const PipelineID& pipeline_id) {
-  if (pipeline_id.empty()) {
-    return;
-  }
-  pending_paint_end_pipeline_ids_queue_.push_back(pipeline_id);
-}
-
-void TimingHandler::SetPaintEndTimingIfNeeded(TimestampUs timestamp) {
-  if (pending_paint_end_pipeline_ids_queue_.empty()) {
-    return;
-  }
-  TimestampKey timing_key(tasm::timing::kPaintEnd);
-  for (const auto& pipeline_id : pending_paint_end_pipeline_ids_queue_) {
-    SetTiming(timing_key, timestamp, pipeline_id);
-  }
-  pending_paint_end_pipeline_ids_queue_.clear();
-}
-
 // Internal methods for checking which timing type.
 bool TimingHandler::IsInitTiming(const TimestampKey& timing_key) const {
   // These are the only init timing keys we are looking for
