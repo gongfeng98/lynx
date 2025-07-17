@@ -1,0 +1,24 @@
+name: test_ios_publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ios-sdk-publish:
+    uses: ./.github/workflows/ios-sdk-publish.yml
+    with:
+      version: 0.0.1-alpha.10
+      tag: 0.0.1-alpha.10
+    permissions:
+      contents: write
+    secrets: inherit
+
+  ios-dev-sdk-publish:
+    uses: ./.github/workflows/ios-sdk-publish.yml
+    with:
+      version: 0.0.1-alpha.101-dev
+      tag: 0.0.1-alpha.101
+      component: Lynx
+    permissions:
+      contents: write
+    secrets: inherit

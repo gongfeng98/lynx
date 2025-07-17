@@ -41,27 +41,32 @@ def copy_podspec(src_dir, dest_dir):
             print(f'Copied: {src_file} to {dest_file}')
 
 
-def generate_zip_file(src_dir, tag, component):
+def generate_zip_file(src_dir, tag, component,dev):
     for filename in os.listdir(src_dir):
         if filename.endswith('.podspec'):
             podspec_name = filename.split('.')[0]
             if component == podspec_name or component == 'all':
                 print(f'Generating zip file for {podspec_name}')
-                run_command(f'export PACKAGE_ENV=prod && geniospkg --output_type zip --repo {podspec_name} --tag {tag} --cache_path lynx --no_json')
+                if dev:
+                    # Assuming the tag has a -dev suffix, remove this suffix to obtain the artifact tag, which will be used as part of the artifact URL.
+                    real_tag = re.sub(r'-dev$', '', tag)
+                    run_command(f'export PACKAGE_ENV=prod && export LYNX_ENABLE_RECORDER=1 && geniospkg --repo {podspec_name} --tag {real_tag} --cache_path lynx --zip_name {podspec_name}-dev.zip')
+                else:
+                    run_command(f'export PACKAGE_ENV=prod && geniospkg --repo {podspec_name} --tag {tag} --cache_path lynx')
 
-def get_enable_trace_param(tag: str) -> str:
+def get_dev_param(dev: bool) -> str:
     """
-    Returns '--enable-trace' if the tag ends with '-dev', otherwise returns an empty string.
+    Returns '--enable-trace' if the args.dev is true, otherwise returns an empty string.
     Args:
         tag (str): The tag string to check.
     Returns:
         str: '--enable-trace' if tag ends with '-dev', else ''.
     """
-    if tag.endswith('-dev'):
+    if dev:
         return '--enable-trace'
     return ''
 
-def prepare_cocoapods_publish_source(tag, component):
+def prepare_cocoapods_publish_source(tag, component,dev):
     root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     # change to root path
@@ -72,13 +77,13 @@ def prepare_cocoapods_publish_source(tag, component):
     replace_lynx_version(tag)
 
     print('2. Generate podspec files')
-    run_command(f'python3 tools/ios_tools/generate_podspec_scripts_by_gn.py --root {root_path} {get_enable_trace_param(tag)}')
+    run_command(f'python3 tools/ios_tools/generate_podspec_scripts_by_gn.py --root {root_path} {get_dev_param(dev)}')
 
     print('3. Generate lynx_core.js')
     run_command(f'python3 tools/js_tools/build.py --platform ios --release_output platform/darwin/ios/JSAssets/release/lynx_core.js --dev_output platform/darwin/ios/lynx_devtool/assets/lynx_core_dev.js --version {tag}')
 
     print('4. Generate zip files')
-    generate_zip_file(root_path, tag, component)
+    generate_zip_file(root_path, tag, component, dev)
 
 def use_local_pod_source(component):
     pattern_source = "(\S+.source\s*=\s*{)\s*\S+\s*=>[\s\S]*?(})"
@@ -133,10 +138,8 @@ def pod_lint_component(component, local_pod_source_name):
 
 def publish_component(component, sources, tag):
     if sources != None:
-        run_command(f'export PACKAGE_ENV=prod && geniospkg --repo {component} --tag {tag} --public_repo --cache_path lynx')
         run_command(f'COCOAPODS_TRUNK_TOKEN=$COCOAPODS_TRUNK_TOKEN bundle exec pod trunk push {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests --sources={sources}')
     else:
-        run_command(f'export PACKAGE_ENV=prod && geniospkg --repo {component} --tag {tag} --public_repo --cache_path lynx')
         run_command(f'COCOAPODS_TRUNK_TOKEN=$COCOAPODS_TRUNK_TOKEN bundle exec pod trunk push {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests')
 
 
@@ -174,10 +177,11 @@ def main():
     )
     parser.add_argument('--sources', type=str, help='the cocoapods sources', required=False)
     parser.add_argument('--pod_lint', action="store_true", help='Run pod lint')
+    parser.add_argument('--dev', action="store_true", help='Run pod lint')
 
     args = parser.parse_args()
     if args.prepare_source:
-        prepare_cocoapods_publish_source(args.tag, args.component)
+        prepare_cocoapods_publish_source(args.tag, args.component, args.dev)
     elif args.publish:
         publish_to_cocoapods(args.component, args.sources, args.tag)
     elif args.pod_lint:
