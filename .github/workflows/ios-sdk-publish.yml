@@ -1,0 +1,64 @@
+name: publish-release
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: false
+        type: string
+      tag:
+        required: false
+        type: string
+      component:
+        required: false
+        type: string
+        default: 'all'
+jobs:
+  ios-sdk-publish:
+    timeout-minutes: 60
+    runs-on: macos-13
+    steps:
+      - name: Download Source
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 2
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: lynx
+      - name: Install Common Dependencies
+        uses: ./lynx/.github/actions/common-deps
+        with:
+          cache-backend: github
+      - name: Setup Ruby Cache
+        uses: ./lynx/.github/actions/ios-common-deps
+      - name: Prepare cocoapods publish source
+        env:
+          DEV_FLAG: ${{ endsWith(inputs.version, '-dev') && '--dev' || '' }}
+        run: |-
+          cd $GITHUB_WORKSPACE/lynx
+          source tools/envsetup.sh
+          python3 tools/ios_tools/cocoapods_publish_helper.py --prepare-source --tag ${{ inputs.version }} --component ${{ inputs.component }} ${{ env.DEV_FLAG }}
+      - name: Push iOS SDK to release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ inputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: '${{ github.workspace }}/lynx/*.zip'
+          replacesArtifacts: true
+          allowUpdates: true
+      - name: Push iOS podspec to release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ inputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: '${{ github.workspace }}/lynx/*.podspec.json'
+          replacesArtifacts: true
+          allowUpdates: true
+      - name: Publish to CocoaPods Repo
+        env:
+          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+        run: |-
+          cd $GITHUB_WORKSPACE/lynx
+          source tools/envsetup.sh
+          git config --global user.name "lynx.authors"
+          git config --global user.email "lynx.authors@users.noreply.github.com"
+          python3 tools/ios_tools/skip_pod_lint.py --source public
+          python3 tools/ios_tools/cocoapods_publish_helper.py --publish --component ${{ inputs.component }}  --tag ${{ inputs.version }}
