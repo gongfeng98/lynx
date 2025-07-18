@@ -66,6 +66,7 @@ class Metadata:
       self.output_name = self.get_first_var(metadata.get("output_name", []), "")
       self.test_subspec = self.get_first_var(metadata.get("test_subspec", []), False)
       self.header_mappings_dir = self.get_first_var(metadata.get("header_mappings_dir", []), "")
+      self.requires_arc = metadata.get("requires_arc", [])
       self.vendored_frameworks = metadata.get("vendored_frameworks", [])
       self.vendored_libraries = metadata.get("vendored_libraries", [])
       self.compiler_flags = metadata.get("compiler_flags", [])
@@ -143,6 +144,7 @@ class SubspecTarget:
     self.exclude_files = self.format_root_path(self.properties.get("exclude_sources", []) + metadata.pattern_exclude_files)
     self.output_name = metadata.output_name
     self.test_subspec = metadata.test_subspec
+    self.requires_arc = metadata.requires_arc
     self.vendored_frameworks = self.format_root_path(metadata.vendored_frameworks)
     self.vendored_libraries = self.format_root_path(metadata.vendored_libraries)
     self.public_header_files = self.format_root_path(metadata.public_header_files)
@@ -499,6 +501,14 @@ class Writer:
     full_str = self.format_head_str(key, header, space) + ' = %s \n' %(list_value)
     self.out.write(full_str)
 
+  def write_requires_arc(self, header, target, level, is_new_line=False):
+    if len(target.requires_arc) <= 0:
+      return
+    if len(target.requires_arc) == 1 and target.requires_arc[0] in ['true', 'false']:
+      self.write_root_spec_normal(header, 'requires_arc', '=', target.requires_arc[0], level)
+      return
+    self.write_specification_list(header, target, level, "requires_arc", is_new_line)
+
   def write_specification_list(self, header, target, level, specification_name, is_new_line=False):
     var = getattr(target, specification_name)
     if len(var) <= 0:
@@ -591,6 +601,7 @@ class Writer:
     subspec_name = subspec_target.output_name
     
     self.write_subspec_title(parent_header, cur_header, subspec_name, level, test_subspec)
+    self.write_requires_arc(cur_header, subspec_target, next_level, True)
     self.write_specification_list(cur_header, subspec_target, next_level, 'compiler_flags')
     self.write_specification_list(cur_header, subspec_target, next_level, 'frameworks')
     self.write_specification_str(cur_header, subspec_target, next_level, 'header_mappings_dir')

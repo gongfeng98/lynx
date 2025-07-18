@@ -151,6 +151,7 @@ template("podspec_target") {
 # Variables
 #   [Cocospods camp's parameters]: You can find the relevant definitions in
 #                                  https://guides.cocoapods.org/syntax/podspec.html.
+#     requires_arc: specify which source_files use ARC. This can either be the files which support ARC, or true to indicate all of the source_files use ARC.
 #     vendored_frameworks: The paths of the framework bundles that come shipped with the Pod.
 #     vendored_libraries: The paths of the libraries that come shipped with the Pod.
 #     compiler_flags: A list of flags which should be passed to the compiler.
@@ -210,6 +211,7 @@ template("podspec_target") {
 #   subspec_target("foo_subspec") {
 #     sources = ["subspec_core.cc", "subspec_core.h", ...]
 #     deps = ["//path/to/file:foo_subspec_deps_target", ...]
+#     requires_arc = true
 #     vendored_frameworks = ["//path/to/file/xxx.framework", ...]
 #     vendored_libraries = ["//path/to/file/libxxx.a", ...]
 #     compiler_flags = ["-Wall", "-Wextra", ...]
@@ -248,6 +250,15 @@ template("subspec_target") {
   test_subspec_ = false
   if (defined(invoker.test_subspec)) {
     test_subspec_ = invoker.test_subspec
+  }
+
+  requires_arc_ = []
+  if (defined(invoker.requires_arc)) {
+    if (invoker.requires_arc == true || invoker.requires_arc == false) {
+      requires_arc_ = [ "${invoker.requires_arc}" ]
+    } else {
+      requires_arc_ = invoker.requires_arc
+    }
   }
 
   vendored_frameworks_ = []
@@ -407,6 +418,7 @@ template("subspec_target") {
       is_subspec_target = [ true ]
       test_subspec = [ test_subspec_ ]
       header_mappings_dir = [ header_mappings_dir_ ]
+      requires_arc = requires_arc_
       vendored_frameworks = vendored_frameworks_
       vendored_libraries = vendored_libraries_
       compiler_flags = compiler_flags_
