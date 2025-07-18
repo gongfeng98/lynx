@@ -61,7 +61,6 @@ podspec_target("lynx_podspec") {
   deps = [
     ":Framework",
     ":ReleaseResource",
-    ":Replay",
     ":UnitTestResource",
     ":UnitTests",
   ]
@@ -603,10 +602,16 @@ subspec_target("Native") {
     HEADER_SEARCH_PATHS = Native_includes
   }
   if (enable_recorder) {
-    condition_deps = [ [
-          ":Recorder",
-          "enable_recorder",
-        ] ]
+    condition_deps = [
+      [
+        ":Recorder",
+        "enable_recorder",
+      ],
+      [
+        ":Replay",
+        "enable_recorder",
+      ],
+    ]
   }
   if (use_flatten_deps) {
     flatten_deps = native_podspec_deps
@@ -801,16 +806,12 @@ subspec_target("ReleaseResource") {
 
 #TODO(zhixuan): migrate worklet
 subspec_target("Replay") {
+  header_mappings_dir = "."
+  libraries = [ "stdc++" ]
   pod_target_xcconfig = {
     GCC_PREPROCESSOR_DEFINITIONS = [ "ENABLE_TESTBENCH_REPLAY=1" ]
   }
   deps = [ "../../../../core/services/replay" ]
-  if (!use_flatten_deps) {
-    dependency = [ "Lynx/Native" ]
-    header_mappings_dir = "."
-  } else {
-    dependency = [ "Lynx/Framework" ]
-  }
 }
 
 subspec_target("Trace") {

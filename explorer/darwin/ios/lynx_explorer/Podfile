@@ -21,7 +21,6 @@ target 'LynxExplorer' do
   use_frameworks! :linkage => :static
   pod 'Lynx', :path => '../../../..', :subspecs => [
    'Framework',
-   'Replay',
   ],:testspecs => [ 'UnitTests' ]
 
   pod 'LynxDevtool', :path => '../../../..', :subspecs => [

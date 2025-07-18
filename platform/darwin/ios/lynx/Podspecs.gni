@@ -13,7 +13,6 @@ lynx_podspec = get_path_info([
                                ":NapiBinding",
                                ":Native",
                                ":ReleaseResource",
-                               ":Replay",
                                ":Trace",
                                ":UnitTests",
                                ":Worklet",

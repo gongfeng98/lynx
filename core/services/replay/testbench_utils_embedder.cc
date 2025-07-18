@@ -21,7 +21,7 @@ namespace replay {
 
 int DecompressString(const unsigned char* compressed_data,
                      unsigned char** uncompressed_data,
-                     size_t* uncompress_data_size, int compressed_size) {
+                     size_t* uncompress_data_size, size_t compressed_size) {
   z_stream strm;
   unsigned char out[CHUNK];
   int ret;
@@ -37,7 +37,7 @@ int DecompressString(const unsigned char* compressed_data,
   if (ret != Z_OK) {
     return ret;
   }
-  strm.avail_in = compressed_size;
+  strm.avail_in = static_cast<unsigned int>(compressed_size);
   strm.next_in = const_cast<unsigned char*>(compressed_data);
   do {
     strm.avail_out = CHUNK;
