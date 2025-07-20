@@ -75,19 +75,32 @@ void UIList::UpdateProps(PropBundleHarmony* props) {
   BaseScrollContainer::UpdateProps(props);
   if (enable_list_sticky_ && update_sticky_for_diff_) {
     // Generate sticky top/bottom item key set.
-    GenerateStickyItemKeySet(sticky_top_item_key_set_, sticky_top_indexes_);
+    GenerateStickyItemKeySet(sticky_top_item_key_set_, sticky_top_item_map_,
+                             sticky_top_indexes_);
     GenerateStickyItemKeySet(sticky_bottom_item_key_set_,
-                             sticky_bottom_indexes_);
+                             sticky_bottom_item_map_, sticky_bottom_indexes_);
   }
 }
 
 void UIList::GenerateStickyItemKeySet(
     std::unordered_set<std::string>& sticky_item_key_set,
+    std::unordered_map<std::string, UIComponent*>& sticky_item_map,
     const std::vector<int>& sticky_indexes) {
   sticky_item_key_set.clear();
   for (auto index : sticky_indexes) {
     if (index >= 0 && index < static_cast<int>(item_keys_.size())) {
       sticky_item_key_set.insert(item_keys_[index]);
+    }
+  }
+  // Remove item from sticky dict if not sticky.
+  for (auto it = sticky_item_map.begin(); it != sticky_item_map.end();) {
+    if (it->second &&
+        sticky_item_key_set.find(it->first) == sticky_item_key_set.end()) {
+      ResetStickyItem(it->second);
+      it->second->SetNodeReadyListener(nullptr);
+      it = sticky_item_map.erase(it);
+    } else {
+      ++it;
     }
   }
 }
@@ -332,42 +345,55 @@ void UIList::OnComponentNodeReady(UIComponent* ui_component) {
     if (sticky_top_item_key_set_.find(item_key) !=
         sticky_top_item_key_set_.end()) {
       // Update sticky top list item map.
-      UpdateStickyItemMap(ui_component, sticky_top_item_map_);
+      UpdateStickyItemMap(ui_component, sticky_top_item_map_, true);
     } else if (sticky_bottom_item_key_set_.find(item_key) !=
                sticky_bottom_item_key_set_.end()) {
       // Update sticky bottom list item map.
-      UpdateStickyItemMap(ui_component, sticky_bottom_item_map_);
+      UpdateStickyItemMap(ui_component, sticky_bottom_item_map_, true);
     } else {
       // Not sticky top or bottom list item, remove it from map.
-      sticky_top_item_map_.erase(item_key);
-      sticky_bottom_item_map_.erase(item_key);
+      UpdateStickyItemMap(ui_component, sticky_top_item_map_, false);
+      UpdateStickyItemMap(ui_component, sticky_bottom_item_map_, false);
     }
   }
 }
 
 void UIList::UpdateStickyItemMap(
     UIComponent* ui_component,
-    std::unordered_map<std::string, UIComponent*>& sticky_item_map) {
-  if (ui_component) {
-    const auto& new_updated_item_key = ui_component->item_key();
-    auto it = sticky_item_map.end();
-    if ((it = sticky_item_map.find(new_updated_item_key)) !=
-            sticky_item_map.end() &&
-        it->second == ui_component) {
-      // No need to update sticky item map.
-      return;
-    }
-    for (it = sticky_item_map.begin(); it != sticky_item_map.end();) {
-      const auto& item_key = it->first;
-      UIComponent* component = it->second;
-      if (component == ui_component && item_key != new_updated_item_key) {
-        // Delete old and insert new <item-key, list-item> pair to finish
-        // updating item-key .
-        sticky_item_map.erase(it++);
-        sticky_item_map.emplace(new_updated_item_key, ui_component);
-        break;
-      } else {
-        ++it;
+    std::unordered_map<std::string, UIComponent*>& sticky_item_map,
+    bool is_sticky_item) {
+  if (ui_component && !ui_component->item_key().empty()) {
+    if (is_sticky_item) {
+      const auto& new_updated_item_key = ui_component->item_key();
+      auto it = sticky_item_map.end();
+      if ((it = sticky_item_map.find(new_updated_item_key)) !=
+              sticky_item_map.end() &&
+          it->second == ui_component) {
+        // No need to update sticky item map.
+        return;
+      }
+      for (it = sticky_item_map.begin(); it != sticky_item_map.end(); ++it) {
+        const auto& item_key = it->first;
+        UIComponent* component = it->second;
+        if (component == ui_component && item_key != new_updated_item_key) {
+          // Delete old and insert new <item-key, list-item> pair to finish
+          // updating item-key.
+          sticky_item_map.erase(it);
+          sticky_item_map.emplace(new_updated_item_key, ui_component);
+          break;
+        }
+      }
+    } else {
+      // The component is not sticky top or bottom list item, remove it from
+      // map.
+      for (auto it = sticky_item_map.begin(); it != sticky_item_map.end();
+           ++it) {
+        if (it->second == ui_component) {
+          // Delete old <item-key, list-item> pair.
+          sticky_item_map.erase(it);
+          ResetStickyItem(ui_component);
+          break;
+        }
       }
     }
   }

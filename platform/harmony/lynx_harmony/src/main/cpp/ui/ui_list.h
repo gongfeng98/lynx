@@ -97,10 +97,12 @@ class UIList : public BaseScrollContainer,
   void ScrollToAsync(float delta_x, float delta_y);
   void GenerateStickyItemKeySet(
       std::unordered_set<std::string>& sticky_item_key_set,
+      std::unordered_map<std::string, UIComponent*>& sticky_item_map,
       const std::vector<int>& sticky_indexes);
   void UpdateStickyItemMap(
       UIComponent* ui_component,
-      std::unordered_map<std::string, UIComponent*>& sticky_item_map);
+      std::unordered_map<std::string, UIComponent*>& sticky_item_map,
+      bool is_sticky_item);
   void InvokeAutoScroll(
       float rate, bool start, bool auto_stop,
       base::MoveOnlyClosure<void, int32_t, const lepus::Value&> callback);

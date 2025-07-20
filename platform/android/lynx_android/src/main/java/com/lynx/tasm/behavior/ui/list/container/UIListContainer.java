@@ -184,34 +184,49 @@ public class UIListContainer extends UISimpleView<ListContainerView>
       String itemKey = component.getItemKey();
       if (mStickyTopItemKeySet.contains(itemKey)) {
         // Update sticky top list item map.
-        updateStickyItemMap(component, mStickyTopItemMap);
+        updateStickyItemMap(component, mStickyTopItemMap, true);
       } else if (mStickyBottomItemKeySet.contains(itemKey)) {
         // Update sticky bottom list item map.
-        updateStickyItemMap(component, mStickyBottomItemMap);
+        updateStickyItemMap(component, mStickyBottomItemMap, true);
       } else {
         // Not sticky top or bottom list item, remove it from map.
-        mStickyTopItemMap.remove(itemKey);
-        mStickyBottomItemMap.remove(itemKey);
+        updateStickyItemMap(component, mStickyTopItemMap, false);
+        updateStickyItemMap(component, mStickyBottomItemMap, false);
       }
     }
   }
 
   private void updateStickyItemMap(
-      UIComponent component, HashMap<String, UIComponent> stickyItemMap) {
+      UIComponent component, HashMap<String, UIComponent> stickyItemMap, boolean isStickyItem) {
     if (component != null && component.getItemKey() != null) {
-      String newUpdatedItemKey = component.getItemKey();
-      if (stickyItemMap.get(newUpdatedItemKey) == component) {
-        // No need to update sticky item map.
-        return;
-      }
-      Iterator<Map.Entry<String, UIComponent>> iterator = stickyItemMap.entrySet().iterator();
-      while (iterator.hasNext()) {
-        Map.Entry<String, UIComponent> entry = iterator.next();
-        if (entry.getValue() == component && !TextUtils.equals(entry.getKey(), newUpdatedItemKey)) {
-          // Delete old and insert new <item-key, list-item> pair to finish updating item-key .
-          iterator.remove();
-          stickyItemMap.put(newUpdatedItemKey, component);
-          break;
+      if (isStickyItem) {
+        String newUpdatedItemKey = component.getItemKey();
+        if (stickyItemMap.get(newUpdatedItemKey) == component) {
+          // No need to update sticky item map.
+          return;
+        }
+        Iterator<Map.Entry<String, UIComponent>> iterator = stickyItemMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+          Map.Entry<String, UIComponent> entry = iterator.next();
+          if (entry.getValue() == component
+              && !TextUtils.equals(entry.getKey(), newUpdatedItemKey)) {
+            // Delete old and insert new <item-key, list-item> pair to finish updating item-key.
+            iterator.remove();
+            stickyItemMap.put(newUpdatedItemKey, component);
+            break;
+          }
+        }
+      } else {
+        // The component is not sticky top or bottom list item, remove it from map.
+        Iterator<Map.Entry<String, UIComponent>> iterator = stickyItemMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+          Map.Entry<String, UIComponent> entry = iterator.next();
+          if (entry.getValue() == component) {
+            // Delete old <item-key, list-item> pair.
+            iterator.remove();
+            resetStickyItem(component);
+            break;
+          }
         }
       }
     }
@@ -1235,14 +1250,26 @@ public class UIListContainer extends UISimpleView<ListContainerView>
     }
   }
 
-  private void generateStickyItemKeySet(
-      HashSet<String> stickyItemKeySet, JavaOnlyArray stickyItemIndexes) {
+  private void generateStickyItemKeySet(HashSet<String> stickyItemKeySet,
+      JavaOnlyArray stickyItemIndexes, HashMap<String, UIComponent> stickyItemMap) {
     stickyItemKeySet.clear();
     final int stickyItemCount = stickyItemIndexes.size();
     for (int i = 0; i < stickyItemCount; ++i) {
       int index = stickyItemIndexes.getInt(i);
       if (index >= 0 && index < mItemKeys.size()) {
         stickyItemKeySet.add(mItemKeys.getString(index));
+      }
+    }
+    // Remove item from sticky dict if not sticky.
+    Iterator<Map.Entry<String, UIComponent>> iterator = stickyItemMap.entrySet().iterator();
+    while (iterator.hasNext()) {
+      Map.Entry<String, UIComponent> entry = iterator.next();
+      String itemKey = entry.getKey();
+      UIComponent component = entry.getValue();
+      if (component != null && itemKey != null && !stickyItemKeySet.contains(itemKey)) {
+        resetStickyItem(component);
+        component.setNodeReadyListener(null);
+        iterator.remove();
       }
     }
   }
@@ -1262,8 +1289,8 @@ public class UIListContainer extends UISimpleView<ListContainerView>
     super.onPropsUpdated();
     if (mEnableListSticky && mUpdateStickyForDiff) {
       // Generate sticky top/bottom item key set.
-      generateStickyItemKeySet(mStickyTopItemKeySet, mStickyTopIndexes);
-      generateStickyItemKeySet(mStickyBottomItemKeySet, mStickyBottomIndexes);
+      generateStickyItemKeySet(mStickyTopItemKeySet, mStickyTopIndexes, mStickyTopItemMap);
+      generateStickyItemKeySet(mStickyBottomItemKeySet, mStickyBottomIndexes, mStickyBottomItemMap);
     }
   }
 

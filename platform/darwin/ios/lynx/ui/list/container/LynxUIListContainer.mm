@@ -308,20 +308,35 @@ LYNX_REGISTER_UI("list-container")
   if (self.enableListSticky && self.updateStickyForDiff) {
     [self.stickyTopItemKeySet removeAllObjects];
     [self.stickyBottomItemKeySet removeAllObjects];
-    // Generate sticky top item key set
-    [self.stickyTopIndexes
-        enumerateObjectsUsingBlock:^(NSNumber *_Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
-          NSInteger index = obj.integerValue;
-          if (index >= 0 && (NSUInteger)index < self.itemKeys.count) {
-            [self.stickyTopItemKeySet addObject:self.itemKeys[index]];
-          }
-        }];
-    // Generate sticky bottom item key set
-    [self.stickyBottomIndexes
-        enumerateObjectsUsingBlock:^(NSNumber *_Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
-          NSInteger index = obj.integerValue;
-          if (index >= 0 && (NSUInteger)index < self.itemKeys.count) {
-            [self.stickyBottomItemKeySet addObject:self.itemKeys[index]];
+    // Generate sticky item key set
+    [self updateStickyItemKeySet:self.stickyTopItemKeySet
+               andStickyItemDict:self.stickyTopListItemDict
+                     withIndexes:self.stickyTopIndexes];
+    [self updateStickyItemKeySet:self.stickyBottomItemKeySet
+               andStickyItemDict:self.stickyBottomListItemDict
+                     withIndexes:self.stickyBottomIndexes];
+  }
+}
+
+- (void)updateStickyItemKeySet:(NSMutableSet<NSString *> *)stickyItemKeySet
+             andStickyItemDict:(NSMutableDictionary<NSString *, LynxUIComponent *> *)stickyItemDict
+                   withIndexes:(NSArray<NSNumber *> *)stickyIndexes {
+  // Generate item key set
+  [stickyIndexes
+      enumerateObjectsUsingBlock:^(NSNumber *_Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
+        NSInteger index = obj.integerValue;
+        if (index >= 0 && (NSUInteger)index < self.itemKeys.count) {
+          [stickyItemKeySet addObject:self.itemKeys[index]];
+        }
+      }];
+  if (stickyItemDict.count) {
+    // Remove item from sticky dict if not sticky.
+    [[stickyItemDict copy]
+        enumerateKeysAndObjectsUsingBlock:^(NSString *_Nonnull key, LynxUIComponent *_Nonnull obj,
+                                            BOOL *_Nonnull stop) {
+          if (key != nil && obj != nil && ![stickyItemKeySet containsObject:key]) {
+            [self resetStickyItem:obj];
+            [stickyItemDict removeObjectForKey:key];
           }
         }];
   }
@@ -346,14 +361,22 @@ LYNX_REGISTER_UI("list-container")
     if (itemKey != nil) {
       if ([self.stickyTopItemKeySet containsObject:itemKey]) {
         // Update sticky top list item dict.
-        [self updateStickyItemDictWithItem:component stickyItemDict:self.stickyTopListItemDict];
+        [self updateStickyItemDictWithItem:component
+                            stickyItemDict:self.stickyTopListItemDict
+                                  isSticky:YES];
       } else if ([self.stickyBottomItemKeySet containsObject:itemKey]) {
         // Update sticky bottom list item dict.
-        [self updateStickyItemDictWithItem:component stickyItemDict:self.stickyBottomListItemDict];
+        [self updateStickyItemDictWithItem:component
+                            stickyItemDict:self.stickyBottomListItemDict
+                                  isSticky:YES];
       } else {
         // Not sticky top or bottom list item, remove it from dict.
-        [self.stickyTopListItemDict removeObjectForKey:itemKey];
-        [self.stickyBottomListItemDict removeObjectForKey:itemKey];
+        [self updateStickyItemDictWithItem:component
+                            stickyItemDict:self.stickyTopListItemDict
+                                  isSticky:NO];
+        [self updateStickyItemDictWithItem:component
+                            stickyItemDict:self.stickyBottomListItemDict
+                                  isSticky:NO];
       }
     }
   }
@@ -361,24 +384,39 @@ LYNX_REGISTER_UI("list-container")
 
 - (void)updateStickyItemDictWithItem:(LynxUIComponent *)component
                       stickyItemDict:
-                          (NSMutableDictionary<NSString *, LynxUIComponent *> *)stickyItemDict {
+                          (NSMutableDictionary<NSString *, LynxUIComponent *> *)stickyItemDict
+                            isSticky:(BOOL)isSticky {
   if (component && component.itemKey) {
-    NSString *newUpdatedItemKey = component.itemKey;
-    if (stickyItemDict[newUpdatedItemKey] == component) {
-      // No need to update sticky item dict.
-      return;
+    if (isSticky) {
+      NSString *newUpdatedItemKey = component.itemKey;
+      if (stickyItemDict[newUpdatedItemKey] == component) {
+        // No need to update sticky item dict.
+        return;
+      }
+      [[stickyItemDict copy]
+          enumerateKeysAndObjectsUsingBlock:^(NSString *_Nonnull key, LynxUIComponent *_Nonnull obj,
+                                              BOOL *_Nonnull stop) {
+            if (![newUpdatedItemKey isEqualToString:key] && obj == component) {
+              // Delete old and insert new <item-key, list-item> pair to finish
+              // updating item-key.
+              [stickyItemDict removeObjectForKey:key];
+              [stickyItemDict setObject:component forKey:newUpdatedItemKey];
+              *stop = YES;
+            }
+          }];
+    } else {
+      // The component is not sticky top or bottom list item, remove it from dict.
+      [[stickyItemDict copy]
+          enumerateKeysAndObjectsUsingBlock:^(NSString *_Nonnull key, LynxUIComponent *_Nonnull obj,
+                                              BOOL *_Nonnull stop) {
+            if (obj == component) {
+              // Delete old <item-key, list-item> pair.
+              [stickyItemDict removeObjectForKey:key];
+              [self resetStickyItem:component];
+              *stop = YES;
+            }
+          }];
     }
-    [[stickyItemDict copy]
-        enumerateKeysAndObjectsUsingBlock:^(NSString *_Nonnull key, LynxUIComponent *_Nonnull obj,
-                                            BOOL *_Nonnull stop) {
-          if (![newUpdatedItemKey isEqualToString:key] && obj == component) {
-            // Delete old and insert new <item-key, list-item> pair to finish
-            // updating item-key.
-            [stickyItemDict removeObjectForKey:key];
-            [stickyItemDict setObject:component forKey:newUpdatedItemKey];
-            *stop = YES;
-          }
-        }];
   }
 }
 
