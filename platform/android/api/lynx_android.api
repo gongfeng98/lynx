@@ -2655,6 +2655,7 @@ public interface com::lynx::tasm::EventEmitter::ITestTapTrack {
 public interface com::lynx::tasm::performance::timing::ITimingCollector {
   public void com.lynx.tasm.performance.timing.ITimingCollector.markTiming(final String key, final String pipelineID);
   public void com.lynx.tasm.performance.timing.ITimingCollector.setMsTiming(final String key, final long msTimestamp, final String pipelineID);
+  public void com.lynx.tasm.performance.timing.ITimingCollector.markHostPlatformTiming(final String key);
   public void com.lynx.tasm.performance.timing.ITimingCollector.markPaintEndTimingIfNeeded();
   public void com.lynx.tasm.performance.timing.ITimingCollector.setNeedMarkPaintEndTiming(String pipelineId);
 }
@@ -5779,6 +5780,7 @@ public class com::lynx::tasm::LynxTemplateRender : com.lynx.tasm.ILynxEngine, co
   public Map< String, Object > com.lynx.tasm.LynxTemplateRender.getPageDataByKey(String[] keys);
   public void com.lynx.tasm.LynxTemplateRender.updateData(Map< String, Object > data, String processorName);
   public void com.lynx.tasm.LynxTemplateRender.onMeasure(int widthMeasureSpec, int heightMeasureSpec);
+  public void com.lynx.tasm.LynxTemplateRender.markHostPlatformTiming(final String key);
   public void com.lynx.tasm.LynxTemplateRender.onLayout(boolean changed, int left, int top, int right, int bottom);
   public void com.lynx.tasm.LynxTemplateRender.updateViewport(int widthMeasureSpec, int heightMeasureSpec);
   public void com.lynx.tasm.LynxTemplateRender.updateFontScale(float scale);
@@ -7187,6 +7189,7 @@ public class com::lynx::tasm::performance::PerformanceController : com.lynx.tasm
   public void com.lynx.tasm.performance.PerformanceController.updateMemoryUsage(Map< String, MemoryRecord > recordMap);
   public void com.lynx.tasm.performance.PerformanceController.setMsTiming(String key, long msTimestamp, String pipelineID);
   public void com.lynx.tasm.performance.PerformanceController.markTiming(final String key, final String pipelineID);
+  public void com.lynx.tasm.performance.PerformanceController.markHostPlatformTiming(final String key);
   public void com.lynx.tasm.performance.PerformanceController.markPaintEndTimingIfNeeded();
   public void com.lynx.tasm.performance.PerformanceController.setNeedMarkPaintEndTiming(String pipelineId);
   public void com.lynx.tasm.performance.PerformanceController.setExtraTiming(TimingHandler.ExtraTimingInfo extraTiming);
@@ -8988,6 +8991,7 @@ public class com::lynx::tasm::base::trace::TraceEventDef :  {
   public final String com.lynx.tasm.base.trace.TraceEventDef.TIMING_TIMESTAMP TIMING_TIMESTAMP;
   public final String com.lynx.tasm.base.trace.TraceEventDef.TIMING_KEY_PAINT_END TIMING_KEY_PAINT_END;
   public final String com.lynx.tasm.base.trace.TraceEventDef.MARK_TIMING MARK_TIMING;
+  public final String com.lynx.tasm.base.trace.TraceEventDef.MARK_HOST_PLATFORM_TIMING MARK_HOST_PLATFORM_TIMING;
 }
 
 public class com::lynx::tasm::behavior::ui::utils::TransformOrigin :  {

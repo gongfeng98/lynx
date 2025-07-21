@@ -5,6 +5,7 @@
 package com.lynx.tasm.performance;
 
 import static com.lynx.tasm.base.trace.TraceEventDef.INSTANCE_ID;
+import static com.lynx.tasm.base.trace.TraceEventDef.MARK_HOST_PLATFORM_TIMING;
 import static com.lynx.tasm.base.trace.TraceEventDef.MARK_TIMING;
 import static com.lynx.tasm.base.trace.TraceEventDef.PIPELINE_ID;
 import static com.lynx.tasm.base.trace.TraceEventDef.TIMING_KEY;
@@ -51,6 +52,7 @@ public class PerformanceController implements IMemoryMonitor, ITimingCollector {
   private WeakReference<IPerformanceObserver> mObserver;
   private WeakReference<ILynxEventReporterService> mEventReporterService;
   private boolean mEnableController = true;
+  private JavaOnlyMap mHostPlatformTiming;
   private JavaOnlyArray mPendingPaintEndPipelineIds = new JavaOnlyArray();
   private int mInstanceId = LynxEventReporter.INSTANCE_ID_UNKNOWN;
 
@@ -210,6 +212,30 @@ public class PerformanceController implements IMemoryMonitor, ITimingCollector {
       nativeSetTiming(mNativePerformanceActorPtr, key, usTimestamp, pipelineID);
     });
   }
+
+  @Override
+  @UiThread
+  public void markHostPlatformTiming(final String key) {
+    if (!mEnableController || !UIThreadUtils.isOnUiThread() || mPendingPaintEndPipelineIds.isEmpty()
+        || key == null) {
+      return;
+    }
+    if (mHostPlatformTiming != null) {
+      // To ensure timing accuracy, we only record the first 'start' event and overwrite 'end'
+      // events, as measure events can be triggered multiple times within a single draw cycle.
+      if (key.endsWith("Start") && mHostPlatformTiming.containsKey(key)) {
+        return;
+      }
+    } else {
+      mHostPlatformTiming = new JavaOnlyMap();
+    }
+    long usTimestamp = TimingUtil.currentTimeUs();
+    makeTraceEventInstants(MARK_HOST_PLATFORM_TIMING, key, usTimestamp);
+    if (mHostPlatformTiming == null) {
+    }
+    mHostPlatformTiming.put(key, usTimestamp);
+  }
+
   @Override
   @UiThread
   public void markPaintEndTimingIfNeeded() {
@@ -219,13 +245,16 @@ public class PerformanceController implements IMemoryMonitor, ITimingCollector {
     }
     long usTimestamp = TimingUtil.currentTimeUs();
     makeTraceEventInstants(MARK_TIMING, TIMING_KEY_PAINT_END, usTimestamp);
+    JavaOnlyMap hostPlatformTiming = mHostPlatformTiming;
+    mHostPlatformTiming = null;
     JavaOnlyArray pendingPaintEndPipelineIds = mPendingPaintEndPipelineIds;
     mPendingPaintEndPipelineIds = new JavaOnlyArray();
     runOnReportThread(() -> {
       if (mNativePerformanceActorPtr == 0) {
         return;
       }
-      nativeSetPaintEndTiming(mNativePerformanceActorPtr, usTimestamp, pendingPaintEndPipelineIds);
+      nativeSetPaintEndTimingAndHostPlatformTiming(
+          mNativePerformanceActorPtr, usTimestamp, hostPlatformTiming, pendingPaintEndPipelineIds);
     });
   }
 
@@ -352,7 +381,7 @@ public class PerformanceController implements IMemoryMonitor, ITimingCollector {
       int instanceCount, Map<String, String> detail);
   private native void nativeSetTiming(
       long nativePtr, String key, long usTimestamp, String pipelineID);
-  private native void nativeSetPaintEndTiming(
-      long nativePtr, long usTimestamp, JavaOnlyArray pipelineIds);
+  private native void nativeSetPaintEndTimingAndHostPlatformTiming(
+      long nativePtr, long usTimestamp, JavaOnlyMap hostPlatformTiming, JavaOnlyArray pipelineIds);
   private static native boolean nativeIsMemoryMonitorEnabled();
 }

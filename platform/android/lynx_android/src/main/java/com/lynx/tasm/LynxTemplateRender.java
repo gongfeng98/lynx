@@ -1872,6 +1872,12 @@ public class LynxTemplateRender implements ILynxEngine, ILynxErrorReceiver {
     onTraceEventEnd(TraceEventDef.LYNX_TEMPLATE_RENDER_MEASURE);
   }
 
+  public void markHostPlatformTiming(final String key) {
+    if (mPerformanceController != null) {
+      mPerformanceController.markHostPlatformTiming(key);
+    }
+  }
+
   private void maybeSyncLayoutResultDuringLayoutOnBackgroundThread(
       int widthMeasureSpec, int heightMeasureSpec) {
     if (!mWillContentSizeChange) {
