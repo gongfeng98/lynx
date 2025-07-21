@@ -33,7 +33,7 @@ public final class EmbeddedMode {
   private EmbeddedMode() {}
   @IntDef(
       flag = true, // 'flag = true' is crucial, it tells the compiler these can be combined with '|'
-      value = {UNSET, EMBEDDED_MODE_BASE, ENGINE_POOL, LAYOUT_IN_ELEMENT})
+      value = {UNSET, EMBEDDED_MODE_BASE, ENGINE_POOL, LAYOUT_IN_ELEMENT, EMBEDDED_MODE_ALL})
   @Retention(RetentionPolicy.SOURCE)
   public @interface Mode {}
   /**
