@@ -10,8 +10,11 @@
 #include "base/include/expected.h"
 #include "base/include/log/logging.h"
 #include "core/renderer/utils/base/tasm_constants.h"
+#include "core/resource/lazy_bundle/bundle_resource_info.h"
 #include "core/runtime/bindings/common/event/runtime_constants.h"
+#include "core/runtime/bindings/common/resource/response_promise.h"
 #include "core/runtime/bindings/jsi/java_script_element.h"
+#include "core/runtime/bindings/jsi/resource/response_handler_in_js.h"
 #include "core/runtime/common/utils.h"
 #include "core/runtime/jsi/jsi.h"
 #include "core/value_wrapper/value_impl_lepus.h"
@@ -473,12 +476,14 @@ piper::Value LynxProxy::FetchBundle(Runtime &rt) {
           options = std::move(*lepus_value_opt);
         }
 
-        std::promise<tasm::BundleResourceInfo> promise;
-        std::future<tasm::BundleResourceInfo> future = promise.get_future();
-        native_app->FetchBundle(std::move(bundle_url), std::move(promise));
-
-        // TODO(nihao.royal): warp future as piper::Value
-        return piper::Value::undefined();
+        auto response_promise = std::make_shared<
+            runtime::ResponsePromise<tasm::BundleResourceInfo>>();
+        // invoke fetchBundle & passing ResponsePromise to retrieve result.
+        native_app->FetchBundle(std::move(bundle_url), response_promise);
+        auto promise = std::make_shared<ResponseHandlerInJS>(
+            native_app->GetDelegate(), std::move(response_promise),
+            native_app_);
+        return piper::Object::createFromHostObject(rt, promise);
       });
 }
 

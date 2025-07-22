@@ -69,6 +69,10 @@ static constexpr const char kIsProfileRecording[] = "isProfileRecording";
 
 static constexpr const char* kQueueMicrotask = "queueMicrotask";
 
+// response handler;
+static constexpr const char* kWait = "wait";
+static constexpr const char* kThen = "then";
+
 }  // namespace runtime
 }  // namespace lynx
 

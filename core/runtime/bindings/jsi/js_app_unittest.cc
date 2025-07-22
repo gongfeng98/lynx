@@ -1478,7 +1478,9 @@ TEST_P(AppTest, FetchBundleTest) {
 
   auto res = fetch_bundle();
   // TODO(nihao.royal): add more test case when ready.
-  EXPECT_TRUE(res->isUndefined());
+  EXPECT_TRUE(res->isObject());
+  EXPECT_TRUE(res->getObject(rt).hasProperty(rt, "then"));
+  EXPECT_TRUE(res->getObject(rt).hasProperty(rt, "wait"));
 }
 
 // TODO(liyanbo.monster): open this when pub value support this.

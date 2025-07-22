@@ -3544,15 +3544,20 @@ base::expected<Value, JSINativeException> App::LoadCustomSectionScript(
   }
 }
 
-void App::FetchBundle(std::string&& bundle_url,
-                      std::promise<tasm::BundleResourceInfo>&& promise) {
+void App::FetchBundle(
+    std::string&& bundle_url,
+    const std::shared_ptr<runtime::ResponsePromise<tasm::BundleResourceInfo>>&
+        response_promise) {
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "FetchBundle", "bundle_url", bundle_url);
   auto rt = rt_.lock();
   if (!rt) {
-    promise.set_value({.url = std::move(bundle_url),
-                       .code = tasm::LYNX_BUNDLE_RESOURCE_INFO_REQUEST_FAILED});
+    response_promise->SetValue(
+        {.url = std::move(bundle_url),
+         .code = tasm::LYNX_BUNDLE_RESOURCE_INFO_REQUEST_FAILED});
     return;
   }
-  delegate_->FetchBundle(std::move(bundle_url), std::move(promise));
+  // TODO(nihao.royal): Added in next patch.
+  //  delegate_->FetchBundle(std::move(bundle_url), std::move(promise));
 }
 
 void App::SetSourceMapRelease(common::JSErrorInfo error_info) {

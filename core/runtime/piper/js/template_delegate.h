@@ -17,6 +17,7 @@
 #include "core/renderer/dom/vdom/radon/node_select_options.h"
 #include "core/resource/lazy_bundle/bundle_resource_info.h"
 #include "core/runtime/bindings/common/event/context_proxy.h"
+#include "core/runtime/bindings/common/resource/response_handler_proxy.h"
 #include "core/runtime/bindings/jsi/api_call_back.h"
 #include "core/runtime/bindings/jsi/modules/module_delegate.h"
 #include "core/runtime/jsi/jsi.h"
@@ -70,6 +71,7 @@ struct UpdateDataTask {
 };
 
 class TemplateDelegate : public ContextProxy::Delegate,
+                         public ResponseHandlerProxy::Delegate,
                          public piper::JSIObserver {
  public:
   TemplateDelegate() {}
@@ -149,7 +151,7 @@ class TemplateDelegate : public ContextProxy::Delegate,
                                       std::string method_name,
                                       lepus::Value args,
                                       piper::ApiCallBack callback) = 0;
-  virtual void RunOnJSThread(base::closure closure) = 0;
+  virtual void RunOnJSThread(base::closure closure) override = 0;
   virtual void RunOnJSThreadWhenIdle(base::closure closure) = 0;
   virtual void SetTiming(tasm::Timing timing) = 0;
   virtual void SetTimingWithTimingFlag(

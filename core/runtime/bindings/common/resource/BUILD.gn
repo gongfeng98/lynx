@@ -1,0 +1,38 @@
+# Copyright 2025 The Lynx Authors. All rights reserved.
+# Licensed under the Apache License Version 2.0 that can be found in the
+# LICENSE file in the root directory of this source tree.
+
+import("../../../../../testing/test.gni")
+import("../../../../Lynx.gni")
+
+response_promise_shared_sources = [
+  "response_handler_proxy.h",
+  "response_promise.h",
+]
+
+lynx_core_source_set("promise") {
+  sources = response_promise_shared_sources
+
+  deps = []
+
+  public_deps = []
+}
+
+unittest_set("resource_common_testset") {
+  sources = [
+    "response_promise_unittest.cc",
+    "response_promise_unittest.h",
+  ]
+
+  public_deps = [ ":promise" ]
+}
+
+unittest_exec("resource_common_unittests_exec") {
+  sources = []
+  deps = [ ":resource_common_testset" ]
+}
+
+group("resource_common_tests") {
+  testonly = true
+  deps = [ ":resource_common_unittests_exec" ]
+}

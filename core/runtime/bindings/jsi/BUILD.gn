@@ -43,6 +43,7 @@ lynx_core_source_set("jsi") {
     "../../trace:runtime_trace",
     "../common/event:runtime_common",
     "event:js_runtime",
+    "resource:js_runtime",
   ]
   deps = [ "../../../../third_party/rapidjson:rapidjson" ]
 }
