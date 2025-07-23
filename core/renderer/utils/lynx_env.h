@@ -44,6 +44,7 @@ class BASE_EXPORT_FOR_DEVTOOL LynxEnv {
     ENABLE_MEMORY_MONITOR,
     MEMORY_CHANGE_THRESHOLD_MB,
     MEMORY_ACQUISITION_DELAY_SEC,
+    MEMORY_REPORT_INTERVAL_SEC,
     DEVTOOL_CONNECTED,
     ENABLE_QUICKJS_DEBUG,
     ENABLE_TABLE_DEEP_CHECK,
@@ -141,6 +142,7 @@ class BASE_EXPORT_FOR_DEVTOOL LynxEnv {
             {Key::MEMORY_CHANGE_THRESHOLD_MB, "memory_change_threshold_mb"},
             {Key::MEMORY_ACQUISITION_DELAY_SEC,
              "memory_acquisition_delay_second"},
+            {Key::MEMORY_REPORT_INTERVAL_SEC, "memory_report_interval_sec"},
             {Key::DEVTOOL_CONNECTED, "devtool_connected"},
             {Key::STORAGE_DIR, "storage_dir"},
             {Key::ENABLE_QUICKJS_DEBUG, "enable_quickjs_debug"},
@@ -324,6 +326,7 @@ class BASE_EXPORT_FOR_DEVTOOL LynxEnv {
   bool EnableMemoryMonitor();
   uint32_t GetMemoryChangeThresholdMb();
   uint32_t GetMemoryAcquisitionDelaySec();
+  uint32_t GetMemoryReportIntervalSec();
   int64_t GetV8HeapSize();
   std::unordered_set<std::string> GetActivatedCDPDomains();
   bool IsDebugModeEnabled();

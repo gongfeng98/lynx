@@ -1277,6 +1277,7 @@ public class LynxEnv : NSObject {
   public BOOL LynxEnv::enableTextContainerOpt();
   public BOOL LynxEnv::enableTextStorageDeallocFix();
   public int LynxEnv::memoryAcquisitionDelaySec();
+  public int LynxEnv::memoryReportIntervalSec();
   public NSDictionary< NSString *, NSString * > * LynxEnv::cppEnvDebugDescription();
   public NSDictionary< NSString *, NSString * > * LynxEnv::platformEnvDebugDescription();
   public BOOL LynxEnv()::enableCreateUIAsync();
@@ -5595,7 +5596,7 @@ public enum LynxEnvKey {
   LynxEnvEnableTextStorageDeallocFix
   LynxEnvEnableJSGroupThreadByDefault
   LynxEnvEnableTextLayoutCache
-  LynxEnvMemoryAcquisitionDelayMs
+  LynxEnvEnableForceMemoryMonitorOnOom
   LynxEnvKeyEndMark
 }
 

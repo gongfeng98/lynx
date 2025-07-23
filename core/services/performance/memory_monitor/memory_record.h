@@ -18,7 +18,7 @@ using MemoryCategory = std::string;
 
 inline constexpr char kMemoryEntryType[] = "memory";
 inline constexpr char kCategory[] = "category";
-inline constexpr char kSizeBytes[] = "size_bytes";
+inline constexpr char kSizeBytes[] = "sizeBytes";
 inline constexpr char kInstanceCount[] = "instanceCount";
 inline constexpr char kDetail[] = "detail";
 
@@ -27,7 +27,7 @@ inline constexpr char kDetail[] = "detail";
 inline constexpr char kCategoryMTSEngine[] = "mainThreadScriptingEngine";
 // Background thread scripting engine. Currently covers only QuickJS.
 inline constexpr char kCategoryBTSEngine[] = "backgroundThreadScriptingEngine";
-inline constexpr char kCategoryTasmElement[] = "lynx::tasm::Element";
+inline constexpr char kCategoryTasmElement[] = "lynxTasmElement";
 
 // Record memory information for a specific module
 struct MemoryRecord {

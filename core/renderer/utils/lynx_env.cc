@@ -283,6 +283,11 @@ uint32_t LynxEnv::GetMemoryAcquisitionDelaySec() {
       GetLongEnv(Key::MEMORY_ACQUISITION_DELAY_SEC, 2));
 }
 
+uint32_t LynxEnv::GetMemoryReportIntervalSec() {
+  return static_cast<uint32_t>(
+      GetLongEnv(Key::MEMORY_REPORT_INTERVAL_SEC, 20 * 60));
+}
+
 bool LynxEnv::IsDevToolConnected() {
   return GetBoolEnv(Key::DEVTOOL_CONNECTED, false, EnvType::LOCAL);
 }

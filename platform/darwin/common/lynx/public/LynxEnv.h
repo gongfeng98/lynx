@@ -141,6 +141,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (int)memoryAcquisitionDelaySec;
 
+- (int)memoryReportIntervalSec;
+
 - (NSDictionary<NSString *, NSString *> *)cppEnvDebugDescription;
 
 - (NSDictionary<NSString *, NSString *> *)platformEnvDebugDescription;
