@@ -435,7 +435,11 @@ void FiberElement::UpdateSimpleStyles(const tasm::StyleMap &style_map) {
         if (pair.second.IsEmpty()) {
           ResetSimpleStyle(pair.first);
         } else {
-          this->SetStyleInternal(pair.first, pair.second);
+          if (pair.first == kPropertyIDFontSize) {
+            SetFontSize(pair.second);
+          } else {
+            this->SetStyleInternal(pair.first, pair.second);
+          }
         }
       });
   EXEC_EXPR_FOR_INSPECTOR(
@@ -1321,7 +1325,7 @@ void FiberElement::ResolveCSSStyles(
           should_update_em_rem_style(*iter, root_font_size_changed) &&
           update_map.find(CSSPropertyID::kPropertyIDFontSize) ==
               update_map.end()) {
-        SetFontSize();
+        SetFontSize(iter->second);
         need_update = true;
       }
 
@@ -2176,7 +2180,10 @@ void FiberElement::ConsumeStyleInternal(
   }
 
   // Handle font-size first. Other css may use this to calc rem or em.
-  SetFontSize();
+  const auto it = parsed_styles_map_.find(CSSPropertyID::kPropertyIDFontSize);
+  CSSValue font_value =
+      (it != parsed_styles_map_.end()) ? it->second : CSSValue::Empty();
+  SetFontSize(font_value);
 
   auto consume_func = [this, should_skip = std::move(should_skip)](
                           const StyleMap &styles, bool process_inherit) {
@@ -2950,11 +2957,10 @@ bool FiberElement::ResolveStyleValue(CSSPropertyID id,
   return resolve_success;
 }
 
-void FiberElement::SetFontSize() {
+void FiberElement::SetFontSize(const tasm::CSSValue &value) {
   base::flex_optional<float> result;
-  if (auto it = parsed_styles_map_.find(CSSPropertyID::kPropertyIDFontSize);
-      it != parsed_styles_map_.end()) {
-    CheckDynamicUnit(CSSPropertyID::kPropertyIDFontSize, it->second, false);
+  if (!value.IsEmpty()) {
+    CheckDynamicUnit(CSSPropertyID::kPropertyIDFontSize, value, false);
     // Take care: GetParentFontSize() here is used to computed em, so it must be
     // parent's fontSize.z
     const auto &env_config = element_manager()->GetLynxEnvConfig();
@@ -2969,7 +2975,7 @@ void FiberElement::SetFontSize() {
             ? env_config.ViewportHeight()
             : env_config.vhbase_for_font_size_to_align_with_legacy_bug();
     result = starlight::CSSStyleUtils::ResolveFontSize(
-        it->second, env_config, vw_base, vh_base, GetParentFontSize(),
+        value, env_config, vw_base, vh_base, GetParentFontSize(),
         GetRecordedRootFontSize(), element_manager()->GetCSSParserConfigs());
   } else {
     result = GetParentFontSize();

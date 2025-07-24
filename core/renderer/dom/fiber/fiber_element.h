@@ -683,7 +683,7 @@ class FiberElement : public Element,
    * Special API for processing Font size
    * font size should be handled at the beginning
    */
-  void SetFontSize();
+  void SetFontSize(const tasm::CSSValue& value);
 
   void ResetFontSize();
 
