@@ -65,14 +65,15 @@ Native_includes = rebase_path([
                               ]) + PRIMJS_includes
 
 Devtool_Native_includes = rebase_path([
-                                        "//TARGET_BUILD_DIR/Devtool/gen/Lynx",
-                                        "//devtool/lynx_devtool",
-                                        "//core",
                                         "//",
-                                        "//lynx",
-                                        "../devtool/lynx_devtool",
-                                        "//PODS_ROOT/Lynx/lynx",
+                                        "//PODS_ROOT/BaseDevtool/",
                                         "//PODS_ROOT/BaseDevtool/lynx/",
+                                        "//PODS_ROOT/Lynx/lynx",
+                                        "//core",
+                                        "//devtool/lynx_devtool",
+                                        "//lynx",
+                                        "//TARGET_BUILD_DIR/Devtool/gen/Lynx",
+                                        "../devtool/lynx_devtool",
                                       ]) + PRIMJS_includes
 
 Lepus_deps = [ "PrimJS/quickjs" ]
