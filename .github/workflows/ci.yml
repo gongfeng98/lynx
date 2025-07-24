@@ -173,8 +173,6 @@ jobs:
       - name: Build Linux Tasm
         run: |
           source tools/envsetup.sh
-          tools/hab sync . -f
-
           pushd oliver/lynx-tasm
           npm install
           npm run build:release:linux
@@ -213,10 +211,11 @@ jobs:
           path: lynx
       - name: Install Common Dependencies
         uses: ./lynx/.github/actions/common-deps
+        with:
+          target: tasm
       - name: Build Wasm Tasm
         run: |
           source tools/envsetup.sh
-          tools/hab sync . -f --target tasm
           pushd oliver/lynx-tasm
           npm install
           npm run build:wasm
