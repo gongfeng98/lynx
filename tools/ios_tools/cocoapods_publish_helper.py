@@ -133,9 +133,9 @@ def pod_lint_component(component, local_pod_source_name):
 
 def publish_component(component, sources):
     if sources != None:
-        run_command(f'COCOAPODS_TRUNK_TOKEN=$COCOAPODS_TRUNK_TOKEN bundle exec pod trunk push {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests --sources={sources}')
+        run_command(f'pod repo add  my_specs https://github.com/gongfeng98/Specs && bundle exec pod repo push my_specs {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests --sources={sources}')
     else:
-        run_command(f'COCOAPODS_TRUNK_TOKEN=$COCOAPODS_TRUNK_TOKEN bundle exec pod trunk push {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests')
+        run_command(f'pod repo add  my_specs https://github.com/gongfeng98/Specs && bundle exec pod repo push my_specs {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests')
 
 
 def publish_to_cocoapods(component, sources):
