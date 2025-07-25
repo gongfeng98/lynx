@@ -3398,6 +3398,19 @@ bool TemplateAssembler::LoadTemplateForSSRRuntime(std::vector<uint8_t> source) {
   return true;
 }
 
+void TemplateAssembler::RequestLayout(
+    const std::shared_ptr<PipelineOptions>& pipeline_options) {
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, "TemplateAssembler::RequestLayout");
+  if (page_proxy()->element_manager()->IsLayoutInElementModeOn()) {
+    auto data =
+        page_proxy()->element_manager()->RequestLayout(pipeline_options);
+    GetCurrentPipelineContext()->RequestFlushUIOperation();
+    OnLayoutAfter(data);
+    return;
+  }
+  layout_scheduler_.RequestLayout(pipeline_options);
+}
+
 // starts run pixel pipeline process;
 // TODO(@yangguangzhao.solace): The same context is only allowed to enter the
 // pixel pipeline once, controlled by its lifecycle state.
@@ -3442,7 +3455,7 @@ void TemplateAssembler::RunPixelPipeline() {
 
     // Execute Layout Job.
     // Maybe Happened On Layout Thread. Trigger layout by engine here;
-    layout_scheduler_.RequestLayout(pipeline_option);
+    RequestLayout(pipeline_option);
   } else {
     PipelineLayoutData layout_data{
         .layout_triggered = false,

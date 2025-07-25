@@ -251,7 +251,7 @@ class TemplateAssembler final : public TemplateEntryHolder,
   class LayoutScheduler {
    public:
     LayoutScheduler() = default;
-    ~LayoutScheduler() = default;
+    virtual ~LayoutScheduler() = default;
 
     virtual void RequestLayout(
         const std::shared_ptr<tasm::PipelineOptions>& options) = 0;
@@ -762,6 +762,8 @@ class TemplateAssembler final : public TemplateEntryHolder,
   }
 
   const PageOptions& GetPageOptions() const { return page_options_; }
+
+  void RequestLayout(const std::shared_ptr<PipelineOptions>& pipeline_options);
 
   // Start pixel pipeline process;
   void RunPixelPipeline();

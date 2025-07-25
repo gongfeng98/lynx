@@ -172,7 +172,9 @@ void PageElement::Layout(const std::shared_ptr<PipelineOptions>& options) {
 
   painting_context()->FinishLayoutOperation(options);
 
-  painting_context()->Flush();
+  if (!options->enable_unified_pixel_pipeline) {
+    painting_context()->Flush();
+  }
 }
 
 }  // namespace tasm

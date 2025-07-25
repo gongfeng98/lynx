@@ -38,6 +38,7 @@
 #include "core/renderer/dom/fiber/page_element.h"
 #include "core/renderer/dom/vdom/radon/radon_element.h"
 #include "core/renderer/dom/vdom/radon/radon_types.h"
+#include "core/renderer/pipeline/pipeline_layout_data.h"
 #include "core/renderer/ui_wrapper/common/prop_bundle_creator_default.h"
 #include "core/renderer/ui_wrapper/layout/layout_context.h"
 #include "core/renderer/ui_wrapper/painting/painting_context.h"
@@ -1126,7 +1127,8 @@ class ElementManager : public ElementContextDelegate {
    * call this function to request layout
    * @param options the pipeline options passed to layout context
    */
-  void RequestLayout(const std::shared_ptr<PipelineOptions> &options);
+  PipelineLayoutData RequestLayout(
+      const std::shared_ptr<PipelineOptions> &options);
 
   inline bool GetEnableBatchLayoutTaskWithSyncLayout() {
     return enable_batch_layout_task_with_sync_layout_;

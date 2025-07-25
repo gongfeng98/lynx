@@ -546,12 +546,12 @@ void ElementManager::CheckAndProcessSlotForInspector(Element *element) {
   });
 }
 
-void ElementManager::RequestLayout(
+PipelineLayoutData ElementManager::RequestLayout(
     const std::shared_ptr<PipelineOptions> &options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_MANAGER_REQUEST_LAYOUT);
   if (!IsLayoutInElementModeOn()) {
     DispatchLayoutUpdates(options);
-    return;
+    return PipelineLayoutData();
   }
 
   // TODO(songshourui.null): we can optimize the performance here within
@@ -572,8 +572,9 @@ void ElementManager::RequestLayout(
       tasm::TimingCollector::Instance()->Mark(tasm::timing::kLayoutEnd);
     }
 
-    painting_context()->FinishLayoutOperation(options);
+    return {.layout_triggered = true, .pipeline_version = options->version};
   }
+  return {.layout_triggered = false, .pipeline_version = options->version};
 }
 
 void ElementManager::DispatchLayoutUpdates(
