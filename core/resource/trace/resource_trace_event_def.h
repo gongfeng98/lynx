@@ -14,8 +14,8 @@ inline constexpr const char* const DYNAMIC_COMPONENT_DID_LOAD_COMPONENT =
     "DynamicComponent::DidLoadComponent";
 inline constexpr const char* const DYNAMIC_COMPONENT_REQUIRE_TEMPLATE =
     "DynamicComponent::RequireTemplate";
-inline constexpr const char* const DYNAMIC_COMPONENT_DID_PRELOAD =
-    "DynamicComponent::DidPreload";
+inline constexpr const char* const LAZY_BUNDLE_DID_FETCH_BUNDLE =
+    "LazyBundle::DidFetchBundle";
 
 inline constexpr const char* const FETCH_SCRIPT_BY_PROVIDER =
     "FetchScriptByProvider";

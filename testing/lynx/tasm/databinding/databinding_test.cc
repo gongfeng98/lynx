@@ -364,7 +364,7 @@ void DataBindingComponentLoader::PreloadTemplates(
   std::for_each(urls.begin(), urls.end(), [this](const auto& url) {
     LazyBundleLoader::CallBackInfo info{url, this->FetchResource(url),
                                         std::nullopt, std::nullopt};
-    this->DidPreloadTemplate(std::move(info));
+    this->DidFetchBundle(std::move(info));
   });
 }
 

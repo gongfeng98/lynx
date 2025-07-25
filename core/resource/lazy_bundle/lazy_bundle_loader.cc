@@ -108,42 +108,9 @@ void LazyBundleLoader::LoadFrameBundle(const std::string& src) {
   if (!requiring_res.second) {
     return;
   }
-  // TODO(zhoupeng.z): support to load frame bundle on platform layer
-  auto request = pub::LynxResourceRequest{src, pub::LynxResourceType::kFrame};
-  resource_loader_->LoadResource(
-      request,
-      [src, weak_self = weak_from_this()](pub::LynxResourceResponse& response) {
-        auto self = weak_self.lock();
-        if (!self) {
-          return;
-        }
-        std::optional<std::string> err_msg = std::nullopt;
-        if (!response.Success()) {
-          err_msg = std::move(response.err_msg);
-        }
-        std::optional<LynxTemplateBundle> bundle = std::nullopt;
-        if (response.bundle != nullptr) {
-          bundle = *static_cast<LynxTemplateBundle*>(response.bundle);
-        }
-        auto callback_info = LazyBundleLoader::CallBackInfo{
-            std::move(src), std::move(response.data), std::move(bundle),
-            err_msg};
-        self->DidLoadFrameBundle(std::move(callback_info));
-      });
-}
-
-void LazyBundleLoader::DidLoadFrameBundle(
-    LazyBundleLoader::CallBackInfo callback_info) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, "LazyBundleLoader::DidLoadBundle", "url",
-              callback_info.component_url);
-  if (engine_actor_) {
-    engine_actor_->Act(
-        [callback_info = std::move(callback_info)](auto& engine) mutable {
-          // TODO(zhoupeng.z): decode template bundle in child thread.
-          DecodeBundle(callback_info, true);
-          engine->DidLoadBundle(std::move(callback_info));
-        });
-  }
+  lazy_bundle::LynxLazyBundleRequest request{
+      .url = src, .resource_type = pub::LynxResourceType::kFrame};
+  FetchBundle(std::move(request));
 }
 
 void LazyBundleLoader::MarkComponentLoading(const std::string& url) {
@@ -228,7 +195,7 @@ void LazyBundleLoader::RequireTemplate(RadonLazyComponent* lazy_bundle,
 
 /**
  * This method should be implemented at the platform layer
- * and callback LazyBundleLoader::DidPreloadTemplate
+ * and callback LazyBundleLoader::DidFetchBundle
  */
 void LazyBundleLoader::PreloadTemplates(const std::vector<std::string>& urls) {
   if (!resource_loader_) {
@@ -238,35 +205,53 @@ void LazyBundleLoader::PreloadTemplates(const std::vector<std::string>& urls) {
     return;
   }
   std::for_each(urls.begin(), urls.end(), [this](const auto& url) {
-    auto request = pub::LynxResourceRequest{
-        url, pub::LynxResourceType::kLazyBundle, false};
-    resource_loader_->LoadResource(
-        request, [url, weak_self = weak_from_this()](
-                     pub::LynxResourceResponse& response) {
-          auto self = weak_self.lock();
-          if (!self) {
-            return;
-          }
-          std::optional<std::string> err_msg = std::nullopt;
-          if (!response.Success()) {
-            err_msg = std::move(response.err_msg);
-          }
-          std::optional<LynxTemplateBundle> bundle = std::nullopt;
-          if (response.bundle != nullptr) {
-            bundle = *static_cast<LynxTemplateBundle*>(response.bundle);
-          }
-          self->DidPreloadTemplate(LazyBundleLoader::CallBackInfo{
-              std::move(url), std::move(response.data), std::move(bundle),
-              std::move(err_msg)});
-        });
+    lazy_bundle::LynxLazyBundleRequest request{.url = url};
+    FetchBundle(request);
   });
 }
 
-void LazyBundleLoader::DidPreloadTemplate(
+void LazyBundleLoader::FetchBundle(
+    lazy_bundle::LynxLazyBundleRequest bundle_request) {
+  if (!resource_loader_) {
+    LOGE("LazyBundleLoader::FetchBundle fails, error: no resource loader, url: "
+         << bundle_request.url);
+    if (bundle_request.response_promise) {
+      bundle_request.response_promise->SetValue(
+          {.url = std::move(bundle_request.url),
+           .code = LYNX_BUNDLE_RESOURCE_INFO_REQUEST_FAILED});
+    }
+    return;
+  }
+  auto request = pub::LynxResourceRequest{
+      bundle_request.url, pub::LynxResourceType::kLazyBundle, false};
+  resource_loader_->LoadResource(
+      request, [bundle_request = std::move(bundle_request),
+                weak_self = weak_from_this()](
+                   pub::LynxResourceResponse& response) mutable {
+        auto self = weak_self.lock();
+        if (!self) {
+          return;
+        }
+        std::optional<std::string> err_msg = std::nullopt;
+        if (!response.Success()) {
+          err_msg = std::move(response.err_msg);
+        }
+        std::optional<LynxTemplateBundle> bundle = std::nullopt;
+        if (response.bundle != nullptr) {
+          bundle = *static_cast<LynxTemplateBundle*>(response.bundle);
+        }
+        auto callback_info = LazyBundleLoader::CallBackInfo{
+            bundle_request.url, std::move(response.data), std::move(bundle),
+            std::move(err_msg)};
+        callback_info.request = std::move(bundle_request);
+        self->DidFetchBundle(std::move(callback_info));
+      });
+}
+
+void LazyBundleLoader::DidFetchBundle(
     LazyBundleLoader::CallBackInfo callback_info) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, DYNAMIC_COMPONENT_DID_PRELOAD, "url",
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LAZY_BUNDLE_DID_FETCH_BUNDLE, "url",
               callback_info.component_url);
-  DecodeBundle(callback_info, false);
 
 #ifdef OS_ANDROID
   // TODO(zhoupeng): Currently, there is no easy way to get JsEngineType, so
@@ -277,11 +262,13 @@ void LazyBundleLoader::DidPreloadTemplate(
         lynx::piper::JSRuntimeType::quickjs);
   }
 #endif
-
   if (engine_actor_) {
-    engine_actor_->ActAsync(
+    engine_actor_->Act(
         [callback_info = std::move(callback_info)](auto& engine) mutable {
-          engine->DidPreloadComponent(std::move(callback_info));
+          // TODO(zhoupeng.z): decode template bundle in child thread.
+          DecodeBundle(callback_info, callback_info.request.resource_type ==
+                                          pub::LynxResourceType::kFrame);
+          engine->DidFetchBundle(std::move(callback_info));
         });
   }
 }

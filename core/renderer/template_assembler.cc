@@ -1248,18 +1248,6 @@ void TemplateAssembler::SetLazyBundleLoader(
   component_loader_ = loader;
 }
 
-void TemplateAssembler::DidPreloadComponent(
-    LazyBundleLoader::CallBackInfo callback_info) {
-  if (callback_info.Success()) {
-    InsertLynxTemplateBundle(callback_info.component_url,
-                             std::move(*callback_info.bundle));
-  } else {
-    ReportError(ConstructLynxErrorForLazyBundle(
-        callback_info.component_url, callback_info.error_code,
-        callback_info.error_msg, kNetworkSuggestion, true));
-  }
-}
-
 void TemplateAssembler::DidLoadComponent(
     LazyBundleLoader::CallBackInfo callback_info,
     std::shared_ptr<PipelineOptions>& pipeline_options) {
@@ -1293,13 +1281,34 @@ void TemplateAssembler::DidLoadComponent(
   }
 }
 
-void TemplateAssembler::DidLoadBundle(
+void TemplateAssembler::DidFetchBundle(
     LazyBundleLoader::CallBackInfo callback_info) {
-  if (callback_info.Success()) {
-    element_manager_delegate_.DidFrameBundleLoaded(
-        callback_info.component_url, std::move(*callback_info.bundle));
+  auto request = std::move(callback_info.request);
+  if (callback_info.Success() && callback_info.bundle) {
+    if (callback_info.bundle->IsCard()) {
+      element_manager_delegate_.DidFrameBundleLoaded(
+          callback_info.component_url, std::move(*callback_info.bundle));
+    } else {
+      InsertLynxTemplateBundle(callback_info.component_url,
+                               std::move(*callback_info.bundle));
+      // TODO(zhoupeng.z): may cause dead lock if MTS do `ResponceHandle.wait`,
+      // fix it later
+      if (request.response_promise) {
+        request.response_promise->SetValue(
+            {.url = request.url, .code = LYNX_BUNDLE_RESOURCE_INFO_SUCCESS});
+      }
+    }
+  } else {
+    // TODO(zhoupeng.z): report error about loading frame bundle
+    ReportError(ConstructLynxErrorForLazyBundle(
+        callback_info.component_url, callback_info.error_code,
+        callback_info.error_msg, kNetworkSuggestion, true));
+    if (request.response_promise) {
+      request.response_promise->SetValue(
+          {.url = request.url,
+           .code = LYNX_BUNDLE_RESOURCE_INFO_REQUEST_FAILED});
+    }
   }
-  // TODO(zhoupeng.z): report error about loading frame bundle
 }
 
 void TemplateAssembler::LoadComponentWithCallbackInfo(
@@ -2528,13 +2537,8 @@ void TemplateAssembler::FetchBundle(
     response_promise->SetValue(
         {.url = bundle_url, .code = LYNX_BUNDLE_RESOURCE_INFO_SUCCESS});
   } else {
-    base::TaskRunnerManufactor::PostTaskToConcurrentLoop(
-        [bundle_url, promise = std::move(response_promise)]() mutable {
-          // TODO(@nihao.royal): invoke LazyBundleLoader to retrieve result.
-          promise->SetValue({.url = std::move(bundle_url),
-                             .code = LYNX_BUNDLE_RESOURCE_INFO_SUCCESS});
-        },
-        base::ConcurrentTaskType::NORMAL_PRIORITY);
+    component_loader_->FetchBundle(lazy_bundle::LynxLazyBundleRequest{
+        .url = bundle_url, .response_promise = response_promise});
   }
 }
 

@@ -298,16 +298,15 @@ class TemplateAssembler final : public TemplateEntryHolder,
       const std::shared_ptr<TemplateData>& template_data,
       std::shared_ptr<PipelineOptions>& pipeline_options);
 
-  void DidPreloadComponent(LazyBundleLoader::CallBackInfo callback_info);
-
   void DidLoadComponent(LazyBundleLoader::CallBackInfo callback_info,
                         std::shared_ptr<PipelineOptions>& pipeline_options);
 
   /**
-   * Receive bundle resource, only support frame bundle currently
+   * Receive bundle resource, support frame bundle, preloaded bundle, js
+   * fetching bundle currently
    * TODO(zhoupeng.z): collapse interface with `DidLoadComponent`
    */
-  void DidLoadBundle(LazyBundleLoader::CallBackInfo callback_info);
+  void DidFetchBundle(LazyBundleLoader::CallBackInfo callback_info);
 
   void LoadComponentWithCallbackInfo(
       LazyBundleLoader::CallBackInfo callback_info,

@@ -150,16 +150,13 @@ class LynxEngine {
   void DidLoadComponentFromJS(
       tasm::LazyBundleLoader::CallBackInfo callback_info);
 
-  void DidPreloadComponent(
-      lynx::tasm::LazyBundleLoader::CallBackInfo callback_info);
-
   void DidLoadComponent(lynx::tasm::LazyBundleLoader::CallBackInfo);
 
   /**
    * Receive bundle resource, only support frame bundle currently
    * TODO(zhoupeng.z): collapse interface with `DidLoadComponent`
    */
-  void DidLoadBundle(lynx::tasm::LazyBundleLoader::CallBackInfo);
+  void DidFetchBundle(lynx::tasm::LazyBundleLoader::CallBackInfo);
 
   std::unique_ptr<lepus_value> GetCurrentData();
 

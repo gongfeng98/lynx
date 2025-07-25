@@ -14,6 +14,7 @@ lynx_core_source_set("resource") {
     "lazy_bundle/lazy_bundle_lifecycle_option.h",
     "lazy_bundle/lazy_bundle_loader.cc",
     "lazy_bundle/lazy_bundle_loader.h",
+    "lazy_bundle/lazy_bundle_request.h",
     "lazy_bundle/lazy_bundle_utils.cc",
     "lazy_bundle/lazy_bundle_utils.h",
   ]

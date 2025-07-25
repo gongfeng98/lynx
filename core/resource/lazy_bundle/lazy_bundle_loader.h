@@ -18,6 +18,7 @@
 #include "core/public/lynx_resource_loader.h"
 #include "core/renderer/dom/vdom/radon/radon_lazy_component.h"
 #include "core/resource/lazy_bundle/lazy_bundle_lifecycle_option.h"
+#include "core/resource/lazy_bundle/lazy_bundle_request.h"
 #include "core/template_bundle/lynx_template_bundle.h"
 
 namespace lynx {
@@ -92,6 +93,9 @@ class LazyBundleLoader : public std::enable_shared_from_this<LazyBundleLoader> {
     // for js
     int32_t callback_id{-1};
     std::vector<std::string> component_ids;
+    // TODO(zhoupeng.z): all info from request should be moved to
+    // LynxLazyBundleRequest
+    lazy_bundle::LynxLazyBundleRequest request;
 
    private:
     void HandleError(const std::optional<std::string>& error);
@@ -140,7 +144,6 @@ class LazyBundleLoader : public std::enable_shared_from_this<LazyBundleLoader> {
    * Load bundle for frame
    */
   void LoadFrameBundle(const std::string& src);
-  void DidLoadFrameBundle(LazyBundleLoader::CallBackInfo);
 
   void DidLoadComponent(LazyBundleLoader::CallBackInfo);
 
@@ -157,7 +160,16 @@ class LazyBundleLoader : public std::enable_shared_from_this<LazyBundleLoader> {
 
   virtual void PreloadTemplates(const std::vector<std::string>& urls);
 
-  void DidPreloadTemplate(LazyBundleLoader::CallBackInfo callback_info);
+  /**
+   * Load bundle for frame, preload and js fetching, will call DidFetchBundle.
+   * TODO(zhoupeng.z): Merge with other apis about fetching bundle.
+   */
+  void FetchBundle(lazy_bundle::LynxLazyBundleRequest request);
+
+  /**
+   * Callback of FetchBundle, will do predecode
+   */
+  void DidFetchBundle(LazyBundleLoader::CallBackInfo callback_info);
 
   // is being required synchronously
   bool SyncRequiring(const std::string& url);

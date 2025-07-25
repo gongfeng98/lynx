@@ -315,11 +315,6 @@ void LynxEngine::DidLoadComponentFromJS(
                                        pipeline_options);
 }
 
-void LynxEngine::DidPreloadComponent(
-    lynx::tasm::LazyBundleLoader::CallBackInfo callback_info) {
-  tasm_->DidPreloadComponent(std::move(callback_info));
-}
-
 void LynxEngine::DidLoadComponent(
     lynx::tasm::LazyBundleLoader::CallBackInfo callback_info) {
   tasm::timing::LongTaskMonitor::Scope longTaskScope(
@@ -335,9 +330,9 @@ void LynxEngine::DidLoadComponent(
   tasm_->DidLoadComponent(std::move(callback_info), pipeline_options);
 }
 
-void LynxEngine::DidLoadBundle(
+void LynxEngine::DidFetchBundle(
     lynx::tasm::LazyBundleLoader::CallBackInfo callback_info) {
-  tasm_->DidLoadBundle(std::move(callback_info));
+  tasm_->DidFetchBundle(std::move(callback_info));
 }
 
 std::unique_ptr<lepus_value> LynxEngine::GetCurrentData() {
