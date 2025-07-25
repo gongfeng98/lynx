@@ -454,6 +454,9 @@ bool ListContainerImpl::ResolveAttribute(const base::String& key,
         std::min(list::ListDebugInfoLevel::kListDebugInfoLevelVerbose,
                  static_cast<list::ListDebugInfoLevel>(value.Number()));
     should_set_props = false;
+  } else if (key.IsEqual(list::kExperimentalRecycleAvailableItemBeforeLayout)) {
+    recycle_available_item_before_layout_ = value.Bool();
+    should_set_props = false;
   }
   if (should_mark_layout_dirty) {
     element_->MarkLayoutDirty();
@@ -478,6 +481,10 @@ void ListContainerImpl::OnLayoutChildren(
       // options->has_layout to make sure invoke FinishLayoutOperation() to
       // trigger layoutDidfinished lifecycle of all list's children.
       should_flush_finish_layout_ = options->has_layout;
+      // Try to enqueue all available items before layout.
+      if (recycle_available_item_before_layout_) {
+        list_adapter_->EnqueueElementsIfNeeded();
+      }
       if (!enable_batch_render()) {
         list_layout_manager_->OnLayoutChildren();
       } else {

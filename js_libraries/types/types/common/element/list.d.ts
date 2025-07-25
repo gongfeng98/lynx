@@ -739,6 +739,15 @@ export interface ListProps extends StandardProps {
    */
   'needs-visible-cells'?: boolean;
 
+  /**
+   * Control whether the list recycle available items before layout, so list can reuse these items in this layout pass. By default, the list will recycle all items after layout.
+   * @defaultValue  false
+   * @Android
+   * @iOS
+   * @Harmony
+   */
+  'experimental-recycle-available-item-before-layout'?: boolean;
+
    /**
    * Control whether the 'attachedCells' is included in the scroll event callback parameters on native list.
    * @defaultValue  false

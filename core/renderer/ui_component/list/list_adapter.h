@@ -68,7 +68,8 @@ class ListAdapter : public AdapterHelper::Delegate {
   virtual void OnItemHolderUpdateFrom(ItemHolder* item_holder) = 0;
 
   // Handle diff update to
-  virtual void OnItemHolderUpdateTo(ItemHolder* item_holder) = 0;
+  virtual void OnItemHolderUpdateTo(ItemHolder* item_holder,
+                                    bool fiber_flush) = 0;
 
   // Handle diff moved from
   virtual void OnItemHolderMovedFrom(ItemHolder* item_holder) = 0;
@@ -78,6 +79,8 @@ class ListAdapter : public AdapterHelper::Delegate {
 
   // Handle diff remove and insert again.
   virtual void OnItemHolderReInsert(ItemHolder* item_holder) = 0;
+
+  virtual void OnEnqueueElement(ItemHolder* item_holder) = 0;
 
 #if ENABLE_TRACE_PERFETTO
   void UpdateTraceDebugInfo(TraceEvent* event) const;
@@ -153,6 +156,8 @@ class ListAdapter : public AdapterHelper::Delegate {
   void UpdateLayoutInfoToItemHolder(Element* list_item,
                                     ItemHolder* item_holder);
 
+  void EnqueueElementsIfNeeded();
+
   ItemHolder* GetItemHolderForIndex(int index);
 
   bool IsFullSpanAtIndex(int index);
@@ -187,6 +192,10 @@ class ListAdapter : public AdapterHelper::Delegate {
  protected:
   int64_t GenerateOperationId() const;
 
+  // It will invoked list's EnqueueComponent() to recycle component
+  // bound with ItemHolder and remove platform view from parent.
+  void EnqueueElement(ItemHolder* item_holder);
+
  private:
   float GetEstimatedSizeForIndex(int index);
 
@@ -198,6 +207,7 @@ class ListAdapter : public AdapterHelper::Delegate {
   Element* list_element_{nullptr};
   ListContainerImpl* list_container_{nullptr};
   std::unique_ptr<list::ItemHolderMap> item_holder_map_;
+  ItemHolderSet fiber_flush_item_holder_set_;
 
  private:
   std::unique_ptr<AdapterHelper> adapter_helper_;

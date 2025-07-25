@@ -2,6 +2,7 @@
 
 ## 3.4.3
 - Add `font-variation-settings`,`font-feature-settings` and `font-optical-sizing` CSS properties.
+- Add `experimental-recycle-available-item-before-layout` property for list.
 
 ## 3.4.2
 - And `lynx.fetchBundle` api defines.

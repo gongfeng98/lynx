@@ -117,7 +117,7 @@ bool ListAdapter::UpdateDataSource(const lepus::Value& data_source) {
     for (const auto& cur : adapter_helper_->update_to()) {
       ItemHolder* child_holder = GetItemHolderForIndex(cur);
       if (child_holder) {
-        OnItemHolderUpdateTo(child_holder);
+        OnItemHolderUpdateTo(child_holder, false);
       }
     }
 
@@ -290,7 +290,7 @@ void ListAdapter::MarkChildHolderDirty() {
   for (const auto& cur : adapter_helper_->update_to()) {
     child_holder = GetItemHolderForIndex(cur);
     if (child_holder) {
-      OnItemHolderUpdateTo(child_holder);
+      OnItemHolderUpdateTo(child_holder, true);
     }
   }
   for (const auto& cur : adapter_helper_->update_from()) {
@@ -407,6 +407,60 @@ void ListAdapter::UpdateLayoutInfoToItemHolder(Element* list_item,
   if (list_item && item_holder && IsFinishedBinding(item_holder) &&
       GetListItemElement(item_holder) == list_item) {
     item_holder->UpdateLayoutFromElement(list_item);
+  }
+}
+
+void ListAdapter::EnqueueElementsIfNeeded() {
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, LIST_ADAPTER_ENQUEUE_ELEMENTS);
+  bool need_flush = !fiber_flush_item_holder_set_.empty();
+  if (!fiber_flush_item_holder_set_.empty()) {
+    list_container_->list_children_helper()->ForEachChild(
+        fiber_flush_item_holder_set_, [this](ItemHolder* item_holder) {
+          EnqueueElement(item_holder);
+          return false;
+        });
+    fiber_flush_item_holder_set_.clear();
+  }
+  for (auto& it : *item_holder_map_) {
+    const auto& item_holder = it.second;
+    // Note: If the ItemHolder is removed, we only try to enqueue element, not
+    // erase it from item_holder_map_.
+    if (item_holder && IsRemoved(item_holder.get())) {
+      EnqueueElement(item_holder.get());
+      need_flush = true;
+    }
+  }
+  if (need_flush) {
+    list_element_->painting_context()->FlushImmediately();
+  }
+}
+
+// It will invoked list's EnqueueComponent() to recycle component
+// bound with ItemHolder and remove platform view from parent.
+void ListAdapter::EnqueueElement(ItemHolder* item_holder) {
+  ListNode* list_node = nullptr;
+  if (!item_holder || !list_element_ ||
+      !(list_node = list_element_->GetListNode())) {
+    NLIST_LOGE("ListAdapter::EnqueueElement: "
+               << "null item holder or list element or list node");
+    return;
+  }
+  Element* list_item = GetListItemElement(item_holder);
+  if (list_item) {
+    // Remove list item platform view.
+    int32_t list_id = list_element_->impl_id();
+    int32_t list_item_id = list_item->impl_id();
+    list_element_->element_manager()
+        ->painting_context()
+        ->RemoveListItemPaintingNode(list_id, list_item_id);
+    // Enqueue list item.
+    list_node->EnqueueComponent(list_item_id);
+    // Detach child.
+    if (list_container_->list_children_helper()) {
+      list_container_->list_children_helper()->DetachChild(item_holder,
+                                                           list_item);
+    }
+    OnEnqueueElement(item_holder);
   }
 }
 

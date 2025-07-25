@@ -26,10 +26,14 @@ void DefaultListAdapter::OnItemHolderUpdateFrom(ItemHolder* item_holder) {
   }
 }
 
-void DefaultListAdapter::OnItemHolderUpdateTo(ItemHolder* item_holder) {
+void DefaultListAdapter::OnItemHolderUpdateTo(ItemHolder* item_holder,
+                                              bool fiber_flush) {
   if (item_holder) {
     item_holder->MarkDirty(true);
     item_holder->MarkDiffStatus(list::DiffStatus::kUpdateTo);
+    if (fiber_flush && GetListItemElement(item_holder)) {
+      fiber_flush_item_holder_set_.insert(item_holder);
+    }
   }
 }
 
@@ -59,6 +63,15 @@ void DefaultListAdapter::OnDataSetChanged() {
         pair.second->MarkDirty(true);
       }
     }
+  }
+}
+
+void DefaultListAdapter::OnEnqueueElement(ItemHolder* item_holder) {
+  if (item_holder) {
+    if (list_container_->list_event_manager()) {
+      list_container_->list_event_manager()->OnViewDetach(item_holder);
+    }
+    item_holder->SetElement(nullptr);
   }
 }
 
@@ -176,37 +189,16 @@ void DefaultListAdapter::OnFinishBindItemHolder(
   }
 }
 
-// Recycle ItemHolder. It will invoked list's EnqueueComponent() to recycle
-// component bound with ItemHolder and remove platform view from parent.
+// Recycle ItemHolder.
 void DefaultListAdapter::RecycleItemHolder(ItemHolder* item_holder) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LIST_ADAPTER_RECYCLE_ITEM_HOLDER,
               [this, item_holder](lynx::perfetto::EventContext ctx) {
                 UpdateTraceDebugInfo(ctx.event(), item_holder);
               });
-  if (!list_element_ || !list_container_ || !item_holder ||
-      !item_holder->element()) {
-    return;
+  if (item_holder) {
+    EnqueueElement(item_holder);
+    list_element_->painting_context()->FlushImmediately();
   }
-  ListNode* list_node = nullptr;
-  if (!list_element_ || !(list_node = list_element_->GetListNode())) {
-    NLIST_LOGE("DefaultListAdapter::RecycleItemHolder: "
-               << "null list element or list node");
-    return;
-  }
-  if (list_container_->list_event_manager()) {
-    list_container_->list_event_manager()->OnViewDetach(item_holder);
-  }
-  int32_t comp_id = item_holder->element()->impl_id();
-  list_node->EnqueueComponent(comp_id);
-  list_element_->element_manager()
-      ->painting_context()
-      ->RemoveListItemPaintingNode(list_element_->impl_id(), comp_id);
-  if (list_container_->list_children_helper()) {
-    list_container_->list_children_helper()->DetachChild(
-        item_holder, item_holder->element());
-  }
-  item_holder->SetElement(nullptr);
-  list_element_->painting_context()->FlushImmediately();
 }
 
 #if ENABLE_TRACE_PERFETTO

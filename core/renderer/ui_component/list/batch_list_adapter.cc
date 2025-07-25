@@ -34,16 +34,27 @@ void BatchListAdapter::OnItemHolderRemoved(ItemHolder* item_holder) {
   MarkItemStatus(item_holder->item_key(), list::ItemStatus::kRemoved);
 }
 
-void BatchListAdapter::OnItemHolderUpdateTo(ItemHolder* item_holder) {
+void BatchListAdapter::OnItemHolderUpdateTo(ItemHolder* item_holder,
+                                            bool fiber_flush) {
   const std::string& item_key = item_holder->item_key();
   auto it = item_status_map_->find(item_key);
   if (it != item_status_map_->end() && !IsNeverBind(it->second)) {
     MarkItemStatus(item_key, list::ItemStatus::kUpdated);
+    if (fiber_flush && GetListItemElement(item_holder)) {
+      fiber_flush_item_holder_set_.insert(item_holder);
+    }
   }
 }
 
 void BatchListAdapter::OnItemHolderReInsert(ItemHolder* item_holder) {
   MarkItemStatus(item_holder->item_key(), list::ItemStatus::kNeverBind);
+}
+
+void BatchListAdapter::OnEnqueueElement(ItemHolder* item_holder) {
+  if (item_holder) {
+    // Note: This is only chance to erase list item element from map.
+    list_item_element_map_->erase(item_holder->item_key());
+  }
 }
 
 void BatchListAdapter::OnDataSetChanged() {
@@ -281,38 +292,19 @@ void BatchListAdapter::RecycleItemHolder(ItemHolder* item_holder) {
               [this, item_holder](lynx::perfetto::EventContext ctx) {
                 UpdateTraceDebugInfo(ctx.event(), item_holder);
               });
-  ListNode* list_node = nullptr;
-  if (!item_holder || !list_element_ ||
-      !(list_node = list_element_->GetListNode())) {
-    NLIST_LOGE("BatchListAdapter::RecycleItemHolder: "
-               << "null item holder or list element or list node");
-    return;
-  }
-  const std::string& item_key = item_holder->item_key();
-  auto it = item_status_map_->find(item_key);
-  if (it != item_status_map_->end()) {
-    const auto& item_status = it->second;
-    if (IsRemoved(item_status)) {
-      // If the data is removed, we need erase it from item_status_map_.
-      item_status_map_->erase(item_key);
-    } else if (IsFinishedBinding(item_status)) {
-      // If the data is finish binding, we set it to bound.
-      MarkItemStatus(item_key, list::ItemStatus::kRecycled);
-    }
-    Element* list_item = GetListItemElement(item_key);
-    if (list_item) {
-      // Remove list item platform view and enqueue list item.
-      list_element_->element_manager()
-          ->painting_context()
-          ->RemoveListItemPaintingNode(list_element_->impl_id(),
-                                       list_item->impl_id());
-      list_node->EnqueueComponent(list_item->impl_id());
-      if (list_container_->list_children_helper()) {
-        list_container_->list_children_helper()->DetachChild(item_holder,
-                                                             list_item);
+  if (item_holder) {
+    const std::string& item_key = item_holder->item_key();
+    auto it = item_status_map_->find(item_key);
+    if (it != item_status_map_->end()) {
+      const auto& item_status = it->second;
+      if (IsRemoved(item_status)) {
+        // If the data is removed, we need erase it from item_status_map_.
+        item_status_map_->erase(item_key);
+      } else if (IsFinishedBinding(item_status)) {
+        // If the data is finish binding, we set it to bound.
+        MarkItemStatus(item_key, list::ItemStatus::kRecycled);
       }
-      // Note: This is only chance to erase list item element from map.
-      list_item_element_map_->erase(item_key);
+      EnqueueElement(item_holder);
     }
   }
 }

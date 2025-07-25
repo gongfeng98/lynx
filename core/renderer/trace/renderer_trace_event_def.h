@@ -822,6 +822,8 @@ inline constexpr const char* const ADAPTER_HELPER_UPDATE_FIBER_EXTRA_INFO =
     "AdapterHelper::UpdateFiberExtraInfo";
 inline constexpr const char* const LIST_ADAPTER_BIND_ITEM_HOLDER =
     "ListAdapter::BindItemHolder";
+inline constexpr const char* const LIST_ADAPTER_ENQUEUE_ELEMENTS =
+    "ListAdapter::EnqueueElements";
 inline constexpr const char* const LIST_ADAPTER_BIND_ITEM_HOLDERS =
     "BatchListAdapter::BindItemHolders";
 inline constexpr const char* const LIST_ADAPTER_FINISH_BIND_ITEM_HOLDERS =

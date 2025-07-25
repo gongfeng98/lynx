@@ -138,6 +138,7 @@ class ListContainerImpl : public ListContainer::Delegate {
  private:
   using BindingItemHolderMap = std::unordered_map<int64_t, ItemHolder*>;
   bool batch_adapter_initialized_{false};
+  bool recycle_available_item_before_layout_{false};
   bool sticky_enabled_{false};
   bool recycle_sticky_item_{true};
   int sticky_buffer_count_{list::kInvalidItemCount};

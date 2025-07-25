@@ -46,6 +46,9 @@ static constexpr const char* const kBounces = "bounces";
 static constexpr const char* const kListType = "list-type";
 static constexpr const char* const kListVerticalOrientation =
     "vertical-orientation";
+static constexpr const char* const
+    kExperimentalRecycleAvailableItemBeforeLayout =
+        "experimental-recycle-available-item-before-layout";
 static constexpr const char* const kListMainAxisGap = "list-main-axis-gap";
 static constexpr const char* const kListCrossAxisGap = "list-cross-axis-gap";
 static constexpr const char* const kColumnCount = "column-count";

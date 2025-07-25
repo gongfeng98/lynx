@@ -53,7 +53,7 @@ class DefaultListAdapter : public ListAdapter {
   void OnItemHolderUpdateFrom(ItemHolder* item_holder) override;
 
   // Handle diff update to
-  void OnItemHolderUpdateTo(ItemHolder* item_holder) override;
+  void OnItemHolderUpdateTo(ItemHolder* item_holder, bool fiber_flush) override;
 
   // Handle diff moved from
   void OnItemHolderMovedFrom(ItemHolder* item_holder) override;
@@ -63,6 +63,8 @@ class DefaultListAdapter : public ListAdapter {
 
   // Handle diff remove and insert again.
   void OnItemHolderReInsert(ItemHolder* item_holder) override;
+
+  void OnEnqueueElement(ItemHolder* item_holder) override;
 
 #if ENABLE_TRACE_PERFETTO
   void UpdateTraceDebugInfo(TraceEvent* event,

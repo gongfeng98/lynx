@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+#define private public
+#define protected public
+
 #include "core/renderer/ui_component/list/default_list_adapter.h"
 
 #include <memory>
@@ -340,7 +343,7 @@ TEST_F(DefaultListAdapterTest, FiberDiffCase2) {
       lepus::Value(fiber_diff_result_1.Resolve()));
 }
 
-TEST_F(DefaultListAdapterTest, FiberDiffCase3) {
+TEST_F(DefaultListAdapterTest, EnqueueElementsIfNeeded) {
   // test duplicated item key
   list::InsertAction insert_action{
       .insert_ops_ = {
@@ -357,6 +360,74 @@ TEST_F(DefaultListAdapterTest, FiberDiffCase3) {
       .Times(1);
   default_list_adapter->UpdateFiberDataSource(
       lepus::Value(fiber_diff_result_0.Resolve()));
+}
+
+TEST_F(DefaultListAdapterTest, FiberDiffCase4) {
+  list::InsertAction insert_action{
+      .insert_ops_ = {
+          {.position_ = 0, "A_0", 100, false, false, false},
+          {.position_ = 1, "B_1", 100, false, false, false},
+          {.position_ = 2, "C_2", 100, false, false, false},
+          {.position_ = 3, "D_3", 100, false, false, false},
+          {.position_ = 4, "E_4", 100, false, false, false},
+          {.position_ = 5, "F_5", 100, false, false, false},
+          {.position_ = 6, "G_6", 100, false, false, false},
+          {.position_ = 7, "H_7", 100, false, false, false},
+          {.position_ = 8, "I_8", 100, false, false, false},
+          {.position_ = 9, "J_9", 100, false, false, false},
+      }};
+  list::FiberDiffResult fiber_diff_result_0{
+      .insert_action_ = insert_action,
+  };
+  int item_count = 10;
+  default_list_adapter->UpdateFiberDataSource(
+      lepus::Value(fiber_diff_result_0.Resolve()));
+  default_list_adapter->UpdateItemHolderToLatest(list_children_helper.get());
+  for (int index = 0; index < item_count; ++index) {
+    ItemHolder* item_holder =
+        default_list_adapter->GetItemHolderForIndex(index);
+    if (item_holder) {
+      // Bind
+      EXPECT_TRUE(default_list_adapter->BindItemHolder(item_holder, index));
+      auto pipeline = std::make_shared<PipelineOptions>();
+      pipeline->operation_id =
+          list::GenerateOperationId(list_element_ref->impl_id());
+      auto list_item_ref = CreateComponentElement();
+      default_list_adapter->OnFinishBindItemHolder(list_item_ref.get(),
+                                                   pipeline);
+      EXPECT_TRUE(default_list_adapter->GetListItemElement(item_holder) !=
+                  nullptr);
+    }
+  }
+  // Test flush is true for update action.
+  list::UpdateAction update_action{
+      .update_ops_ =
+          {
+              {.from_ = 0, .to_ = 0, true, "A_0", 50, true, true, true},
+              {.from_ = 1, .to_ = 1, true, "B_1", 50, true, true, true},
+              {.from_ = 2, .to_ = 2, true, "C_2", 50, true, true, true},
+              {.from_ = 3, .to_ = 3, true, "D_3", 50, true, true, true},
+              {.from_ = 4, .to_ = 4, true, "E_4", 50, true, true, true},
+          },
+  };
+  list::RemoveAction remove_action{
+      .remove_ops_ = {5, 6, 7, 8, 9},
+  };
+  list::FiberDiffResult fiber_diff_result_1{
+      .remove_action_ = remove_action,
+      .update_action_ = update_action,
+  };
+  item_count = 5;
+  default_list_adapter->UpdateFiberDataSource(
+      lepus::Value(fiber_diff_result_1.Resolve()));
+  EXPECT_EQ(default_list_adapter->fiber_flush_item_holder_set_.size(),
+            item_count);
+  // Test EnqueueElementsIfNeeded
+  default_list_adapter->EnqueueElementsIfNeeded();
+  for (const auto& pair : *(default_list_adapter->item_holder_map_)) {
+    EXPECT_EQ(default_list_adapter->GetListItemElement(pair.second.get()),
+              nullptr);
+  }
 }
 
 }  // namespace testing
