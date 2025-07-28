@@ -44,6 +44,16 @@ public class ImageRequestInfo {
 
   private boolean mForceStaticImage = false;
 
+  // Whether an image needs premultiplication: Libraries like Fresco default to premultiplying
+  // decoded images, but a switch lets you disable this and handle it yourself when needed.
+  // This should NOT be set to false for images to be directly drawn by the view system or through a
+  // Canvas. The view system and Canvas assume all drawn images are pre-multiplied to simplify
+  // draw-time blending, and will throw a RuntimeException when un-premultiplied are drawn. This is
+  // likely only useful if you want to manipulate raw encoded image data, e.g. with RenderScript or
+  // custom OpenGL.
+  // Notice!!!: This config is only used in decodeImage method.
+  private boolean mEnablePremultiplied = true;
+
   ImageRequestInfo(ImageRequestInfoBuilder builder) {
     mUrl = builder.getUrl();
     mResizeWidth = builder.getResizeWidth();
@@ -62,6 +72,7 @@ public class ImageRequestInfo {
     mAutoPlay = builder.isEnableAnimationAutoPlay();
     mUseLocalCache = builder.isUseLocalCache();
     mForceStaticImage = builder.isForceStaticImage();
+    mEnablePremultiplied = builder.isEnablePremultiplied();
   }
 
   public String getUrl() {
@@ -86,6 +97,10 @@ public class ImageRequestInfo {
 
   public boolean isEnableGifLiteDecoder() {
     return mEnableGifLiteDecoder;
+  }
+
+  public boolean isEnablePremultiplied() {
+    return mEnablePremultiplied;
   }
 
   public Map<String, String> getCustomParam() {

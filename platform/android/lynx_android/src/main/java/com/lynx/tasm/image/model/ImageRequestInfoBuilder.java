@@ -43,6 +43,8 @@ public class ImageRequestInfoBuilder {
 
   private boolean mForceStaticImage = false;
 
+  private boolean mEnablePremultiplied = true;
+
   public static ImageRequestInfoBuilder newBuilderWithSource(String url) {
     return new ImageRequestInfoBuilder().setUrl(url);
   }
@@ -62,6 +64,15 @@ public class ImageRequestInfoBuilder {
 
   public ImageRequestInfoBuilder setEnableAnimationAutoPlay(boolean mEnableAnimationAutoPlay) {
     this.mEnableAnimationAutoPlay = mEnableAnimationAutoPlay;
+    return this;
+  }
+
+  public boolean isEnablePremultiplied() {
+    return mEnablePremultiplied;
+  }
+
+  public ImageRequestInfoBuilder setEnablePremultiplied(boolean mEnablePremultiplied) {
+    this.mEnablePremultiplied = mEnablePremultiplied;
     return this;
   }
 
