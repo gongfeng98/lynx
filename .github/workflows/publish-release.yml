@@ -139,6 +139,10 @@ jobs:
           cocoapods_trunk_token: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           component: all
+          pod_token: ${{ secrets.POD_GITHUB_API_TOKEN }}
+      - name: remove pod
+        run: |-
+          pod repo remove my_specs
       - name: Publish iOS dev SDK
         uses: ./lynx/.github/actions/ios-sdk-publish
         env:
@@ -149,3 +153,4 @@ jobs:
           cocoapods_trunk_token: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           component: all
+          pod_token: ${{ secrets.POD_GITHUB_API_TOKEN }}
