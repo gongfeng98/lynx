@@ -21,6 +21,9 @@ inputs:
   github_token:
     description: The github token
     type: string
+  pod_token:
+    description: The github token
+    type: string
 
 runs:
   using: composite
@@ -42,11 +45,13 @@ runs:
     - name: Publish to CocoaPods Repo
       env:
         COCOAPODS_TRUNK_TOKEN: ${{ inputs.cocoapods_trunk_token }}
+        POD_GITHUB_API_TOKEN: ${{ inputs.pod_token }}
       shell: bash
       run: |-
         cd $GITHUB_WORKSPACE/lynx
         source tools/envsetup.sh
         git config --global user.name "lynx.authors"
         git config --global user.email "lynx.authors@users.noreply.github.com"
-        python3 tools/ios_tools/skip_pod_lint.py --source public
+        python3 tools/ios_tools/skip_pod_lint.py --source private
+        pod repo add my_specs  https://$POD_GITHUB_API_TOKEN@github.com/gongfeng98/Specs.git
         python3 tools/ios_tools/cocoapods_publish_helper.py --publish --component ${{ inputs.component }}

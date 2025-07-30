@@ -132,10 +132,13 @@ def pod_lint_component(component, local_pod_source_name):
     run_command(f'bundle exec pod spec lint {component}.podspec.json --sources=trunk,{local_pod_source_name} --verbose --skip-import-validation --allow-warnings --skip-tests')
 
 def publish_component(component, sources):
+    POD_GITHUB_API_TOKEN = os.getenv("POD_GITHUB_API_TOKEN")
+    print("111")
+    print(POD_GITHUB_API_TOKEN[:3])
     if sources != None:
-        run_command(f'pod repo add  my_specs https://github.com/gongfeng98/Specs && bundle exec pod repo push my_specs {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests --sources={sources}')
+        run_command(f'pod repo add  my_specs  https://{POD_GITHUB_API_TOKEN}@github.com/gongfeng98/Specs.git && bundle exec pod repo push my_specs {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests --sources={sources}')
     else:
-        run_command(f'pod repo add  my_specs https://github.com/gongfeng98/Specs && bundle exec pod repo push my_specs {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests')
+        run_command(f'pod repo add  my_specs  https://{POD_GITHUB_API_TOKEN}@github.com/gongfeng98/Specs.git && bundle exec pod repo push my_specs {component}.podspec.json --verbose --skip-import-validation --allow-warnings --skip-tests')
 
 
 def publish_to_cocoapods(component, sources):
