@@ -26,6 +26,12 @@ void PerfControllerProxyImpl::MarkTiming(tasm::TimingKey timing_key,
         ctx.event()->add_debug_annotations("instance_id",
                                            std::to_string(instance_id));
       });
+  SetTiming(timestamp_us, timing_key, pipeline_id);
+}
+
+void PerfControllerProxyImpl::SetTiming(
+    uint64_t timestamp_us, tasm::TimingKey timing_key,
+    const tasm::PipelineID& pipeline_id) const {
   perf_actor_->ActAsync([timestamp_us, pipeline_id,
                          timing_key =
                              std::move(timing_key)](auto& controller) mutable {
@@ -34,5 +40,6 @@ void PerfControllerProxyImpl::MarkTiming(tasm::TimingKey timing_key,
         key, static_cast<tasm::timing::TimestampUs>(timestamp_us), pipeline_id);
   });
 }
+
 }  // namespace shell
 }  // namespace lynx

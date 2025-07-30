@@ -23,6 +23,8 @@ class PerfControllerProxy {
    */
   virtual void MarkTiming(tasm::TimingKey timing_key,
                           const tasm::PipelineID& pipeline_id) = 0;
+  virtual void SetTiming(uint64_t timestamp_us, tasm::TimingKey timing_key,
+                         const tasm::PipelineID& pipeline_id) const = 0;
 };
 
 }  // namespace shell

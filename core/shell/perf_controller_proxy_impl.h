@@ -24,6 +24,8 @@ class PerfControllerProxyImpl : public PerfControllerProxy {
 
   void MarkTiming(tasm::TimingKey timing_key,
                   const tasm::PipelineID& pipeline_id) override;
+  void SetTiming(uint64_t timestamp_us, tasm::TimingKey timing_key,
+                 const tasm::PipelineID& pipeline_id) const override;
 
  protected:
   std::shared_ptr<shell::LynxActor<tasm::performance::PerformanceController>>
