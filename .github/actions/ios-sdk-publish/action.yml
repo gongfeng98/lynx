@@ -48,5 +48,5 @@ runs:
         source tools/envsetup.sh
         git config --global user.name "lynx.authors"
         git config --global user.email "lynx.authors@users.noreply.github.com"
-        python3 tools/ios_tools/skip_pod_lint.py --source public
+        python3 tools/ios_tools/skip_pod_lint.py --source private
         python3 tools/ios_tools/cocoapods_publish_helper.py --publish --component ${{ inputs.component }}

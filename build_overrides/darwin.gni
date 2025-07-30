@@ -111,7 +111,7 @@ devtool_prepare_command = build_devtool_resources_command
 
 LepusNG_deps = [ "PrimJS/quickjs" ]
 
-NapiBinding_Common_deps = [ "PrimJS/napi/env" ]
+NapiBinding_Common_deps = [[ "PrimJS/napi/env","2.13.3-rc.1", ]]
 
 QuickJS_includes = PRIMJS_includes
 QuickJS_deps = [ "PrimJS/napi/quickjs" ]
