@@ -1,0 +1,17 @@
+name: publish-release
+on:
+  push:
+    branches:
+      - test_push
+    paths:
+      - '.npmrc'
+
+jobs:
+  get-version:
+    runs-on: macos-13
+    timeout-minutes: 60
+    steps:
+      - name: Get Version
+        id: get_version
+        run: |-
+          echo "Test"
