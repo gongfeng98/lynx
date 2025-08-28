@@ -517,4 +517,8 @@
   }
 }
 
+- (void)setDebugTag:(NSString*)debugTag {
+  [_devtoolNG setTag:debugTag];
+}
+
 @end
