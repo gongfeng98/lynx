@@ -59,6 +59,7 @@ public class PageConfig {
   private static final String KEY_ENABLE_DISEXPOSURE_WHEN_LYNX_HIDDEN =
       "enableDisexposureWhenLynxHidden";
   private static final String KEY_ENABLE_EXPOSURE_WHEN_LAYOUT = "enableExposureWhenLayout";
+  private static final String KEY_ENABLE_EXPOSURE_WHEN_RELOAD = "enableExposureWhenReload";
   private static final String KEY_INCLUDE_FONT_PADDING = "includeFontPadding";
   private static final String KEY_ENABLE_NEW_INTERSECTION_OBSERVER =
       "enableNewIntersectionObserver";
@@ -117,6 +118,7 @@ public class PageConfig {
   private boolean mEnableEventRefactor = true;
   private boolean mEnableDisexposureWhenLynxHidden = true;
   private boolean mEnableExposureWhenLayout = false;
+  private boolean mEnableExposureWhenReload = false;
   private boolean mEnableFlattenTranslateZ = false;
   private boolean mEnableNewGesture = false;
   private boolean mEnablePlatformGesture = false;
@@ -296,6 +298,10 @@ public class PageConfig {
 
       if (map.hasKey(KEY_ENABLE_EXPOSURE_WHEN_LAYOUT)) {
         mEnableExposureWhenLayout = map.getBoolean(KEY_ENABLE_EXPOSURE_WHEN_LAYOUT, false);
+      }
+
+      if (map.hasKey(KEY_ENABLE_EXPOSURE_WHEN_RELOAD)) {
+        mEnableExposureWhenReload = map.getBoolean(KEY_ENABLE_EXPOSURE_WHEN_RELOAD, false);
       }
 
       if (map.hasKey(KEY_ENABLE_NEW_INTERSECTION_OBSERVER)) {
@@ -528,6 +534,10 @@ public class PageConfig {
 
   public boolean getEnableExposureWhenLayout() {
     return mEnableExposureWhenLayout;
+  }
+
+  public boolean getEnableExposureWhenReload() {
+    return mEnableExposureWhenReload;
   }
 
   public boolean getEnableNewIntersectionObserver() {
