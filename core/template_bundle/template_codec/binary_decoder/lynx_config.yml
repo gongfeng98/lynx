@@ -4,9 +4,8 @@
 
 extraInfo:
   description: user defined extraInfo.
-  defaultValue: ''
+  defaultValue: null
   valueType: lepus::Value
-  jsValueType: Object
   syncTo:
     - script
   codeGen:
@@ -15,17 +14,10 @@ extraInfo:
     - GETTER
   nameAs:
     const: kUserDefinedExtraInfo
-  author: nhsprite
-  since: '2.8'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 customCSSInheritanceList:
-  description: Custom Inheritable CSS Properties
-  defaultValue: ''
+  description:
+  defaultValue: null
   valueType: std::unordered_set<CSSPropertyID>
-  jsValueType: string[]
   bindMemberTo: css_configs_.custom_inherit_list_
   codeGen:
     - SETTER
@@ -33,370 +25,186 @@ customCSSInheritanceList:
   nameAs:
     setter: SetCustomCSSInheritList
     getter: GetCustomCSSInheritList
-  author: ShouruiSong
-  since: '1.6'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 version:
-  description: null
-  defaultValue: ''
+  description:
+  defaultValue: null
   valueType: string
   nameAs:
     member: page_version
-  author: nhsprite
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 cli:
   description: cli version
-  defaultValue: ''
+  defaultValue: null
   valueType: string
   nameAs:
     member: cli_version
     setter: SetCliVersion
     getter: GetCliVersion
     const: kCliVersion
-  author: nhsprite
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 reactVersion:
-  description: null
-  defaultValue: ''
+  description:
+  defaultValue: null
   valueType: string
-  author: Yradex
-  since: '2.1'
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 customData:
-  description: null
-  defaultValue: ''
+  description:
+  defaultValue: null
   valueType: string
-  author: nhsprite
-  deprecated: '3.5'
 tapSlop:
   description:
-    Specify the sliding distance threshold at which the tap event is not
-    triggered.
   defaultValue: 50px
   valueType: string
-  author: rAY-ooo
-  since: '2.0'
-  supportPlatform:
-    - Android
-    - HarmonyOS
 preferredFps:
-  description: Control the frame rate of CSS animations
-  defaultValue: auto
+  description:
+  defaultValue: 'auto'
   valueType: string
-  author: YellowFishWyfCPP
-  since: '3.0'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 quirksMode:
   description:
-    Supports string value. It is equal to TargetSDKVersion by default.
-    The mode is for compatibility with old pages that do not conform to CSS layout
-    specifications produced.
-  defaultValue: base::Version(1, 5)
+  defaultValue: 'base::Version(1, 5)'
   valueType: base::Version
-  jsValueType: 'boolean | string'
   codeGen:
     - NONE
-  author: givemefive9
-  since: '1.4'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableLynxScrollFluency:
-  description:
-    Force report lynx scroll fluency event. When setting pageConfig.enableLynxScrollFluency
-    to a double value in the range [0, 1], we will monitor the fluency metrics for
-    this LynxUI based on this probability. The probability indicates the likelihood
-    of enabling fluency monitoring, and the metrics will be reported unconditionally
-    through the applogService.
-  defaultValue: '-1'
+  description: Force report lynx scroll fluency event. When setting pageConfig.enableLynxScrollFluency to a double value in the range [0, 1], we will monitor the fluency metrics for this LynxUI based on this probability. The probability indicates the likelihood of enabling fluency monitoring, and the metrics will be reported unconditionally through the applogService.
+  defaultValue: -1
   valueType: double
-  jsValueType: boolean | number
   syncTo:
     - script
   codeGen:
     - MEMBER
   nameAs:
     member: enable_scroll_fluency_monitor
-  author: Tamerlx
-  since: '2.15'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 lepusGCThreshold:
-  description:
-    GC threshold of lepusNG. Let default value be 256, and the unit is
-    KB.
-  defaultValue: '256'
+  description: GC threshold of lepusNG. Let default value be 256, and the unit is KB.
+  defaultValue: 256
   valueType: int64_t
-  jsValueType: number
-  author: ShouruiSong
-  since: '2.9'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 pipelineSchedulerConfig:
-  description:
-    Scheduler config for pipeline, including enableParallelElement/list-framework
-    batch render and other scheduler config.
-  defaultValue: '0'
+  description: Scheduler config for pipeline, including enableParallelElement/list-framework batch render and other scheduler config.
+  defaultValue: 0
   valueType: uint64_t
-  jsValueType: number
   readNative: true
-  author: usczz
-  since: '3.1'
-  supportPlatform:
-    - Android
-    - iOS
+  author: 'usczz'
 redBoxImageSizeWarningThreshold:
   description: null
-  defaultValue: '1000000'
+  defaultValue: 1000000
   valueType: uint32_t
-  jsValueType: number
   nameAs:
     member: log_box_image_size_warning_threshold
     setter: SetLogBoxImageSizeWarningThreshold
     getter: GetLogBoxImageSizeWarningThreshold
     const: kLogBoxImageSizeWarningThreshold
-  author: pilipala195
-  deprecated: '3.5'
 lepusQuickjsStacksize:
-  description:
-    Set the virtual stack space of the lepusng engine, or use the system
-    default value if it is not set actively
-  defaultValue: '0'
+  description: null
+  defaultValue: 0
   valueType: uint32_t
-  jsValueType: number
   nameAs:
     member: lepus_quickjs_stack_size
     setter: SetLepusQuickjsStackSize
     getter: GetLepusQuickjsStackSize
-  author: zys777
-  since: '2.2'
-  supportPlatform:
-    - iOS
 observerFrameRate:
-  description: Specifies the frequency of exposure detection.
-  defaultValue: '20'
+  description:
+  defaultValue: 20
   valueType: int32_t
-  jsValueType: number
-  author: rAY-ooo
-  since: '2.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 longPressDuration:
-  description: Specify the interval for triggering the long press event.
-  defaultValue: '-1'
+  description:
+  defaultValue: -1
   valueType: int32_t
-  jsValueType: number
-  author: rAY-ooo
-  since: '2.8'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 useNewImage:
   description: null
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
-  author: liubb0516
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - iOS
 enableTextBoringLayout:
-  description: Enable using BoringLayout on Android.
+  description: Enable Android text BoringLayout.
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
-  author: Randycn
-  since: '2.17'
-  supportPlatform:
-    - Android
 enableTextLayerRender:
-  description: Enable using text layer render on iOS.
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
-  author: Randycn
-  since: '2.3'
-  supportPlatform:
-    - iOS
 enableUseMapBuffer:
-  description: Enable the mapbuffer structure for LynxProps.
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   readNative: true
-  author: nhsprite
-  since: '2.14'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+  author: 'nhsprite'
 enableFiberElementForRadonDiff:
-  description: Indicates whether use FiberElement for RadonDiff Arch.
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
-  author: DragonDragonDDD
+  author: 'DragonDragonDDD'
   readNative: true
-  since: '3.0'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableOptPushStyleToBundle:
-  description: Enable using PropBundleStyleWriter to write style to PropBundle.
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
-  author: ShouruiSong
+  author: 'ShouruiSong'
   readNative: true
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableTextLayoutCache:
-  description: Whether enable text layout cache.
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
-  author: Randycn
-  since: '3.3'
-  supportPlatform:
-    - Android
-    - iOS
 enableUnifiedPipeline:
-  description: Enable the unified pixel pipeline for Lynx Engine.
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
-  author: nhsprite
+  author: 'nhsprite'
   readNative: true
-  since: '3.4'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableUseContextPool:
-  description: Enable Use Context Pool For LepusNG VM creation.
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   codeGen:
     - MEMBER
     - SETTER
     - DECODE
-  author: nhsprite
-  since: '2.14'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableCSSLazyImport:
   description:
-    Under scoped CSS, the imported CSS declarations by import rules are
-    lazily decoded at the first time the scope takes effect.
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   codeGen:
     - MEMBER
     - SETTER
     - DECODE
-  author: zhongyr
-  since: '2.18'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableNewAnimator:
-  description: If this flag is false, will use platform animation ability.
-  defaultValue: TernaryBool::UNDEFINE_VALUE
-  valueType: TernaryBool
-  codeGen:
-    - MEMBER
-    - SETTER
-    - DECODE
-  author: YellowFishWyfCPP
-  since: '2.18'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
-enableComponentAsyncDecode:
   description:
-    Enable dynamic components to be decoded in child threads before they
-    are delivered into tasm in async-loading.
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   codeGen:
     - MEMBER
     - SETTER
     - DECODE
-  author: nhsprite
-  since: '2.14'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+enableComponentAsyncDecode:
+  description: Enable dynamic components to be decoded in child threads before they are delivered into tasm in async-loading.
+  defaultValue: TernaryBool::UNDEFINE_VALUE
+  valueType: TernaryBool
+  codeGen:
+    - MEMBER
+    - SETTER
+    - DECODE
 enableSignalAPI:
-  description: Enable using native signal API
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   readNative: true
-  author: ShouruiSong
-  since: '3.1'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+  author: 'ShouruiSong'
 enableNativeScheduleCreateViewAsync:
-  description: Enable create ui async form C++ PaintingContext
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   readNative: true
-  author: ShouruiSong
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
+  author: 'ShouruiSong'
 enableNativeList:
   description: Indicates whether use c++ list.
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   readNative: true
-  author: DwwWxx
-  since: '3.2'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+  author: 'DwwWxx'
 trailNewImage:
-  description: Enable the iOS image refactor
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   readNative: true
-  author: liubb0516
-  since: '2.6'
-  supportPlatform:
-    - iOS
+  author: 'liubb0516'
 asyncRedirect:
-  description: Enable Android Lynx Image URL asynchronous redirect
+  description:
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   nameAs:
@@ -404,63 +212,32 @@ asyncRedirect:
     setter: SetAsyncRedirectUrl
     getter: GetAsyncRedirectUrl
   readNative: true
-  author: liubb0516
-  since: '2.6'
-  supportPlatform:
-    - Android
+  author: 'liubb0516'
 enableUIOperationOptimize:
-  description:
-    Enable the optimization about UIOperation batching and CreateViewAsync
-    at Android.
+  description: Enable the optimization aboult UIOperation batching and CreateViewAsync at Android.
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   readNative: true
-  author: nhsprite
-  since: '2.16'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableMicrotaskPromisePolyfill:
   description:
-    'This configuration item enableMicrotaskPromisePolyfill is used to
-    determine whether to enable the micro - task Promise polyfill. Its value type
-    is TernaryBool, and the default value is TernaryBool::UNDEFINE_VALUE. '
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
   readNative: true
-  author: lybvinci
-  since: '3.1'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 mapContainerType:
-  description: set 0 is surface mapview, set 1 is texture mapview
-  defaultValue: '0'
+  description:
+  defaultValue: 0
   valueType: uint8_t
-  jsValueType: number
-  author: AdrianLCA
-  since: '3.2'
-  supportPlatform:
-    - Android
 flatten:
   description:
-    Control whether the node requires creating a corresponding Android
-    View. Default is true.
-  defaultValue: 'true'
+  defaultValue: true
   valueType: bool
   nameAs:
     member: page_flatten
     setter: SetGlobalFlattern
     getter: GetGlobalFlattern
-  author: linxs0211
-  since: '1.4'
-  supportPlatform:
-    - Android
 implicit:
-  description: Control whether implicit animations are allowed on the iOS platform.
-  defaultValue: 'true'
+  description: null
+  defaultValue: true
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_0
@@ -469,29 +246,17 @@ implicit:
     member: page_implicit
     setter: SetGlobalImplicit
     getter: GetGlobalImplicit
-  author: linxs0211
-  since: '1.4'
-  supportPlatform:
-    - iOS
 lepusStrict:
-  description: Sets whether lepus/lepusng is run in strict mode
-  defaultValue: 'false'
+  description: null
+  defaultValue: false
   valueType: bool
   nameAs:
     member: enable_lepus_strict_check
     setter: SetEnableLepusStrictCheck
     getter: GetEnableLepusStrictCheck
-  author: zys777
-  since: '1.4'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 lepusNullPropAsUndef:
-  description:
-    If this is set to true, lepus.js will get undefined instead of null
-    for a nonexistent property on the object; Only available for lepus engine。
-  defaultValue: 'false'
+  description: null
+  defaultValue: false
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_1_6
@@ -500,315 +265,148 @@ lepusNullPropAsUndef:
     member: enable_lepus_null_prop_as_undef
     setter: SetEnableLepusNullPropAsUndef
     getter: GetEnableLepusNullPropAsUndef
-  author: zys777
-  since: '1.6'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 dataStrictMode:
-  description:
-    ReactLynx cannot opt top_level_variables used in lepus. So we cannot
-    forbid updateData when variable not in top_level_variables. User can use this
-    config to close the check.
-  defaultValue: 'true'
+  description: null
+  defaultValue: true
   valueType: bool
-  author: nhsprite
-  since: '2.1'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableAsyncDisplay:
-  description:
-    'Globally enable async rendering for software rendering contents on
-    iOS, this can largely optimize the frame rate and reduce janks. '
-  defaultValue: 'true'
+  description: null
+  defaultValue: true
   valueType: bool
-  author: zhongyr
-  since: '2.1'
-  deprecated: '3.5'
-  supportPlatform:
-    - iOS
 enableImageDownsampling:
-  description: If true,  downsampling will be enabled for all images on this LynxView
-  defaultValue: 'false'
+  description: null
+  defaultValue: false
   valueType: bool
-  author: liubb0516
-  since: '2.0'
-  supportPlatform:
-    - iOS
 enableNewImage:
-  description: Enable load image from image service
-  defaultValue: 'true'
+  description: null
+  defaultValue: true
   valueType: bool
-  author: liubb0516
-  since: '2.8'
-  supportPlatform:
-    - Android
-    - iOS
 enableTextNonContiguousLayout:
-  description: 'Whether enable text noncontiguous layout '
-  defaultValue: 'true'
+  description: null
+  defaultValue: true
   valueType: bool
-  author: Randycn
-  since: '1.6'
-  supportPlatform:
-    - iOS
 enableViewReceiveTouch:
-  description:
-    Enable touchesBegan and other methods to be triggered when touching
-    the client-slide custom components.
-  defaultValue: 'false'
+  description: null
+  defaultValue: false
   valueType: bool
-  author: rAY-ooo
-  since: '1.4'
-  supportPlatform:
-    - iOS
 enableEventThrough:
-  description:
-    Enable the client-slide touch event penetrate Lynx when touching the
-    root node area of the Lynx page.
-  defaultValue: 'false'
+  description: null
+  defaultValue: false
   valueType: bool
-  author: rAY-ooo
-  since: '1.4'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 removeComponentElement:
-  description: deprecated
-  defaultValue: 'false'
+  description: null
+  defaultValue: false
   valueType: bool
   nameAs:
     member: need_remove_component_element
-  author: linxs0211
-  since: '1.6'
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 strictPropType:
-  description:
-    if this flag is true, if component's prop type mismatch, will use default
-    value.
-  defaultValue: 'false'
+  description: null
+  defaultValue: false
   valueType: bool
-  author: nhsprite
-  since: '2.10'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 syncImageAttach:
-  description:
-    If true and on the main thread, image requests will be initiated immediately;
-    otherwise, image requests will be posted after the next frame of the main thread
-    to delay the requests.
-  defaultValue: 'true'
+  description: null
+  defaultValue: true
   valueType: bool
-  author: liubb0516
-  since: '2.6'
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
 useImagePostProcessor:
-  description: Whether use image post processor
-  defaultValue: 'false'
+  description: null
+  defaultValue: false
   valueType: bool
-  author: liubb0516
-  since: '2.7'
-  supportPlatform:
-    - Android
 useNewSwiper:
-  description: Indicates whether to use new swiper
-  defaultValue: 'true'
+  description: null
+  defaultValue: true
   valueType: bool
-  author: keweibing
-  since: '1.6'
-  supportPlatform:
-    - Android
 enableAsyncInitVideoEngine:
-  description: Whether to enable asynchronous initialization of videoEngine
-  defaultValue: 'false'
+  description: null
+  defaultValue: false
   valueType: bool
   nameAs:
     member: async_init_tt_video_engine
     setter: SetEnableAsyncInitTTVideoEngine
     getter: GetEnableAsyncInitTTVideoEngine
-  author: AdrianLCA
-  since: '2.6'
-  supportPlatform:
-    - Android
 enableComponentLifecycleAlignWebview:
-  description: Customize component lifecycle align webview when enable.
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
-  author: pilipala195
-  since: '2.2'
-  supportPlatform:
-    - Android
 enableListNewArchitecture:
-  description: Indicates whether to use new architecture for the  platform list
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
   nameAs:
     member: list_new_architecture
     setter: SetListNewArchitecture
     getter: GetListNewArchitecture
-  author: keweibing
-  since: 2.4.4
-  supportPlatform:
-    - Android
-    - iOS
 enableNewListContainer:
-  description: Implement the platform-level list based on scrollView on the IOS platform
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
-  author: keweibing
-  since: '2.13'
-  supportPlatform:
-    - iOS
 enableListPlug:
-  description: Indicates whether to use list plug
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
   nameAs:
     member: list_enable_plug
-  author: keweibing
-  since: '2.5'
-  supportPlatform:
-    - Android
-    - iOS
 enableListMoveOperation:
-  description: Does diffResult have moveAction?
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
   nameAs:
     member: list_enable_move_operation
-  author: DragonDragonDDD
-  since: '2.2'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableCreateViewAsync:
   description:
-    'Create Android platform UIs in lynx built-in thread-pool to optimize
-    UI Operation Execution '
-  defaultValue: 'true'
+  defaultValue: true
   valueType: bool
-  author: usczz
-  since: '2.0'
-  supportPlatform:
-    - Android
 enableVsyncAlignedFlush:
   description:
-    Drive the execution of UI tasks in the pipeline according to the VSync
-    signal, bringing a certain progressive rendering effect. It is suitable for scenarios
-    where JS-driven updates are frequent. Turn it on as needed.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: Yellow5A5
-  since: 'Android: 2.11, iOS: 3.2'
-  supportPlatform:
-    - Android
-    - iOS
 enableAccessibilityElement:
-  description: Indicates whether all ui  enable a11y
-  defaultValue: 'true'
+  description:
+  defaultValue: true
   valueType: bool
-  author: DwwWxx
-  since: '2.0'
-  supportPlatform:
-    - Android
 enableOverlapForAccessibilityElement:
-  description: null
-  defaultValue: 'true'
+  description:
+  defaultValue: true
   valueType: bool
-  author: DwwWxx
-  since: '2.3'
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
 enableNewAccessibility:
-  description: null
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
-  author: DwwWxx
-  since: '2.7'
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
 enableNewLayoutOnly:
-  description: null
-  defaultValue: 'true'
+  description:
+  defaultValue: true
   valueType: bool
-  author: zhongyr
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableReactOnlyPropsId:
   description:
-    If we got propsId, we could only pass propsId and a flag to JS thread.
-    JS thread will use a propsMap to get correct props
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: colinaaa
-  since: '2.2'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableGlobalComponentMap:
-  description: null
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
-  author: DragonDragonDDD
-  deprecated: '3.5'
 enableTextRefactor:
-  description: 'Enable text refactor, with behavior more aligned with web. '
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_2
       value: 'true'
-  author: Randycn
-  since: '2.2'
-  supportPlatform:
-    - Android
-    - iOS
 enableTextOverflow:
   description: Set text overflow as visible if true.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_8
       value: 'true'
-  author: Randycn
-  since: '2.8'
-  supportPlatform:
-    - Android
-    - iOS
 enableNewClipMode:
-  description: Whether enable new clip mode.
-  defaultValue: 'true'
+  description: Set new clip mode if true.
+  defaultValue: true
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_10
       value: 'true'
-  author: Randycn
-  since: '2.10'
-  supportPlatform:
-    - Android
-    - iOS
 autoResumeAnimation:
-  description: deprecated
-  defaultValue: 'true'
+  description:
+  defaultValue: true
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_3
@@ -816,11 +414,9 @@ autoResumeAnimation:
   nameAs:
     setter: SetGlobalAutoResumeAnimation
     getter: GetGlobalAutoResumeAnimation
-  author: linxs0211
-  deprecated: '3.5'
 enableNewTransformOrigin:
   description: If this flag is true, new transform origin algorithm will apply.
-  defaultValue: 'true'
+  defaultValue: true
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_6
@@ -828,68 +424,31 @@ enableNewTransformOrigin:
   nameAs:
     setter: SetGlobalEnableNewTransformOrigin
     getter: GetGlobalEnableNewTransformOrigin
-  author: YellowFishWyfCPP
-  since: '2.6'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableCircularDataCheck:
-  description:
-    If this flag is true, circular data check will enable when convert
-    js value to other vale.
-  defaultValue: 'true'
+  description: If this flag is true, circular data check will enable when convert js value to other vale.
+  defaultValue: true
   valueType: bool
   nameAs:
     setter: SetGlobalCircularDataCheck
     getter: GetGlobalCircularDataCheck
-  author: nhsprite
-  since: '2.10'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableReduceInitDataCopy:
   description:
-    If this flag is true, do not copy init data, instead copy Object.keys
-    of init data for efficiency.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: nhsprite
-  since: '2.6'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableSimultaneousTap:
   description:
-    Enable the client's tap gesture to be triggered simultaneously with
-    Lynx's tap gesture.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: rAY-ooo
-  since: '2.8'
-  supportPlatform:
-    - iOS
 enableComponentLayoutOnly:
-  description: null
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_6
       value: 'true'
-  author: linxs0211
-  since: '2.5'
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 extendedLayoutOnlyOpt:
-  description:
-    A config to force make some special properties can be used to layout
-    only (such as direction&text-align,etc.).
-  defaultValue: 'false'
+  description: A config to force make some special properties can be used to layout only (such as direction&text-align,etc.).
+  defaultValue: false
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_13
@@ -897,45 +456,21 @@ extendedLayoutOnlyOpt:
   nameAs:
     setter: SetEnableExtendedLayoutOpt
     getter: GetEnableExtendedLayoutOpt
-  author: linxs0211
-  since: '2.11'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableTouchRefactor:
-  description: Enable Lynx's touchend event to be triggered normally.
-  defaultValue: 'true'
+  description: Default value is false. If this flag is true, the external gesture which's state is possible or began will not cancel the Lynx iOS touch gesture see issue:#7920.
+  defaultValue: true
   valueType: bool
-  author: rAY-ooo
-  since: '2.8'
-  supportPlatform:
-    - iOS
 enableEndGestureAtLastFingerUp:
-  description:
-    Enable the Lynx touch event to be triggered normally after the last
-    finger is lifted in a multi-finger scenario.
-  defaultValue: 'false'
+  description: In the previous commit, when determining whether all fingers had moved off the screen in multiple touch scenarios, touch.view was used for judgment. However, in a scrolling container, touch.view obtained from touchesEnd/touchesMove could be nil, resulting in incorrect judgment of whether all fingers had moved off the screen. _touches could not be cleared, leading to a subsequent failure to trigger tap events. To fix this issue, we added null checks before calling touch.view, and ended the gesture if _touches was empty. This resolved the problem. Only for ios, detail can see f-12375631 and its mr.
+  defaultValue: false
   valueType: bool
-  author: rAY-ooo
-  since: '2.9'
-  supportPlatform:
-    - iOS
 disableLongpressAfterScroll:
-  description: Prevent the long press event from being triggered during inertial scrolling.
-  defaultValue: 'false'
+  description: If this flag is true, iOS will not recognize the corresponding long press gesture after triggering scrolling.
+  defaultValue: false
   valueType: bool
-  author: rAY-ooo
-  since: '2.5'
-  supportPlatform:
-    - iOS
 keyboardCallbackPassRelativeHeight:
   description:
-    The outer decor view that wraps lynx view may change due to that virtual
-    navigation bar is shielded or drawn. Change the returning value of keyboard event
-    to return absolute keyboard height and the offset from keyboard to to lynx view
-    bottom
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_2
@@ -943,336 +478,173 @@ keyboardCallbackPassRelativeHeight:
   nameAs:
     setter: SetKeyboardCallbackUseRelativeHeight
     getter: GetKeyboardCallbackUseRelativeHeight
-  author: pilipala195
-  since: '2.2'
-  supportPlatform:
-    - Android
 enableCheckDataWhenUpdatePage:
-  description: null
-  defaultValue: 'true'
-  valueType: bool
-  author: DragonDragonDDD
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
-enableBackgroundShapeLayer:
   description:
-    Enable iOS background manager to apply shape layer optimization. Deprecated
-    and to be removed since this optimization becomes a fixed setting.
-  defaultValue: 'true'
+  defaultValue: true
   valueType: bool
-  author: zhongyr
-  since: '2.3'
-  deprecated: '3.5'
-  supportPlatform:
-    - iOS
+enableBackgroundShapeLayer:
+  description: Enable iOS background manager to apply shape layer optimization.
+  defaultValue: true
+  valueType: bool
 compileRender:
-  description: null
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
-  author: DragonDragonDDD
-  deprecated: '3.5'
 enableTextLanguageAlignment:
   description:
-    'Enable a more accurate text alignment judgment method, but it will
-    increase the time taken for text layout. '
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: Randycn
-  since: '2.8'
-  supportPlatform:
-    - iOS
 enableXTextLayoutReused:
-  description: Whether enable x-text layout reused.
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
-  author: Randycn
-  since: '2.9'
-  supportPlatform:
-    - iOS
 enableRemoveComponentExtraData:
   description:
-    If this flag is true，remove the globalProps & systemInfo from component
-    data for efficiency.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: nhsprite
-  since: '2.7'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableExposureUIMargin:
-  description: Enable exposure-ui-margin-* properties to take effect.
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
-  author: rAY-ooo
-  since: '2.6'
-  supportPlatform:
-    - Android
-    - iOS
 enableNewGesture:
-  description: if want to use gesture handler api, you need to set true
-  defaultValue: 'false'
+  description: Enable gesture handler.
+  defaultValue: false
   valueType: bool
-  author: AdrianLCA
-  since: '2.16'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enablePlatformGesture:
   description: Enable shadow platform gesture to handle gesture conflict.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  since: '3.6'
-  author: AdrianLCA
-  supportPlatform:
-    - Android
-    - iOS
+  since: 3.6
 enableCheckLocalImage:
-  description: Determine whether redirection is needed for local image resources.
-  defaultValue: 'true'
-  valueType: bool
-  author: liubb0516
-  since: '2.8'
-  supportPlatform:
-    - Android
-enableAsyncRequestImage:
-  description: If true, supports initiating image requests in asynchronous threads.
-  defaultValue: 'false'
-  valueType: bool
-  author: liubb0516
-  since: '2.12'
-  supportPlatform:
-    - Android
-enableComponentNullProp:
   description:
-    Support component can be passed null props, null props only supported
-    in LepusNG now. Open this switch to support lepus use null prop.
-  defaultValue: 'false'
+  defaultValue: true
   valueType: bool
-  author: nhsprite
-  since: '2.9'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+enableAsyncRequestImage:
+  description:
+  defaultValue: false
+  valueType: bool
+enableComponentNullProp:
+  description: Support component can be passed null props, null props only supported in LepusNG now. Open this switch to support lepus use null prop.
+  defaultValue: false
+  valueType: bool
 enableCascadePseudo:
-  description: Deprecated, this is for legacy CSS selector to enable a cascading.
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
-  author: zhongyr
-  since: '2.1'
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 autoExpose:
   description:
-    if this flag is true, onShow/onHide will be automatically triggered
-    by attachToView/detachFromWindow calls
-  defaultValue: 'true'
+  defaultValue: true
   valueType: bool
   nameAs:
     member: enable_auto_show_hide
-  author: nhsprite
-  since: '2.1'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 disableQuickTracingGC:
   description: Disable tracing gc mode in quick context.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: zys777
-  since: '3.2'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 fixCSSImportRuleOrder:
-  description: null
-  defaultValue: 'true'
+  description:
+  defaultValue: true
   valueType: bool
-  author: linxs0211
-  since: '3.1'
-  deprecated: '3.5'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableReloadLifecycle:
   description: Enable LynxUI onNodeReload lifecycle.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: nhsprite
-  since: '2.17'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+  author: 'nhsprite'
 enableA11y:
   description: Enable Android A11y
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: DwwWxx
-  since: '2.12'
-  supportPlatform:
-    - Android
+  author: 'DwwWxx'
 enableA11yIDMutationObserver:
   description: Enable MutationObserver for accessibility.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: MoonfaceX
+  author: 'MoonfaceX'
   nameAs:
     member: enable_a11y_mutation_observer
-  since: '2.18'
-  deprecated: '3.5'
 enableCheckExposureOptimize:
-  description:
-    Enable exposure detection optimization so that exposure detection is
-    not performed when the page is static.
-  defaultValue: 'false'
+  description: Enable exposure detection optimization.
+  defaultValue: false
   valueType: bool
-  author: rAY-ooo
-  since: '2.10'
-  supportPlatform:
-    - iOS
+  author: 'rAY-ooo'
 enableDisexposureWhenLynxHidden:
-  description:
-    Enables the disexposure event to fire when LynxView is in the hidden
-    state.
-  defaultValue: 'true'
+  description: Enable send disexposure events when lynxview is hidden.
+  defaultValue: true
   valueType: bool
-  author: rAY-ooo
-  since: '2.10'
-  supportPlatform:
-    - Android
+  author: 'rAY-ooo'
 enableExposureWhenLayout:
   description: Enable exposure check when LynxView is layoutRequest
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: ShouruiSong
-  since: '2.10'
-  supportPlatform:
-    - Android
+  author: 'ShouruiSong'
 enableExposureWhenReload:
-  description:
-    Enables exposure and disexposure events to be triggered when reloading
-    the Lynx page.
-  defaultValue: 'false'
+  description: Enable exposure event when LynxView is reload
+  defaultValue: false
   valueType: bool
   syncTo: platform
   supportPlatform:
     - Android
-    - HarmonyOS
     - iOS
-  since: '3.6'
-  author: rAY-ooo
+    - Harmony
+  since: 3.6
+  author: 'rAY-ooo'
 enableAirDetectRemovedKeysWhenUpdateData:
-  description:
-    If true, when reload template or update data with option reset_page_data,
-    the keys that do not exist in the new data but exist in the original data will
-    have their values set to undefined in TTML Strict Mode.
-  defaultValue: 'false'
+  description: enable Air Mode detect removed keys when updating data from native
+  defaultValue: false
   valueType: bool
-  author: liulixplor
-  since: '2.14'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableJSDataProcessor:
   description: Enable data processor on JS thread
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: ShouruiSong
+  author: 'ShouruiSong'
   nameAs:
     member: enable_data_processor_on_js
     setter: SetEnableDataProcessorOnJs
     getter: GetEnableDataProcessorOnJs
-  since: '2.12'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableJsBindingApiThrowException:
   description: Enable js binding api throw exception
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_14
       value: 'true'
-  author: lybvinci
-  since: '2.14'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+  author: 'lybvinci'
 enableICU:
   description: Enable Bind PRIMJS-ICU
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   syncTo:
     - script
-  author: OverWatch-Winder
+  author: 'OverWatch-Winder'
   nameAs:
     member: enable_bind_icu
     setter: SetEnableBindICU
     getter: GetEnableBindICU
     const: kEnableBindICU
-  since: '2.16'
-  supportPlatform:
-    - Android
-    - iOS
 enableQueryComponentSync:
   description: Enable query component sync in background runtime
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: nhsprite
-  since: '2.14'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+  author: 'Awuiil'
 enableAsyncResolveSubtree:
-  description:
-    FE Framework use this config to notify Engine that resolve subtree
-    binding will be triggered when render DOM (Not exposed to normal user)
+  description: FE Framework use this config to notify Engine that resolve subtree binding will be triggered when render DOM (Not exposed to normal user)
   defaultValue: TernaryBool::UNDEFINE_VALUE
   valueType: TernaryBool
-  author: usczz
+  author: 'usczz'
   nameAs:
     const: kEnableAsyncFlushSubtree
-  since: '3.4'
-  supportPlatform:
-    - Android
-    - iOS
 absoluteInContentBound:
   description:
-    When set to true, the containing block of absolute/fixed elements is
-    the content area; otherwise, it is the padding area
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   bindMemberTo: layout_configs_.is_absolute_in_content_bound_
   codeGen:
     - SETTER
     - GETTER
     - DECODE
-  author: givemefive9
-  since: '1.4'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableFixedNew:
-  description: 'A better and stable position fixed handling. '
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
   bindMemberTo: layout_configs_.enable_fixed_new_
   codeGen:
@@ -1280,64 +652,34 @@ enableFixedNew:
     - GETTER
     - DECODE
   readSettings: true
-  author: zhongyr
-  since: '2.10'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableCSSInheritance:
-  description: Enable CSS inheritance
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
   bindMemberTo: css_configs_.enable_css_inheritance_
   codeGen:
     - SETTER
     - GETTER
     - DECODE
-  author: ShouruiSong
-  since: '1.6'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 CSSAlignWithLegacyW3C:
   description:
-    When set to true, for compatibility, some layout behaviors are consistent
-    with the previous incorrect behaviors.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   codeGen:
     - MEMBER
     - DECODE
-  author: givemefive9
-  since: '1.4'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableCSSStrictMode:
   description:
-    CSS Length should be <number> follows a unit. Under strict mode, invalid
-    <length> values are dropped.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   bindMemberTo: css_parser_configs_.enable_css_strict_mode
   codeGen:
     - SETTER
     - GETTER
     - DECODE
-  author: zhongyr
-  since: '3.2'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 unifyVWVHBehavior:
   description:
-    Control whether the vw and vh units dynamically adjust with the viewport
-    in properties like font-size; enabled by default for targetSdkVersion >= 2.3
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   versionOverrides:
     - minSDKVersion: LYNX_VERSION_2_3
@@ -1350,15 +692,9 @@ unifyVWVHBehavior:
     setter: SetUnifyVWVH
     getter: GetUnifyVWVH
   bindMemberTo: css_configs_.unify_vw_vh_behavior_
-  author: givemefive9
-  since: '2.3'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 fontScaleEffectiveOnlyOnSp:
-  description: Make font scale only apply to sp units.
-  defaultValue: 'false'
+  description:
+  defaultValue: false
   valueType: bool
   bindMemberTo: layout_configs_.font_scale_sp_only_
   codeGen:
@@ -1368,27 +704,14 @@ fontScaleEffectiveOnlyOnSp:
   nameAs:
     setter: SetFontScaleSpOnly
     getter: GetFontScaleSpOnly
-  author: Randycn
-  since: '2.4'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableNewIntersectionObserver:
   description:
-    Enable the new IntersectionObserver detection logic so that observe
-    can be triggered normally without binding to scroll events.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   readSettings: true
-  author: rAY-ooo
-  since: '2.8'
-  supportPlatform:
-    - Android
-    - iOS
 forceCalcNewStyle:
-  description: null
-  defaultValue: 'true'
+  description:
+  defaultValue: true
   valueType: bool
   codeGen:
     - SETTER
@@ -1396,23 +719,15 @@ forceCalcNewStyle:
     - MEMBER
   nameAs:
     const: kForceCalcNewStyleKey
-  author: DragonDragonDDD
-  deprecated: '3.5'
 includeFontPadding:
   description:
-    Control the top and bottom padding of text on Android, which affects
-    the text's height and vertical centering effect.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   codeGen:
     - DECODE
-  author: Randycn
-  since: '2.4'
-  supportPlatform:
-    - Android
 removeDescendantSelectorScope:
   description: If false, descendant selector only works in component scope.
-  defaultValue: 'true'
+  defaultValue: true
   valueType: bool
   syncTo:
     - script
@@ -1420,49 +735,26 @@ removeDescendantSelectorScope:
     - MEMBER
     - SETTER
     - GETTER
-  author: linxs0211
-  since: '2.0'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableMultiTouch:
-  description:
-    Enable support multi-finger events so that event parameters can contain
-    information about multiple fingers.
-  defaultValue: 'false'
+  description: Enable support multi-finger events
+  defaultValue: false
   valueType: bool
-  author: rAY-ooo
+  author: 'rAY-ooo'
   readSettings: true
-  since: '2.14'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
 enableMultiTouchParamsCompatible:
-  description:
-    Enable the parameters of multi-finger events compatible with single-finger
-    events
-  defaultValue: 'false'
+  description: Enable support multi-finger event parameter compatibility
+  defaultValue: false
   valueType: bool
   codeGen:
     - MEMBER
     - SETTER
     - GETTER
-  author: rAY-ooo
-  since: '3.2'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+  author: 'rAY-ooo'
 enableHarmonyVisibleAreaChangeForExposure:
   description: Enable Harmony to detect exposure with visible area change event.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
-  author: rAY-ooo
-  since: '3.4'
-  supportPlatform:
-    - HarmonyOS
+  author: 'rAY-ooo'
 enableTextGradientOpt:
   description: Enable text gradient optimization for iOS.
   defaultValue: TernaryBool::UNDEFINE_VALUE
@@ -1470,39 +762,25 @@ enableTextGradientOpt:
   readSettings: false
   settingsEnv: external
   syncTo: platform
-  author: zhongyr
+  author: 'zhongyr'
   readNative: true
-  since: '3.5'
-  supportPlatform:
-    - iOS
 enableEventHandleRefactor:
-  description:
-    Enable new event processing logic to support dynamic registration of
-    event listeners, interception of events, etc.
-  defaultValue: 'false'
+  description: Enable support new event handling logic.
+  defaultValue: false
   valueType: bool
-  since: '3.6'
+  since: 3.5
   readSettings: true
-  author: rAY-ooo
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+  author: 'rAY-ooo'
 enableReuseLoadScriptExports:
   description: Enable reuse loadScript's result.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   syncTo:
     - script
-  author: lybvinci
-  since: '3.6'
-  supportPlatform:
-    - Android
-    - HarmonyOS
-    - iOS
+  author: 'liyanbo.monster'
 enableCSSInlineVariables:
   description: Enable CSS inline variables.
-  defaultValue: 'false'
+  defaultValue: false
   valueType: bool
   readSettings: true
   readNative: true
@@ -1512,4 +790,3 @@ enableCSSInlineVariables:
     - GETTER
     - DECODE
   author: 'pilipala195'
-  since: '3.6'
