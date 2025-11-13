@@ -50,10 +50,9 @@ ContextProxy::Type ContextProxy::ConvertStringToContextType(
 }
 
 void ContextProxy::PostMessage(const lepus::Value& message) {
-  auto event = fml::MakeRefCounted<MessageEvent>(
-      origin_type_, target_type_,
-      std::make_unique<pub::ValueImplLepus>(message));
-  DispatchEvent(std::move(event));
+  MessageEvent event(origin_type_, target_type_,
+                     std::make_unique<pub::ValueImplLepus>(message));
+  DispatchEvent(event);
 }
 
 void ContextProxy::SetListenerBeforePublishEvent(
@@ -65,22 +64,22 @@ event::EventListener* ContextProxy::GetListenerBeforePublishEvent() {
   return event_listener_.get();
 }
 
-event::DispatchEventResult ContextProxy::DispatchEvent(
-    fml::RefPtr<event::Event> event) {
-  if (event->event_type() != event::Event::EventType::kMessageEvent) {
+event::DispatchEventResult ContextProxy::DispatchEvent(event::Event& event) {
+  if (event.event_type() != event::Event::EventType::kMessageEvent) {
     return {event::EventCancelType::kNotCanceled, false};
   }
-  auto message_event = fml::static_ref_ptr_cast<runtime::MessageEvent>(event);
-  if (message_event->GetTargetType() == origin_type_) {
+  MessageEvent& message_event = static_cast<MessageEvent&>(event);
+  if (message_event.GetTargetType() == origin_type_) {
     bool consumed = false;
     if (event_listener_ != nullptr) {
-      event_listener_->Invoke(event);
+      event_listener_->Invoke(&event);
       consumed = true;
     }
     consumed |= EventTarget::DispatchEvent(message_event).consumed;
     return {event::EventCancelType::kNotCanceled, consumed};
   }
-  return delegate_.DispatchMessageEvent(message_event);
+  return delegate_.DispatchMessageEvent(
+      runtime::MessageEvent::ShallowCopy(message_event));
 }
 
 }  // namespace runtime

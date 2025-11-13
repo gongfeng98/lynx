@@ -5,7 +5,6 @@
 #include "core/runtime/bindings/lepus/event/context_proxy_in_lepus.h"
 
 #include <memory>
-#include <utility>
 
 #include "base/include/value/base_value.h"
 #include "core/runtime/bindings/common/event/runtime_constants.h"
@@ -81,7 +80,7 @@ void ContextProxyInLepus::PostMessage(const lepus::Value& message) {
 }
 
 event::DispatchEventResult ContextProxyInLepus::DispatchEvent(
-    fml::RefPtr<event::Event> event) {
+    event::Event& event) {
   EnsureListenerBeforePublishEvent();
   return ContextProxy::DispatchEvent(event);
 }

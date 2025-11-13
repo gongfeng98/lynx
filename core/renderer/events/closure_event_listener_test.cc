@@ -25,17 +25,17 @@ TEST(ClosureEventListenerTest, Invoke) {
     EXPECT_TRUE(args.String().IsEqual("foo"));
     called = true;
   });
-  auto event = fml::MakeRefCounted<runtime::MessageEvent>(
+  runtime::MessageEvent event(
       runtime::ContextProxy::Type::kCoreContext,
       runtime::ContextProxy::Type::kJSContext,
       std::make_unique<pub::ValueImplLepus>(lepus::Value("foo")));
-  listener.Invoke(event);
+  listener.Invoke(&event);
   EXPECT_TRUE(called);
 }
 
 TEST(ClosureEventListenerTest, Matches) {
   ClosureEventListener listener([](lepus::Value args) {});
-  auto event = fml::MakeRefCounted<runtime::MessageEvent>(
+  runtime::MessageEvent event(
       runtime::ContextProxy::Type::kCoreContext,
       runtime::ContextProxy::Type::kJSContext,
       std::make_unique<pub::ValueImplLepus>(lepus::Value()));

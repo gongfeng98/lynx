@@ -577,12 +577,12 @@ void LynxRuntime::CallFunction(const std::string& module_id,
   if (native_context_proxy != nullptr &&
       native_context_proxy->HasEventListener(kMessageEventTypeGlobalEvent) &&
       module_id == "GlobalEventEmitter" && method_id == "emit") {
-    auto jsContextEvent = fml::MakeRefCounted<MessageEvent>(
+    MessageEvent jsContextEvent(
         kMessageEventTypeGlobalEvent, ContextProxy::Type::kNative,
         ContextProxy::Type::kJSContext,
         std::make_unique<pub::ValueImplPiper>(
             *js_runtime, piper::Value(*js_runtime, arguments)));
-    native_context_proxy->DispatchEvent(std::move(jsContextEvent));
+    native_context_proxy->DispatchEvent(jsContextEvent);
     auto coreContextEvent = fml::MakeRefCounted<MessageEvent>(
         kMessageEventTypeGlobalEvent, ContextProxy::Type::kNative,
         ContextProxy::Type::kCoreContext,
@@ -724,14 +724,14 @@ void LynxRuntime::TryToDestroy() {
     if (native_context_proxy != nullptr &&
         native_context_proxy->HasEventListener(
             kMessageEventTypeDestroyLifetime)) {
-      auto jsContextEvent = fml::MakeRefCounted<MessageEvent>(
+      MessageEvent jsContextEvent(
           kMessageEventTypeDestroyLifetime, ContextProxy::Type::kNative,
           ContextProxy::Type::kJSContext,
           std::make_unique<pub::ValueImplPiper>(
               *js_runtime,
               piper::Value(*js_runtime, piper::String::createFromUtf8(
                                             *js_runtime, app_->getAppGUID()))));
-      native_context_proxy->DispatchEvent(std::move(jsContextEvent));
+      native_context_proxy->DispatchEvent(jsContextEvent);
     } else {
       app_->CallDestroyLifetimeFun();
     }
@@ -1024,7 +1024,7 @@ void LynxRuntime::OnReceiveMessageEvent(
   QueueOrExecTask([this, event = std::move(event)]() mutable {
     auto proxy = app_->GetContextProxy(event->GetOriginType());
     if (proxy != nullptr) {
-      proxy->DispatchEvent(std::move(event));
+      proxy->DispatchEvent(*event);
     }
   });
 }

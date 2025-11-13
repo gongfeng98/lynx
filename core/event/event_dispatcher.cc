@@ -31,8 +31,6 @@
 
 #include "core/event/event_dispatcher.h"
 
-#include <utility>
-
 #include "base/include/fml/memory/weak_ptr.h"
 #include "base/trace/native/trace_event.h"
 #include "core/event/event.h"
@@ -44,13 +42,13 @@ namespace lynx {
 namespace event {
 
 DispatchEventResult EventDispatcher::DispatchEvent(EventTarget& target,
-                                                   fml::RefPtr<Event> event) {
+                                                   Event& event) {
   EventDispatcher dispatcher(target, event);
-  return event->DispatchEvent(dispatcher);
+  return event.DispatchEvent(dispatcher);
 }
 
-EventDispatcher::EventDispatcher(EventTarget& target, fml::RefPtr<Event> event)
-    : target_(target.GetWeakTarget()), event_(std::move(event)) {
+EventDispatcher::EventDispatcher(EventTarget& target, Event& event)
+    : target_(target.GetWeakTarget()), event_(&event) {
   event_->InitEventPath(*target_);
 }
 
@@ -76,7 +74,7 @@ DispatchEventResult EventDispatcher::Dispatch() {
 
   // TODO(hexionghui): trigger global event, eg: trigger-global-event attribute
   // or GlobalEventEmitter
-  target_->HandleGlobalEvent(event_);
+  target_->HandleGlobalEvent(*event_);
 
   // TODO(hexionghui): global-bind event, eg: global-bindtap
 
@@ -96,7 +94,7 @@ DispatchEventResult EventDispatcher::Dispatch() {
       }
       event_->set_event_phase(Event::PhaseType::kCapturingPhase);
       event_->set_current_target(*item);
-      auto result = (*item)->DispatchEvent(event_);
+      auto result = (*item)->DispatchEvent(*event_);
       consumed |= result.consumed;
       if (result.IsCanceled()) {
         return result;
@@ -108,7 +106,7 @@ DispatchEventResult EventDispatcher::Dispatch() {
   {
     event_->set_event_phase(Event::PhaseType::kAtTarget);
     event_->set_current_target(target_->GetWeakTarget());
-    auto result = target_->DispatchEvent(event_);
+    auto result = target_->DispatchEvent(*event_);
     consumed |= result.consumed;
     if (result.IsCanceled()) {
       return result;
@@ -130,7 +128,7 @@ DispatchEventResult EventDispatcher::Dispatch() {
       }
       event_->set_event_phase(Event::PhaseType::kBubblingPhase);
       event_->set_current_target(item);
-      auto result = item->DispatchEvent(event_);
+      auto result = item->DispatchEvent(*event_);
       consumed |= result.consumed;
       if (result.IsCanceled()) {
         return result;

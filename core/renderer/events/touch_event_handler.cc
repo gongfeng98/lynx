@@ -180,9 +180,8 @@ void TouchEventHandler::HandleTouchEvent(TemplateAssembler *tasm,
           LOGE("HandleTouchEvent multi touch error: the target is null.");
           continue;
         }
-        auto event = fml::MakeRefCounted<event::TouchEvent>(name, info.params,
-                                                            info.timestamp);
-        event::EventDispatcher::DispatchEvent(*target, std::move(event));
+        event::TouchEvent event(name, info.params, info.timestamp);
+        event::EventDispatcher::DispatchEvent(*target, event);
       }
     } else {
       auto target = node_manager_->Get(info.tag);
@@ -190,10 +189,9 @@ void TouchEventHandler::HandleTouchEvent(TemplateAssembler *tasm,
         LOGE("HandleTouchEvent error: the target is null.");
         return;
       }
-      auto event = fml::MakeRefCounted<event::TouchEvent>(
-          name, info.x, info.y, info.page_x, info.page_y, info.client_x,
-          info.client_y, info.timestamp);
-      event::EventDispatcher::DispatchEvent(*target, std::move(event));
+      event::TouchEvent event(name, info.x, info.y, info.page_x, info.page_y,
+                              info.client_x, info.client_y, info.timestamp);
+      event::EventDispatcher::DispatchEvent(*target, event);
     }
     return;
   }
@@ -382,9 +380,8 @@ void TouchEventHandler::HandleCustomEvent(TemplateAssembler *tasm,
     int64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                             std::chrono::system_clock::now().time_since_epoch())
                             .count();
-    auto event =
-        fml::MakeRefCounted<event::CustomEvent>(name, params, pname, timestamp);
-    event::EventDispatcher::DispatchEvent(*target, std::move(event));
+    event::CustomEvent event(name, params, pname, timestamp);
+    event::EventDispatcher::DispatchEvent(*target, event);
     return;
   }
 
@@ -656,13 +653,12 @@ void TouchEventHandler::HandleTriggerComponentEvent(
     int64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                             std::chrono::system_clock::now().time_since_epoch())
                             .count();
-    auto event = fml::MakeRefCounted<event::CustomEvent>(
-        event_name, msg, "detail", timestamp,
-        static_cast<event::Event::Capture>(capture_phase),
-        static_cast<event::Event::Bubbles>(bubbles),
-        event::Event::Cancelable::kNo,
-        static_cast<event::Event::ComposedMode>(composed));
-    event::EventDispatcher::DispatchEvent(*component_element, std::move(event));
+    event::CustomEvent event(event_name, msg, "detail", timestamp,
+                             static_cast<event::Event::Capture>(capture_phase),
+                             static_cast<event::Event::Bubbles>(bubbles),
+                             event::Event::Cancelable::kNo,
+                             static_cast<event::Event::ComposedMode>(composed));
+    event::EventDispatcher::DispatchEvent(*component_element, event);
     return;
   }
 

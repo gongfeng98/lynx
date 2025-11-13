@@ -175,12 +175,12 @@ void LynxShell::Destroy() {
     if (native_context_proxy != nullptr &&
         native_context_proxy->HasEventListener(
             runtime::kMessageEventTypeDestroyLifetime)) {
-      auto coreContextEvent = fml::MakeRefCounted<runtime::MessageEvent>(
+      runtime::MessageEvent coreContextEvent(
           runtime::kMessageEventTypeDestroyLifetime,
           runtime::ContextProxy::Type::kNative,
           runtime::ContextProxy::Type::kCoreContext,
           std::make_unique<pub::ValueImplLepus>(lepus::Value(instance_id)));
-      native_context_proxy->DispatchEvent(std::move(coreContextEvent));
+      native_context_proxy->DispatchEvent(coreContextEvent);
     }
     engine = nullptr;
     tasm::report::FeatureCounter::Instance()->ClearAndReport(instance_id);
