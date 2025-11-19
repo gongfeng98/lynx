@@ -66,6 +66,8 @@ class Fragment : public BaseElementContainer {
   void AddChildBefore(Fragment* child, Fragment* sibling);
 
  private:
+  void DrawBorder(DisplayListBuilder& display_list_builder);
+
   bool has_platform_renderer_;
   bool need_redraw_{false};
 
