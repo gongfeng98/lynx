@@ -4,6 +4,7 @@ import platform
 system = platform.system().lower()
 machine = platform.machine().lower()
 machine = "x86_64" if machine == "amd64" else machine
+is_ci = os.environ.get('IS_CI') in ['true', 'True', '1']
 
 python_path = "python3"
 if system == "windows":
@@ -143,7 +144,7 @@ deps = {
             "windows": "https://dl.google.com/android/repository/commandlinetools-win-8512546_latest.zip"
         }.get(system, None),
         "ignore_in_git": True,
-        "condition": system in ['linux', 'darwin', 'windows']
+        "condition": system in ['linux', 'darwin', 'windows'] and not is_ci
     },
     'third_party/gyp': {
         "type": "git",
