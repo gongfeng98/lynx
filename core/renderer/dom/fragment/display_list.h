@@ -29,7 +29,8 @@ enum class DisplayListOpType : int32_t {
   kText = 6,
   kImage = 7,
   kCustom = 8,
-  kBorder = 9
+  kBorder = 9,
+  kClipRect = 10,
 };
 
 enum class DisplayListSubtreePropertyOpType : int32_t {
@@ -77,6 +78,7 @@ struct DisplayListOpCategoryTraits<DisplayListOpCategory::kSubtreeProperty> {
 class DisplayList {
  public:
   DisplayList() = default;
+  DisplayList(float dx, float dy) : render_offset_{dx, dy} {}
   ~DisplayList() = default;
 
   // Once the display list is built up by display list builder, it should be
@@ -98,6 +100,8 @@ class DisplayList {
     return content_data_.has_value() ? content_data_->float_data.data()
                                      : nullptr;
   }
+
+  const float* GetRenderOffset() const { return render_offset_; }
 
   const int32_t* GetSubtreePropertyOpTypesData() const {
     return subtree_property_data_.has_value()
@@ -158,6 +162,9 @@ class DisplayList {
     }
   }
 
+  void AddSubLayer(int id) { sub_layers_.emplace_back(id); }
+  const auto& SubLayers() const { return sub_layers_; }
+
  private:
   template <typename OpType, typename... Args>
   void AddOperationToData(base::auto_create_optional<OpData>& data_store,
@@ -171,6 +178,12 @@ class DisplayList {
   // These operations affect the entire subtree and only apply to owner layers -
   // lazy allocated
   base::auto_create_optional<OpData> subtree_property_data_;
+
+  // Platform renderers that belongs to the layer holds this displayList. Used
+  // for re-construct ot update the platform renderer hierachy.
+  base::InlineVector<int, 16> sub_layers_;
+
+  float render_offset_[2] = {0, 0};
 };
 
 template <typename OpType, typename... Args>

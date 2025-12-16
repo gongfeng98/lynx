@@ -776,6 +776,9 @@ public class LynxEnv {
       devtoolService.setLynxDebugPresetValue(enableLynxDebug);
     }
     initDevtoolEnv();
+    if (mIsNativeLibraryLoaded) {
+      setBooleanLocalEnv(LynxEnvKey.LYNX_DEBUG_ENABLED, isLynxDebugEnabled());
+    }
   }
 
   protected void initDevtoolComponentAttachSwitch() {
@@ -1418,6 +1421,17 @@ public class LynxEnv {
 
   public HashMap<String, String> getFSPConfig() {
     return mFSPConfig;
+  }
+
+  public boolean isFspScreenshotEnabled() {
+    if (!isLynxDebugEnabled()) {
+      return false;
+    }
+    return getDevtoolEnv(LynxEnvKey.SP_KEY_ENABLE_FSP_SCREENSHOT, false);
+  }
+
+  public void enableFspScreenshot(boolean value) {
+    setDevtoolEnv(LynxEnvKey.SP_KEY_ENABLE_FSP_SCREENSHOT, value);
   }
 
   /**

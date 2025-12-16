@@ -155,7 +155,45 @@ TEST_P(FiberElementTest, TestSetOverflow) {
   map = UnitHandler::Process(id, impl, configs);
   page->computed_css_style()->SetValue(id, map[id]);
   EXPECT_TRUE(page->computed_css_style()->IsOverflowXY());
+  EXPECT_TRUE(page->computed_css_style()->IsOverflowX());
+  EXPECT_TRUE(page->computed_css_style()->IsOverflowY());
   EXPECT_FALSE(page->computed_css_style()->IsOverflowHidden());
+
+  impl = lepus::Value("hidden");
+  id = CSSPropertyID::kPropertyIDOverflow;
+  map = UnitHandler::Process(id, impl, configs);
+  page->computed_css_style()->SetValue(id, map[id]);
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowXY());
+  EXPECT_TRUE(page->computed_css_style()->IsOverflowHidden());
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowX());
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowY());
+
+  impl = lepus::Value("visible");
+  id = CSSPropertyID::kPropertyIDOverflowX;
+  map = UnitHandler::Process(id, impl, configs);
+  page->computed_css_style()->SetValue(id, map[id]);
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowXY());
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowHidden());
+  EXPECT_TRUE(page->computed_css_style()->IsOverflowX());
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowY());
+
+  impl = lepus::Value("visible");
+  id = CSSPropertyID::kPropertyIDOverflowY;
+  map = UnitHandler::Process(id, impl, configs);
+  page->computed_css_style()->SetValue(id, map[id]);
+  EXPECT_TRUE(page->computed_css_style()->IsOverflowXY());
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowHidden());
+  EXPECT_TRUE(page->computed_css_style()->IsOverflowX());
+  EXPECT_TRUE(page->computed_css_style()->IsOverflowY());
+
+  impl = lepus::Value("hidden");
+  id = CSSPropertyID::kPropertyIDOverflowX;
+  map = UnitHandler::Process(id, impl, configs);
+  page->computed_css_style()->SetValue(id, map[id]);
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowXY());
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowHidden());
+  EXPECT_FALSE(page->computed_css_style()->IsOverflowX());
+  EXPECT_TRUE(page->computed_css_style()->IsOverflowY());
 }
 
 TEST_P(FiberElementTest, TestSetComputedFontSize0) {
@@ -2533,7 +2571,7 @@ TEST_P(FiberElementTest, FiberElementSetAndResetAttribute) {
 
   page->InsertNode(element0);
 
-  const auto& attributes = element0->data_model_->attributes();
+  auto& attributes = element0->data_model_->attributes();
 
   EXPECT_TRUE(attributes.at("enable-layout") == lepus::Value("false"));
   EXPECT_TRUE(attributes.at("flatten") == lepus::Value("false"));
@@ -9919,7 +9957,7 @@ TEST_P(FiberElementTest, CopySetStyle) {
   auto manager_1 = unique_manager_1.get();
   auto tasm_1 = std::make_shared<lynx::tasm::TemplateAssembler>(
       *tasm_mediator_1.get(), std::move(unique_manager_1),
-      *tasm_mediator_1.get(), 0);
+      tasm_mediator_1.get(), 0);
   auto test_entry_1 = std::make_shared<TemplateEntry>();
   tasm_1->template_entries_.insert({"test_entry", test_entry_1});
   auto config_1 = std::make_shared<PageConfig>();
@@ -9994,7 +10032,7 @@ TEST_P(FiberElementTest, CloneAPITest) {
   auto manager_1 = unique_manager_1.get();
   auto tasm_1 = std::make_shared<lynx::tasm::TemplateAssembler>(
       *tasm_mediator_1.get(), std::move(unique_manager_1),
-      *tasm_mediator_1.get(), 0);
+      tasm_mediator_1.get(), 0);
   auto test_entry_1 = std::make_shared<TemplateEntry>();
   tasm_1->template_entries_.insert({"test_entry", test_entry_1});
   auto config_1 = std::make_shared<PageConfig>();
@@ -10136,7 +10174,7 @@ TEST_P(FiberElementTest, ElementBundleTest00) {
   auto manager_1 = unique_manager_1.get();
   auto tasm_1 = std::make_shared<lynx::tasm::TemplateAssembler>(
       *tasm_mediator_1.get(), std::move(unique_manager_1),
-      *tasm_mediator_1.get(), 0);
+      tasm_mediator_1.get(), 0);
   auto test_entry_1 = std::make_shared<TemplateEntry>();
   tasm_1->template_entries_.insert({"test_entry", test_entry_1});
   auto config_1 = std::make_shared<PageConfig>();
@@ -10213,7 +10251,7 @@ TEST_P(FiberElementTest, ElementBundleTest01) {
   auto manager_1 = unique_manager_1.get();
   auto tasm_1 = std::make_shared<lynx::tasm::TemplateAssembler>(
       *tasm_mediator_1.get(), std::move(unique_manager_1),
-      *tasm_mediator_1.get(), 0);
+      tasm_mediator_1.get(), 0);
   auto test_entry_1 = std::make_shared<TemplateEntry>();
   tasm_1->template_entries_.insert({"test_entry", test_entry_1});
   auto config_1 = std::make_shared<PageConfig>();
@@ -10379,7 +10417,7 @@ TEST_P(FiberElementTest, ElementBundleTest02) {
   auto manager_1 = unique_manager_1.get();
   auto tasm_1 = std::make_shared<lynx::tasm::TemplateAssembler>(
       *tasm_mediator_1.get(), std::move(unique_manager_1),
-      *tasm_mediator_1.get(), 0);
+      tasm_mediator_1.get(), 0);
   auto test_entry_1 = std::make_shared<TemplateEntry>();
   tasm_1->template_entries_.insert({"test_entry", test_entry_1});
   auto config_1 = std::make_shared<PageConfig>();

@@ -451,7 +451,7 @@ describe('List method test', () => {
         alignTo: 'top',
         offset: 0,
         smooth: true,
-        'item-key': 'key-1',
+        itemKey: 'key-1',
       },
     });
 
@@ -476,7 +476,7 @@ describe('List method test', () => {
       method: 'scrollToPosition',
       // @ts-expect-error
       params: {
-        'item-key': 'key-1',
+        itemKey: 'key-1',
       },
     });
   });

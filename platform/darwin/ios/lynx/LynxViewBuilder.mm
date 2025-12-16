@@ -8,10 +8,10 @@
 #import <Lynx/LynxLazyRegister.h>
 #import <Lynx/LynxLog.h>
 #import <Lynx/LynxTraceEvent.h>
-#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxViewBuilder+Internal.h>
 #import <Lynx/LynxViewBuilder.h>
 #import <Lynx/LynxViewGroup.h>
+#import "LynxTraceEventDef.h"
 #import "LynxUIRenderer.h"
 #import "LynxUIRendererCreator.h"
 
@@ -233,10 +233,15 @@
 }
 
 - (LynxThreadStrategyForRender)getThreadStrategyForRender {
+  if (_hasThreadStrategySet) {
+    return _threadStrategy;
+  }
+
   if (_lynxViewGroup) {
     return [_lynxViewGroup getThreadStrategyForRender];
   }
-  return [super getThreadStrategyForRender];
+
+  return LynxThreadStrategyForRenderAllOnUI;
 }
 
 - (LynxEmbeddedMode)getEmbeddedMode {
@@ -273,6 +278,13 @@
     [module_wrapper addEntriesFromDictionary:superConfig.moduleFactoryPtr->getModuleClasses()];
   }
   return module_wrapper;
+}
+
+- (BOOL)enableFetchUIImage {
+  if (_lynxViewGroup) {
+    return _lynxViewGroup.enableFetchUIImage;
+  }
+  return [super enableFetchUIImage];
 }
 
 @end

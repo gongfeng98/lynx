@@ -207,12 +207,28 @@ LYNX_REGISTER_UI("list-container")
   return scrollView;
 }
 
+- (NSMutableArray *)restoreNativeStateBlockArray {
+  if (!_restoreNativeStateBlockArray) {
+    _restoreNativeStateBlockArray = [NSMutableArray array];
+  }
+  return _restoreNativeStateBlockArray;
+}
+
 - (BOOL)isScrollContainer {
   return YES;
 }
 
 - (void)onNodeReady {
   [super onNodeReady];
+
+  if (_restoreNativeStateBlockArray) {
+    NSArray *blockArray = _restoreNativeStateBlockArray;
+    _restoreNativeStateBlockArray = nil;
+    for (RestoreNativeStateBlock restoreNativeState in blockArray) {
+      restoreNativeState();
+    }
+  }
+
   auto listNodeInfoFetcher = self.context.fetcher;
   auto listEngineProxyPtr = [listNodeInfoFetcher getListEngineProxyPtr];
   if (_listContainerProxy == nullptr && listEngineProxyPtr != 0) {
@@ -1117,7 +1133,7 @@ LYNX_UI_METHOD(scrollToPosition) {
     position = ((NSNumber *)[params objectForKey:@"index"]).intValue;
   }
 
-  NSString *itemKey = [params objectForKey:@"item-key"];
+  NSString *itemKey = [params objectForKey:@"itemKey"];
   NSInteger resolvedPosition = position;
   if (itemKey.length) {
     NSInteger idx = [self getIndexFromItemKey:itemKey];
@@ -1205,12 +1221,12 @@ LYNX_UI_METHOD(scrollToPosition) {
                                      smooth:(BOOL)smooth
                                   scrolling:(BOOL)scrolling {
   // ListElement flush scrolling to platform
-
-  NSInteger scrollRequestId = ++self.scrollRequestId;
   ((LynxListContainerView *)(self.view)).scrollEstimatedOffset = estimatedOffset;
   if (!scrolling) {
     // Scroll will begin !
 
+    // Workaround Logic: Stop current scroll if 600ms has passed
+    NSInteger scrollRequestId = ++self.scrollRequestId;
     __weak __typeof(self) weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (600 * NSEC_PER_MSEC)),
                    dispatch_get_main_queue(), ^{

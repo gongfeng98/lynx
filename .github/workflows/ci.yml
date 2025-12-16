@@ -128,6 +128,8 @@ jobs:
         uses: ./lynx/.github/actions/common-deps
       - name: Setup Ruby Cache
         uses: ./lynx/.github/actions/ios-common-deps
+        with:
+          cache-backend: 'lynx-infra'
       - name: Install iOS Dependencies
         uses: nick-fields/retry@v2
         with:
@@ -350,6 +352,11 @@ jobs:
         with:
           java-version: 17
           distribution: 'zulu'
+      - name: Gradle Wrapper Cache
+        uses: lynx-infra/cache@5c6160a6a4c7fca80a2f3057bb9dfc9513fcb732
+        with:
+          path: ~/.gradle/wrapper/dists
+          key: gradle-8.7-${{ runner.os }}
       - name: Start Android 28 emulator
         run: |
           set -x
@@ -555,7 +562,7 @@ jobs:
   harmony-explorer-build:
     runs-on: lynx-custom-container
     container:
-      image: ghcr.io/lynx-family/ubuntu24.04-harmony@sha256:8a27a41a94c6541b24dfa6c80386d2e9b0ee3cc8896b6cd7e8d98fe5b0854699
+      image: ghcr.io/lynx-family/ubuntu24.04-harmony@sha256:bf493c3710de3c44bfa84caf402c0727b9310c42497f6e52580ad441ea640ef1
       credentials:
         username: lynx-family
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -610,6 +617,8 @@ jobs:
         uses: ./lynx/.github/actions/common-deps
       - name: Setup Ruby Cache
         uses: ./lynx/.github/actions/ios-common-deps
+        with:
+          cache-backend: 'lynx-infra'
       - name: Prepare cocoapods publish source
         run: |-
           source tools/envsetup.sh
@@ -627,7 +636,7 @@ jobs:
         with:
           path: demo
           repository: lynx-family/integrating-lynx-demo-projects
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: 0ab9340e1e560f07d3d4c4331f8b62b0702d067a
       - name: Build the Demo Project
         run: |-
           cd $GITHUB_WORKSPACE
@@ -657,6 +666,8 @@ jobs:
         uses: ./lynx/.github/actions/common-deps
       - name: Setup Ruby Cache
         uses: ./lynx/.github/actions/ios-common-deps
+        with:
+          cache-backend: 'lynx-infra'
       - name: Get iOS simulator SDK version
         run: |
           xcodebuild -showsdks | grep -Eo -m 1 "iphonesimulator([0-9]{1,}\.)+[0-9]{1,}" > sdk.txt
@@ -814,3 +825,19 @@ jobs:
         with:
           name: ios-e2e-resources
           path: '${{ github.workspace }}/lynx/testing/integration_test/test_script/screenshots.zip'
+
+  clay-macos-build:
+    timeout-minutes: 60
+    runs-on: lynx-darwin-14-medium
+    steps:
+      - name: Download Source
+        uses: actions/checkout@v4.2.2
+        with:
+          path: lynx
+      - name: Build Clay Example
+        uses: ./lynx/.github/actions/clay-macos-build
+      - name: upload artifact
+        uses: lynx-infra/upload-artifact@332ec52e99f7cbf1fbbdc9bcc09280d49147d092
+        with:
+          name: clay_glfw
+          path: '${{ github.workspace }}/lynx/out/Default/clay_glfw'

@@ -39,6 +39,7 @@
 #include "core/renderer/dom/fiber/page_element.h"
 #include "core/renderer/dom/vdom/radon/radon_element.h"
 #include "core/renderer/dom/vdom/radon/radon_types.h"
+#include "core/renderer/layout_scheduler/layout_scheduler.h"
 #include "core/renderer/pipeline/pipeline_layout_data.h"
 #include "core/renderer/ui_wrapper/common/prop_bundle_creator_default.h"
 #include "core/renderer/ui_wrapper/layout/layout_context.h"
@@ -83,8 +84,8 @@ class HierarchyObserver {
  public:
   virtual ~HierarchyObserver() {}
 
-  virtual void OnLayoutNodeCreated(int32_t id, LayoutNode *ptr) {}
-  virtual void OnLayoutNodeDestroy(int32_t id) {}
+  virtual void OnLayoutObjectCreated(int32_t id, SLNode *ptr) {}
+  virtual void OnLayoutObjectDestroy(int32_t id) {}
   virtual void OnComponentUselessUpdate(const std::string &component_name,
                                         const lepus::Value &properties) {}
 };
@@ -176,15 +177,14 @@ class ComponentManager {
   std::unordered_map<std::string, Element *> component_map_;
 };
 
-class ElementManager : public ElementContextDelegate {
+class ElementManager : public ElementContextDelegate,
+                       public LayoutScheduler::LayoutSchedulerImpl {
  public:
   class Delegate {
    public:
     Delegate() = default;
     virtual ~Delegate() = default;
 
-    virtual void DispatchLayoutUpdates(
-        const std::shared_ptr<PipelineOptions> &options) = 0;
     virtual std::unordered_map<int32_t, LayoutInfoArray> GetSubTreeLayoutInfo(
         int32_t root_id, Viewport viewport = Viewport{}) = 0;
 
@@ -339,6 +339,7 @@ class ElementManager : public ElementContextDelegate {
   void AddFontFace(const lepus::Value &font);
 
   void SetEnableSimpleStyle(bool enable) { enable_simple_style_ = enable; }
+  bool EnableSimpleStyle() const { return enable_simple_style_; }
 
   void SetSimpleStyleKeyframes(
       const std::shared_ptr<CSSKeyframesTokenMap> &keyframes) {
@@ -491,6 +492,11 @@ class ElementManager : public ElementContextDelegate {
   }
 
   bool GetEnableNewAnimatorForFiber() {
+    // If enable fragment layer render, default enable new animation.
+    // TODO(songshourui.null): support simple styling + new animation.
+    if (enable_fragment_layer_render_) {
+      return true;
+    }
     if (config_) {
       return config_->GetEnableNewAnimator() && !enable_simple_style_;
     }
@@ -659,6 +665,9 @@ class ElementManager : public ElementContextDelegate {
 
   virtual bool IsDomTreeEnabled() { return dom_tree_enabled_; }
   bool GetEnableZIndex() { return config_ && config_->GetEnableZIndex(); }
+  bool EnablePropertyBasedSimpleStyle() const {
+    return enable_property_based_simple_style_;
+  }
 
   void InsertDirtyContext(BaseElementContainer *stacking_context) {
     dirty_stacking_contexts_.insert(stacking_context);
@@ -953,14 +962,7 @@ class ElementManager : public ElementContextDelegate {
    */
   void CheckAndProcessSlotForInspector(Element *element);
 
-  void SetEnableParallelElement(bool value) {
-    enable_parallel_element_ = value;
-    if (enable_parallel_element_ &&
-        (thread_strategy_ == base::ThreadStrategyForRendering::ALL_ON_UI ||
-         thread_strategy_ == base::ThreadStrategyForRendering::MOST_ON_TASM)) {
-      parallel_with_sync_layout_ = true;
-    }
-  }
+  void SetEnableParallelElement(bool value);
 
   bool GetEnableParallelElement() { return enable_parallel_element_; }
 
@@ -1086,11 +1088,17 @@ class ElementManager : public ElementContextDelegate {
   void LegacyHandleLayoutTask(FiberElement *target,
                               base::MoveOnlyClosure<void> operation);
 
+  void SetLayoutTick(
+      base::MoveOnlyClosure<void, const std::shared_ptr<PipelineOptions>>
+          tick) {
+    layout_tick_ = std::move(tick);
+  }
+
   /**
    * call this function to request layout
    * @param options the pipeline options passed to layout context
    */
-  void RequestLayout(const std::shared_ptr<PipelineOptions> &options);
+  void RequestLayout(const std::shared_ptr<PipelineOptions> &options) override;
 
   void MarkLayoutDirtyAndRequestLayout(
       int32_t id, const std::shared_ptr<PipelineOptions> &options);
@@ -1138,6 +1146,10 @@ class ElementManager : public ElementContextDelegate {
     }
   }
 
+  void SetEnableLevelOrderTraversing(bool enable) {
+    enable_level_order_traversing_ = enable;
+  }
+
   bool EnableLevelOrderTraversing() const {
     return enable_level_order_traversing_;
   }
@@ -1179,10 +1191,6 @@ class ElementManager : public ElementContextDelegate {
 
   void ScheduleLayout();
 
-  void SetRequestLayoutCallback(base::MoveOnlyClosure<void> callback) {
-    request_layout_callback_ = std::move(callback);
-  }
-
   std::optional<std::thread::id> GetCurrentEngineThreadId() {
     return engine_thread_id_;
   }
@@ -1191,7 +1199,15 @@ class ElementManager : public ElementContextDelegate {
     engine_thread_id_ = engine_id;
   }
 
+  bool GetRequireCSSVariables() const { return require_css_variables_; }
+
+  void SetRequireCSSVariables(bool require_css_variables) {
+    require_css_variables_ = require_css_variables;
+  }
+
  protected:
+  void TickLayout(const std::shared_ptr<PipelineOptions> &options);
+
   /**
    * call this function after exec OnPatchFinishForFiber
    */
@@ -1229,7 +1245,6 @@ class ElementManager : public ElementContextDelegate {
   ElementManager(const ElementManager &) = delete;
   ElementManager &operator=(const ElementManager &) = delete;
   void OnListComponentUpdated(const std::shared_ptr<PipelineOptions> &options);
-  void DispatchLayoutUpdates(const std::shared_ptr<PipelineOptions> &options);
 
   const int instance_id_;
   int32_t element_id_{kInitialImplId};
@@ -1302,10 +1317,12 @@ class ElementManager : public ElementContextDelegate {
   bool enable_level_order_traversing_{false};
   std::atomic_int pending_level_order_tasks_{0};
   std::optional<std::thread::id> engine_thread_id_{std::nullopt};
+  bool require_css_variables_{false};
 
   bool enable_fiber_element_memory_reporter_{false};
   bool enable_layout_in_element_mode_{false};
   bool enable_fragment_layer_render_{false};
+  bool enable_property_based_simple_style_{false};
 
   bool has_viewport_ready_{false};
   bool is_memory_collecting_{false};
@@ -1373,6 +1390,13 @@ class ElementManager : public ElementContextDelegate {
       devtool_func_map_;
 
   base::MoveOnlyClosure<void> request_layout_callback_;
+
+  // Keep layout_tick_ for now. Once enable_unified_pipeline is fully rolled
+  // out, layout triggering will be driven by TemplateAssembler. ElementManager
+  // will only implement layout when LayoutInElement is enabled and will no
+  // longer proactively tick layout, so this variable can be removed.
+  base::MoveOnlyClosure<void, const std::shared_ptr<PipelineOptions>>
+      layout_tick_;
 
  public:
   // fixed node attached to the page node.

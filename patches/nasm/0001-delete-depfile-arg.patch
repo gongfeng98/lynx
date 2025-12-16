@@ -1,19 +1,19 @@
-From d325226e62cd92ff5cfb2c5c7dc78cb36714e7f1 Mon Sep 17 00:00:00 2001
+From 66ed6baa77a97f2762572e25891c4790588ee42c Mon Sep 17 00:00:00 2001
 From: tangyongjie <80395553+yongjieTang@users.noreply.github.com>
-Date: Fri, 14 Nov 2025 16:47:11 +0800
+Date: Fri, 28 Nov 2025 13:31:07 +0800
 Subject: [PATCH] delete depfile arg
 
 ---
- BUILD.gn          | 8 ++++----
- nasm_assemble.gni | 1 -
- nasm_sources.gni  | 2 +-
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ BUILD.gn          | 15 +++++++++++----
+ nasm_assemble.gni |  1 -
+ nasm_sources.gni  |  2 +-
+ 3 files changed, 12 insertions(+), 6 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 4fdc2938..da98277b 100644
+index 4fdc2938..3b4abfb2 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -7,7 +7,7 @@ import("nasm_sources.gni")
+@@ -7,9 +7,13 @@ import("nasm_sources.gni")
  
  configs_to_delete = [
    # Don't enable sanitizers for build tools. They slow down the overall build.
@@ -21,8 +21,14 @@ index 4fdc2938..da98277b 100644
 +  # "//build/config/sanitizers:default_sanitizer_flags",
  ]
  
++if (use_flutter_cxx) {
++  configs_to_delete += [ "//third_party/libcxx:libcxx_config" ]
++}
++
  configs_to_add = []
-@@ -30,8 +30,8 @@ if (is_debug) {
+ if (is_debug) {
+   configs_to_delete += [
+@@ -30,8 +34,8 @@ if (is_debug) {
    if (is_win) {
      # This switches to using the release CRT. For yasm debug component builds
      # of highbd_sad4d_sse2.asm on Windows this saved about 15 s.
@@ -33,7 +39,16 @@ index 4fdc2938..da98277b 100644
    }
  }
  
-@@ -99,7 +99,7 @@ if (current_toolchain == host_toolchain) {
+@@ -93,13 +97,16 @@ if (current_toolchain == host_toolchain) {
+       "config/config-win.h",
+     ]
+ 
++    if (use_flutter_cxx) {
++      no_default_deps = true
++    }
+     configs -= configs_to_delete
+     configs += configs_to_add
+     configs += [ ":nasm_config" ]
  
      deps = [
        # Default manifest on Windows (a no-op elsewhere).

@@ -1,7 +1,7 @@
 # Copyright 2025 The Lynx Authors. All rights reserved.
 # Licensed under the Apache License Version 2.0 that can be found in the
 # LICENSE file in the root directory of this source tree.
-compileOptions:
+compilerOptions:
   targetSdkVersion:
     defaultValue: ''
     valueType: string
@@ -122,7 +122,7 @@ compileOptions:
   lynxAirMode:
     defaultValue: AIR_MODE_OFF
     valueType: uint8_t
-    jsValueType: CompileOptionAirMode
+    jsValueType: CompilerOptionAirMode
     since: '2.11'
   enableFiberArch:
     defaultValue: 'false'
@@ -169,6 +169,21 @@ compileOptions:
     defaultValue: 'false'
     valueType: boolean
     since: '3.3'
+  bundleModuleMode:
+    defaultValue: ''
+    valueType: string
+    codeGen:
+      - NONE
+  enableLepusDebug:
+    defaultValue: 'false'
+    valueType: boolean
+    codeGen:
+      - NONE
+  enableParallelElement:
+    defaultValue: 'false'
+    valueType: boolean
+    codeGen:
+      - NONE
 # compile options end here
 
 # PageConfig start here
@@ -1691,3 +1706,17 @@ enableCSSInlineVariables:
     - DECODE
   author: 'pilipala195'
   since: '3.6'
+enableMTSPreExecute:
+  description: Enable MTS VM pre execute code.
+  defaultValue: 'false'
+  valueType: bool
+  author: 'lybvinci'
+  since: '3.7'
+enablePropertyBasedSimpleStyle:
+  description: SimpleStyle mode will incrementally update styles based on properties if this config set to TRUE. Otherwise it will incrementally update based on StyleObjects. The StyleObject based updating has a better performance but not allow StyleObjects bound to the same elememnt has intersect properties.
+  defaultValue: 'false'
+  valueType: bool
+  readSettings: false
+  readNative: false
+  author: 'zhongyr'
+  since: '3.5'

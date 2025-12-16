@@ -77,6 +77,8 @@ uint64_t GetFlowId() {
   return sTraceEventFlowId++;
 }
 
+uint64_t GetTraceTimeNs() { return TrackEventInternal::GetTimeNs(); }
+
 void TraceEventImplementation(const char* category_name,
                               const std::string& name, TraceEventType phase,
                               const lynx::perfetto::Track* track_id,
@@ -278,6 +280,9 @@ int TraceControllerImpl::StartTracing(
   cfg.set_flush_period_ms(1000);
   cfg.add_buffers()->set_size_kb(config->buffer_size);
 
+  if (config->enable_compress) {
+    cfg.set_compression_type(::perfetto::TraceConfig::COMPRESSION_TYPE_DEFLATE);
+  }
   // file path
   if (config->file_path.empty() && delegate_) {
     if (trace_file_dir_.empty()) {

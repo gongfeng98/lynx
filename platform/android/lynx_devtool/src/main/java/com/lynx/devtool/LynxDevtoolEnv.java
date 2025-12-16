@@ -17,6 +17,8 @@ import com.lynx.tasm.LynxEnvKey;
 import com.lynx.tasm.LynxSubErrorCode;
 import com.lynx.tasm.base.LLog;
 import com.lynx.tasm.base.LynxTraceEnv;
+import com.lynx.tasm.service.ILynxDevToolService;
+import com.lynx.tasm.service.LynxServiceCenter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -127,6 +129,8 @@ public class LynxDevtoolEnv {
             new ArrayList<Object>(Arrays.asList(true, true, true)));
         put(LynxEnvKey.SP_KEY_ENABLE_HIGHLIGHT_TOUCH,
             new ArrayList<Object>(Arrays.asList(false, false, false)));
+        put(LynxEnvKey.SP_KEY_ENABLE_FSP_SCREENSHOT,
+            new ArrayList<Object>(Arrays.asList(true, false, false)));
         put(LynxEnvKey.SP_KEY_ENABLE_LAUNCH_RECORD,
             new ArrayList<Object>(Arrays.asList(true, false, false)));
         put(LynxEnvKey.SP_KEY_ENABLE_QUICKJS_DEBUG,
@@ -203,24 +207,39 @@ public class LynxDevtoolEnv {
     mDevtoolLibraryLoader = loader;
   }
 
+  private boolean shouldLoadDevToolJsBridge() {
+    ILynxDevToolService devtoolService =
+        LynxServiceCenter.inst().getService(ILynxDevToolService.class);
+    return devtoolService != null && devtoolService.getLoadJsBridge();
+  }
+
   public void loadNativeDevtoolLibrary() {
     if (mDevtoolLibraryLoader != null) {
       mDevtoolLibraryLoader.loadLibrary("lynxdebugrouter");
-      mDevtoolLibraryLoader.loadLibrary("v8_libfull.cr");
       mDevtoolLibraryLoader.loadLibrary("basedevtool");
       mDevtoolLibraryLoader.loadLibrary("lynxdevtool");
+      if (shouldLoadDevToolJsBridge()) {
+        mDevtoolLibraryLoader.loadLibrary("v8_libfull.cr");
+        mDevtoolLibraryLoader.loadLibrary("lynxdevtool_js_bridge");
+      }
       LLog.i(TAG, "liblynxdevtool and libv8_libfull loaded via custom devtool library loader");
     } else {
       if (LynxEnv.inst().getLibraryLoader() != null) {
         LynxEnv.inst().getLibraryLoader().loadLibrary("lynxdebugrouter");
-        LynxEnv.inst().getLibraryLoader().loadLibrary("v8_libfull.cr");
         LynxEnv.inst().getLibraryLoader().loadLibrary("basedevtool");
         LynxEnv.inst().getLibraryLoader().loadLibrary("lynxdevtool");
+        if (shouldLoadDevToolJsBridge()) {
+          LynxEnv.inst().getLibraryLoader().loadLibrary("v8_libfull.cr");
+          LynxEnv.inst().getLibraryLoader().loadLibrary("lynxdevtool_js_bridge");
+        }
         LLog.i(TAG, "liblynxdevtool loaded via library loader");
       } else {
-        System.loadLibrary("v8_libfull.cr");
         System.loadLibrary("basedevtool");
         System.loadLibrary("lynxdevtool");
+        if (shouldLoadDevToolJsBridge()) {
+          System.loadLibrary("v8_libfull.cr");
+          System.loadLibrary("lynxdevtool_js_bridge");
+        }
         LLog.i(TAG, "liblynxdevtool loaded via system loader");
       }
     }

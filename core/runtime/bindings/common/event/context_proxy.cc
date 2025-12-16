@@ -80,7 +80,8 @@ event::DispatchEventResult ContextProxy::DispatchEvent(
     consumed |= EventTarget::DispatchEvent(message_event).consumed;
     return {event::EventCancelType::kNotCanceled, consumed};
   }
-  return delegate_.DispatchMessageEvent(message_event);
+  return delegate_.DispatchMessageEvent(
+      runtime::MessageEvent::ShallowCopy(*message_event));
 }
 
 }  // namespace runtime

@@ -4,13 +4,14 @@
 
 #include "core/renderer/dom/style_resolver.h"
 
-#include <algorithm>
 #include <utility>
 
 #include "base/include/algorithm.h"
 #include "base/include/log/logging.h"
 #include "base/trace/native/trace_event.h"
+#include "core/renderer/css/css_property.h"
 #include "core/renderer/css/css_sheet.h"
+#include "core/renderer/css/css_value.h"
 #include "core/renderer/css/parser/css_string_parser.h"
 #include "core/renderer/dom/element.h"
 #include "core/renderer/dom/fiber/fiber_element.h"
@@ -136,6 +137,49 @@ void StyleResolver::ResolveStyleObjects(style::StyleObject** old_ptr,
         }
         HandleAddedStyleObject(new_ptr, target);
       }
+    }
+  }
+}
+
+void StyleResolver::ResolveStyleObjectsBasedOnExistingMap(
+    const tasm::StyleMap& old_dcl_style, style::StyleObject** new_ptr,
+    style::SimpleStyleNode* target) {
+  // Early return if no new style objects and no existing styles
+  if (!new_ptr && old_dcl_style.empty()) {
+    return;
+  }
+
+  // Reserve space to avoid reallocations - estimate based on old + new
+  // properties
+  tasm::StyleMap resolved_property;
+  const size_t estimated_size = old_dcl_style.size() + (new_ptr ? 8 : 0);
+  resolved_property.reserve(estimated_size);
+
+  // Merge all properties from new style objects
+  if (new_ptr) {
+    for (auto** it = new_ptr; *it; ++it) {
+      (*it)->FromBinary();
+      resolved_property.merge((*it)->Properties());
+    }
+  }
+
+  // Update target only if we have resolved properties
+  if (!resolved_property.empty()) {
+    // Update to new style object.
+    // Reset any properties from old_dcl_style that don't exist in the new
+    // styles
+    for (const auto& [property_id, value] : old_dcl_style) {
+      if (!resolved_property.contains(property_id)) {
+        target->ResetSimpleStyle(property_id);
+      }
+    }
+
+    target->UpdateSimpleStyles(std::move(resolved_property));
+
+  } else {
+    // Reset every styles, since the new styleObject array is empty.
+    for (const auto& [property_id, value] : old_dcl_style) {
+      target->ResetSimpleStyle(property_id);
     }
   }
 }
@@ -278,22 +322,30 @@ void StyleResolver::HandleCSSVariables(StyleMap& styles) {
   bool is_fiber_arch = element_->is_fiber_element();
 
   CSSVariableHandler handler(is_fiber_arch);
+  bool has_css_variable_in_style_map = false;
+  bool is_css_inline_variables_enabled =
+      element_->IsCSSInlineVariablesEnabled();
   if (is_fiber_arch && element_->is_greedy_parallel_flush()) {
-    if (handler.HasCSSVariableInStyleMap(styles) ||
-        (manager()->GetDynamicCSSConfigs().enable_css_inline_variables_ &&
+    has_css_variable_in_style_map = handler.HasCSSVariableInStyleMap(styles);
+    if (has_css_variable_in_style_map ||
+        (is_css_inline_variables_enabled &&
          handler.HasCSSVariableInHolder(element_->data_model()))) {
       // mark need refresh style in parallel flush with css variables in
       // StyleMap
       static_cast<FiberElement*>(element_)->MarkRefreshCSSStyles();
     }
   } else {
-    if (is_fiber_arch && element()->IsCSSInlineVariablesEnabled()) {
+    if (is_fiber_arch && is_css_inline_variables_enabled) {
       static_cast<FiberElement*>(element_)->CollectCustomProperties(
           element_->data_model());
     }
 
-    handler.HandleCSSVariables(styles, element_->data_model(),
-                               GetCSSParserConfigs());
+    has_css_variable_in_style_map = handler.HandleCSSVariables(
+        styles, element_->data_model(), GetCSSParserConfigs());
+  }
+
+  if (has_css_variable_in_style_map || is_css_inline_variables_enabled) {
+    element_->element_manager()->SetRequireCSSVariables(true);
   }
 }
 

@@ -199,23 +199,20 @@ TemplateAssembler::Scope::~Scope() {
   }
 }
 
-TemplateAssembler::TemplateAssembler(Delegate& delegate,
-                                     std::unique_ptr<ElementManager> client,
-                                     LayoutScheduler& layout_scheduler,
-                                     int32_t instance_id,
-                                     bool enable_unified_pipeline,
-                                     const PageOptions& page_options)
+TemplateAssembler::TemplateAssembler(
+    Delegate& delegate, std::unique_ptr<ElementManager> client,
+    LayoutScheduler::LayoutSchedulerImpl* layout_scheduler, int32_t instance_id,
+    bool enable_unified_pipeline, const PageOptions& page_options)
     : page_proxy_(this, std::move(client), &delegate),
       target_sdk_version_("null"),
       delegate_(delegate),
-      layout_scheduler_(layout_scheduler),
       touch_event_handler_(nullptr),
       page_config_(nullptr),
       instance_id_(instance_id),
       font_scale_(1.0),
       page_options_(page_options),
       pipeline_context_manager_(std::make_unique<PipelineContextManager>(
-          enable_unified_pipeline ||
+          enable_unified_pipeline || page_options.IsFragmentLayerRender() ||
           LynxEnv::GetInstance().EnableUnifiedPixelPipeline())),
       support_component_js_(false),
       template_loaded_(false),
@@ -223,6 +220,15 @@ TemplateAssembler::TemplateAssembler(Delegate& delegate,
       destroyed_(false),
       is_loading_template_(false) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, TEMPLATE_ASSEMBLER_CONSTRUCTOR);
+
+  layout_scheduler_ = std::make_unique<LayoutScheduler>(
+      page_options.IsLayoutInElementModeOn()
+          ? page_proxy_.element_manager().get()
+          : layout_scheduler);
+
+  page_proxy_.element_manager()->SetLayoutTick(
+      [this](auto& options) { RequestLayout(options); });
+
   pipeline_context_manager_->SetOnCreateHook(
       [this]() { EnsureOnLayoutReadyHooksFinish(); });
 
@@ -253,7 +259,7 @@ void TemplateAssembler::UpdateGlobalProps(
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_UPDATE_GLOBAL_PROPS, "need_render",
               need_render);
   PipelineScope pipeline_scope(this, pipeline_options);
-
+  LOGI("UpdateGlobalProps " << data.GetLength() << " this: " << this);
   global_props_ = data;
   if (template_loaded_) {
     NotifyGlobalPropsChanged(data);
@@ -581,14 +587,57 @@ void TemplateAssembler::RenderTemplate(
       page_proxy()->element_manager()->GetEnableParallelElement();
   bool enable_radon_fiber_arch =
       page_proxy()->element_manager()->GetEnableFiberElementForRadonDiff();
-  if (EnableFiberArch() && !enable_parallel_element) {
+  auto instance_id = page_proxy()->element_manager()->GetInstanceId();
+  if (!enable_parallel_element) {
+    if (EnableFiberArch()) {
+      report::GlobalFeatureCounter::Count(
+          report::LynxFeature::CPP_DISABLE_PARALLEL_FLUSH_FIBER_ARCH,
+          instance_id);
+    } else if (enable_radon_fiber_arch) {
+      report::GlobalFeatureCounter::Count(
+          report::LynxFeature::CPP_DISABLE_PARALLEL_FLUSH_FIBER_RADON_ARCH,
+          instance_id);
+    }
+  } else {
+    if (EnableFiberArch()) {
+      report::GlobalFeatureCounter::Count(
+          report::LynxFeature::CPP_ENABLE_PARALLEL_FLUSH_FIBER_ARCH,
+          instance_id);
+    } else if (enable_radon_fiber_arch) {
+      report::GlobalFeatureCounter::Count(
+          report::LynxFeature::CPP_ENABLE_PARALLEL_FLUSH_FIBER_RADON_ARCH,
+          instance_id);
+    }
+  }
+
+  bool enable_standard_css_selector =
+      page_proxy()->element_manager()->GetEnableStandardCSSSelector();
+  if (enable_standard_css_selector) {
     report::GlobalFeatureCounter::Count(
-        report::LynxFeature::CPP_DISABLE_PARALLEL_FLUSH_FIBER_ARCH,
-        page_proxy()->element_manager()->GetInstanceId());
-  } else if (enable_radon_fiber_arch && !enable_parallel_element) {
+        report::LynxFeature::CPP_ENABLE_STANDARD_CSS_SELECTOR, instance_id);
+  } else {
     report::GlobalFeatureCounter::Count(
-        report::LynxFeature::CPP_DISABLE_PARALLEL_FLUSH_FIBER_RADON_ARCH,
-        page_proxy()->element_manager()->GetInstanceId());
+        report::LynxFeature::CPP_DISABLE_STANDARD_CSS_SELECTOR, instance_id);
+  }
+
+  bool enable_css_inheritance =
+      page_proxy()->element_manager()->GetCSSInheritance();
+  if (enable_css_inheritance) {
+    report::GlobalFeatureCounter::Count(
+        report::LynxFeature::CPP_ENABLE_CSS_INHERITANCE, instance_id);
+  } else {
+    report::GlobalFeatureCounter::Count(
+        report::LynxFeature::CPP_DISABLE_CSS_INHERITANCE, instance_id);
+  }
+
+  bool require_css_variables =
+      page_proxy()->element_manager()->GetRequireCSSVariables();
+  if (require_css_variables) {
+    report::GlobalFeatureCounter::Count(
+        report::LynxFeature::CPP_ENABLE_CSS_VARIABLES, instance_id);
+  } else {
+    report::GlobalFeatureCounter::Count(
+        report::LynxFeature::CPP_DISABLE_CSS_VARIABLES, instance_id);
   }
 }
 
@@ -1291,9 +1340,14 @@ void TemplateAssembler::DidFetchBundle(
   TRACE_EVENT(LYNX_TRACE_CATEGORY_VITALS, TEMPLATE_ASSEMBLER_DID_FETCH_BUNDLE,
               "bundle_url", callback_info.component_url);
   if (callback_info.request.resource_type == pub::LynxResourceType::kFrame) {
-    auto pipeline_option = std::make_shared<PipelineOptions>();
-    {
-      PipelineScope pipeline_scope(this, pipeline_option);
+    if (this->GetCurrentPipelineContext()) {
+      // If the current context is not empty, it means the frame loading process
+      // is still in an ongoing pipeline, so there’s no need to create a new
+      // one.
+      element_manager_delegate_.DidFrameBundleLoaded(callback_info);
+    } else {
+      auto pipeline_options = std::make_shared<PipelineOptions>();
+      PipelineScope pipeline_scope(this, pipeline_options);
       element_manager_delegate_.DidFrameBundleLoaded(callback_info);
     }
   }
@@ -2888,17 +2942,19 @@ void TemplateAssembler::OnPageConfigDecoded(
   element_manager->SetEnableFiberElementForRadonDiff(
       config->GetEnableFiberElementForRadonDiff());
 
-  if (config->GetEnableParallelElement() &&
-      element_manager->painting_context()->impl()->EnableParallelElement()) {
-    element_manager->SetEnableParallelElement(true);
-    bool enable_report_statistic =
-        lynx::tasm::LynxEnv::GetInstance().GetBoolEnv(
-            lynx::tasm::LynxEnv::Key::
-                ENABLE_REPORT_THREADED_ELEMENT_FLUSH_STATISTIC,
-            false);
-    element_manager->SetEnableReportThreadedElementFlushStatistic(
-        enable_report_statistic);
+  if (element_manager->painting_context()->impl()->EnableParallelElement()) {
+    element_manager->SetEnableLevelOrderTraversing(
+        config->GetEnableLevelOrderTraversing());
+    bool enable_parallel_element = config->GetEnableParallelElement();
+    element_manager->SetEnableParallelElement(enable_parallel_element);
+    if (enable_parallel_element) {
+      bool enable_report_statistic = LynxEnv::GetInstance().GetBoolEnv(
+          LynxEnv::Key::ENABLE_REPORT_THREADED_ELEMENT_FLUSH_STATISTIC, false);
+      element_manager->SetEnableReportThreadedElementFlushStatistic(
+          enable_report_statistic);
+    }
   }
+
   if (!config->GetEnableMultiTouch()) {
     report::GlobalFeatureCounter::Count(
         report::LynxFeature::CPP_DISABLE_MULTI_TOUCH,
@@ -3412,18 +3468,13 @@ void TemplateAssembler::TriggerLayout(
   pipeline_options->layout_requested = true;
 
   if (!pipeline_options->enable_unified_pixel_pipeline) {
-    page_proxy()->element_manager()->RequestLayout(pipeline_options);
+    RequestLayout(pipeline_options);
   }
 }
 
 void TemplateAssembler::RequestLayout(
     const std::shared_ptr<PipelineOptions>& pipeline_options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, "TemplateAssembler::RequestLayout");
-  if (page_proxy()->element_manager()->IsLayoutInElementModeOn()) {
-    page_proxy()->element_manager()->RequestLayout(pipeline_options);
-    return;
-  }
-
   if (pipeline_options->render_for_recreate_engine) {
     page_proxy()
         ->element_manager()
@@ -3439,7 +3490,7 @@ void TemplateAssembler::RequestLayout(
             tasm::timing::kPaintingUiOperationExecuteEnd,
             pipeline_options->pipeline_id);
   }
-  layout_scheduler_.RequestLayout(pipeline_options);
+  layout_scheduler_->RequestLayout(pipeline_options);
 }
 
 // starts run pixel pipeline process;

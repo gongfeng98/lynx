@@ -17,7 +17,6 @@
 #import <Lynx/LynxShadowNodeOwner.h>
 #import <Lynx/LynxTextRenderManager.h>
 #import <Lynx/LynxTraceEvent.h>
-#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxTraceEventWrapper.h>
 #import <Lynx/LynxUI+Internal.h>
 #import <Lynx/LynxUICollection.h>
@@ -38,6 +37,7 @@
 #import "LynxFeatureCounter.h"
 #import "LynxGestureArenaManager.h"
 #import "LynxMemoryRecord.h"
+#import "LynxTraceEventDef.h"
 #import "LynxUI+Private.h"
 #import "LynxUIContext+Internal.h"
 #import "LynxUIIntersectionObserver.h"
@@ -1142,8 +1142,8 @@ extern NSString* const kDefaultComponentID;
     return nil;
   }
   NSMutableDictionary<NSString*, LynxMemoryRecord*>* uiMemUsage = [NSMutableDictionary dictionary];
-  [_uiHolder enumerateKeysAndObjectsUsingBlock:^(NSNumber* _Nonnull key, LynxUI* _Nonnull obj,
-                                                 BOOL* _Nonnull stop) {
+  [[_uiHolder copy] enumerateKeysAndObjectsUsingBlock:^(NSNumber* _Nonnull key,
+                                                        LynxUI* _Nonnull obj, BOOL* _Nonnull stop) {
     NSString* tag = [obj tagName];
     if (!tag) {
       return;
@@ -1183,6 +1183,7 @@ extern NSString* const kDefaultComponentID;
                                                 maxY:rootSize.height];
   snapshot.contentsArray = contentsArray.copy;
   snapshot.containerSize = rootSize;
+  [snapshot captureView:self.rootUI.rootView];
   return snapshot;
 }
 

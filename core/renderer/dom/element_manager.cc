@@ -100,8 +100,6 @@ ElementManager::ElementManager(
       LynxEnv::Key::FIX_NEW_ANIMATOR_FLUSH_BUG, true);
   enable_fiber_element_memory_reporter_ =
       LynxEnv::GetInstance().EnableFiberElementMemoryReport();
-  enable_level_order_traversing_ =
-      LynxEnv::GetInstance().EnableLevelOrderTraversing();
   if (platform_layout_context_) {
     layout_node_manager_ = std::make_unique<ElementLayoutNodeManager>(*this);
     platform_layout_context_->SetLayoutNodeManager(layout_node_manager_.get());
@@ -396,7 +394,7 @@ void ElementManager::MarkLayoutDirtyAndRequestLayout(
     layout_node_manager_->MarkDirtyAndRequestLayout(id);
     options->layout_requested = true;
     if (!options->enable_unified_pixel_pipeline) {
-      RequestLayout(options);
+      TickLayout(options);
     }
   }
 }
@@ -404,21 +402,6 @@ void ElementManager::MarkLayoutDirtyAndRequestLayout(
 void ElementManager::RequestLayout(
     const std::shared_ptr<PipelineOptions> &options) {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_MANAGER_REQUEST_LAYOUT);
-
-  if (options->render_for_recreate_engine) {
-    painting_context()->MarkUIOperationQueueFlushForRecreateEngine(false);
-  }
-
-  if (options->need_timestamps) {
-    painting_context()->MarkUIOperationQueueFlushTiming(
-        tasm::timing::kPaintingUiOperationExecuteEnd, options->pipeline_id);
-  }
-
-  if (!IsLayoutInElementModeOn()) {
-    DispatchLayoutUpdates(options);
-    return;
-  }
-
   // TODO(songshourui.null): we can optimize the performance here within
   // checking layout dirty.
   if (layout_node_manager_) {
@@ -456,11 +439,6 @@ void ElementManager::RequestLayout(
   layout_data = {.layout_triggered = false,
                  .pipeline_version = options->version};
   element_manager_delegate_->OnLayoutAfter(layout_data);
-}
-
-void ElementManager::DispatchLayoutUpdates(
-    const std::shared_ptr<PipelineOptions> &options) {
-  delegate_->DispatchLayoutUpdates(options);
 }
 
 std::unordered_map<int32_t, LayoutInfoArray>
@@ -762,7 +740,7 @@ void ElementManager::OnUpdateViewport(float width, int width_mode, float height,
 
   if (SetViewportSizeToRootNode()) {
     if (need_layout) {
-      RequestLayout(std::make_shared<PipelineOptions>());
+      TickLayout(std::make_shared<PipelineOptions>());
     } else {
       need_layout_ = true;
     }
@@ -991,6 +969,8 @@ void ElementManager::SetConfig(const std::shared_ptr<PageConfig> &config) {
           {.enable_native_schedule_create_view_async =
                config_->GetEnableNativeScheduleCreateViewAsyncAsBool()});
     }
+    enable_property_based_simple_style_ =
+        config_->GetEnablePropertyBasedSimpleStyle();
   }
 }
 
@@ -1292,6 +1272,14 @@ fml::RefPtr<FrameElement> ElementManager::CreateFiberFrame() {
   return res;
 }
 
+void ElementManager::TickLayout(
+    const std::shared_ptr<PipelineOptions> &options) {
+  if (layout_tick_ == nullptr) {
+    return;
+  }
+  layout_tick_(options);
+}
+
 void ElementManager::OnPatchFinish(std::shared_ptr<PipelineOptions> &option,
                                    Element *element) {
   if (element == nullptr) {
@@ -1310,9 +1298,9 @@ void ElementManager::OnPatchFinish(std::shared_ptr<PipelineOptions> &option,
     is_memory_collecting_ = true;
   }
   base::MoveOnlyClosure<void, bool> patch_finish_callback =
-      [&option, self = this](bool has_patch) {
+      [&option, this](bool has_patch) {
         if (has_patch) {
-          self->RequestLayout(option);
+          TickLayout(option);
         }
       };
   if (element->is_radon_element()) {
@@ -1635,15 +1623,28 @@ void ElementManager::SetPageOptions(const PageOptions &options) {
 
   enable_fragment_layer_render_ = ((page_options_.GetEmbeddedMode() &
                                     EmbeddedMode::FRAGMENT_LAYER_RENDER) > 0);
+
+  // If enable fragment layer render, default enable layout in element default.
   enable_layout_in_element_mode_ =
       enable_fragment_layer_render_ ||
       ((page_options_.GetEmbeddedMode() & EmbeddedMode::LAYOUT_IN_ELEMENT) > 0);
+
+  // If enable fragment layer render, default enable native list.
+  enable_native_list_ |= enable_fragment_layer_render_;
 }
 
 void ElementManager::ScheduleLayout() {
   if (platform_layout_context_) {
-    platform_layout_context_->ScheduleLayoutInEmbeddedMode(
-        [this]() { request_layout_callback_(); });
+    platform_layout_context_->ScheduleLayout();
+  }
+}
+
+void ElementManager::SetEnableParallelElement(bool value) {
+  enable_parallel_element_ = value;
+  if (enable_parallel_element_ &&
+      (thread_strategy_ == base::ThreadStrategyForRendering::ALL_ON_UI ||
+       thread_strategy_ == base::ThreadStrategyForRendering::MOST_ON_TASM)) {
+    parallel_with_sync_layout_ = true;
   }
 }
 

@@ -99,6 +99,7 @@ public class LynxView extends UIBodyView {
   private int mCurrentHeightMeasureSpec = -1;
 
   private boolean isInPrePainting = false;
+  private boolean mDestroyed = false;
 
   public LynxView(Context context) {
     super(context);
@@ -1069,6 +1070,10 @@ public class LynxView extends UIBodyView {
 
   @Override
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    if (mDestroyed) {
+      setMeasuredDimension(0, 0);
+      return;
+    }
     onTraceEventBegin(TraceEventDef.LYNX_VIEW_ON_MEASURE, new Callable<HashMap<String, String>>() {
       @Override
       public HashMap<String, String> call() throws Exception {
@@ -1138,6 +1143,11 @@ public class LynxView extends UIBodyView {
       if (lynxUIRenderer.shouldInvokeNativeViewMethod()) {
         super.onLayout(changed, left, top, right, bottom);
       }
+      if (getLynxContext() != null && getLynxContext().isFragmentLayerRenderOn()) {
+        // PlatformRenderer uses native layout pass to update frame.
+        super.onLayout(changed, left, top, right, bottom);
+      }
+
       mLynxTemplateRender.onLayout(changed, left, top, right, bottom);
     } else {
       onLayoutWhenDetach();
@@ -1171,8 +1181,9 @@ public class LynxView extends UIBodyView {
    * @brief The client updates the `LynxView` view size.
    * @param widthMeasureSpec Current `LynxView` width.
    * @param heightMeasureSpec Current `LynxView` height.
+   * @param needLayout whether needs to triggerLayout.
    */
-  public void updateViewport(int widthMeasureSpec, int heightMeasureSpec) {
+  public void updateViewport(int widthMeasureSpec, int heightMeasureSpec, boolean needLayout) {
     onTraceEventBegin(
         TraceEventDef.LYNX_VIEW_UPDATE_VIEWPORT, new Callable<HashMap<String, String>>() {
           @Override
@@ -1180,6 +1191,7 @@ public class LynxView extends UIBodyView {
             HashMap<String, String> extraMap = new HashMap<>();
             extraMap.put(TraceEventDef.WIDTH_MEASURE_SPEC, String.valueOf(widthMeasureSpec));
             extraMap.put(TraceEventDef.HEIGHT_MEASURE_SPEC, String.valueOf(heightMeasureSpec));
+            extraMap.put(TraceEventDef.NEED_LAYOUT, String.valueOf(needLayout));
             return extraMap;
           }
         });
@@ -1191,9 +1203,19 @@ public class LynxView extends UIBodyView {
     if (mLynxTemplateRender == null) {
       return;
     }
-    mLynxTemplateRender.updateViewport(widthMeasureSpec, heightMeasureSpec);
-
+    mLynxTemplateRender.updateViewport(widthMeasureSpec, heightMeasureSpec, needLayout);
     onTraceEventEnd(TraceEventDef.LYNX_VIEW_UPDATE_VIEWPORT);
+  }
+
+  /**
+   * @apidoc
+   * @brief The client updates the `LynxView` view size.
+   * @param widthMeasureSpec Current `LynxView` width.
+   * @param heightMeasureSpec Current `LynxView` height.
+   */
+  public void updateViewport(int widthMeasureSpec, int heightMeasureSpec) {
+    checkAccessFromNonUiThread("updateViewport");
+    updateViewport(widthMeasureSpec, heightMeasureSpec, true);
   }
 
   /**
@@ -1221,6 +1243,10 @@ public class LynxView extends UIBodyView {
    * to release the `LynxView` memory, otherwise there will be a memory leak.
    */
   public void destroy() {
+    if (mDestroyed) {
+      return;
+    }
+    mDestroyed = true;
     LLog.i(TAG, "lynxview destroy " + this.toString());
     triggerEmbeddedModeLifecycle(DefaultLogicExecutor.LIFECYCLE_EVENT_ON_DESTROY, true);
     TraceEvent.beginSection(TraceEventDef.DESTORY_LYNXVIEW);

@@ -52,11 +52,11 @@ TEST_F(RadonNodeTest, GetAttributesForWorklet) {
                                         page_proxy->element_manager().get());
 
   radon_element->SetAttribute("test", lepus::Value(2));
-  EXPECT_EQ(radon_element->GetAttributesForWorklet().at("test"),
+  EXPECT_EQ(radon_element->GetAttributesForWorklet().find("test")->second,
             lepus::Value(2));
 
   radon_element->SetAttribute("test", lepus::Value(3));
-  EXPECT_EQ(radon_element->GetAttributesForWorklet().at("test"),
+  EXPECT_EQ(radon_element->GetAttributesForWorklet().find("test")->second,
             lepus::Value(3));
 }
 
@@ -215,7 +215,7 @@ TEST_F(RadonNodeTest, CreateFiberElementPage) {
 
 TEST_F(RadonNodeTest, NotCreateFiberElementPage) {
   page_proxy->element_manager()->SetEnableFiberElementForRadonDiff(
-      TernaryBool::FALSE_VALUE);
+      TernaryBool::TRUE_VALUE);
   auto radon_node = std::make_unique<RadonPage>(page_proxy.get(), 0, nullptr,
                                                 nullptr, nullptr, nullptr);
   radon_node->SetComponent(nullptr);

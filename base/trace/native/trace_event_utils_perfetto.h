@@ -46,6 +46,7 @@ using argsVecPair =
 using FuncType = std::function<void(lynx::perfetto::EventContext)>;
 
 TRACE_EXPORT uint64_t GetFlowId();
+TRACE_EXPORT uint64_t GetTraceTimeNs();
 TRACE_EXPORT void TraceEventImplementation(
     const char* category_name, const char* name, TraceEventType phase,
     const lynx::perfetto::Track* track_id, const uint64_t& timestamp,
@@ -71,8 +72,8 @@ TRACE_EXPORT void TraceRuntimeProfile(const std::string& runtime_profile,
 // https://en.cppreference.com/w/cpp/types/remove_cvref
 template <class T>
 struct remove_cvref {
-  using type = typename std::remove_cv<typename std::remove_cv<
-      typename std::remove_reference<T>::type>::type>::type;
+  using type =
+      typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 };
 template <class T>
 using remove_cvref_t = typename remove_cvref<T>::type;

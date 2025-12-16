@@ -168,11 +168,11 @@ bool UnitHandler::Process(const CSSPropertyID key, const lepus::Value& input,
     return true;
   }
 
-  if (output.empty()) {
-    // If target map is empty, we have the opportunity to reserve memory
-    // for it. This will optimize the case that a shorthand inline style
-    // is set by render functions.
-    if (auto expand = CSSProperty::GetShorthandExpand(key); expand > 0) {
+  if (output.capacity() == 0) {
+    // If target map buffer has not been allocated, we have the opportunity
+    // to reserve memory for it. This will optimize the case that a inline
+    // style is set by render functions.
+    if (auto expand = CSSProperty::GetShorthandExpand(key); true) {
       output.reserve(expand + kCSSStyleMapFuzzyAllocationSize);
     }
   }
@@ -186,7 +186,8 @@ bool UnitHandler::Process(const CSSPropertyID key, const lepus::Value& input,
 StyleMap UnitHandler::Process(const CSSPropertyID key,
                               const lepus::Value& input,
                               const CSSParserConfigs& configs) {
-  StyleMap ret(CSSProperty::GetShorthandExpand(key));
+  StyleMap ret;
+  ret.reserve(CSSProperty::GetShorthandExpand(key));
   Process(key, input, ret, configs);
   return ret;
 }

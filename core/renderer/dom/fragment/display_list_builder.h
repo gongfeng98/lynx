@@ -6,6 +6,7 @@
 #define CORE_RENDERER_DOM_FRAGMENT_DISPLAY_LIST_BUILDER_H_
 
 #include "core/renderer/dom/fragment/display_list.h"
+#include "core/renderer/dom/fragment/rounded_rectangle.h"
 
 namespace lynx {
 namespace starlight {
@@ -15,7 +16,7 @@ namespace tasm {
 
 class DisplayListBuilder {
  public:
-  DisplayListBuilder();
+  explicit DisplayListBuilder(float dx = 0, float dy = 0);
   ~DisplayListBuilder();
 
   DisplayListBuilder(const DisplayListBuilder&) = delete;
@@ -50,6 +51,9 @@ class DisplayListBuilder {
 
   // Set all border properties at once (color, width, style for all four sides)
   DisplayListBuilder& Border(const starlight::BordersData& border);
+
+  // Set clip rect
+  DisplayListBuilder& ClipRect(const RoundedRectangle& border);
 
   // Build the final display list
   DisplayList Build();

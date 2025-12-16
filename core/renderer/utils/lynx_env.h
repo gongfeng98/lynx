@@ -126,9 +126,12 @@ class LYNX_EXPORT_FOR_DEVTOOL LynxEnv {
     ENABLE_CSS_INLINE_VARIABLES,
     ENABLE_OPTIMIZE_HAS_OPACITY,
     DISABLE_JS_MODE_STRIP,
+    ENABLE_PLATFORM_DATA_FIX,
     ENABLE_QUICKJS_THREAD_CHECKER,
     ENABLE_LEVEL_ORDER_TRAVERSING,
     LYNX_DEBUG_ENABLED,
+    ENABLE_JS_CALLBACK_MANAGER,
+    ENABLE_HARMONY_DRAW_BEHIND,
     // Please add new enum values above
     END_MARK,  // Keep this as the last enum value, and do not use
   };
@@ -269,10 +272,13 @@ class LYNX_EXPORT_FOR_DEVTOOL LynxEnv {
             {Key::ENABLE_CSS_INLINE_VARIABLES, "enable_css_inline_variables"},
             {Key::ENABLE_OPTIMIZE_HAS_OPACITY, "enable_optimize_has_opacity"},
             {Key::DISABLE_JS_MODE_STRIP, "disable_js_mode_strip"},
+            {Key::ENABLE_PLATFORM_DATA_FIX, "enable_platform_data_fix"},
             {Key::ENABLE_QUICKJS_THREAD_CHECKER,
              "enable_quickjs_thread_checker"},
             {Key::ENABLE_LEVEL_ORDER_TRAVERSING,
              "enable_level_order_traversing"},
+            {Key::ENABLE_JS_CALLBACK_MANAGER, "enable_js_callback_manager"},
+            {Key::ENABLE_HARMONY_DRAW_BEHIND, "enable_harmony_draw_behind"},
         });
     auto it = (*env_key_to_string_map).find(key);
     DCHECK(it != (*env_key_to_string_map).end());
@@ -419,8 +425,10 @@ class LYNX_EXPORT_FOR_DEVTOOL LynxEnv {
   bool EnableCSSInlineVariables();
   bool EnableOptimizeHasOpacity();
   bool DisableJSModeStrip();
+  bool EnablePlatformDataFix();
   bool EnableQuickJsThreadChecker();
   bool EnableLevelOrderTraversing();
+  bool EnableHarmonyDrawBehind();
 
   LynxEnv(const LynxEnv&) = delete;
   LynxEnv& operator=(const LynxEnv&) = delete;

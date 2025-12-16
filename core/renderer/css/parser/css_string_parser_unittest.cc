@@ -805,6 +805,72 @@ TEST(CSSStringParser, valid_grayscale_value) {
   }
 }
 
+TEST(CSSStringParser, valid_brightness_value) {
+  constexpr const char* valid_brightness_str[] = {"0" /* 0 doesn't need unit*/,
+                                                  "50%", "100%", "0.5", ".5"};
+  CSSValue brightness_values[] = {CSSValue(0.0, CSSValuePattern::NUMBER),
+                                  CSSValue(0.5, CSSValuePattern::NUMBER),
+                                  CSSValue(1.0, CSSValuePattern::NUMBER),
+                                  CSSValue(0.5, CSSValuePattern::NUMBER),
+                                  CSSValue(0.5, CSSValuePattern::NUMBER)};
+  constexpr int num_str = sizeof(valid_brightness_str) / sizeof(char*);
+  for (int i = 0; i < num_str; i++) {
+    CSSStringParser parser{
+        valid_brightness_str[i],
+        static_cast<uint32_t>(strlen(valid_brightness_str[i])),
+        CSSParserConfigs()};
+    CSSValue brightness =
+        parser.ParseFilterValue(starlight::FilterType::kBrightness);
+    EXPECT_EQ(brightness_values[i].GetNumber(), brightness.GetNumber());
+    EXPECT_EQ(static_cast<uint32_t>(brightness_values[i].GetPattern()),
+              static_cast<uint32_t>(brightness.GetPattern()));
+  }
+}
+
+TEST(CSSStringParser, valid_contrast_value) {
+  constexpr const char* valid_contrast_str[] = {"0" /* 0 doesn't need unit*/,
+                                                "50%", "100%", "0.5", ".5"};
+  CSSValue contrast_values[] = {CSSValue(0.0, CSSValuePattern::NUMBER),
+                                CSSValue(0.5, CSSValuePattern::NUMBER),
+                                CSSValue(1.0, CSSValuePattern::NUMBER),
+                                CSSValue(0.5, CSSValuePattern::NUMBER),
+                                CSSValue(0.5, CSSValuePattern::NUMBER)};
+  constexpr int num_str = sizeof(valid_contrast_str) / sizeof(char*);
+  for (int i = 0; i < num_str; i++) {
+    CSSStringParser parser{valid_contrast_str[i],
+                           static_cast<uint32_t>(strlen(valid_contrast_str[i])),
+                           CSSParserConfigs()};
+    CSSValue contrast =
+        parser.ParseFilterValue(starlight::FilterType::kContrast);
+    EXPECT_EQ(contrast_values[i].GetNumber(), contrast.GetNumber());
+    EXPECT_EQ(static_cast<uint32_t>(contrast_values[i].GetPattern()),
+              static_cast<uint32_t>(contrast.GetPattern()));
+  }
+}
+
+TEST(CSSStringParser, valid_saturate_value) {
+  constexpr const char* valid_saturate_str[] = {"0" /* 0 doesn't need unit*/,
+                                                "50%", "100%", "0.5", ".5"};
+  CSSValue saturate_values[] = {
+      CSSValue(0.0, CSSValuePattern::NUMBER),
+      CSSValue(0.5, CSSValuePattern::NUMBER),
+      CSSValue(1.0, CSSValuePattern::NUMBER),
+      CSSValue(0.5, CSSValuePattern::NUMBER),
+      CSSValue(0.5, CSSValuePattern::NUMBER),
+  };
+  constexpr int num_str = sizeof(valid_saturate_str) / sizeof(char*);
+  for (int i = 0; i < num_str; i++) {
+    CSSStringParser parser{valid_saturate_str[i],
+                           static_cast<uint32_t>(strlen(valid_saturate_str[i])),
+                           CSSParserConfigs()};
+    CSSValue saturate =
+        parser.ParseFilterValue(starlight::FilterType::kSaturate);
+    EXPECT_EQ(saturate_values[i].GetNumber(), saturate.GetNumber());
+    EXPECT_EQ(static_cast<uint32_t>(saturate_values[i].GetPattern()),
+              static_cast<uint32_t>(saturate.GetPattern()));
+  }
+}
+
 TEST(CSSStringParser, parse_variable_positions) {
   CSSParserConfigs configs;
   // single var without fallback
@@ -815,9 +881,9 @@ TEST(CSSStringParser, parse_variable_positions) {
     CSSValue result = parser.ParseVariable();
     EXPECT_TRUE(result.IsVariable());
 
-    // var_references_ is private; test file exposes private members via
+    // optionals_ is private; test file exposes private members via
     // #define private public trick at top of this test file.
-    auto& refs = *(result.var_references_);
+    auto& refs = result.optionals_.Get<CSSValue::VarReferenceField>();
     ASSERT_EQ(refs.size(), 1u);
     auto& ref = refs[0];
 
@@ -837,7 +903,7 @@ TEST(CSSStringParser, parse_variable_positions) {
     CSSValue result = parser.ParseVariable();
     EXPECT_TRUE(result.IsVariable());
 
-    auto& refs = *result.var_references_;
+    auto& refs = result.optionals_.Get<CSSValue::VarReferenceField>();
     ASSERT_EQ(refs.size(), 1u);
     auto& ref = refs[0];
 
@@ -862,9 +928,9 @@ TEST(CSSStringParser, parse_variable_multiple_and_malformed) {
                            configs};
     CSSValue result = parser.ParseVariable();
     EXPECT_TRUE(result.IsVariable());
-    ASSERT_TRUE(result.var_references_ != nullptr);
+    ASSERT_TRUE(result.optionals_.HasValue<CSSValue::VarReferenceField>());
 
-    auto& refs = *result.var_references_;
+    auto& refs = result.optionals_.Get<CSSValue::VarReferenceField>();
     ASSERT_EQ(refs.size(), 2u);
 
     size_t first_idx = raw.find("var(");
@@ -891,8 +957,8 @@ TEST(CSSStringParser, parse_variable_multiple_and_malformed) {
     CSSValue result = parser.ParseVariable();
     EXPECT_FALSE(result.IsVariable());
     // No valid references should be attached
-    EXPECT_TRUE(result.var_references_ == nullptr ||
-                result.var_references_->empty());
+    EXPECT_TRUE(!result.optionals_.HasValue<CSSValue::VarReferenceField>() ||
+                result.optionals_.Get<CSSValue::VarReferenceField>().empty());
   }
 }
 
@@ -903,9 +969,9 @@ TEST(CSSStringParser, parse_variable_nested_fallback) {
                          configs};
   CSSValue result = parser.ParseVariable();
   EXPECT_TRUE(result.IsVariable());
-  ASSERT_TRUE(result.var_references_ != nullptr);
+  ASSERT_TRUE(result.optionals_.HasValue<CSSValue::VarReferenceField>());
 
-  auto& refs = *result.var_references_;
+  auto& refs = result.optionals_.Get<CSSValue::VarReferenceField>();
   ASSERT_EQ(refs.size(), 1u);
   EXPECT_EQ(refs[0].Name(result.AsStdString()), "--a");
   ASSERT_FALSE(refs[0].fallback.empty());
@@ -924,7 +990,7 @@ TEST(CSSStringParser, parse_variable_with_leading_whitespaces) {
     CSSValue result = parser.ParseVariable();
     EXPECT_TRUE(result.IsVariable());
 
-    auto& refs = *result.var_references_;
+    auto& refs = result.optionals_.Get<CSSValue::VarReferenceField>();
     ASSERT_EQ(refs.size(), 1u);
     auto& ref = refs[0];
 
@@ -945,7 +1011,7 @@ TEST(CSSStringParser, parse_variable_with_leading_whitespaces) {
     CSSValue result = parser.ParseVariable();
     EXPECT_TRUE(result.IsVariable());
 
-    auto& refs = *result.var_references_;
+    auto& refs = result.optionals_.Get<CSSValue::VarReferenceField>();
     ASSERT_EQ(refs.size(), 1u);
     auto& ref = refs[0];
 
@@ -964,7 +1030,7 @@ TEST(CSSStringParser, parse_variable_with_leading_whitespaces) {
     CSSValue result = parser.ParseVariable();
     EXPECT_TRUE(result.IsVariable());
 
-    auto& refs = *result.var_references_;
+    auto& refs = result.optionals_.Get<CSSValue::VarReferenceField>();
     ASSERT_EQ(refs.size(), 1u);
     auto& ref = refs[0];
 

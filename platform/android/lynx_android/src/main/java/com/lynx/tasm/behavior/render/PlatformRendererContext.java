@@ -3,24 +3,26 @@
 // LICENSE file in the root directory of this source tree.
 package com.lynx.tasm.behavior.render;
 
+import android.graphics.PointF;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.lynx.react.bridge.mapbuffer.ReadableCompactArrayBuffer;
 import com.lynx.tasm.base.CalledByNative;
+import com.lynx.tasm.base.LLog;
 import com.lynx.tasm.behavior.LynxContext;
 import com.lynx.tasm.behavior.shadow.TextLayout;
 import com.lynx.tasm.behavior.shadow.TextMeasurerProvider;
 import com.lynx.tasm.behavior.shadow.text.TextMeasurer;
 import com.lynx.tasm.behavior.ui.UIBody;
 import com.lynx.tasm.behavior.ui.image.LynxImageManager;
-import com.lynx.tasm.behavior.ui.scroll.AndroidScrollView;
-import com.lynx.tasm.behavior.ui.scroll.UIScrollView;
-import com.lynx.tasm.behavior.ui.view.AndroidView;
+import com.lynx.tasm.behavior.ui.utils.LynxUIHelper;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
 public class PlatformRendererContext implements TextMeasurerProvider {
+  final private static String TAG = "PlatformRendererContext";
+
   public static final class PlatformRendererType {
     public static final int kUnknown = 0;
     public static final int kView = 1;
@@ -28,13 +30,14 @@ public class PlatformRendererContext implements TextMeasurerProvider {
     public static final int kScroll = 3;
     public static final int kText = 4;
     public static final int kImage = 5;
+    public static final int kList = 6;
   }
 
   WeakReference<UIBody.UIBodyView> mRootView = null;
 
-  HashMap<Integer, ViewGroup> mViewHolder = new HashMap<>();
+  HashMap<Integer, IRendererHost> mViewHolder = new HashMap<>();
 
-  private LynxContext mContext = null;
+  private LynxContext mContext;
   private long mNativePtr = 0;
   private TextLayout mTextLayout;
   private boolean mDestroyed = false;
@@ -68,31 +71,66 @@ public class PlatformRendererContext implements TextMeasurerProvider {
     return mNativePtr;
   }
 
+  PointF convertPointInViewToScreen(int sign, PointF point) {
+    IRendererHost host = mViewHolder.get(sign);
+    if (host == null || host.getView() == null) {
+      LLog.e(TAG, "convertPointInViewToScreen failed since can not find target view.");
+    }
+    return LynxUIHelper.convertPointInViewToScreen(host.getView(), point);
+  }
+
+  public int getTargetWidth(int sign) {
+    IRendererHost host = mViewHolder.get(sign);
+    if (host == null) {
+      LLog.e(TAG, "getTargetWidth failed since can not find target view.");
+      return 0;
+    }
+
+    return host.getView().getWidth();
+  }
+
+  public int getTargetHeight(int sign) {
+    IRendererHost host = mViewHolder.get(sign);
+    if (host == null) {
+      LLog.e(TAG, "getTargetHeight failed since can not find target view.");
+      return 0;
+    }
+
+    return host.getView().getHeight();
+  }
+
   @CalledByNative
   public void createPlatformRenderer(int sign, int type) {
     switch (type) {
-      case PlatformRendererType.kView: {
-        AndroidView view = new AndroidView(mContext);
+      case PlatformRendererType.kView:
+      case PlatformRendererType.kText:
+      case PlatformRendererType.kImage: {
+        ContainerRenderer view = new ContainerRenderer(mContext);
+        Renderer renderer = view.createRenderer(this, sign);
+        renderer.setRenderHost(view);
+        view.setRenderer(renderer);
         mViewHolder.put(sign, view);
+        view.invalidate();
         break;
       }
       case PlatformRendererType.kPage: {
         UIBody.UIBodyView view = mRootView.get();
         if (view != null) {
-          view.mSign = sign;
-          view.setPlatformRendererContext(this);
           view.setWillNotDraw(false);
-
           view.invalidate();
+          Renderer renderer = view.createRenderer(this, sign);
+          renderer.setRenderHost(view);
+          view.setRenderer(renderer);
           mViewHolder.put(sign, view);
         }
         break;
       }
       case PlatformRendererType.kScroll: {
-        AndroidScrollView scrollView = new AndroidScrollView(
-            mContext, /*TODO: decoupling from UIScrollView*/ new UIScrollView(mContext));
-        mViewHolder.put(sign, scrollView);
-      }
+        // TODO: support <scroll-view/> platform view here.
+      } break;
+      case PlatformRendererType.kList: {
+        // TODO: support <list/> platform view here.
+      } break;
       default:
         // TODO: support customized PlatformRendererHostView.
         break;
@@ -106,11 +144,13 @@ public class PlatformRendererContext implements TextMeasurerProvider {
 
   @CalledByNative
   public void insertPlatformRenderer(int parent, int child, int index) {
-    ViewGroup parentView = mViewHolder.get(parent);
-    ViewGroup childView = mViewHolder.get(child);
-    if (parentView == null || childView == null) {
+    IRendererHost hParent = mViewHolder.get(parent);
+    IRendererHost hChild = mViewHolder.get(child);
+    if (hParent == null || hChild == null) {
       return;
     }
+    ViewGroup parentView = hParent.getView();
+    ViewGroup childView = hChild.getView();
     int count = parentView.getChildCount();
     if (index == -1 || index >= count) {
       parentView.addView(childView);
@@ -121,16 +161,27 @@ public class PlatformRendererContext implements TextMeasurerProvider {
 
   @CalledByNative
   public void invalidatePlatformRenderer(int sign) {
-    ViewGroup view = mViewHolder.get(sign);
-    if (view != null) {
-      view.invalidate();
+    IRendererHost host = mViewHolder.get(sign);
+    if (host != null) {
+      host.getView().invalidate();
     }
+  }
+
+  @CalledByNative
+  public void updatePlatformRendererFrame(
+      int sign, int left, int top, int width, int height, int dx, int dy) {
+    IRendererHost host = mViewHolder.get(sign);
+    if (host == null) {
+      LLog.d(TAG, "host renderer not found for sign: " + sign);
+    }
+    host.getRenderer().setLynxFrame(left, top, left + width, top + height, dx, dy);
+    host.getView().requestLayout();
   }
 
   public LynxImageManager getImage(int sign) {
     UIBody.UIBodyView rootView = mRootView.get();
     if (rootView != null) {
-      return rootView.obtainImageAccordingToNodeIndex(sign);
+      return rootView.peekImageAccordingToNodeIndex(sign);
     }
     return null;
   }
@@ -159,22 +210,22 @@ public class PlatformRendererContext implements TextMeasurerProvider {
 
   @CalledByNative
   public void removePlatformRendererFromParent(int sign) {
-    ViewGroup view = mViewHolder.get(sign);
-    if (view != null) {
-      ViewGroup parent = (ViewGroup) view.getParent();
+    IRendererHost host = mViewHolder.get(sign);
+    if (host != null) {
+      ViewGroup parent = (ViewGroup) host.getView().getParent();
       if (parent != null) {
-        parent.removeView(view);
+        parent.removeView(host.getView());
       }
     }
   }
 
   public void getDisplayList(int id, DisplayList displayList) {
-    if (displayList == null) {
+    if (displayList == null || mDestroyed || mNativePtr == 0) {
       return;
     }
 
     // Get the display list lengths first
-    int[] lengths = nativeGetDisplayListLengths(id);
+    int[] lengths = nativeGetDisplayListLengths(mNativePtr, id);
     if (lengths == null || lengths.length != 3) {
       return;
     }
@@ -189,7 +240,7 @@ public class PlatformRendererContext implements TextMeasurerProvider {
     displayList.fArgv = new float[fArgvLength];
 
     // Fill the arrays with actual data
-    nativeGetDisplayListData(id, displayList.ops, displayList.iArgv, displayList.fArgv);
+    nativeGetDisplayListData(mNativePtr, id, displayList.ops, displayList.iArgv, displayList.fArgv);
   }
 
   public TextLayout getTextLayout() {
@@ -232,16 +283,18 @@ public class PlatformRendererContext implements TextMeasurerProvider {
 
   native long nativeCreateEmbeddedViewContext(PlatformRendererContext jThis);
 
-  native int[] nativeGetDisplayListLengths(int id);
+  native int[] nativeGetDisplayListLengths(long nativePtr, int id);
 
   /**
    * Fills the provided arrays with display list data.
    * The arrays must be pre-allocated with lengths obtained from nativeGetDisplayListLengths().
    */
-  native void nativeGetDisplayListData(int id, int[] ops, int[] iArgv, float[] fArgv);
+  native void nativeGetDisplayListData(
+      long nativePtr, int id, int[] ops, int[] iArgv, float[] fArgv);
 
   public void destroy() {
     mDestroyed = true;
+    mNativePtr = 0; // Clear native pointer to indicate context is destroyed
     mViewHolder.clear();
     mTextMeasurer = null;
     mTextLayout = null;

@@ -13,10 +13,14 @@ lynx_core_source_set("fragment") {
     "fragment_behavior.h",
     "image_fragment_behavior.cc",
     "image_fragment_behavior.h",
+    "list_fragment_behavior.cc",
+    "list_fragment_behavior.h",
     "page_fragment_behavior.cc",
     "page_fragment_behavior.h",
     "text_fragment_behavior.cc",
     "text_fragment_behavior.h",
+    "view_fragment_behavior.cc",
+    "view_fragment_behavior.h",
   ]
   public_deps = [
     ":display_list",
@@ -31,6 +35,7 @@ lynx_core_source_set("display_list") {
     "display_list.h",
     "display_list_builder.cc",
     "display_list_builder.h",
+    "rounded_rectangle.h",
   ]
 }
 
@@ -39,6 +44,7 @@ unittest_set("display_list_testset") {
   sources = [
     "display_list_builder_unittest.cc",
     "display_list_unittest.cc",
+    "rounded_rectangle_unittest.cc",
   ]
   public_deps = [
     ":display_list",

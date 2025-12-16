@@ -61,7 +61,7 @@ class WorkletAPITest : public ::testing::Test {
 
     // Init tasm
     tasm_ = std::make_unique<lynx::tasm::TemplateAssembler>(
-        *delegate_.get(), std::move(manager), *delegate_.get(), 0);
+        *delegate_.get(), std::move(manager), delegate_.get(), 0);
     ctx_->delegate_ = tasm_.get();
 
     // Create default entry and set it to tasm
@@ -71,7 +71,6 @@ class WorkletAPITest : public ::testing::Test {
     tasm_->template_entries_[tasm::DEFAULT_ENTRY_NAME] = default_entry;
 
     // Register Method
-    tasm::Utils::RegisterNGBuiltin(ctx_.get());
     tasm::Renderer::RegisterNGBuiltin(ctx_.get(), tasm::ArchOption::RADON_ARCH);
     tasm::Renderer::RegisterNGBuiltin(ctx_.get(), tasm::ArchOption::FIBER_ARCH);
   }

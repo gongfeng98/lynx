@@ -22,16 +22,6 @@
 
 namespace lynx {
 namespace tasm {
-#define RENDERER_FUNCTION(name) static lepus::Value name(lepus::Context* ctx)
-#define PREPARE_ARGS(name)
-#define CALL_RUNTIME_AND_RETURN(name)                   \
-  return RendererFunctions::name(ctx, ctx->GetParam(0), \
-                                 (int)(ctx->GetParamsSize()))
-
-#define CREATE_FUNCTION(name) \
-  RENDERER_FUNCTION(name) { return lepus::Value(); }
-
-#include "core/runtime/bindings/lepus/renderer_template.h"
 
 #if defined(OS_WIN)
 #ifdef SetProp
@@ -39,71 +29,69 @@ namespace tasm {
 #endif  // SetProp
 #endif  // OS_WIN
 
-void Utils::RegisterBuiltin(lepus::Context* context) {
-  lepus::RegisterCFunction(context, kCFuncIndexOf, &IndexOf);
-  lepus::RegisterCFunction(context, kCFuncGetLength, &GetLength);
-  lepus::RegisterCFunction(context, kCFuncSetValueToMap, &SetValueToMap);
-}
-
 void Utils::RegisterMethodToLynx(lepus::Context* context, lepus::Value& lynx) {
   if (lynx.IsTable()) {
     auto lynx_table = lynx.Table();
     lepus::RegisterTableFunction(context, lynx_table, kGetTextInfo,
-                                 GetTextInfo);
+                                 &RendererFunctions::GetTextInfo);
 
-    lepus::RegisterTableFunction(context, lynx_table, kSetTimeout, &SetTimeout);
+    lepus::RegisterTableFunction(context, lynx_table, kSetTimeout,
+                                 &RendererFunctions::SetTimeout);
     lepus::RegisterTableFunction(context, lynx_table, kClearTimeout,
-                                 &ClearTimeout);
+                                 &RendererFunctions::ClearTimeout);
     lepus::RegisterTableFunction(context, lynx_table, kSetInterval,
-                                 &SetInterval);
+                                 &RendererFunctions::SetInterval);
     lepus::RegisterTableFunction(context, lynx_table, kClearTimeInterval,
-                                 &ClearTimeInterval);
-    lepus::RegisterTableFunction(
-        context, lynx_table, kCFunctionTriggerLepusBridge, &TriggerLepusBridge);
+                                 &RendererFunctions::ClearTimeInterval);
+    lepus::RegisterTableFunction(context, lynx_table,
+                                 kCFunctionTriggerLepusBridge,
+                                 &RendererFunctions::TriggerLepusBridge);
     lepus::RegisterTableFunction(context, lynx_table,
                                  kCFunctionTriggerComponentEvent,
-                                 &TriggerComponentEvent);
+                                 &RendererFunctions::TriggerComponentEvent);
     lepus::RegisterTableFunction(context, lynx_table,
                                  kCFunctionTriggerLepusBridgeSync,
-                                 &TriggerLepusBridgeSync);
+                                 &RendererFunctions::TriggerLepusBridgeSync);
     lepus::RegisterTableFunction(context, lynx_table, runtime::kGetDevTool,
-                                 GetDevTool);
+                                 &RendererFunctions::GetDevTool);
     lepus::RegisterTableFunction(context, lynx_table, runtime::kGetCoreContext,
-                                 GetCoreContext);
+                                 &RendererFunctions::GetCoreContext);
     lepus::RegisterTableFunction(context, lynx_table, runtime::kGetJSContext,
-                                 GetJSContext);
+                                 &RendererFunctions::GetJSContext);
     lepus::RegisterTableFunction(context, lynx_table, runtime::kGetUIContext,
-                                 GetUIContext);
+                                 &RendererFunctions::GetUIContext);
     lepus::RegisterTableFunction(context, lynx_table, runtime::kGetNative,
-                                 GetNative);
+                                 &RendererFunctions::GetNative);
     lepus::RegisterTableFunction(context, lynx_table, runtime::kGetEngine,
-                                 GetEngine);
+                                 &RendererFunctions::GetEngine);
     lepus::RegisterTableFunction(context, lynx_table, kRequestAnimationFrame,
-                                 &RequestAnimationFrame);
+                                 &RendererFunctions::RequestAnimationFrame);
     lepus::RegisterTableFunction(context, lynx_table, kCancelAnimationFrame,
-                                 &CancelAnimationFrame);
+                                 &RendererFunctions::CancelAnimationFrame);
     lepus::RegisterTableFunction(context, lynx_table,
                                  runtime::kGetCustomSectionSync,
-                                 &GetCustomSectionSync);
+                                 &RendererFunctions::GetCustomSectionSync);
     lepus::RegisterTableFunction(context, lynx_table, kSetSessionStorageItem,
-                                 &SetSessionStorageItem);
+                                 &RendererFunctions::SetSessionStorageItem);
     lepus::RegisterTableFunction(context, lynx_table, kGetSessionStorageItem,
-                                 &GetSessionStorageItem);
-    lepus::RegisterTableFunction(context, lynx_table, kLoadScript, &LoadScript);
+                                 &RendererFunctions::GetSessionStorageItem);
+    lepus::RegisterTableFunction(context, lynx_table, kLoadScript,
+                                 &RendererFunctions::LoadScript);
     // Timing
     RegisterMethodToLynxPerformance(context, lynx);
     lepus::RegisterTableFunction(context, lynx_table, kFetchBundle,
-                                 &FetchBundle);
+                                 &RendererFunctions::FetchBundle);
     lepus::RegisterTableFunction(context, lynx_table,
                                  runtime::kAddReporterCustomInfo,
-                                 &LynxAddReporterCustomInfo);
+                                 &RendererFunctions::LynxAddReporterCustomInfo);
     // NativeModule GetModule Method
-    lepus::RegisterTableFunction(context, lynx_table, kGetModule, &GetModule);
+    lepus::RegisterTableFunction(context, lynx_table, kGetModule,
+                                 &RendererFunctions::GetModule);
     // exposure
     lepus::RegisterTableFunction(context, lynx_table, kStopExposure,
-                                 &StopExposure);
+                                 &RendererFunctions::StopExposure);
     lepus::RegisterTableFunction(context, lynx_table, kResumeExposure,
-                                 &ResumeExposure);
+                                 &RendererFunctions::ResumeExposure);
   }
 }
 
@@ -116,27 +104,29 @@ void Utils::RegisterMethodToLynxPerformance(lepus::Context* context,
     auto perf_table = perf_obj.Table();
     lepus::RegisterTableFunction(context, perf_table,
                                  runtime::kGeneratePipelineOptions,
-                                 &GeneratePipelineOptions);
+                                 &RendererFunctions::GeneratePipelineOptions);
     lepus::RegisterTableFunction(context, perf_table, runtime::kOnPipelineStart,
-                                 &OnPipelineStart);
+                                 &RendererFunctions::OnPipelineStart);
     lepus::RegisterTableFunction(context, perf_table, runtime::kMarkTiming,
-                                 &MarkTiming);
-    lepus::RegisterTableFunction(context, perf_table,
-                                 runtime::kBindPipelineIDWithTimingFlag,
-                                 &BindPipelineIDWithTimingFlag);
+                                 &RendererFunctions::MarkTiming);
     lepus::RegisterTableFunction(
-        context, perf_table, runtime::kAddTimingListener, &AddTimingListener);
+        context, perf_table, runtime::kBindPipelineIDWithTimingFlag,
+        &RendererFunctions::BindPipelineIDWithTimingFlag);
+    lepus::RegisterTableFunction(context, perf_table,
+                                 runtime::kAddTimingListener,
+                                 &RendererFunctions::AddTimingListener);
 
     lepus::RegisterTableFunction(context, perf_table, runtime::kProfileStart,
-                                 &ProfileStart);
+                                 &RendererFunctions::ProfileStart);
     lepus::RegisterTableFunction(context, perf_table, runtime::kProfileEnd,
-                                 &ProfileEnd);
+                                 &RendererFunctions::ProfileEnd);
     lepus::RegisterTableFunction(context, perf_table, runtime::kProfileMark,
-                                 &ProfileMark);
+                                 &RendererFunctions::ProfileMark);
     lepus::RegisterTableFunction(context, perf_table, runtime::kProfileFlowId,
-                                 &ProfileFlowId);
-    lepus::RegisterTableFunction(
-        context, perf_table, runtime::kIsProfileRecording, &IsProfileRecording);
+                                 &RendererFunctions::ProfileFlowId);
+    lepus::RegisterTableFunction(context, perf_table,
+                                 runtime::kIsProfileRecording,
+                                 &RendererFunctions::IsProfileRecording);
   }
 };
 
@@ -145,9 +135,9 @@ void Utils::RegisterMethodToResponseHandler(lepus::Context* context,
   if (response_handler.IsTable()) {
     auto target_table = response_handler.Table();
     lepus::RegisterTableFunction(context, target_table, runtime::kWait,
-                                 WaitingForResponse);
+                                 &RendererFunctions::WaitingForResponse);
     lepus::RegisterTableFunction(context, target_table, runtime::kThen,
-                                 AddListenerForResponse);
+                                 &RendererFunctions::AddListenerForResponse);
   }
 }
 
@@ -157,23 +147,23 @@ void Utils::RegisterMethodToContextProxy(lepus::Context* context,
   if (target.IsTable()) {
     auto target_table = target.Table();
     lepus::RegisterTableFunction(context, target_table, runtime::kPostMessage,
-                                 PostMessage);
+                                 &RendererFunctions::PostMessage);
     lepus::RegisterTableFunction(context, target_table, runtime::kDispatchEvent,
-                                 DispatchEvent);
+                                 &RendererFunctions::DispatchEvent);
     lepus::RegisterTableFunction(context, target_table,
                                  runtime::kAddEventListener,
-                                 RuntimeAddEventListener);
-    lepus::RegisterTableFunction(context, target_table,
-                                 runtime::kRemoveEventListener,
-                                 RuntimeRemoveEventListener);
+                                 &RendererFunctions::RuntimeAddEventListener);
+    lepus::RegisterTableFunction(
+        context, target_table, runtime::kRemoveEventListener,
+        &RendererFunctions::RuntimeRemoveEventListener);
 
     if (type == runtime::ContextProxy::Type::kDevTool) {
-      RegisterTableFunction(context, target_table,
-                            runtime::kReplaceStyleSheetByIdWithBase64,
-                            &ReplaceStyleSheetByIdWithBase64);
+      RegisterTableFunction(
+          context, target_table, runtime::kReplaceStyleSheetByIdWithBase64,
+          &RendererFunctions::ReplaceStyleSheetByIdWithBase64);
       RegisterTableFunction(context, target_table,
                             runtime::kRemoveStyleSheetById,
-                            &RemoveStyleSheetById);
+                            &RendererFunctions::RemoveStyleSheetById);
     }
   }
 }
@@ -182,17 +172,9 @@ void Utils::RegisterMethodToLepusModule(lepus::Context* context,
                                         lepus::Value& lepus_module) {
   if (lepus_module.IsTable()) {
     lepus::RegisterTableFunction(context, lepus_module.Table(),
-                                 runtime::kInvoke, &InvokeModuleMethod);
+                                 runtime::kInvoke,
+                                 &RendererFunctions::InvokeModuleMethod);
   }
-}
-
-#undef RENDERER_FUNCTION
-#undef CALL_RUNTIME_AND_RETURN
-#undef PREPARE_ARGS
-
-static ALLOW_UNUSED_TYPE lepus::Value SlotFunction(lepus::Context* context) {
-  TRACE_EVENT(LYNX_TRACE_CATEGORY, SLOT_FUNCTION);
-  return lepus::Value();
 }
 
 void Renderer::RegisterBuiltin(lepus::Context* context, ArchOption option) {
@@ -206,70 +188,75 @@ void Renderer::RegisterBuiltin(lepus::Context* context, ArchOption option) {
 }
 
 void Renderer::RegisterBuiltinForRadon(lepus::Context* context) {
+  lepus::RegisterCFunction(context, kCFuncIndexOf, &RendererFunctions::IndexOf);
+  lepus::RegisterCFunction(context, kCFuncGetLength,
+                           &RendererFunctions::GetLength);
+  lepus::RegisterCFunction(context, kCFuncSetValueToMap,
+                           &RendererFunctions::SetValueToMap);
   // clang-format off
   /* To add a RenderFunction, it needs to be registered first to avoid conflicts across different branches. */
-  /* 001 */ lepus::RegisterCFunction(context, kCFuncCreatePage, &CreateVirtualPage);
-  /* 002 */ lepus::RegisterCFunction(context, kCFuncAttachPage, &AttachPage);
+  /* 001 */ lepus::RegisterCFunction(context, kCFuncCreatePage, &RendererFunctions::CreateVirtualPage);
+  /* 002 */ lepus::RegisterCFunction(context, kCFuncAttachPage, &RendererFunctions::AttachPage);
   /* 003 */ lepus::RegisterCFunction(context, kCFuncCreateVirtualComponent,
-                           &CreateVirtualComponent);
+                           &RendererFunctions::CreateVirtualComponent);
   /* 004 */ lepus::RegisterCFunction(context, kCFuncCreateVirtualNode,
-                           &CreateVirtualNode);
-  /* 005 */ lepus::RegisterCFunction(context, kCFuncAppendChild, AppendChild);
-  /* 006 */ lepus::RegisterCFunction(context, kCFuncSetClassTo, &SetClassTo);
-  /* 007 */ lepus::RegisterCFunction(context, kCFuncSetStyleTo, &SetStyleTo);
-  /* 008 */ lepus::RegisterCFunction(context, kCFuncSetEventTo, &SetEventTo);
+                           &RendererFunctions::CreateVirtualNode);
+  /* 005 */ lepus::RegisterCFunction(context, kCFuncAppendChild, &RendererFunctions::AppendChild);
+  /* 006 */ lepus::RegisterCFunction(context, kCFuncSetClassTo, &RendererFunctions::SetClassTo);
+  /* 007 */ lepus::RegisterCFunction(context, kCFuncSetStyleTo, &RendererFunctions::SetStyleTo);
+  /* 008 */ lepus::RegisterCFunction(context, kCFuncSetEventTo, &RendererFunctions::SetEventTo);
   /* 009 */ lepus::RegisterCFunction(context, kCFuncSetAttributeTo,
-                           SetAttributeTo);
+                           &RendererFunctions::SetAttributeTo);
   /* 010 */ lepus::RegisterCFunction(context, kCFuncSetStaticClassTo,
-                           &SetStaticClassTo);
+                           &RendererFunctions::SetStaticClassTo);
   /* 011 */ lepus::RegisterCFunction(context, kCFuncSetStaticStyleTo,
-                           &SetStaticStyleTo);
+                           &RendererFunctions::SetStaticStyleTo);
   /* 012 */ lepus::RegisterCFunction(context, kCFuncSetStaticAttributeTo,
-                           &SetStaticAttrTo);
-  /* 013 */ lepus::RegisterCFunction(context, kCFuncSetDataSetTo, &SetDataSetTo);
+                           &RendererFunctions::SetStaticAttrTo);
+  /* 013 */ lepus::RegisterCFunction(context, kCFuncSetDataSetTo, &RendererFunctions::SetDataSetTo);
   /* 014 */ lepus::RegisterCFunction(context, kCFuncSetStaticEventTo,
-                           &SetStaticEventTo);
-  /* 015 */ lepus::RegisterCFunction(context, kCFuncSetId, &SetId);
+                           &RendererFunctions::SetStaticEventTo);
+  /* 015 */ lepus::RegisterCFunction(context, kCFuncSetId, &RendererFunctions::SetId);
   /* 016 */ lepus::RegisterCFunction(context, kCFuncCreateVirtualSlot,
-                           &CreateSlot);
+                           &RendererFunctions::CreateSlot);
   /* 017 */ lepus::RegisterCFunction(context, kCFuncCreateVirtualPlug,
-                           &CreateVirtualPlug);
+                           &RendererFunctions::CreateVirtualPlug);
   /* 018 */ lepus::RegisterCFunction(context, kCFuncMarkComponentHasRenderer,
-                           &MarkComponentHasRenderer);
-  /* 019 */ lepus::RegisterCFunction(context, kCFuncSetProp, &SetProp);
-  /* 020 */ lepus::RegisterCFunction(context, kCFuncSetData, &SetData);
+                           &RendererFunctions::MarkComponentHasRenderer);
+  /* 019 */ lepus::RegisterCFunction(context, kCFuncSetProp, &RendererFunctions::SetProp);
+  /* 020 */ lepus::RegisterCFunction(context, kCFuncSetData, &RendererFunctions::SetData);
   /* 021 */ lepus::RegisterCFunction(context, kCFuncAddPlugToComponent,
-                           AddVirtualPlugToComponent);
-  /* 022 */ lepus::RegisterCFunction(context, kCFuncGetComponentData, &GetComponentData);
+                           &RendererFunctions::AddVirtualPlugToComponent);
+  /* 022 */ lepus::RegisterCFunction(context, kCFuncGetComponentData, &RendererFunctions::GetComponentData);
   /* 023 */ lepus::RegisterCFunction(context, kCFuncGetComponentProps,
-                           &GetComponentProps);
+                           &RendererFunctions::GetComponentProps);
   /* 024 */ lepus::RegisterCFunction(context, kCFuncSetDynamicStyleTo,
-                           &SetDynamicStyleTo);
-  /* 025 */ lepus::RegisterCFunction(context, kCFuncGetLazyLoadCount, &ThemedTranslationLegacy);
+                           &RendererFunctions::SetDynamicStyleTo);
+  /* 025 */ lepus::RegisterCFunction(context, kCFuncGetLazyLoadCount, &RendererFunctions::ThemedTranslationLegacy);
   /* 026 */ lepus::RegisterCFunction(context, kCFuncUpdateComponentInfo,
-                           &UpdateComponentInfo);
-  /* 027 */ lepus::RegisterCFunction(context, kCFuncGetComponentInfo, &GetComponentInfo);
+                           &RendererFunctions::UpdateComponentInfo);
+  /* 027 */ lepus::RegisterCFunction(context, kCFuncGetComponentInfo, &RendererFunctions::GetComponentInfo);
   /* 028 */ lepus::RegisterCFunction(context, kCFuncCreateVirtualListNode,
-                           &CreateVirtualListNode);
+                           &RendererFunctions::CreateVirtualListNode);
   /* 029 */ lepus::RegisterCFunction(context, kCFuncAppendListComponentInfo,
-                           &AppendListComponentInfo);
+                           &RendererFunctions::AppendListComponentInfo);
   /* 030 */ lepus::RegisterCFunction(context, kCFuncSetListRefreshComponentInfo,
                            &SlotFunction);
   /* 031 */ lepus::RegisterCFunction(context, kCFuncCreateVirtualComponentByName,
-                           &CreateComponentByName);
+                           &RendererFunctions::CreateComponentByName);
   /* 032 */ lepus::RegisterCFunction(context, kCFuncCreateDynamicVirtualComponent,
-                           &CreateDynamicVirtualComponent);
+                           &RendererFunctions::CreateDynamicVirtualComponent);
   /* 033 */ lepus::RegisterCFunction(context, kCFuncRenderDynamicComponent,
-                           &RenderDynamicComponent);
+                           &RendererFunctions::RenderDynamicComponent);
   /* 034 */ lepus::RegisterCFunction(context, kCFuncThemedTranslation,
-                           &ThemedTranslation);
+                           &RendererFunctions::ThemedTranslation);
   /* 035 */ lepus::RegisterCFunction(context, kCFuncRegisterDataProcessor,
-                           &RegisterDataProcessor);
+                           &RendererFunctions::RegisterDataProcessor);
   /* 036 */ lepus::RegisterCFunction(context, kCFuncThemedLangTranslation,
-                           &ThemedLanguageTranslation);
+                           &RendererFunctions::ThemedLanguageTranslation);
   /* 037 */ lepus::RegisterCFunction(context, kCFuncGetComponentContextData,
-                               &GetComponentContextData);
-  /* 038 */ lepus::RegisterCFunction(context, kCFuncProcessComponentData, &ProcessComponentData);
+                               &RendererFunctions::GetComponentContextData);
+  /* 038 */ lepus::RegisterCFunction(context, kCFuncProcessComponentData, &RendererFunctions::ProcessComponentData);
   /* 039 */ lepus::RegisterCFunction(context, "__slot__39", &SlotFunction);
   /* 040 */ lepus::RegisterCFunction(context, "__slot__40", &SlotFunction);
   /* 041 */ lepus::RegisterCFunction(context, "__slot__41", &SlotFunction);
@@ -309,273 +296,593 @@ void Renderer::RegisterBuiltinForRadon(lepus::Context* context) {
   /* 073 */ lepus::RegisterCFunction(context, "__slot__73", &SlotFunction);
   /* 074 */ lepus::RegisterCFunction(context, "__slot__74", &SlotFunction);
   /* 075 */ lepus::RegisterCFunction(context, kCFuncSetStaticStyleToByFiber,
-          &SetStaticStyleTo2);
+          &RendererFunctions::SetStaticStyleTo2);
   /* 076 */ lepus::RegisterCFunction(context, "__slot__76", &SlotFunction);
   /* 077 */ lepus::RegisterCFunction(context, "__slot__77", &SlotFunction);
   /* 078 */ lepus::RegisterCFunction(context, "__slot__78", &SlotFunction);
   /* 079 */ lepus::RegisterCFunction(context, "__slot__79", &SlotFunction);
   /* 080 */ lepus::RegisterCFunction(context, "__slot__80", &SlotFunction);
-  /* 081 */ lepus::RegisterCFunction(context, kCFuncSetContextData, &SetContextData);
-  /* 082 */ lepus::RegisterCFunction(context, kCFuncSetScriptEventTo, &SetScriptEventTo);
-  /* 083 */ lepus::RegisterCFunction(context, kCFuncRegisterElementWorklet, &RegisterElementWorklet);
-  /* 084 */ lepus::RegisterCFunction(context, kCFuncCreateVirtualPlugWithComponent, &CreateVirtualPlugWithComponent);
+  /* 081 */ lepus::RegisterCFunction(context, kCFuncSetContextData, &RendererFunctions::SetContextData);
+  /* 082 */ lepus::RegisterCFunction(context, kCFuncSetScriptEventTo, &RendererFunctions::SetScriptEventTo);
+  /* 083 */ lepus::RegisterCFunction(context, kCFuncRegisterElementWorklet, &RendererFunctions::RegisterElementWorklet);
+  /* 084 */ lepus::RegisterCFunction(context, kCFuncCreateVirtualPlugWithComponent, &RendererFunctions::CreateVirtualPlugWithComponent);
   /* 085 */ lepus::RegisterCFunction(context, "__slot__85", &SlotFunction);
-  /* 086 */ lepus::RegisterCFunction(context, kCFuncAddEventListener, &AddEventListener);
-  /* 087 */ lepus::RegisterCFunction(context, kCFuncI18nResourceTranslation, &I18nResourceTranslation);
-  /* 088 */ lepus::RegisterCFunction(context, kCFuncReFlushPage, &ReFlushPage);
-  /* 089 */ lepus::RegisterCFunction(context, kCFuncSetComponent, &SetComponent);
-  /* 090 */ lepus::RegisterCFunction(context, kCFuncGetGlobalProps, &GetGlobalProps);
+  /* 086 */ lepus::RegisterCFunction(context, kCFuncAddEventListener, &RendererFunctions::AddEventListener);
+  /* 087 */ lepus::RegisterCFunction(context, kCFuncI18nResourceTranslation, &RendererFunctions::I18nResourceTranslation);
+  /* 088 */ lepus::RegisterCFunction(context, kCFuncReFlushPage, &RendererFunctions::ReFlushPage);
+  /* 089 */ lepus::RegisterCFunction(context, kCFuncSetComponent, &RendererFunctions::SetComponent);
+  /* 090 */ lepus::RegisterCFunction(context, kCFuncGetGlobalProps, &RendererFunctions::GetGlobalProps);
   /* 091 */ lepus::RegisterCFunction(context, "__slot__91", &SlotFunction);
-  /* 092 */ lepus::RegisterCFunction(context, kCFuncAppendSubTree, &AppendSubTree);
-  /* 093 */ lepus::RegisterCFunction(context, kCFuncHandleExceptionInLepus, &HandleExceptionInLepus);
+  /* 092 */ lepus::RegisterCFunction(context, kCFuncAppendSubTree, &RendererFunctions::AppendSubTree);
+  /* 093 */ lepus::RegisterCFunction(context, kCFuncHandleExceptionInLepus, &RendererFunctions::HandleExceptionInLepus);
   /* 094 */ lepus::RegisterCFunction(context, kCFuncAppendVirtualPlugToComponent,
-                                     AppendVirtualPlugToComponent);
-  /* 095 */ lepus::RegisterCFunction(context, kCFuncMarkPageElement, &MarkPageElement);
-  /* 096 */ lepus::RegisterCFunction(context, kCFuncFilterI18nResource, &FilterI18nResource);
-  /* 097 */ lepus::RegisterCFunction(context, kCFuncSendGlobalEvent, &SendGlobalEvent);
-  /* 098 */ lepus::RegisterCFunction(context, kCFunctionSetSourceMapRelease, &SetSourceMapRelease);
-  /* 099 */ lepus::RegisterCFunction(context, kCFuncCloneSubTree, &CloneSubTree);
-  /* 100 */ lepus::RegisterCFunction(context, kCFuncGetSystemInfo, &GetSystemInfo);
+                                     &RendererFunctions::AppendVirtualPlugToComponent);
+  /* 095 */ lepus::RegisterCFunction(context, kCFuncMarkPageElement, &RendererFunctions::MarkPageElement);
+  /* 096 */ lepus::RegisterCFunction(context, kCFuncFilterI18nResource, &RendererFunctions::FilterI18nResource);
+  /* 097 */ lepus::RegisterCFunction(context, kCFuncSendGlobalEvent, &RendererFunctions::SendGlobalEvent);
+  /* 098 */ lepus::RegisterCFunction(context, kCFunctionSetSourceMapRelease, &RendererFunctions::SetSourceMapRelease);
+  /* 099 */ lepus::RegisterCFunction(context, kCFuncCloneSubTree, &RendererFunctions::CloneSubTree);
+  /* 100 */ lepus::RegisterCFunction(context, kCFuncGetSystemInfo, &RendererFunctions::GetSystemInfo);
   /* 101 */ lepus::RegisterCFunction(context, kCFuncAddFallbackToDynamicComponent,
-                           &AddFallbackToDynamicComponent);
-  /* 102 */ lepus::RegisterCFunction(context, kCFuncCreateGestureDetector, &CreateGestureDetector);
-  /* 103 */ lepus::RegisterCFunction(context, kCFunctionElementAnimate, &ElementAnimate);
+                           &RendererFunctions::AddFallbackToDynamicComponent);
+  /* 102 */ lepus::RegisterCFunction(context, kCFuncCreateGestureDetector, &RendererFunctions::CreateGestureDetector);
+  /* 103 */ lepus::RegisterCFunction(context, kCFunctionElementAnimate, &RendererFunctions::ElementAnimate);
+  /* 104 */  lepus::RegisterCFunction(context, kCFuncSetStaticStyleTo2, &RendererFunctions::SetStaticStyleTo2);
+  /* 105 */ lepus::RegisterCFunction(context, kSetTimeout, &RendererFunctions::SetTimeout);
+  /* 106 */ lepus::RegisterCFunction(context, kClearTimeout, &RendererFunctions::ClearTimeout);
+  /* 107 */ lepus::RegisterCFunction(context, kSetInterval, &RendererFunctions::SetInterval);
+  /* 108 */ lepus::RegisterCFunction(context, kClearTimeInterval, &RendererFunctions::ClearTimeInterval);
+  /* 109 */ lepus::RegisterCFunction(context, kRequestAnimationFrame, &RendererFunctions::RequestAnimationFrame);
+  /* 110 */ lepus::RegisterCFunction(context, kCancelAnimationFrame, &RendererFunctions::CancelAnimationFrame);
   // clang-format on
 }
 
 void Renderer::RegisterBuiltinForFiber(lepus::Context* context) {
+  lepus::RegisterCFunction(context, kCFuncIndexOf, &RendererFunctions::IndexOf);
+  lepus::RegisterCFunction(context, kCFuncGetLength,
+                           &RendererFunctions::GetLength);
+  lepus::RegisterCFunction(context, kCFuncSetValueToMap,
+                           &RendererFunctions::SetValueToMap);
   // To add a RenderFunction, it needs to be registered first to avoid conflicts
   // across different branches.
   /* 001 */ lepus::RegisterCFunction(context, kCFunctionCreateElement,
-                                     &FiberCreateElement);
+                                     &RendererFunctions::FiberCreateElement);
   /* 002 */ lepus::RegisterCFunction(context, kCFunctionCreatePage,
-                                     &FiberCreatePage);
+                                     &RendererFunctions::FiberCreatePage);
   /* 003 */ lepus::RegisterCFunction(context, kCFunctionCreateComponent,
-                                     &FiberCreateComponent);
+                                     &RendererFunctions::FiberCreateComponent);
   /* 004 */ lepus::RegisterCFunction(context, kCFunctionCreateView,
-                                     &FiberCreateView);
+                                     &RendererFunctions::FiberCreateView);
   /* 005 */ lepus::RegisterCFunction(context, kCFunctionCreateList,
-                                     &FiberCreateList);
+                                     &RendererFunctions::FiberCreateList);
   /* 006 */ lepus::RegisterCFunction(context, kCFunctionCreateScrollView,
-                                     &FiberCreateScrollView);
+                                     &RendererFunctions::FiberCreateScrollView);
   /* 007 */ lepus::RegisterCFunction(context, kCFunctionCreateText,
-                                     &FiberCreateText);
+                                     &RendererFunctions::FiberCreateText);
   /* 008 */ lepus::RegisterCFunction(context, kCFunctionCreateImage,
-                                     &FiberCreateImage);
+                                     &RendererFunctions::FiberCreateImage);
   /* 009 */ lepus::RegisterCFunction(context, kCFunctionCreateRawText,
-                                     &FiberCreateRawText);
+                                     &RendererFunctions::FiberCreateRawText);
   /* 010 */ lepus::RegisterCFunction(context, kCFunctionCreateNonElement,
-                                     &FiberCreateNonElement);
-  /* 011 */ lepus::RegisterCFunction(context, kCFunctionCreateWrapperElement,
-                                     &FiberCreateWrapperElement);
+                                     &RendererFunctions::FiberCreateNonElement);
+  /* 011 */ lepus::RegisterCFunction(
+      context, kCFunctionCreateWrapperElement,
+      &RendererFunctions::FiberCreateWrapperElement);
   /* 012 */ lepus::RegisterCFunction(context, kCFunctionAppendElement,
-                                     &FiberAppendElement);
+                                     &RendererFunctions::FiberAppendElement);
   /* 013 */ lepus::RegisterCFunction(context, kCFunctionRemoveElement,
-                                     &FiberRemoveElement);
-  /* 014 */ lepus::RegisterCFunction(context, kCFunctionInsertElementBefore,
-                                     &FiberInsertElementBefore);
+                                     &RendererFunctions::FiberRemoveElement);
+  /* 014 */ lepus::RegisterCFunction(
+      context, kCFunctionInsertElementBefore,
+      &RendererFunctions::FiberInsertElementBefore);
   /* 015 */ lepus::RegisterCFunction(context, kCFunctionFirstElement,
-                                     &FiberFirstElement);
+                                     &RendererFunctions::FiberFirstElement);
   /* 016 */ lepus::RegisterCFunction(context, kCFunctionLastElement,
-                                     &FiberLastElement);
+                                     &RendererFunctions::FiberLastElement);
   /* 017 */ lepus::RegisterCFunction(context, kCFunctionNextElement,
-                                     &FiberNextElement);
+                                     &RendererFunctions::FiberNextElement);
   /* 018 */ lepus::RegisterCFunction(context, kCFunctionReplaceElement,
-                                     &FiberReplaceElement);
+                                     &RendererFunctions::FiberReplaceElement);
   /* 019 */ lepus::RegisterCFunction(context, kCFunctionSwapElement,
-                                     &FiberSwapElement);
+                                     &RendererFunctions::FiberSwapElement);
   /* 020 */ lepus::RegisterCFunction(context, kCFunctionGetParent,
-                                     &FiberGetParent);
+                                     &RendererFunctions::FiberGetParent);
   /* 021 */ lepus::RegisterCFunction(context, kCFunctionGetChildren,
-                                     &FiberGetChildren);
+                                     &RendererFunctions::FiberGetChildren);
   /* 022 */ lepus::RegisterCFunction(context, kCFunctionCloneElement,
-                                     &FiberCloneElement);
+                                     &RendererFunctions::FiberCloneElement);
   /* 023 */ lepus::RegisterCFunction(context, kCFunctionElementIsEqual,
-                                     &FiberElementIsEqual);
-  /* 024 */ lepus::RegisterCFunction(context, kCFunctionGetElementUniqueID,
-                                     &FiberGetElementUniqueID);
-  /* 025 */ lepus::RegisterCFunction(context, kCFunctionGetTag, &FiberGetTag);
+                                     &RendererFunctions::FiberElementIsEqual);
+  /* 024 */ lepus::RegisterCFunction(
+      context, kCFunctionGetElementUniqueID,
+      &RendererFunctions::FiberGetElementUniqueID);
+  /* 025 */ lepus::RegisterCFunction(context, kCFunctionGetTag,
+                                     &RendererFunctions::FiberGetTag);
   /* 026 */ lepus::RegisterCFunction(context, kCFunctionSetAttribute,
-                                     &FiberSetAttribute);
+                                     &RendererFunctions::FiberSetAttribute);
   /* 027 */ lepus::RegisterCFunction(context, kCFunctionGetAttributes,
-                                     &FiberGetAttributes);
+                                     &RendererFunctions::FiberGetAttributes);
   /* 028 */ lepus::RegisterCFunction(context, kCFunctionAddClass,
-                                     &FiberAddClass);
+                                     &RendererFunctions::FiberAddClass);
   /* 029 */ lepus::RegisterCFunction(context, kCFunctionSetClasses,
-                                     &FiberSetClasses);
+                                     &RendererFunctions::FiberSetClasses);
   /* 030 */ lepus::RegisterCFunction(context, kCFunctionGetClasses,
-                                     &FiberGetClasses);
+                                     &RendererFunctions::FiberGetClasses);
   /* 031 */ lepus::RegisterCFunction(context, kCFunctionAddInlineStyle,
-                                     &FiberAddInlineStyle);
+                                     &RendererFunctions::FiberAddInlineStyle);
   /* 032 */ lepus::RegisterCFunction(context, kCFunctionSetInlineStyles,
-                                     &FiberSetInlineStyles);
+                                     &RendererFunctions::FiberSetInlineStyles);
   /* 033 */ lepus::RegisterCFunction(context, kCFunctionGetInlineStyles,
-                                     &FiberGetInlineStyles);
+                                     &RendererFunctions::FiberGetInlineStyles);
   /* 034 */ lepus::RegisterCFunction(context, kCFunctionSetParsedStyles,
-                                     &FiberSetParsedStyles);
-  /* 035 */ lepus::RegisterCFunction(context, kCFunctionGetComputedStyles,
-                                     &FiberGetComputedStyles);
+                                     &RendererFunctions::FiberSetParsedStyles);
+  /* 035 */ lepus::RegisterCFunction(
+      context, kCFunctionGetComputedStyles,
+      &RendererFunctions::FiberGetComputedStyles);
   /* 036 */ lepus::RegisterCFunction(context, kCFunctionAddEvent,
-                                     &FiberAddEvent);
+                                     &RendererFunctions::FiberAddEvent);
   /* 037 */ lepus::RegisterCFunction(context, kCFunctionSetEvents,
-                                     &FiberSetEvents);
+                                     &RendererFunctions::FiberSetEvents);
   /* 038 */ lepus::RegisterCFunction(context, kCFunctionGetEvent,
-                                     &FiberGetEvent);
+                                     &RendererFunctions::FiberGetEvent);
   /* 039 */ lepus::RegisterCFunction(context, kCFunctionGetEvents,
-                                     &FiberGetEvents);
-  /* 040 */ lepus::RegisterCFunction(context, kCFunctionSetID, &FiberSetID);
-  /* 041 */ lepus::RegisterCFunction(context, kCFunctionGetID, &FiberGetID);
+                                     &RendererFunctions::FiberGetEvents);
+  /* 040 */ lepus::RegisterCFunction(context, kCFunctionSetID,
+                                     &RendererFunctions::FiberSetID);
+  /* 041 */ lepus::RegisterCFunction(context, kCFunctionGetID,
+                                     &RendererFunctions::FiberGetID);
   /* 042 */ lepus::RegisterCFunction(context, kCFunctionAddDataset,
-                                     &FiberAddDataset);
+                                     &RendererFunctions::FiberAddDataset);
   /* 043 */ lepus::RegisterCFunction(context, kCFunctionSetDataset,
-                                     &FiberSetDataset);
+                                     &RendererFunctions::FiberSetDataset);
   /* 044 */ lepus::RegisterCFunction(context, kCFunctionGetDataset,
-                                     &FiberGetDataset);
+                                     &RendererFunctions::FiberGetDataset);
   /* 045 */ lepus::RegisterCFunction(context, kCFunctionGetComponentID,
-                                     &FiberGetComponentID);
-  /* 046 */ lepus::RegisterCFunction(context, kCFunctionUpdateComponentID,
-                                     &FiberUpdateComponentID);
-  /* 047 */ lepus::RegisterCFunction(context, kCFunctionElementFromBinary,
-                                     &FiberElementFromBinary);
-  /* 048 */ lepus::RegisterCFunction(context, kCFunctionElementFromBinaryAsync,
-                                     &FiberElementFromBinaryAsync);
-  /* 049 */ lepus::RegisterCFunction(context, kCFunctionUpdateListCallbacks,
-                                     &FiberUpdateListCallbacks);
+                                     &RendererFunctions::FiberGetComponentID);
+  /* 046 */ lepus::RegisterCFunction(
+      context, kCFunctionUpdateComponentID,
+      &RendererFunctions::FiberUpdateComponentID);
+  /* 047 */ lepus::RegisterCFunction(
+      context, kCFunctionElementFromBinary,
+      &RendererFunctions::FiberElementFromBinary);
+  /* 048 */ lepus::RegisterCFunction(
+      context, kCFunctionElementFromBinaryAsync,
+      &RendererFunctions::FiberElementFromBinaryAsync);
+  /* 049 */ lepus::RegisterCFunction(
+      context, kCFunctionUpdateListCallbacks,
+      &RendererFunctions::FiberUpdateListCallbacks);
   /* 050 */ lepus::RegisterCFunction(context, kCFunctionFlushElementTree,
-                                     &FiberFlushElementTree);
+                                     &RendererFunctions::FiberFlushElementTree);
   /* 051 */ lepus::RegisterCFunction(context, kCFunctionOnLifecycleEvent,
-                                     &FiberOnLifecycleEvent);
+                                     &RendererFunctions::FiberOnLifecycleEvent);
   /* 052 */ lepus::RegisterCFunction(context, kCFunctionQueryComponent,
-                                     &FiberQueryComponent);
+                                     &RendererFunctions::FiberQueryComponent);
   /* 053 */ lepus::RegisterCFunction(context, kCFunctionSetCSSId,
-                                     &FiberSetCSSId);
+                                     &RendererFunctions::FiberSetCSSId);
   /* 054 */ lepus::RegisterCFunction(context, kCFunctionSetSourceMapRelease,
-                                     &SetSourceMapRelease);
+                                     &RendererFunctions::SetSourceMapRelease);
   /* 055 */ lepus::RegisterCFunction(context, kCFuncAddEventListener,
-                                     &AddEventListener);
-  /* 056 */ lepus::RegisterCFunction(context, kCFuncI18nResourceTranslation,
-                                     &I18nResourceTranslation);
+                                     &RendererFunctions::AddEventListener);
+  /* 056 */ lepus::RegisterCFunction(
+      context, kCFuncI18nResourceTranslation,
+      &RendererFunctions::I18nResourceTranslation);
   /* 057 */ lepus::RegisterCFunction(context, kCFuncFilterI18nResource,
-                                     &FilterI18nResource);
+                                     &RendererFunctions::FilterI18nResource);
   /* 058 */ lepus::RegisterCFunction(context, kCFuncSendGlobalEvent,
-                                     &SendGlobalEvent);
+                                     &RendererFunctions::SendGlobalEvent);
   /* 059 */ lepus::RegisterCFunction(context, kCFunctionReportError,
-                                     &ReportError);
+                                     &RendererFunctions::ReportError);
   /* 060 */ lepus::RegisterCFunction(context, kCFunctionGetDataByKey,
-                                     &FiberGetDataByKey);
+                                     &RendererFunctions::FiberGetDataByKey);
   /* 061 */ lepus::RegisterCFunction(context, kCFunctionReplaceElements,
-                                     &FiberReplaceElements);
+                                     &RendererFunctions::FiberReplaceElements);
   /* 062 */ lepus::RegisterCFunction(context, kCFunctionQuerySelector,
-                                     &FiberQuerySelector);
+                                     &RendererFunctions::FiberQuerySelector);
   /* 063 */ lepus::RegisterCFunction(context, kCFunctionQuerySelectorAll,
-                                     &FiberQuerySelectorAll);
+                                     &RendererFunctions::FiberQuerySelectorAll);
   /* 064 */ lepus::RegisterCFunction(context, kCFunctionSetLepusInitData,
-                                     &FiberSetLepusInitData);
+                                     &RendererFunctions::FiberSetLepusInitData);
   /* 065 */ lepus::RegisterCFunction(context, kCFunctionAddConfig,
-                                     &FiberAddConfig);
+                                     &RendererFunctions::FiberAddConfig);
   /* 066 */ lepus::RegisterCFunction(context, kCFunctionSetConfig,
-                                     &FiberSetConfig);
-  /* 067 */ lepus::RegisterCFunction(context, kCFunctionUpdateComponentInfo,
-                                     &FiberUpdateComponentInfo);
+                                     &RendererFunctions::FiberSetConfig);
+  /* 067 */ lepus::RegisterCFunction(
+      context, kCFunctionUpdateComponentInfo,
+      &RendererFunctions::FiberUpdateComponentInfo);
   /* 068 */ lepus::RegisterCFunction(context, kCFunctionGetConfig,
-                                     &FiberGetElementConfig);
+                                     &RendererFunctions::FiberGetElementConfig);
   /* 069 */ lepus::RegisterCFunction(context, kCFunctionGetInlineStyle,
-                                     &FiberGetInlineStyle);
-  /* 070 */ lepus::RegisterCFunction(context, kCFuncSetGestureDetector,
-                                     &FiberSetGestureDetector);
-  /* 071 */ lepus::RegisterCFunction(context, kCFuncRemoveGestureDetector,
-                                     &FiberRemoveGestureDetector);
-  /* 072 */ lepus::RegisterCFunction(context, kCFunctionGetAttributeByName,
-                                     &FiberGetAttributeByName);
-  /* 073 */ lepus::RegisterCFunction(context, kCFunctionGetAttributeNames,
-                                     &FiberGetAttributeNames);
+                                     &RendererFunctions::FiberGetInlineStyle);
+  /* 070 */ lepus::RegisterCFunction(
+      context, kCFuncSetGestureDetector,
+      &RendererFunctions::FiberSetGestureDetector);
+  /* 071 */ lepus::RegisterCFunction(
+      context, kCFuncRemoveGestureDetector,
+      &RendererFunctions::FiberRemoveGestureDetector);
+  /* 072 */ lepus::RegisterCFunction(
+      context, kCFunctionGetAttributeByName,
+      &RendererFunctions::FiberGetAttributeByName);
+  /* 073 */ lepus::RegisterCFunction(
+      context, kCFunctionGetAttributeNames,
+      &RendererFunctions::FiberGetAttributeNames);
   /* 074 */ lepus::RegisterCFunction(context, kCFunctionGetPageElement,
-                                     &FiberGetPageElement);
+                                     &RendererFunctions::FiberGetPageElement);
   /* 075 */ lepus::RegisterCFunction(context, kCFunctionCreateIf,
-                                     &FiberCreateIf);
+                                     &RendererFunctions::FiberCreateIf);
   /* 076 */ lepus::RegisterCFunction(context, kCFunctionCreateFor,
-                                     &FiberCreateFor);
+                                     &RendererFunctions::FiberCreateFor);
   /* 077 */ lepus::RegisterCFunction(context, kCFunctionCreateBlock,
-                                     &FiberCreateBlock);
-  /* 078 */ lepus::RegisterCFunction(context, kCFunctionUpdateIfNodeIndex,
-                                     &FiberUpdateIfNodeIndex);
-  /* 079 */ lepus::RegisterCFunction(context, kCFunctionUpdateForChildCount,
-                                     &FiberUpdateForChildCount);
-  /* 080 */ lepus::RegisterCFunction(context, kCFunctionGetElementByUniqueID,
-                                     &FiberGetElementByUniqueID);
+                                     &RendererFunctions::FiberCreateBlock);
+  /* 078 */ lepus::RegisterCFunction(
+      context, kCFunctionUpdateIfNodeIndex,
+      &RendererFunctions::FiberUpdateIfNodeIndex);
+  /* 079 */ lepus::RegisterCFunction(
+      context, kCFunctionUpdateForChildCount,
+      &RendererFunctions::FiberUpdateForChildCount);
+  /* 080 */ lepus::RegisterCFunction(
+      context, kCFunctionGetElementByUniqueID,
+      &RendererFunctions::FiberGetElementByUniqueID);
   /* 081 */ lepus::RegisterCFunction(context, kCFunctionGetDiffData,
-                                     &FiberGetDiffData);
+                                     &RendererFunctions::FiberGetDiffData);
   /* 082 */ lepus::RegisterCFunction(context, kCFunctionLoadLepusChunk,
-                                     &LoadLepusChunk);
+                                     &RendererFunctions::LoadLepusChunk);
   /* 083 */ lepus::RegisterCFunction(context, kCFuncSetGestureState,
-                                     &FiberSetGestureState);
-  /* 084 */ lepus::RegisterCFunction(context, kCFunctionMarkTemplateElement,
-                                     &FiberMarkTemplateElement);
-  /* 085 */ lepus::RegisterCFunction(context, kCFunctionIsTemplateElement,
-                                     &FiberIsTemplateElement);
+                                     &RendererFunctions::FiberSetGestureState);
+  /* 084 */ lepus::RegisterCFunction(
+      context, kCFunctionMarkTemplateElement,
+      &RendererFunctions::FiberMarkTemplateElement);
+  /* 085 */ lepus::RegisterCFunction(
+      context, kCFunctionIsTemplateElement,
+      &RendererFunctions::FiberIsTemplateElement);
   /* 086 */ lepus::RegisterCFunction(context, kCFunctionMarkPartElement,
-                                     &FiberMarkPartElement);
+                                     &RendererFunctions::FiberMarkPartElement);
   /* 087 */ lepus::RegisterCFunction(context, kCFunctionIsPartElement,
-                                     &FiberIsPartElement);
+                                     &RendererFunctions::FiberIsPartElement);
   /* 088 */ lepus::RegisterCFunction(context, kCFunctionGetTemplateParts,
-                                     &FiberGetTemplateParts);
-  /* 089 */ lepus::RegisterCFunction(context, kCFunctionAsyncResolveElement,
-                                     &FiberAsyncResolveElement);
+                                     &RendererFunctions::FiberGetTemplateParts);
+  /* 089 */ lepus::RegisterCFunction(
+      context, kCFunctionAsyncResolveElement,
+      &RendererFunctions::FiberAsyncResolveElement);
   /* 090 */ lepus::RegisterCFunction(context, kCFuncConsumeGesture,
-                                     &FiberConsumeGesture);
-  /* 091 */ lepus::RegisterCFunction(context,
-                                     kCFunctionCreateElementWithProperties,
-                                     &FiberCreateElementWithProperties);
+                                     &RendererFunctions::FiberConsumeGesture);
+  /* 091 */ lepus::RegisterCFunction(
+      context, kCFunctionCreateElementWithProperties,
+      &RendererFunctions::FiberCreateElementWithProperties);
   /* 092 */ lepus::RegisterCFunction(context, kCFunctionCreateSignal,
-                                     &FiberCreateSignal);
+                                     &RendererFunctions::FiberCreateSignal);
   /* 093 */ lepus::RegisterCFunction(context, kCFunctionWriteSignal,
-                                     &FiberWriteSignal);
+                                     &RendererFunctions::FiberWriteSignal);
   /* 094 */ lepus::RegisterCFunction(context, kCFunctionReadSignal,
-                                     &FiberReadSignal);
-  /* 095 */ lepus::RegisterCFunction(context, kCFunctionCreateComputation,
-                                     &FiberCreateComputation);
+                                     &RendererFunctions::FiberReadSignal);
+  /* 095 */ lepus::RegisterCFunction(
+      context, kCFunctionCreateComputation,
+      &RendererFunctions::FiberCreateComputation);
   /* 096 */ lepus::RegisterCFunction(context, kCFunctionCreateMemo,
-                                     &FiberCreateMemo);
+                                     &RendererFunctions::FiberCreateMemo);
   /* 097 */ lepus::RegisterCFunction(context, kCFunctionCreateScope,
-                                     &FiberCreateScope);
+                                     &RendererFunctions::FiberCreateScope);
   /* 098 */ lepus::RegisterCFunction(context, kCFunctionGetScope,
-                                     &FiberGetScope);
-  /* 099 */ lepus::RegisterCFunction(context, kCFunctionCleanUp, &FiberCleanUp);
+                                     &RendererFunctions::FiberGetScope);
+  /* 099 */ lepus::RegisterCFunction(context, kCFunctionCleanUp,
+                                     &RendererFunctions::FiberCleanUp);
   /* 100 */ lepus::RegisterCFunction(context, kCFunctionOnCleanUp,
-                                     &FiberOnCleanUp);
-  /* 101 */ lepus::RegisterCFunction(context, kCFunctionUnTrack, &FiberUnTrack);
+                                     &RendererFunctions::FiberOnCleanUp);
+  /* 101 */ lepus::RegisterCFunction(context, kCFunctionUnTrack,
+                                     &RendererFunctions::FiberUnTrack);
   /* 102 */ lepus::RegisterCFunction(context, kCFunctionCreateFrame,
-                                     &FiberCreateFrame);
+                                     &RendererFunctions::FiberCreateFrame);
   /* 103 */ lepus::RegisterCFunction(context, kCFunctionRunUpdates,
-                                     &FiberRunUpdates);
+                                     &RendererFunctions::FiberRunUpdates);
   /* 104 */ lepus::RegisterCFunction(context, kCFunctionCreateStyleObject,
-                                     &CreateStyleObject);
+                                     &RendererFunctions::CreateStyleObject);
   /* 105 */ lepus::RegisterCFunction(context, kCFunctionSetStyleObject,
-                                     &SetStyleObject);
+                                     &RendererFunctions::SetStyleObject);
   /* 106 */ lepus::RegisterCFunction(context, kCFunctionUpdateStyleObject,
-                                     &UpdateStyleObject);
-  /* 107 */ lepus::RegisterCFunction(context,
-                                     kCFunctionAsyncResolveSubtreeProperty,
-                                     &FiberAsyncResolveSubtreeProperty);
-  /* 108 */ lepus::RegisterCFunction(context, kCFunctionMarkAsyncFlushRoot,
-                                     &FiberMarkAsyncResolveRoot);
+                                     &RendererFunctions::UpdateStyleObject);
+  /* 107 */ lepus::RegisterCFunction(
+      context, kCFunctionAsyncResolveSubtreeProperty,
+      &RendererFunctions::FiberAsyncResolveSubtreeProperty);
+  /* 108 */ lepus::RegisterCFunction(
+      context, kCFunctionMarkAsyncFlushRoot,
+      &RendererFunctions::FiberMarkAsyncResolveRoot);
   /* 109 */ lepus::RegisterCFunction(context, kCFunctionAddEventListener,
-                                     &FiberAddEventListener);
+                                     &RendererFunctions::FiberAddEventListener);
   /* 110 */ lepus::RegisterCFunction(
-      context, kCFunctionFiberRemoveEventListener, &FiberRemoveEventListener);
+      context, kCFunctionFiberRemoveEventListener,
+      &RendererFunctions::FiberRemoveEventListener);
   /* 111 */ lepus::RegisterCFunction(context, kCFunctionCreateEvent,
-                                     &FiberCreateEvent);
+                                     &RendererFunctions::FiberCreateEvent);
   /* 112 */ lepus::RegisterCFunction(context, kCFunctionDispatchEvent,
-                                     &FiberDispatchEvent);
+                                     &RendererFunctions::FiberDispatchEvent);
   /* 113 */ lepus::RegisterCFunction(context, kCFunctionStopPropagation,
-                                     &FiberStopPropagation);
-  /* 114 */ lepus::RegisterCFunction(context,
-                                     kCFunctionStopImmediatePropagation,
-                                     &FiberStopImmediatePropagation);
+                                     &RendererFunctions::FiberStopPropagation);
+  /* 114 */ lepus::RegisterCFunction(
+      context, kCFunctionStopImmediatePropagation,
+      &RendererFunctions::FiberStopImmediatePropagation);
   /* 115 */ lepus::RegisterCFunction(context, kCFunctionInvokeUIMethod,
-                                     &InvokeUIMethod);
-  /* 116 */ lepus::RegisterCFunction(context, kCFunctionGetComputedStyleByKey,
-                                     &FiberGetComputedStyleByKey);
+                                     &RendererFunctions::InvokeUIMethod);
+  /* 116 */ lepus::RegisterCFunction(
+      context, kCFunctionGetComputedStyleByKey,
+      &RendererFunctions::FiberGetComputedStyleByKey);
+  /*117*/ lepus::RegisterCFunction(context, kSetTimeout,
+                                   &RendererFunctions::SetTimeout);
+  /*118*/ lepus::RegisterCFunction(context, kClearTimeout,
+                                   &RendererFunctions::ClearTimeout);
+  /*119*/ lepus::RegisterCFunction(context, kSetInterval,
+                                   &RendererFunctions::SetInterval);
+  /*120*/ lepus::RegisterCFunction(context, kClearTimeInterval,
+                                   &RendererFunctions::ClearTimeInterval);
+  /*121*/ lepus::RegisterCFunction(context, kRequestAnimationFrame,
+                                   &RendererFunctions::RequestAnimationFrame);
+  /*122*/ lepus::RegisterCFunction(context, kCancelAnimationFrame,
+                                   &RendererFunctions::CancelAnimationFrame);
+  /*123*/ lepus::RegisterCFunction(context, kCFunctionElementAnimate,
+                                   &RendererFunctions::ElementAnimate);
 }
+
+const lepus::RenderBindingFunction* Renderer::GetBuiltinFunctionsForRadon(
+    int32_t& size) {
+  // To add a RenderFunction, it needs to be registered first to avoid conflicts
+  // across different branches.
+  // clang-format off
+  constexpr const static lepus::RenderBindingFunction kFuncs[] = {
+      /* NO-ID */ {kCFuncIndexOf, &RendererFunctions::IndexOf, true, true},
+      /* NO-ID */ {kCFuncGetLength, &RendererFunctions::GetLength, true, true},
+      /* NO-ID */ {kCFuncSetValueToMap, &RendererFunctions::SetValueToMap, true, true},
+      /* 001 */ {kCFuncCreatePage, &RendererFunctions::CreateVirtualPage, true, true},
+      /* 002 */ {kCFuncAttachPage, &RendererFunctions::AttachPage, true, true},
+      /* 003 */ {kCFuncCreateVirtualComponent, &RendererFunctions::CreateVirtualComponent, true, true},
+      /* 004 */ {kCFuncCreateVirtualNode, &RendererFunctions::CreateVirtualNode, true, true},
+      /* 005 */ {kCFuncAppendChild, &RendererFunctions::AppendChild, true, true},
+      /* 006 */ {kCFuncSetClassTo, &RendererFunctions::SetClassTo, true, true},
+      /* 007 */ {kCFuncSetStyleTo, &RendererFunctions::SetStyleTo, true, true},
+      /* 008 */ {kCFuncSetEventTo, &RendererFunctions::SetEventTo, true, true},
+      /* 009 */ {kCFuncSetAttributeTo, &RendererFunctions::SetAttributeTo, true, true},
+      /* 010 */ {kCFuncSetStaticClassTo, &RendererFunctions::SetStaticClassTo, true, true},
+      /* 011 */ {kCFuncSetStaticStyleTo, &RendererFunctions::SetStaticStyleTo, true, true},
+      /* 012 */ {kCFuncSetStaticAttributeTo, &RendererFunctions::SetStaticAttrTo, true, true},
+      /* 013 */ {kCFuncSetDataSetTo, &RendererFunctions::SetDataSetTo, true, true},
+      /* 014 */ {kCFuncSetStaticEventTo, &RendererFunctions::SetStaticEventTo, true, true},
+      /* 015 */ {kCFuncSetId, &RendererFunctions::SetId, true, true},
+      /* 016 */ {kCFuncCreateVirtualSlot, &RendererFunctions::CreateSlot, true, true},
+      /* 017 */ {kCFuncCreateVirtualPlug, &RendererFunctions::CreateVirtualPlug, true, true},
+      /* 018 */ {kCFuncMarkComponentHasRenderer, &RendererFunctions::MarkComponentHasRenderer, true, true},
+      /* 019 */ {kCFuncSetProp, &RendererFunctions::SetProp, true, true},
+      /* 020 */ {kCFuncSetData, &RendererFunctions::SetData, true, true},
+      /* 021 */ {kCFuncAddPlugToComponent, &RendererFunctions::AddVirtualPlugToComponent, true, true},
+      /* 022 */ {kCFuncGetComponentData, &RendererFunctions::GetComponentData, true, true},
+      /* 023 */ {kCFuncGetComponentProps, &RendererFunctions::GetComponentProps, true, true},
+      /* 024 */ {kCFuncSetDynamicStyleTo, &RendererFunctions::SetDynamicStyleTo, true, true},
+      /* 025 */ {kCFuncGetLazyLoadCount, &RendererFunctions::ThemedTranslationLegacy, true, true},
+      /* 026 */ {kCFuncUpdateComponentInfo, &RendererFunctions::UpdateComponentInfo, true, true},
+      /* 027 */ {kCFuncGetComponentInfo, &RendererFunctions::GetComponentInfo, true, true},
+      /* 028 */ {kCFuncCreateVirtualListNode, &RendererFunctions::CreateVirtualListNode, true, true},
+      /* 029 */ {kCFuncAppendListComponentInfo,&RendererFunctions::AppendListComponentInfo, true, true},
+      /* 030 */ {kCFuncSetListRefreshComponentInfo, &SlotFunction, true, true},
+      /* 031 */ {kCFuncCreateVirtualComponentByName, &RendererFunctions::CreateComponentByName, true, true},
+      /* 032 */ {kCFuncCreateDynamicVirtualComponent, &RendererFunctions::CreateDynamicVirtualComponent, true, true},
+      /* 033 */ {kCFuncRenderDynamicComponent, &RendererFunctions::RenderDynamicComponent, true, true},
+      /* 034 */ {kCFuncThemedTranslation, &RendererFunctions::ThemedTranslation, true, true},
+      /* 035 */ {kCFuncRegisterDataProcessor, &RendererFunctions::RegisterDataProcessor, true, true},
+      /* 036 */ {kCFuncThemedLangTranslation, &RendererFunctions::ThemedLanguageTranslation, true, true},
+      /* 037 */ {kCFuncGetComponentContextData, &RendererFunctions::GetComponentContextData, true, true},
+      /* 038 */ {kCFuncProcessComponentData, &RendererFunctions::ProcessComponentData, true, true},
+      /* 039 */ {"__slot__39", &SlotFunction, true, false},
+      /* 040 */ {"__slot__40", &SlotFunction, true, false},
+      /* 041 */ {"__slot__41", &SlotFunction, true, false},
+      /* 042 */ {"__slot__42", &SlotFunction, true, false},
+      /* 043 */ {"__slot__43", &SlotFunction, true, false},
+      /* 044 */ {"__slot__44", &SlotFunction, true, false},
+      /* 045 */ {"__slot__45", &SlotFunction, true, false},
+      /* 046 */ {"__slot__46", &SlotFunction, true, false},
+      /* 047 */ {"__slot__47", &SlotFunction, true, false},
+      /* 048 */ {"__slot__48", &SlotFunction, true, false},
+      /* 049 */ {"__slot__49", &SlotFunction, true, false},
+      /* 050 */ {"__slot__50", &SlotFunction, true, false},
+      /* 051 */ {"__slot__51", &SlotFunction, true, false},
+      /* 052 */ {"__slot__51_1", &SlotFunction, true, false},
+      /* 053 */ {"__slot__52", &SlotFunction, true, false},
+      /* 054 */ {"__slot__53", &SlotFunction, true, false},
+      /* 055 */ {"__slot__54", &SlotFunction, true, false},
+      /* 056 */ {"__slot__55", &SlotFunction, true, false},
+      /* 057 */ {"__slot__56", &SlotFunction, true, false},
+      /* 058 */ {"__slot__57", &SlotFunction, true, false},
+      /* 059 */ {"__slot__58", &SlotFunction, true, false},
+      /* 060 */ {"__slot__59", &SlotFunction, true, false},
+      /* 061 */ {"__slot__60", &SlotFunction, true, false},
+      /* 062 */ {"__slot__61", &SlotFunction, true, false},
+      /* 063 */ {"__slot__62", &SlotFunction, true, false},
+      /* 064 */ {"__slot__63", &SlotFunction, true, false},
+      /* 065 */ {"__slot__64", &SlotFunction, true, false},
+      /* 066 */ {"__slot__65", &SlotFunction, true, false},
+      /* 067 */ {"__slot__66", &SlotFunction, true, false},
+      /* 068 */ {"__slot__67", &SlotFunction, true, false},
+      /* 069 */ {"__slot__68", &SlotFunction, true, false},
+      /* 070 */ {"__slot__69", &SlotFunction, true, false},
+      /* 071 */ {"__slot__70", &SlotFunction, true, false},
+      /* 072 */ {"__slot__71", &SlotFunction, true, false},
+      /* 073 */ {"__slot__72", &SlotFunction, true, false},
+      /* 074 */ {"__slot__73", &SlotFunction, true, false},
+      /* 075 */ {"__slot__74", &SlotFunction, true, false},
+      /* 076 */ {kCFuncSetStaticStyleToByFiber, &RendererFunctions::SetStaticStyleTo2, true, true},
+      /* 077 */ {"__slot__76", &SlotFunction, true, false},
+      /* 078 */ {"__slot__77", &SlotFunction, true, false},
+      /* 079 */ {"__slot__78", &SlotFunction, true, false},
+      /* 080 */ {"__slot__79", &SlotFunction, true, false},
+      /* 081 */ {"__slot__80", &SlotFunction, true, false},
+      /* 082 */ {kCFuncSetContextData, &RendererFunctions::SetContextData, true, true},
+      /* 083 */ {kCFuncSetScriptEventTo, &RendererFunctions::SetScriptEventTo, true, true},
+      /* 084 */ {kCFuncRegisterElementWorklet, &RendererFunctions::RegisterElementWorklet, true, true},
+      /* 085 */ {kCFuncCreateVirtualPlugWithComponent, &RendererFunctions::CreateVirtualPlugWithComponent, true, true},
+      /* 086 */ {"__slot__85", &SlotFunction, true, false},
+      /* 087 */ {kCFuncAddEventListener, &RendererFunctions::AddEventListener, true, true},
+      /* 088 */ {kCFuncI18nResourceTranslation, &RendererFunctions::I18nResourceTranslation, true, true},
+      /* 089 */ {kCFuncReFlushPage, &RendererFunctions::ReFlushPage, true, true},
+      /* 090 */ {kCFuncSetComponent, &RendererFunctions::SetComponent, true, true},
+      /* 091 */ {kCFuncGetGlobalProps, &RendererFunctions::GetGlobalProps, true, true},
+      /* 092 */ {"__slot__91", &SlotFunction, true, false},
+      /* 093 */ {kCFuncAppendSubTree, &RendererFunctions::AppendSubTree, true, true},
+      /* 094 */ {kCFuncHandleExceptionInLepus, &RendererFunctions::HandleExceptionInLepus, true, true},
+      /* 095 */ {kCFuncAppendVirtualPlugToComponent, &RendererFunctions::AppendVirtualPlugToComponent, true, true},
+      /* 096 */ {kCFuncMarkPageElement, &RendererFunctions::MarkPageElement, true, true},
+      /* 097 */ {kCFuncFilterI18nResource, &RendererFunctions::FilterI18nResource, true, true},
+      /* 098 */ {kCFuncSendGlobalEvent, &RendererFunctions::SendGlobalEvent, true, true},
+      /* 099 */ {kCFunctionSetSourceMapRelease, &RendererFunctions::SetSourceMapRelease, true, true},
+      /* 100 */ {kCFuncCloneSubTree, &RendererFunctions::CloneSubTree, true, true},
+      /* 101 */ {kCFuncGetSystemInfo, &RendererFunctions::GetSystemInfo, true, true},
+      /* 102 */ {kCFuncAddFallbackToDynamicComponent, &RendererFunctions::AddFallbackToDynamicComponent, true, true},
+      /* 103 */ {kCFuncCreateGestureDetector, &RendererFunctions::CreateGestureDetector, true, true},
+      /* 104 */ {kCFunctionElementAnimate, &RendererFunctions::ElementAnimate, true, true},
+      /* 105 */ {kCFuncSetStaticStyleTo2, &RendererFunctions::SetStaticStyleTo2, true, true},
+      /* 106 */ {kSetTimeout, &RendererFunctions::SetTimeout, true, true},
+      /* 107 */ {kClearTimeout, &RendererFunctions::ClearTimeout, true, true},
+      /* 108 */ {kSetInterval, &RendererFunctions::SetInterval, true, true},
+      /* 109 */ {kClearTimeInterval, &RendererFunctions::ClearTimeInterval, true, true},
+      /* 110 */ {kRequestAnimationFrame, &RendererFunctions::RequestAnimationFrame, true, true},
+      /* 111 */ {kCancelAnimationFrame, &RendererFunctions::CancelAnimationFrame, true, true},
+  };
+  // clang-format on
+  size = sizeof(kFuncs) / sizeof(kFuncs[0]);
+  return kFuncs;
+}
+
+const lepus::RenderBindingFunction* Renderer::GetBuiltinFunctionsForFiber(
+    int32_t& size) {
+  // To add a RenderFunction, it needs to be registered first to avoid conflicts
+  // across different branches.
+  // clang-format off
+  constexpr const static lepus::RenderBindingFunction kFuncs[] = {
+    /* NO-ID */ {kCFuncIndexOf, &RendererFunctions::IndexOf, true, true},
+    /* NO-ID */ {kCFuncGetLength, &RendererFunctions::GetLength, true, true},
+    /* NO-ID */ {kCFuncSetValueToMap, &RendererFunctions::SetValueToMap, true, true},
+    /* 001 */ {kCFunctionCreateElement, &RendererFunctions::FiberCreateElement, true, true},
+    /* 002 */ {kCFunctionCreatePage, &RendererFunctions::FiberCreatePage, true, true},
+    /* 003 */ {kCFunctionCreateComponent, &RendererFunctions::FiberCreateComponent, true, true},
+    /* 004 */ {kCFunctionCreateView, &RendererFunctions::FiberCreateView, true, true},
+    /* 005 */ {kCFunctionCreateList, &RendererFunctions::FiberCreateList, true, true},
+    /* 006 */ {kCFunctionCreateScrollView, &RendererFunctions::FiberCreateScrollView, true, true},
+    /* 007 */ {kCFunctionCreateText, &RendererFunctions::FiberCreateText, true, true},
+    /* 008 */ {kCFunctionCreateImage, &RendererFunctions::FiberCreateImage, true, true},
+    /* 009 */ {kCFunctionCreateRawText, &RendererFunctions::FiberCreateRawText, true, true},
+    /* 010 */ {kCFunctionCreateNonElement, &RendererFunctions::FiberCreateNonElement, true, true},
+    /* 011 */ {kCFunctionCreateWrapperElement, &RendererFunctions::FiberCreateWrapperElement, true, true},
+    /* 012 */ {kCFunctionAppendElement, &RendererFunctions::FiberAppendElement, true, true},
+    /* 013 */ {kCFunctionRemoveElement, &RendererFunctions::FiberRemoveElement, true, true},
+    /* 014 */ {kCFunctionInsertElementBefore, &RendererFunctions::FiberInsertElementBefore, true, true},
+    /* 015 */ {kCFunctionFirstElement, &RendererFunctions::FiberFirstElement, true, true},
+    /* 016 */ {kCFunctionLastElement, &RendererFunctions::FiberLastElement, true, true},
+    /* 017 */ {kCFunctionNextElement, &RendererFunctions::FiberNextElement, true, true},
+    /* 018 */ {kCFunctionReplaceElement, &RendererFunctions::FiberReplaceElement, true, true},
+    /* 019 */ {kCFunctionSwapElement, &RendererFunctions::FiberSwapElement, true, true},
+    /* 020 */ {kCFunctionGetParent, &RendererFunctions::FiberGetParent, true, true},
+    /* 021 */ {kCFunctionGetChildren, &RendererFunctions::FiberGetChildren, true, true},
+    /* 022 */ {kCFunctionCloneElement, &RendererFunctions::FiberCloneElement, true, true},
+    /* 023 */ {kCFunctionElementIsEqual, &RendererFunctions::FiberElementIsEqual, true, true},
+    /* 024 */ {kCFunctionGetElementUniqueID, &RendererFunctions::FiberGetElementUniqueID, true, true},
+    /* 025 */ {kCFunctionGetTag, &RendererFunctions::FiberGetTag, true, true},
+    /* 026 */ {kCFunctionSetAttribute, &RendererFunctions::FiberSetAttribute, true, true},
+    /* 027 */ {kCFunctionGetAttributes, &RendererFunctions::FiberGetAttributes, true, true},
+    /* 028 */ {kCFunctionAddClass, &RendererFunctions::FiberAddClass, true, true},
+    /* 029 */ {kCFunctionSetClasses, &RendererFunctions::FiberSetClasses, true, true},
+    /* 030 */ {kCFunctionGetClasses, &RendererFunctions::FiberGetClasses, true, true},
+    /* 031 */ {kCFunctionAddInlineStyle, &RendererFunctions::FiberAddInlineStyle, true, true},
+    /* 032 */ {kCFunctionSetInlineStyles, &RendererFunctions::FiberSetInlineStyles, true, true},
+    /* 033 */ {kCFunctionGetInlineStyles, &RendererFunctions::FiberGetInlineStyles, true, true},
+    /* 034 */ {kCFunctionSetParsedStyles, &RendererFunctions::FiberSetParsedStyles, true, true},
+    /* 035 */ {kCFunctionGetComputedStyles, &RendererFunctions::FiberGetComputedStyles, true, true},
+    /* 036 */ {kCFunctionAddEvent, &RendererFunctions::FiberAddEvent, true, true},
+    /* 037 */ {kCFunctionSetEvents, &RendererFunctions::FiberSetEvents, true, true},
+    /* 038 */ {kCFunctionGetEvent, &RendererFunctions::FiberGetEvent, true, true},
+    /* 039 */ {kCFunctionGetEvents, &RendererFunctions::FiberGetEvents, true, true},
+    /* 040 */ {kCFunctionSetID, &RendererFunctions::FiberSetID, true, true},
+    /* 041 */ {kCFunctionGetID, &RendererFunctions::FiberGetID, true, true},
+    /* 042 */ {kCFunctionAddDataset, &RendererFunctions::FiberAddDataset, true, true},
+    /* 043 */ {kCFunctionSetDataset, &RendererFunctions::FiberSetDataset, true, true},
+    /* 044 */ {kCFunctionGetDataset, &RendererFunctions::FiberGetDataset, true, true},
+    /* 045 */ {kCFunctionGetComponentID, &RendererFunctions::FiberGetComponentID, true, true},
+    /* 046 */ {kCFunctionUpdateComponentID, &RendererFunctions::FiberUpdateComponentID, true, true},
+    /* 047 */ {kCFunctionElementFromBinary, &RendererFunctions::FiberElementFromBinary, true, true},
+    /* 048 */ {kCFunctionElementFromBinaryAsync, &RendererFunctions::FiberElementFromBinaryAsync, true, true},
+    /* 049 */ {kCFunctionUpdateListCallbacks, &RendererFunctions::FiberUpdateListCallbacks, true, true},
+    /* 050 */ {kCFunctionFlushElementTree, &RendererFunctions::FiberFlushElementTree, true, true},
+    /* 051 */ {kCFunctionOnLifecycleEvent, &RendererFunctions::FiberOnLifecycleEvent, true, true},
+    /* 052 */ {kCFunctionQueryComponent, &RendererFunctions::FiberQueryComponent, true, true},
+    /* 053 */ {kCFunctionSetCSSId, &RendererFunctions::FiberSetCSSId, true, true},
+    /* 054 */ {kCFunctionSetSourceMapRelease, &RendererFunctions::SetSourceMapRelease, true, true},
+    /* 055 */ {kCFuncAddEventListener, &RendererFunctions::AddEventListener, true, true},
+    /* 056 */ {kCFuncI18nResourceTranslation, &RendererFunctions::I18nResourceTranslation, true, true},
+    /* 057 */ {kCFuncFilterI18nResource, &RendererFunctions::FilterI18nResource, true, true},
+    /* 058 */ {kCFuncSendGlobalEvent, &RendererFunctions::SendGlobalEvent, true, true},
+    /* 059 */ {kCFunctionReportError, &RendererFunctions::ReportError, true, true},
+    /* 060 */ {kCFunctionGetDataByKey, &RendererFunctions::FiberGetDataByKey, true, true},
+    /* 061 */ {kCFunctionReplaceElements, &RendererFunctions::FiberReplaceElements, true, true},
+    /* 062 */ {kCFunctionQuerySelector, &RendererFunctions::FiberQuerySelector, true, true},
+    /* 063 */ {kCFunctionQuerySelectorAll, &RendererFunctions::FiberQuerySelectorAll, true, true},
+    /* 064 */ {kCFunctionSetLepusInitData, &RendererFunctions::FiberSetLepusInitData, true, true},
+    /* 065 */ {kCFunctionAddConfig, &RendererFunctions::FiberAddConfig, true, true},
+    /* 066 */ {kCFunctionSetConfig, &RendererFunctions::FiberSetConfig, true, true},
+    /* 067 */ {kCFunctionUpdateComponentInfo, &RendererFunctions::FiberUpdateComponentInfo, true, true},
+    /* 068 */ {kCFunctionGetConfig, &RendererFunctions::FiberGetElementConfig, true, true},
+    /* 069 */ {kCFunctionGetInlineStyle, &RendererFunctions::FiberGetInlineStyle, true, true},
+    /* 070 */ {kCFuncSetGestureDetector, &RendererFunctions::FiberSetGestureDetector, true, true},
+    /* 071 */ {kCFuncRemoveGestureDetector, &RendererFunctions::FiberRemoveGestureDetector, true, true},
+    /* 072 */ {kCFunctionGetAttributeByName, &RendererFunctions::FiberGetAttributeByName, true, true},
+    /* 073 */ {kCFunctionGetAttributeNames, &RendererFunctions::FiberGetAttributeNames, true, true},
+    /* 074 */ {kCFunctionGetPageElement, &RendererFunctions::FiberGetPageElement, true, true},
+    /* 075 */ {kCFunctionCreateIf, &RendererFunctions::FiberCreateIf, true, true},
+    /* 076 */ {kCFunctionCreateFor, &RendererFunctions::FiberCreateFor, true, true},
+    /* 077 */ {kCFunctionCreateBlock, &RendererFunctions::FiberCreateBlock, true, true},
+    /* 078 */ {kCFunctionUpdateIfNodeIndex, &RendererFunctions::FiberUpdateIfNodeIndex, true, true},
+    /* 079 */ {kCFunctionUpdateForChildCount, &RendererFunctions::FiberUpdateForChildCount, true, true},
+    /* 080 */ {kCFunctionGetElementByUniqueID, &RendererFunctions::FiberGetElementByUniqueID, true, true},
+    /* 081 */ {kCFunctionGetDiffData, &RendererFunctions::FiberGetDiffData, true, true},
+    /* 082 */ {kCFunctionLoadLepusChunk, &RendererFunctions::LoadLepusChunk, true, true},
+    /* 083 */ {kCFuncSetGestureState, &RendererFunctions::FiberSetGestureState, true, true},
+    /* 084 */ {kCFunctionMarkTemplateElement, &RendererFunctions::FiberMarkTemplateElement, true, true},
+    /* 085 */ {kCFunctionIsTemplateElement, &RendererFunctions::FiberIsTemplateElement, true, true},
+    /* 086 */ {kCFunctionMarkPartElement, &RendererFunctions::FiberMarkPartElement, true, true},
+    /* 087 */ {kCFunctionIsPartElement, &RendererFunctions::FiberIsPartElement, true, true},
+    /* 088 */ {kCFunctionGetTemplateParts, &RendererFunctions::FiberGetTemplateParts, true, true},
+    /* 089 */ {kCFunctionAsyncResolveElement, &RendererFunctions::FiberAsyncResolveElement, true, true},
+    /* 090 */ {kCFuncConsumeGesture, &RendererFunctions::FiberConsumeGesture, true, true},
+    /* 091 */ {kCFunctionCreateElementWithProperties, &RendererFunctions::FiberCreateElementWithProperties, true, true},
+    /* 092 */ {kCFunctionCreateSignal, &RendererFunctions::FiberCreateSignal, true, true},
+    /* 093 */ {kCFunctionWriteSignal, &RendererFunctions::FiberWriteSignal, true, true},
+    /* 094 */ {kCFunctionReadSignal, &RendererFunctions::FiberReadSignal, true, true},
+    /* 095 */ {kCFunctionCreateComputation, &RendererFunctions::FiberCreateComputation, true, true},
+    /* 096 */ {kCFunctionCreateMemo, &RendererFunctions::FiberCreateMemo, true, true},
+    /* 097 */ {kCFunctionCreateScope, &RendererFunctions::FiberCreateScope, true, true},
+    /* 098 */ {kCFunctionGetScope, &RendererFunctions::FiberGetScope, true, true},
+    /* 099 */ {kCFunctionCleanUp, &RendererFunctions::FiberCleanUp, true, true},
+    /* 100 */ {kCFunctionOnCleanUp, &RendererFunctions::FiberOnCleanUp, true, true},
+    /* 101 */ {kCFunctionUnTrack, &RendererFunctions::FiberUnTrack, true, true},
+    /* 102 */ {kCFunctionCreateFrame, &RendererFunctions::FiberCreateFrame, true, true},
+    /* 103 */ {kCFunctionRunUpdates, &RendererFunctions::FiberRunUpdates, true, true},
+    /* 104 */ {kCFunctionCreateStyleObject, &RendererFunctions::CreateStyleObject, true, true},
+    /* 105 */ {kCFunctionSetStyleObject, &RendererFunctions::SetStyleObject, true, true},
+    /* 106 */ {kCFunctionUpdateStyleObject, &RendererFunctions::UpdateStyleObject, true, true},
+    /* 107 */ {kCFunctionAsyncResolveSubtreeProperty, &RendererFunctions::FiberAsyncResolveSubtreeProperty, true, true},
+    /* 108 */ {kCFunctionMarkAsyncFlushRoot, &RendererFunctions::FiberMarkAsyncResolveRoot, true, true},
+    /* 109 */ {kCFunctionAddEventListener, &RendererFunctions::FiberAddEventListener, true, true},
+    /* 110 */ {kCFunctionFiberRemoveEventListener, &RendererFunctions::FiberRemoveEventListener, true, true},
+    /* 111 */ {kCFunctionCreateEvent, &RendererFunctions::FiberCreateEvent, true, true},
+    /* 112 */ {kCFunctionDispatchEvent, &RendererFunctions::FiberDispatchEvent, true, true},
+    /* 113 */ {kCFunctionStopPropagation, &RendererFunctions::FiberStopPropagation, true, true},
+    /* 114 */ {kCFunctionStopImmediatePropagation, &RendererFunctions::FiberStopImmediatePropagation, true, true},
+    /* 115 */ {kCFunctionInvokeUIMethod, &RendererFunctions::InvokeUIMethod, true, true},
+    /* 116 */ {kCFunctionGetComputedStyleByKey, &RendererFunctions::FiberGetComputedStyleByKey, true, true},
+    /* 117 */ {kSetTimeout, &RendererFunctions::SetTimeout, true, true},
+    /* 118 */ {kClearTimeout, &RendererFunctions::ClearTimeout, true, true},
+    /* 119 */ {kSetInterval, &RendererFunctions::SetInterval, true, true},
+    /* 120 */ {kClearTimeInterval, &RendererFunctions::ClearTimeInterval, true, true},
+    /* 121 */ {kRequestAnimationFrame, &RendererFunctions::RequestAnimationFrame, true, true},
+    /* 122 */ {kCancelAnimationFrame, &RendererFunctions::CancelAnimationFrame, true, true},
+    /* 123 */ {kCFunctionElementAnimate, &RendererFunctions::ElementAnimate, true, true},
+  };
+  // clang-format on
+  size = sizeof(kFuncs) / sizeof(kFuncs[0]);
+  return kFuncs;
+}
+
 }  // namespace tasm
 }  // namespace lynx

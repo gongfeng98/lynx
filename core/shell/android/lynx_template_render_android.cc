@@ -26,6 +26,7 @@
 #include "core/shell/android/tasm_platform_invoker_android.h"
 #include "core/shell/lynx_engine_proxy_impl.h"
 #include "core/shell/lynx_engine_wrapper.h"
+#include "core/shell/lynx_layout_proxy_impl.h"
 #include "core/shell/lynx_runtime_proxy_impl.h"
 #include "core/shell/lynx_shell.h"
 #include "core/shell/lynx_shell_builder.h"
@@ -448,10 +449,13 @@ void OnLynxEngineCreated(JNIEnv* env, jclass jcaller, jlong ptr,
   auto perf_controller_proxy =
       std::make_shared<lynx::shell::PerfControllerProxyImpl>(
           shell->GetPerfControllerActor());
-  ui_delegate->OnLynxCreate(shell->GetListEngineProxy(),
-                            std::move(engine_proxy), std::move(runtime_proxy),
-                            std::move(perf_controller_proxy), nullptr, nullptr,
-                            nullptr);
+  auto layout_proxy = std::make_shared<lynx::shell::LynxLayoutProxyImpl>(
+      shell->GetLayoutActor());
+  ui_delegate->OnLynxCreate(
+      shell->GetListEngineProxy(), std::move(engine_proxy),
+      std::move(runtime_proxy), std::move(layout_proxy),
+      std::move(perf_controller_proxy), nullptr, nullptr, nullptr,
+      shell->GetInstanceId(), shell->GetPageOptions().IsEmbeddedModeOn());
 }
 
 void StartRuntime(JNIEnv* env, jclass jcaller, jlong ptr, jlong lifecycle) {
@@ -519,7 +523,7 @@ void LoadSSRDataByPreParsedData(JNIEnv* env, jclass jcaller, jlong ptr,
 
 void LoadTemplateByPreParsedData(JNIEnv* env, jclass jcaller, jlong ptr,
                                  jlong lifecycle, jstring j_url,
-                                 jbyteArray j_binary, jint is_pre_painting,
+                                 jbyteArray j_binary, jboolean is_pre_painting,
                                  jboolean enable_recycle_template_bundle,
                                  jlong data, jboolean readOnly, jstring name,
                                  jobject template_data, jint options,
@@ -528,19 +532,17 @@ void LoadTemplateByPreParsedData(JNIEnv* env, jclass jcaller, jlong ptr,
   std::vector<uint8_t> vec = JNIConvertHelper::ConvertJavaBinary(env, j_binary);
   InternalLoadTemplate(env, ptr, lifecycle, j_url, std::move(vec),
                        data ? *(reinterpret_cast<Value*>(data)) : Value(),
-                       readOnly, is_pre_painting == 1, processor_name,
-                       template_data, enable_recycle_template_bundle,
-                       j_timing_option, options);
+                       readOnly, is_pre_painting, processor_name, template_data,
+                       enable_recycle_template_bundle, j_timing_option,
+                       options);
 }
 
-void LoadTemplateBufferByPreParsedData(JNIEnv* env, jclass jcaller, jlong ptr,
-                                       jlong lifecycle, jstring url,
-                                       jobject bufferPtr, jint is_pre_painting,
-                                       jboolean enable_recycle_template_bundle,
-                                       jlong data, jboolean read_only,
-                                       jstring j_processor_name,
-                                       jobject template_data, jint options,
-                                       jobject timing_option) {
+void LoadTemplateBufferByPreParsedData(
+    JNIEnv* env, jclass jcaller, jlong ptr, jlong lifecycle, jstring url,
+    jobject bufferPtr, jboolean is_pre_painting,
+    jboolean enable_recycle_template_bundle, jlong data, jboolean read_only,
+    jstring j_processor_name, jobject template_data, jint options,
+    jobject timing_option) {
   std::string processor_name =
       JNIConvertHelper::ConvertToString(env, j_processor_name);
   auto* buffer_ptr =
@@ -558,16 +560,16 @@ void LoadTemplateBufferByPreParsedData(JNIEnv* env, jclass jcaller, jlong ptr,
   std::vector<uint8_t> vec(buffer_ptr, buffer_ptr + capacity);
   InternalLoadTemplate(env, ptr, lifecycle, url, std::move(vec),
                        data ? *(reinterpret_cast<Value*>(data)) : Value(),
-                       read_only, is_pre_painting == 1, processor_name,
+                       read_only, is_pre_painting, processor_name,
                        template_data, enable_recycle_template_bundle,
                        timing_option, options);
 }
 
 void LoadTemplateBundleByPreParsedData(JNIEnv* env, jclass jcaller, jlong ptr,
                                        jlong lifecycle, jstring j_url,
-                                       jlong bundlePtr, jint is_pre_painting,
-                                       jlong data, jboolean readOnly,
-                                       jstring processorName,
+                                       jlong bundlePtr,
+                                       jboolean is_pre_painting, jlong data,
+                                       jboolean readOnly, jstring processorName,
                                        jobject android_template_data,
                                        jint options, jobject j_timing_option) {
   // TODO(songshourui.null): add a method to get template_data with
@@ -605,7 +607,7 @@ void LoadTemplateBundleByPreParsedData(JNIEnv* env, jclass jcaller, jlong ptr,
   }
   auto pipeline_options =
       ProcessLoadTemplateTimingOption(env, ptr, j_timing_option, options);
-  pipeline_options->enable_pre_painting = (is_pre_painting == 1);
+  pipeline_options->enable_pre_painting = is_pre_painting;
 
   reinterpret_cast<LynxShell*>(ptr)->LoadTemplateBundle(
       url, std::move(copied_bundle), pipeline_options, template_data);

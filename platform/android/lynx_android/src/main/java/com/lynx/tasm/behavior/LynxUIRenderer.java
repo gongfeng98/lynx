@@ -11,6 +11,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -460,18 +461,26 @@ public class LynxUIRenderer implements ILynxUIRenderer {
           "performInnerMeasure failed, mLynxUIOwner:" + mLynxUIOwner + ", bodyView:" + bodyView);
       return;
     }
-    mLynxUIOwner.performMeasure();
+    boolean isFragmentLayerRender =
+        lynxContext != null && lynxContext.isFragmentLayerRenderOn() && bodyView != null;
+    if (!isFragmentLayerRender) {
+      // No platform ui is needed
+      mLynxUIOwner.performMeasure();
+    }
     int width = 0;
     int height = 0;
     int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+
     if (widthMode == MeasureSpec.AT_MOST || widthMode == MeasureSpec.UNSPECIFIED) {
-      width = mLynxUIOwner.getRootWidth();
+      width = isFragmentLayerRender ? bodyView.getRenderer().getLynxFrame().width()
+                                    : mLynxUIOwner.getRootWidth();
     } else {
       width = MeasureSpec.getSize(widthMeasureSpec);
     }
     int heightMode = MeasureSpec.getMode(heightMeasureSpec);
     if (heightMode == MeasureSpec.AT_MOST || heightMode == MeasureSpec.UNSPECIFIED) {
-      height = mLynxUIOwner.getRootHeight();
+      height = isFragmentLayerRender ? bodyView.getRenderer().getLynxFrame().height()
+                                     : mLynxUIOwner.getRootHeight();
     } else {
       height = MeasureSpec.getSize(heightMeasureSpec);
     }
@@ -485,6 +494,13 @@ public class LynxUIRenderer implements ILynxUIRenderer {
       return;
     }
     LynxContext lynxContext = (mLynxContext != null) ? mLynxContext.get() : null;
+    boolean isFragmentLayerRender = lynxContext != null && lynxContext.isFragmentLayerRenderOn()
+        && lynxContext.getUIBodyView() != null;
+    if (isFragmentLayerRender) {
+      // No need to perform layout for UIOwner under fragment layer render.
+      return;
+    }
+
     if (lynxContext != null) {
       String eventName = "LynxTemplateRender.Layout";
       boolean needLongTaskMonitor = LynxLongTaskMonitor.willProcessTask(
@@ -612,11 +628,36 @@ public class LynxUIRenderer implements ILynxUIRenderer {
         }
         Surface surface = (Surface) field.get(view.getRootView().getParent());
 
+        // Compute intersection with the screen to avoid out-of-bounds requests
+        DisplayMetrics dm = DisplayMetricsHolder.getRealScreenDisplayMetrics(view.getContext());
+        int surfaceWidth = dm.widthPixels;
+        int surfaceHeight = dm.heightPixels;
+
+        // When LynxView size is unrestricted and the parent supports scrolling,
+        // scrolling upward can make its position relative to the screen negative.
+        // PixelCopy only copies pixels from the on-screen visible viewport, so we
+        // clamp the copy region to the screen bounds to avoid out-of-range and
+        // negative coordinates.
+        int left = Math.max(0, location[0]);
+        int top = Math.max(0, location[1]);
+        int right = Math.min(location[0] + view.getWidth(), surfaceWidth);
+        int bottom = Math.min(location[1] + view.getHeight(), surfaceHeight);
+        Rect srcRect = new Rect(left, top, right, bottom);
+
+        int copyWidth = Math.max(0, srcRect.width());
+        int copyHeight = Math.max(0, srcRect.height());
+        if (copyWidth <= 0 || copyHeight <= 0) {
+          // Fully invisible: clear and return
+          canvas.drawColor(Color.TRANSPARENT);
+          return;
+        }
+
+        // PixelCopy destination must match srcRect size: use a temporary bitmap
+        Bitmap copyBitmap = Bitmap.createBitmap(copyWidth, copyHeight, Bitmap.Config.ARGB_8888);
+
         synchronized (mSyncObject) {
-          PixelCopy.request(surface,
-              new Rect(location[0], location[1], location[0] + view.getWidth(),
-                  location[1] + view.getHeight()),
-              bitmap, new PixelCopy.OnPixelCopyFinishedListener() {
+          PixelCopy.request(
+              surface, srcRect, copyBitmap, new PixelCopy.OnPixelCopyFinishedListener() {
                 @Override
                 public void onPixelCopyFinished(int copyResult) {
                   synchronized (mSyncObject) {
@@ -632,6 +673,11 @@ public class LynxUIRenderer implements ILynxUIRenderer {
             LLog.e("DevTool Screenshot", e.toString());
           }
         }
+        // Draw visible region onto the large bitmap at the correct offset; leave other areas blank
+        int drawX = left - location[0];
+        int drawY = top - location[1];
+        canvas.drawBitmap(copyBitmap, drawX, drawY, null);
+        copyBitmap.recycle();
       } else {
         view.draw(canvas);
       }
@@ -863,66 +909,81 @@ public class LynxUIRenderer implements ILynxUIRenderer {
   @Override
   public float[] getTransformValue(int sign, float[] padBorderMarginLayout) {
     float[] res = new float[32];
-    if (mLynxUIOwner != null) {
-      LynxBaseUI ui = mLynxUIOwner.getNode(sign);
-      if (ui != null) {
-        for (int i = 0; i < 4; i++) {
-          LynxBaseUI.TransOffset arr;
-          if (i == 0) {
-            arr = ui.getTransformValue(padBorderMarginLayout[BoxModelOffset.PAD_LEFT.ordinal()]
-                    + padBorderMarginLayout[BoxModelOffset.BORDER_LEFT.ordinal()]
-                    + padBorderMarginLayout[BoxModelOffset.LAYOUT_LEFT.ordinal()],
-                -padBorderMarginLayout[BoxModelOffset.PAD_RIGHT.ordinal()]
-                    - padBorderMarginLayout[BoxModelOffset.BORDER_RIGHT.ordinal()]
-                    - padBorderMarginLayout[BoxModelOffset.LAYOUT_RIGHT.ordinal()],
-                padBorderMarginLayout[BoxModelOffset.PAD_TOP.ordinal()]
-                    + padBorderMarginLayout[BoxModelOffset.BORDER_TOP.ordinal()]
-                    + padBorderMarginLayout[BoxModelOffset.LAYOUT_TOP.ordinal()],
-                -padBorderMarginLayout[BoxModelOffset.PAD_BOTTOM.ordinal()]
-                    - padBorderMarginLayout[BoxModelOffset.BORDER_BOTTOM.ordinal()]
-                    - padBorderMarginLayout[BoxModelOffset.LAYOUT_BOTTOM.ordinal()]);
-          } else if (i == 1) {
-            arr = ui.getTransformValue(padBorderMarginLayout[BoxModelOffset.BORDER_LEFT.ordinal()]
-                    + padBorderMarginLayout[BoxModelOffset.LAYOUT_LEFT.ordinal()],
-                -padBorderMarginLayout[BoxModelOffset.BORDER_RIGHT.ordinal()]
-                    - padBorderMarginLayout[BoxModelOffset.LAYOUT_RIGHT.ordinal()],
-                padBorderMarginLayout[BoxModelOffset.BORDER_TOP.ordinal()]
-                    + padBorderMarginLayout[BoxModelOffset.LAYOUT_TOP.ordinal()],
-                -padBorderMarginLayout[BoxModelOffset.BORDER_BOTTOM.ordinal()]
-                    - padBorderMarginLayout[BoxModelOffset.LAYOUT_BOTTOM.ordinal()]);
-          } else if (i == 2) {
-            arr = ui.getTransformValue(padBorderMarginLayout[BoxModelOffset.LAYOUT_LEFT.ordinal()],
-                -padBorderMarginLayout[BoxModelOffset.LAYOUT_RIGHT.ordinal()],
-                padBorderMarginLayout[BoxModelOffset.LAYOUT_TOP.ordinal()],
-                -padBorderMarginLayout[BoxModelOffset.LAYOUT_BOTTOM.ordinal()]);
-          } else {
-            arr = ui.getTransformValue(-padBorderMarginLayout[BoxModelOffset.MARGIN_LEFT.ordinal()]
-                    + padBorderMarginLayout[BoxModelOffset.LAYOUT_LEFT.ordinal()],
-                padBorderMarginLayout[BoxModelOffset.MARGIN_RIGHT.ordinal()]
-                    - padBorderMarginLayout[BoxModelOffset.LAYOUT_RIGHT.ordinal()],
-                -padBorderMarginLayout[BoxModelOffset.MARGIN_TOP.ordinal()]
-                    + padBorderMarginLayout[BoxModelOffset.LAYOUT_TOP.ordinal()],
-                padBorderMarginLayout[BoxModelOffset.MARGIN_BOTTOM.ordinal()]
-                    - padBorderMarginLayout[BoxModelOffset.LAYOUT_BOTTOM.ordinal()]);
-          }
-          /**
-           * The arr returns the x and y coordinates of four points, a total of 8 numbers,
-           * which are stored in the res array in the order of top-left, top-right, bottom-right,
-           * bottom-left.
-           */
 
-          if (arr != null) {
-            res[i * 8] = arr.left_top[0];
-            res[i * 8 + 1] = arr.left_top[1];
-            res[i * 8 + 2] = arr.right_top[0];
-            res[i * 8 + 3] = arr.right_top[1];
-            res[i * 8 + 4] = arr.right_bottom[0];
-            res[i * 8 + 5] = arr.right_bottom[1];
-            res[i * 8 + 6] = arr.left_bottom[0];
-            res[i * 8 + 7] = arr.left_bottom[1];
-          }
-        }
+    if (mPaintingContext == null) {
+      LLog.e(TAG, "getTransformValue failed since mPaintingContext is null.");
+      return res;
+    }
+
+    int width = mPaintingContext.getTargetWidth(sign);
+    int height = mPaintingContext.getTargetHeight(sign);
+
+    for (int i = 0; i < 4; i++) {
+      float left = 0;
+      float top = 0;
+      float right = 0;
+      float bottom = 0;
+
+      if (i == 0) {
+        left = padBorderMarginLayout[BoxModelOffset.PAD_LEFT.ordinal()]
+            + padBorderMarginLayout[BoxModelOffset.BORDER_LEFT.ordinal()]
+            + padBorderMarginLayout[BoxModelOffset.LAYOUT_LEFT.ordinal()];
+        right = width - padBorderMarginLayout[BoxModelOffset.PAD_RIGHT.ordinal()]
+            - padBorderMarginLayout[BoxModelOffset.BORDER_RIGHT.ordinal()]
+            - padBorderMarginLayout[BoxModelOffset.LAYOUT_RIGHT.ordinal()];
+        top = padBorderMarginLayout[BoxModelOffset.PAD_TOP.ordinal()]
+            + padBorderMarginLayout[BoxModelOffset.BORDER_TOP.ordinal()]
+            + padBorderMarginLayout[BoxModelOffset.LAYOUT_TOP.ordinal()];
+        bottom = height - padBorderMarginLayout[BoxModelOffset.PAD_BOTTOM.ordinal()]
+            - padBorderMarginLayout[BoxModelOffset.BORDER_BOTTOM.ordinal()]
+            - padBorderMarginLayout[BoxModelOffset.LAYOUT_BOTTOM.ordinal()];
+      } else if (i == 1) {
+        left = padBorderMarginLayout[BoxModelOffset.BORDER_LEFT.ordinal()]
+            + padBorderMarginLayout[BoxModelOffset.LAYOUT_LEFT.ordinal()];
+        right = width - padBorderMarginLayout[BoxModelOffset.BORDER_RIGHT.ordinal()]
+            - padBorderMarginLayout[BoxModelOffset.LAYOUT_RIGHT.ordinal()];
+        top = padBorderMarginLayout[BoxModelOffset.BORDER_TOP.ordinal()]
+            + padBorderMarginLayout[BoxModelOffset.LAYOUT_TOP.ordinal()];
+        bottom = height - padBorderMarginLayout[BoxModelOffset.BORDER_BOTTOM.ordinal()]
+            - padBorderMarginLayout[BoxModelOffset.LAYOUT_BOTTOM.ordinal()];
+      } else if (i == 2) {
+        left = padBorderMarginLayout[BoxModelOffset.LAYOUT_LEFT.ordinal()];
+        right = width - padBorderMarginLayout[BoxModelOffset.LAYOUT_RIGHT.ordinal()];
+        top = padBorderMarginLayout[BoxModelOffset.LAYOUT_TOP.ordinal()];
+        bottom = height - padBorderMarginLayout[BoxModelOffset.LAYOUT_BOTTOM.ordinal()];
+      } else {
+        left = -padBorderMarginLayout[BoxModelOffset.MARGIN_LEFT.ordinal()]
+            + padBorderMarginLayout[BoxModelOffset.LAYOUT_LEFT.ordinal()];
+        right = width + padBorderMarginLayout[BoxModelOffset.MARGIN_RIGHT.ordinal()]
+            - padBorderMarginLayout[BoxModelOffset.LAYOUT_RIGHT.ordinal()];
+        top = -padBorderMarginLayout[BoxModelOffset.MARGIN_TOP.ordinal()]
+            + padBorderMarginLayout[BoxModelOffset.LAYOUT_TOP.ordinal()];
+        bottom = height + padBorderMarginLayout[BoxModelOffset.MARGIN_BOTTOM.ordinal()]
+            - padBorderMarginLayout[BoxModelOffset.LAYOUT_BOTTOM.ordinal()];
       }
+
+      PointF targetLeftTop =
+          mPaintingContext.convertPointInViewToScreen(sign, new PointF(left, top));
+      PointF targetRightTop =
+          mPaintingContext.convertPointInViewToScreen(sign, new PointF(right, top));
+      PointF targetLeftBottom =
+          mPaintingContext.convertPointInViewToScreen(sign, new PointF(left, bottom));
+      PointF targetRightBottom =
+          mPaintingContext.convertPointInViewToScreen(sign, new PointF(right, bottom));
+
+      /**
+       * The arr returns the x and y coordinates of four points, a total of 8 numbers,
+       * which are stored in the res array in the order of top-left, top-right, bottom-right,
+       * bottom-left.
+       */
+      res[i * 8] = targetLeftTop.x;
+      res[i * 8 + 1] = targetLeftTop.y;
+      res[i * 8 + 2] = targetRightTop.x;
+      res[i * 8 + 3] = targetRightTop.y;
+      res[i * 8 + 4] = targetRightBottom.x;
+      res[i * 8 + 5] = targetRightBottom.y;
+      res[i * 8 + 6] = targetLeftBottom.x;
+      res[i * 8 + 7] = targetLeftBottom.y;
     }
     return res;
   }

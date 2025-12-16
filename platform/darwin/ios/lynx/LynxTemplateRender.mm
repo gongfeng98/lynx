@@ -8,6 +8,7 @@
 #import <Lynx/LynxError.h>
 #import <Lynx/LynxEventReporter.h>
 #import <Lynx/LynxFontFaceManager.h>
+#import <Lynx/LynxFrameView.h>
 #import <Lynx/LynxLoadMeta.h>
 #import <Lynx/LynxLog.h>
 #import <Lynx/LynxLogicExecutor.h>
@@ -24,7 +25,6 @@
 #import <Lynx/LynxTemplateRenderHelper.h>
 #import <Lynx/LynxTheme.h>
 #import <Lynx/LynxTraceEvent.h>
-#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxView.h>
 #import "LynxAccessibilityModule.h"
 #import "LynxBackgroundRuntime+Internal.h"
@@ -48,6 +48,7 @@
 #import "LynxTemplateRender+Protected.h"
 #import "LynxTextInfoModule.h"
 #import "LynxTimingConstants.h"
+#import "LynxTraceEventDef.h"
 #import "LynxUIIntersectionObserver+Internal.h"
 #import "LynxUILayoutTick.h"
 #import "LynxUIMethodModule.h"
@@ -185,7 +186,6 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 
 - (LynxViewBuilder*)setUpBuilder {
   LynxViewBuilder* builder = [LynxViewBuilder new];
-  [builder setThreadStrategyForRender:LynxThreadStrategyForRenderAllOnUI];
   builder.enableJSRuntime = YES;
   builder.frame = CGRectZero;
   builder.screenSize = CGSizeZero;
@@ -235,7 +235,9 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   _enableTextNonContiguousLayout = [builder enableTextNonContiguousLayout];
   _enableLayoutOnly = [LynxEnv.sharedInstance getEnableLayoutOnly];
   _embeddedMode = [builder getEmbeddedMode];
-  _templateBundle = builder.lynxViewGroup.templateBundle;
+  if (builder.lynxViewGroup.isTemplateBundleReady) {
+    _templateBundle = builder.lynxViewGroup.templateBundle;
+  }
   builder.config = builder.config ?: [LynxEnv sharedInstance].config;
   builder.config = builder.config ?: [[LynxConfig alloc] initWithProvider:nil];
   _config = builder.config;
@@ -279,7 +281,12 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 }
 
 - (LynxView*)getLynxView {
-  return [_containerView isKindOfClass:[LynxView class]] ? (LynxView*)_containerView : nil;
+  if ([_containerView isKindOfClass:[LynxView class]]) {
+    return (LynxView*)_containerView;
+  } else if ([_containerView isKindOfClass:[LynxFrameView class]]) {
+    return (LynxView*)[(LynxFrameView*)_containerView getRootView];
+  }
+  return nil;
 }
 
 - (void)setUpDevTool:(BOOL)debuggable {
@@ -488,21 +495,23 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 
   // bundle in meta is considered before bundle in lynxViewGroup.
   LynxTemplateBundle* templateBundle =
-      meta.templateBundle ? meta.templateBundle : _lynxViewGroup.templateBundle;
+      meta.templateBundle ? meta.templateBundle : self.templateBundle;
 
+  if (_logicExecutor != nil) {
+    // if logicExecutor set, we need to keep _templateData
+    if (_templateData == nil) {
+      _templateData = [[LynxTemplateData alloc] initWithDictionary:@{}];
+    }
+    [_templateData updateWithTemplateData:meta.initialData];
+  }
   if (templateBundle) {
     [self loadTemplateBundle:templateBundle withURL:meta.url initData:meta.initialData];
-    if (_logicExecutor != nil) {
-      // if logicExecutor set, we need to keep _templateData
-      if (_templateData == nil) {
-        _templateData = [[LynxTemplateData alloc] initWithDictionary:@{}];
-      }
-      [_templateData updateWithTemplateData:meta.initialData];
-    }
   } else if (meta.binaryData) {
     [self loadTemplate:meta.binaryData withURL:meta.url initData:meta.initialData];
   } else if (meta.url) {
     [self loadTemplateFromURL:meta.url initData:meta.initialData];
+  } else if (_lynxViewGroup.url) {
+    [self loadTemplateFromURL:_lynxViewGroup.url initData:meta.initialData];
   }
 
   LOGI("loadTemplate preload:" << _enablePrePainting << " ,templateBundle:" << isTemplateBundleValid
@@ -542,7 +551,20 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
 
   _LogI(@"LynxTemplateRender loadTemplate url after process is %@", url);
   [weakSelf markTiming:[kTimingPrepareTemplateStart UTF8String] pipelineID:[@"" UTF8String]];
-  if (_lynxUIRenderer.uiOwner.uiContext.templateResourceFetcher) {
+  if (_lynxViewGroup != nil) {
+    _LogI(@"loadTemplateFromURL with lynxViewGroup.");
+    [_lynxViewGroup fetchTemplate:^(LynxTemplateBundle* bundle, NSError* error) {
+      if (!error) {
+        [weakSelf.devTool onLoadFromBundle:bundle withURL:url initData:data];
+        // TODO(zhoumingsong.smile) move attachToDebugBridge to dispatchViewDidStartLoading
+        // Due to lynxDevTool UI session limitations, we cannot do this yet
+        [self->_devTool attachDebugBridge:url];
+        [weakSelf loadTemplateBundle:bundle withURL:url initData:data];
+      } else {
+        [weakSelf onFetchTemplateError:error];
+      }
+    }];
+  } else if (_lynxUIRenderer.uiOwner.uiContext.templateResourceFetcher) {
     _LogI(@"loadTemplateFromURL with templateResourceFetcher.");
     LynxResourceRequest* request =
         [[LynxResourceRequest alloc] initWithUrl:url type:LynxResourceTypeTemplate];
@@ -1209,6 +1231,14 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
     [_context sendGlobalEvent:name withParams:finalParams];
   } else {
     _LogE(@"TemplateRender %p sendGlobalEvent %@ error, can't get LynxContext", self, name);
+  }
+
+  if (_context && _context.isEmbeddedModeOn) {
+    [self onLynxEventWithDictionary:@{
+      @"method" : kSendGlobalEvent,
+      @"name" : name,
+      @"params" : params
+    }];
   }
 }
 
@@ -2359,12 +2389,6 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
   }
 
   id<LynxEventTarget> target = (id<LynxEventTarget>)event.eventTarget;
-  if (target == nil) {
-    target = [_lynxUIRenderer.uiOwner findUIBySign:event.targetSign];
-  }
-  if (target == nil) {
-    return NO;
-  }
   LynxEventDetail* detail =
       [[LynxEventDetail alloc] initWithEvent:event
                                       target:(id<LynxEventTargetBase>)target
@@ -2511,6 +2535,7 @@ LYNX_NOT_IMPLEMENTED(-(instancetype)initWithCoder : (NSCoder*)aDecoder)
     builder.lynxBackgroundRuntimeOptions =
         [[LynxBackgroundRuntimeOptions alloc] initWithOptions:self->_runtimeOptions];
     [builder setThreadStrategyForRender:self->_threadStrategyForRendering];
+    builder.enableUnifiedPipeline = self->_enableUnifiedPipeline;
   };
 }
 

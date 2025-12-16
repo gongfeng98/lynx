@@ -16,7 +16,11 @@
 #import <Lynx/LynxUIRendererCreatorProtocol.h>
 #import <Lynx/LynxViewEnum.h>
 
-@interface LynxBaseConfigurator : NSObject
+@interface LynxBaseConfigurator : NSObject {
+ @protected
+  LynxThreadStrategyForRender _threadStrategy;
+  BOOL _hasThreadStrategySet;
+}
 
 @property(nonatomic, nullable) LynxConfig* config;
 @property(nonatomic, nullable) LynxGroup* group;
@@ -43,6 +47,8 @@
 @property(nonatomic, nonnull) id<LynxGenericResourceFetcher> genericResourceFetcher;
 @property(nonatomic, nonnull) id<LynxMediaResourceFetcher> mediaResourceFetcher;
 @property(nonatomic, nonnull) id<LynxTemplateResourceFetcher> templateResourceFetcher;
+// enable LynxMediaResourceFetcher::fetchUIImage
+@property(nonatomic, assign) BOOL enableFetchUIImage;
 
 /**
  * You can set a virtual screen size to lynxview by this way.

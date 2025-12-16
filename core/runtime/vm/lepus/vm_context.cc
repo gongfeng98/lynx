@@ -77,6 +77,9 @@ void VMContext::Initialize() {
 }
 
 bool VMContext::Execute() {
+  if (HasPreExecuteSuccess()) {
+    return true;
+  }
   ScriptingScope scope(this);
   return ExecuteBinaryInternal(nullptr);
 }
@@ -394,7 +397,7 @@ int32_t VMContext::CallFunction(Value* function, size_t argc, Value* ret) {
     }
     current_frame_ = &frame;
     CFunction cfunction = function->Function();
-    *ret = cfunction(this);
+    *ret = cfunction(this, GetParam(0), static_cast<int>(GetParamsSize()));
     heap_.top_ = frame.prev_frame_->register_;
     current_frame_ = frame.prev_frame_;
     if (current_exception_.has_value()) {
@@ -1602,7 +1605,6 @@ bool VMContext::MoveContextBundle(VMContextBundle& bundle) {
 
 void VMContext::RegisterCtxBuiltin(const tasm::ArchOption& option) {
 #ifndef LEPUS_PC
-  tasm::Utils::RegisterBuiltin(this);
   tasm::Renderer::RegisterBuiltin(this, option);
 #endif
   return;

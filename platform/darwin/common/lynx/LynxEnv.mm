@@ -15,11 +15,11 @@
 #import <Lynx/LynxService.h>
 #import <Lynx/LynxSubErrorCode.h>
 #import <Lynx/LynxTraceEvent.h>
-#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxTraceEventWrapper.h>
 #import <Lynx/LynxViewClient.h>
 #import <LynxBase/LynxLog.h>
 #import "LynxEnv+Internal.h"
+#import "LynxTraceEventDef.h"
 #if ENABLE_TRACE_PERFETTO
 #import <Lynx/LynxTraceController.h>
 #endif
@@ -137,6 +137,8 @@
 
 - (void)setLynxDebugEnabled:(BOOL)lynxDebugEnabled {
   [LynxService(LynxServiceDevToolProtocol) setLynxDebugPresetValue:lynxDebugEnabled];
+  lynx::tasm::LynxEnv::GetInstance().SetBoolLocalEnv([KEY_LYNX_DEBUG UTF8String],
+                                                     [self lynxDebugEnabled]);
   [self initDevToolEnv];
 }
 
@@ -188,18 +190,34 @@
 }
 
 - (void)setDevtoolEnv:(BOOL)value forKey:(NSString *)key {
+  if (![self lynxDebugEnabled]) {
+    _LogI(@"setDevtoolEnv, lynxDebugEnabled is NO");
+    return;
+  }
   [LynxDevToolUtils setDevtoolEnv:value forKey:key];
 }
 
 - (BOOL)getDevtoolEnv:(NSString *)key withDefaultValue:(BOOL)value {
+  if (![self lynxDebugEnabled]) {
+    _LogI(@"getDevtoolEnv, lynxDebugEnabled is NO, defaultValue is %@", value ? @"YES" : @"NO");
+    return value;
+  }
   return [LynxDevToolUtils getDevtoolEnv:key withDefaultValue:value];
 }
 
 - (void)setDevtoolEnv:(NSSet *)newGroupValues forGroup:(NSString *)groupKey {
+  if (![self lynxDebugEnabled]) {
+    _LogI(@"setDevtoolEnv group %@, lynxDebugEnabled is NO", groupKey);
+    return;
+  }
   [LynxDevToolUtils setDevtoolEnv:newGroupValues forGroup:groupKey];
 }
 
 - (NSSet *)getDevtoolEnvWithGroupName:(NSString *)groupKey {
+  if (![self lynxDebugEnabled]) {
+    _LogI(@"getDevtoolEnvWithGroupName %@, lynxDebugEnabled is NO", groupKey);
+    return nil;
+  }
   return [LynxDevToolUtils getDevtoolEnvWithGroupName:groupKey];
 }
 
@@ -210,6 +228,14 @@
 
 - (BOOL)devtoolEnabled {
   return [self getDevtoolEnv:SP_KEY_ENABLE_DEVTOOL withDefaultValue:NO];
+}
+
+- (BOOL)fspScreenshotEnabled {
+  return [self getDevtoolEnv:SP_KEY_ENABLE_FSP_SCREENSHOT withDefaultValue:NO];
+}
+
+- (void)setFspScreenshotEnabled:(BOOL)fspEnabled {
+  [self setDevtoolEnv:fspEnabled forKey:SP_KEY_ENABLE_FSP_SCREENSHOT];
 }
 
 - (BOOL)getEnableRadonCompatible

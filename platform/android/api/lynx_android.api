@@ -966,6 +966,7 @@ public class com::lynx::tasm::group::BitmapSize :  {
 }
 
 public class com::lynx::tasm::utils::BitmapUtils :  {
+  public static String com.lynx.tasm.utils.BitmapUtils.bitmapToFormattedBase64(Bitmap bitmap, int quality);
   public static String com.lynx.tasm.utils.BitmapUtils.bitmapToBase64WithQuality(Bitmap bitmap, int quality);
   public static String com.lynx.tasm.utils.BitmapUtils.bitmapToBase64(Bitmap bitmap, Bitmap.CompressFormat format, int quality, int flags);
 }
@@ -976,6 +977,10 @@ public class com::lynx::tasm::utils::BlurUtils :  {
   public static boolean com.lynx.tasm.utils.BlurUtils.removeEffect(View v);
   public static Bitmap com.lynx.tasm.utils.BlurUtils.blur(Context context, Bitmap bitmap, int width, int height, float radius, int sampling);
   public static void com.lynx.tasm.utils.BlurUtils.iterativeBoxBlur(Bitmap bitmap, int blurRadius);
+}
+
+public class com::lynx::tasm::behavior::ui::utils::BorderDrawingUtil :  {
+  public static void com.lynx.tasm.behavior.ui.utils.BorderDrawingUtil.drawRectangularBorders(Canvas canvas, Paint paint, Rect bounds, int[] borderWidths, int[] borderColors, @NonNull BorderStyle[] borderStyles);
 }
 
 public class com::lynx::tasm::behavior::ui::utils::BorderRadius :  {
@@ -1265,6 +1270,14 @@ public enum com::lynx::tasm::LynxSubErrorCode::Consumer {
   public com.lynx.tasm.LynxSubErrorCode.Consumer.Consumer(String value);
 }
 
+public class com::lynx::tasm::behavior::render::ContainerRenderer : ViewGroup, com.lynx.tasm.behavior.render.IRendererHost {
+  public Renderer com.lynx.tasm.behavior.render.ContainerRenderer.createRenderer(PlatformRendererContext platformRendererContext, int sign);
+  public void com.lynx.tasm.behavior.render.ContainerRenderer.setRenderer(Renderer renderer);
+  public Renderer com.lynx.tasm.behavior.render.ContainerRenderer.getRenderer();
+  public ViewGroup com.lynx.tasm.behavior.render.ContainerRenderer.getView();
+  public com.lynx.tasm.behavior.render.ContainerRenderer.ContainerRenderer(LynxContext context);
+}
+
 public class com::lynx::tasm::utils::ContextUtils :  {
   public static LynxContext com.lynx.tasm.utils.ContextUtils.toLynxContext(Context context);
   public static Activity com.lynx.tasm.utils.ContextUtils.getActivity(Context context);
@@ -1516,6 +1529,12 @@ public class com::lynx::tasm::EmbeddedMode :  {
   public final int com.lynx.tasm.EmbeddedMode.EMBEDDED_MODE_ALL EMBEDDED_MODE_ALL;
   public static boolean com.lynx.tasm.EmbeddedMode.isEnginePoolEnable(@EmbeddedMode.Mode int mode);
   public static boolean com.lynx.tasm.EmbeddedMode.isBaseModeEnable(@EmbeddedMode.Mode int mode);
+}
+
+public class com::lynx::tasm::performance::timing::EmbeddedTimingCollector :  {
+  public void com.lynx.tasm.performance.timing.EmbeddedTimingCollector.setObserver(WeakReference< IPerformanceObserver > observer);
+  public boolean com.lynx.tasm.performance.timing.EmbeddedTimingCollector.hasEmitTimingEvent();
+  public void com.lynx.tasm.performance.timing.EmbeddedTimingCollector.markTiming(String key, long usTimestamp);
 }
 
 public enum com::lynx::tasm::behavior::event::EventTarget::EnableStatus {
@@ -1847,7 +1866,7 @@ public class com::lynx::tasm::behavior::shadow::text::FontFamilySpan : MetricAff
 }
 
 public class com::lynx::tasm::fontface::FontSettingsKey :  {
-  public com.lynx.tasm.fontface.FontSettingsKey.FontSettingsKey(String variation, String feature, float textSize, String fontFamily);
+  public com.lynx.tasm.fontface.FontSettingsKey.FontSettingsKey(String variation, float textSize, String fontFamily);
   public boolean com.lynx.tasm.fontface.FontSettingsKey.equals(Object o);
   public int com.lynx.tasm.fontface.FontSettingsKey.hashCode();
 }
@@ -1880,6 +1899,7 @@ public class com::lynx::tasm::performance::fsp::FSPConfig :  {
   public int com.lynx.tasm.performance.fsp.FSPConfig.minContentFillPercentageX minContentFillPercentageX;
   public int com.lynx.tasm.performance.fsp.FSPConfig.minContentFillPercentageY minContentFillPercentageY;
   public int com.lynx.tasm.performance.fsp.FSPConfig.minContentFillPercentageTotalArea minContentFillPercentageTotalArea;
+  public int com.lynx.tasm.performance.fsp.FSPConfig.minContainerFillPercentageContainerArea minContainerFillPercentageContainerArea;
   public int com.lynx.tasm.performance.fsp.FSPConfig.acceptablePixelDiffPerSec acceptablePixelDiffPerSec;
   public int com.lynx.tasm.performance.fsp.FSPConfig.acceptableAreaDiffPerSec acceptableAreaDiffPerSec;
   public int com.lynx.tasm.performance.fsp.FSPConfig.minDiffIntervalMs minDiffIntervalMs;
@@ -1889,6 +1909,7 @@ public class com::lynx::tasm::performance::fsp::FSPConfig :  {
 }
 
 public class com::lynx::tasm::performance::fsp::FSPSnapshot :  {
+  public long com.lynx.tasm.performance.fsp.FSPSnapshot.traceCurrentTimestampUs traceCurrentTimestampUs;
   public com.lynx.tasm.performance.fsp.FSPSnapshot.FSPSnapshot(int containerWidth, int containerHeight, long lastChangeTimestampUs);
   public com.lynx.tasm.performance.fsp.FSPSnapshot.FSPSnapshot();
   public void com.lynx.tasm.performance.fsp.FSPSnapshot.fillContentToSnapshot(boolean isPresented, Rect rect, long firstPresentedTimestampUs);
@@ -1897,6 +1918,7 @@ public class com::lynx::tasm::performance::fsp::FSPSnapshot :  {
   public long com.lynx.tasm.performance.fsp.FSPSnapshot.getTotalPresentedContentArea();
   public void com.lynx.tasm.performance.fsp.FSPSnapshot.setTotalPresentedContentArea(long totalPresentedContentArea);
   public long com.lynx.tasm.performance.fsp.FSPSnapshot.getTotalContentArea();
+  public long com.lynx.tasm.performance.fsp.FSPSnapshot.getContainerArea();
   public void com.lynx.tasm.performance.fsp.FSPSnapshot.setTotalContentArea(long totalContentArea);
   public long com.lynx.tasm.performance.fsp.FSPSnapshot.getLastChangeTimestampUs();
   public void com.lynx.tasm.performance.fsp.FSPSnapshot.setLastChangeTimestampUs(long lastChangeTimestampUs);
@@ -1906,10 +1928,13 @@ public class com::lynx::tasm::performance::fsp::FSPSnapshot :  {
   public void com.lynx.tasm.performance.fsp.FSPSnapshot.setContentFillPercentageY(int contentFillPercentageY);
   public int com.lynx.tasm.performance.fsp.FSPSnapshot.getContentFillPercentageTotalArea();
   public void com.lynx.tasm.performance.fsp.FSPSnapshot.setContentFillPercentageTotalArea(int contentFillPercentageTotalArea);
+  public int com.lynx.tasm.performance.fsp.FSPSnapshot.getContainerFillPercentageContainerArea();
+  public void com.lynx.tasm.performance.fsp.FSPSnapshot.setContainerFillPercentageContainerArea(int containerFillPercentageContainerArea);
   public BitSet com.lynx.tasm.performance.fsp.FSPSnapshot.getXProjections();
   public BitSet com.lynx.tasm.performance.fsp.FSPSnapshot.getYProjections();
   public BitSet com.lynx.tasm.performance.fsp.FSPSnapshot.getXTotalContentProjections();
   public BitSet com.lynx.tasm.performance.fsp.FSPSnapshot.getYTotalContentProjections();
+  public Map< String, String > com.lynx.tasm.performance.fsp.FSPSnapshot.toMap();
 }
 
 public class com::lynx::tasm::performance::fsp::FSPTracer :  {
@@ -2252,6 +2277,8 @@ public interface com::lynx::tasm::service::ILynxDevToolService {
   public void com.lynx.tasm.service.ILynxDevToolService.setLynxDebugPresetValue(boolean value);
   public boolean com.lynx.tasm.service.ILynxDevToolService.getLogBoxPresetValue();
   public void com.lynx.tasm.service.ILynxDevToolService.setLogBoxPresetValue(boolean value);
+  public boolean com.lynx.tasm.service.ILynxDevToolService.getLoadJsBridge();
+  public void com.lynx.tasm.service.ILynxDevToolService.setLoadJsBridge(boolean value);
 }
 
 public interface com::lynx::tasm::ILynxEngine {
@@ -2857,6 +2884,9 @@ public class com::lynx::tasm::animation::InterpolatorFactory :  {
 public interface com::lynx::tasm::behavior::IPaintingContext {
   public void com.lynx.tasm.behavior.IPaintingContext.destroy();
   public long com.lynx.tasm.behavior.IPaintingContext.getNativePaintingContextPtr();
+  public PointF com.lynx.tasm.behavior.IPaintingContext.convertPointInViewToScreen(int sign, PointF point);
+  public int com.lynx.tasm.behavior.IPaintingContext.getTargetWidth(int sign);
+  public int com.lynx.tasm.behavior.IPaintingContext.getTargetHeight(int sign);
 }
 
 public interface com::lynx::tasm::performance::IPerformanceObserver {
@@ -2875,6 +2905,13 @@ public interface com::lynx::tasm::behavior::ui::IProcessViewInfoHook {
   public void com.lynx.tasm.behavior.ui.IProcessViewInfoHook.afterProcessViewInfo(ViewInfo info);
   public void com.lynx.tasm.behavior.ui.IProcessViewInfoHook.processLayoutChildren();
   public void com.lynx.tasm.behavior.ui.IProcessViewInfoHook.processMeasureChildren();
+}
+
+public interface com::lynx::tasm::behavior::render::IRendererHost {
+  public void com.lynx.tasm.behavior.render.IRendererHost.setRenderer(Renderer renderer);
+  public Renderer com.lynx.tasm.behavior.render.IRendererHost.getRenderer();
+  public ViewGroup com.lynx.tasm.behavior.render.IRendererHost.getView();
+  public Renderer com.lynx.tasm.behavior.render.IRendererHost.createRenderer(PlatformRendererContext platformRendererContext, int sign);
 }
 
 public interface com::lynx::tasm::behavior::ui::scroll::IScrollSticky {
@@ -2899,6 +2936,7 @@ public interface com::lynx::tasm::performance::timing::ITimingCollector {
   public void com.lynx.tasm.performance.timing.ITimingCollector.markHostPlatformTiming(final String key);
   public void com.lynx.tasm.performance.timing.ITimingCollector.markPaintEndTimingIfNeeded();
   public void com.lynx.tasm.performance.timing.ITimingCollector.setNeedMarkPaintEndTiming(String pipelineId);
+  public JavaOnlyArray com.lynx.tasm.performance.timing.ITimingCollector.getPendingPaintEndPipelineIds();
 }
 
 public interface com::lynx::tasm::IUIRendererCreator {
@@ -3720,6 +3758,7 @@ public interface com::lynx::devtoolwrapper::LynxBaseInspectorOwner {
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.onTemplateAssemblerCreated(long ptr);
   public long com.lynx.devtoolwrapper.LynxBaseInspectorOwner.onBackgroundRuntimeCreated(String groupName);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.reload(boolean ignoreCache);
+  public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.reload(boolean ignoreCache, String templateBin, boolean fromTemplateFragments, int templateSize);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.reload(boolean ignoreCache, String templateBin, boolean fromTemplateFragments, int templateSize, String reloadUrl);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.navigate(String url);
   public void com.lynx.devtoolwrapper.LynxBaseInspectorOwner.stopCasting();
@@ -4896,6 +4935,8 @@ public class com::lynx::tasm::LynxEnv :  {
   public boolean com.lynx.tasm.LynxEnv.enableLazyInitA11y();
   public boolean com.lynx.tasm.LynxEnv.enableFSP();
   public HashMap< String, String > com.lynx.tasm.LynxEnv.getFSPConfig();
+  public boolean com.lynx.tasm.LynxEnv.isFspScreenshotEnabled();
+  public void com.lynx.tasm.LynxEnv.enableFspScreenshot(boolean value);
   public void com.lynx.tasm.LynxEnv.initNativeUIThread();
   public boolean com.lynx.tasm.LynxEnv.tryToLoadV8Bridge(boolean unused);
   public void com.lynx.tasm.LynxEnv.forceDisableQuickJsCache();
@@ -4954,6 +4995,7 @@ public enum com::lynx::tasm::LynxEnvKey {
   public  final String com.lynx.tasm.LynxEnvKey.SP_KEY_ENABLE_DEVTOOL SP_KEY_ENABLE_DEVTOOL;
   public  final String com.lynx.tasm.LynxEnvKey.SP_KEY_ENABLE_LOGBOX SP_KEY_ENABLE_LOGBOX;
   public  final String com.lynx.tasm.LynxEnvKey.SP_KEY_ENABLE_HIGHLIGHT_TOUCH SP_KEY_ENABLE_HIGHLIGHT_TOUCH;
+  public  final String com.lynx.tasm.LynxEnvKey.SP_KEY_ENABLE_FSP_SCREENSHOT SP_KEY_ENABLE_FSP_SCREENSHOT;
   public  final String com.lynx.tasm.LynxEnvKey.SP_KEY_SHOW_DEVTOOL_BADGE SP_KEY_SHOW_DEVTOOL_BADGE;
   public  final String com.lynx.tasm.LynxEnvKey.SP_KEY_ENABLE_QUICKJS_CACHE SP_KEY_ENABLE_QUICKJS_CACHE;
   public  final String com.lynx.tasm.LynxEnvKey.SP_KEY_ENABLE_V8 SP_KEY_ENABLE_V8;
@@ -5305,7 +5347,7 @@ public class com::lynx::tasm::behavior::ui::frame::LynxFrameView : com.lynx.tasm
   public com.lynx.tasm.behavior.ui.frame.LynxFrameView.LynxFrameView(Context context, AttributeSet attrs);
   public LynxView com.lynx.tasm.behavior.ui.frame.LynxFrameView.getRootView();
   public void com.lynx.tasm.behavior.ui.frame.LynxFrameView.updateViewport(int widthMeasureSpec, int heightMeasureSpec);
-  public void com.lynx.tasm.behavior.ui.frame.LynxFrameView.updateMetaData(LynxUpdateMeta meta);
+  public void com.lynx.tasm.behavior.ui.frame.LynxFrameView.updateMetaData(TemplateData initData, TemplateData globalProps);
   public void com.lynx.tasm.behavior.ui.frame.LynxFrameView.setUrl(String url);
   public void com.lynx.tasm.behavior.ui.frame.LynxFrameView.runOnTasmThread(Runnable runnable);
   public void com.lynx.tasm.behavior.ui.frame.LynxFrameView.setAttachLynxPageUICallback(attachLynxPageUICallback callback);
@@ -6648,6 +6690,7 @@ public class com::lynx::tasm::behavior::ui::utils::LynxUIHelper :  {
   public static int com.lynx.tasm.behavior.ui.utils.LynxUIHelper.px2dip(Context context, float pxValue);
   public static LynxBaseUI com.lynx.tasm.behavior.ui.utils.LynxUIHelper.getRelativeUI(final LynxBaseUI ui, String relativeID);
   public static RectF com.lynx.tasm.behavior.ui.utils.LynxUIHelper.getRelativePositionInfo(final LynxBaseUI ui, ReadableMap params);
+  public static PointF com.lynx.tasm.behavior.ui.utils.LynxUIHelper.convertPointInViewToScreen(View view, PointF point);
 }
 
 public interface com::lynx::tasm::behavior::LynxUIMethod {
@@ -6962,6 +7005,7 @@ public class com::lynx::tasm::LynxView : com.lynx.tasm.behavior.ui.UIBody.UIBody
   public void com.lynx.tasm.LynxView.updateGlobalProps(@NonNull TemplateData props);
   public void com.lynx.tasm.LynxView.updateData(Map< String, Object > data);
   public void com.lynx.tasm.LynxView.updateData(Map< String, Object > data, String processorName);
+  public void com.lynx.tasm.LynxView.updateViewport(int widthMeasureSpec, int heightMeasureSpec, boolean needLayout);
   public void com.lynx.tasm.LynxView.updateViewport(int widthMeasureSpec, int heightMeasureSpec);
   public void com.lynx.tasm.LynxView.updateFontScale(float scale);
   public void com.lynx.tasm.LynxView.destroy();
@@ -7069,7 +7113,6 @@ public class com::lynx::tasm::LynxViewBuilder : LynxBaseConfigurator< LynxViewBu
   public LynxViewBuilder com.lynx.tasm.LynxViewBuilder.setLynxViewConfig(Map< String, String > map);
   public Map< String, String > com.lynx.tasm.LynxViewBuilder.getLynxViewConfig();
   public LynxViewBuilder com.lynx.tasm.LynxViewBuilder.setLynxBackgroundRuntime(LynxBackgroundRuntime runtime);
-  public LynxViewBuilder com.lynx.tasm.LynxViewBuilder.setTemplateBundle(TemplateBundle templateBundle);
   public BehaviorRegistry com.lynx.tasm.LynxViewBuilder.getBehaviorRegistry();
   public boolean com.lynx.tasm.LynxViewBuilder.isEnableAutoExpose();
   public Float com.lynx.tasm.LynxViewBuilder.getDensity();
@@ -7298,8 +7341,10 @@ public class com::lynx::tasm::utils::MatrixMathUtils :  {
 
 public class com::lynx::tasm::performance::fsp::MeaningfulContentSnapshot :  {
   public com.lynx.tasm.performance.fsp.MeaningfulContentSnapshot.MeaningfulContentSnapshot(int containerWidth, int containerHeight, List< MeaningfulPaintingArea > meaningfulPaintingAreas);
+  public void com.lynx.tasm.performance.fsp.MeaningfulContentSnapshot.takeScreenshot(ILynxUIRenderer uiRenderer);
   public int com.lynx.tasm.performance.fsp.MeaningfulContentSnapshot.getContainerWidth();
   public int com.lynx.tasm.performance.fsp.MeaningfulContentSnapshot.getContainerHeight();
+  public long com.lynx.tasm.performance.fsp.MeaningfulContentSnapshot.getTraceCurrentTimestampUs();
   public List< MeaningfulPaintingArea > com.lynx.tasm.performance.fsp.MeaningfulContentSnapshot.getMeaningfulPaintingAreas();
 }
 
@@ -7447,9 +7492,10 @@ public class com::lynx::tasm::performance::performanceobserver::MetricFspEntry :
   public PerformanceMetric com.lynx.tasm.performance.performanceobserver.MetricFspEntry.lynxFsp lynxFsp;
   public PerformanceMetric com.lynx.tasm.performance.performanceobserver.MetricFspEntry.totalFsp totalFsp;
   public String com.lynx.tasm.performance.performanceobserver.MetricFspEntry.fspStatus fspStatus;
-  public double com.lynx.tasm.performance.performanceobserver.MetricFspEntry.contentFillRatioX contentFillRatioX;
-  public double com.lynx.tasm.performance.performanceobserver.MetricFspEntry.contentFillRatioY contentFillRatioY;
-  public double com.lynx.tasm.performance.performanceobserver.MetricFspEntry.contentFillRatioTotalArea contentFillRatioTotalArea;
+  public double com.lynx.tasm.performance.performanceobserver.MetricFspEntry.contentFillPercentageX contentFillPercentageX;
+  public double com.lynx.tasm.performance.performanceobserver.MetricFspEntry.contentFillPercentageY contentFillPercentageY;
+  public double com.lynx.tasm.performance.performanceobserver.MetricFspEntry.contentFillPercentageTotalArea contentFillPercentageTotalArea;
+  public double com.lynx.tasm.performance.performanceobserver.MetricFspEntry.containerFillPercentageContainerArea containerFillPercentageContainerArea;
   public com.lynx.tasm.performance.performanceobserver.MetricFspEntry.MetricFspEntry(HashMap< String, Object > props);
 }
 
@@ -7541,6 +7587,9 @@ public class com::lynx::tasm::behavior::render::NativePaintingContext : com.lynx
   public com.lynx.tasm.behavior.render.NativePaintingContext.NativePaintingContext(UIBody.UIBodyView rootView, LynxContext context);
   public void com.lynx.tasm.behavior.render.NativePaintingContext.destroy();
   public long com.lynx.tasm.behavior.render.NativePaintingContext.getNativePaintingContextPtr();
+  public PointF com.lynx.tasm.behavior.render.NativePaintingContext.convertPointInViewToScreen(int sign, PointF point);
+  public int com.lynx.tasm.behavior.render.NativePaintingContext.getTargetWidth(int sign);
+  public int com.lynx.tasm.behavior.render.NativePaintingContext.getTargetHeight(int sign);
   public void com.lynx.tasm.behavior.render.NativePaintingContext.attachUIBodyView(UIBody.UIBodyView view);
 }
 
@@ -7881,6 +7930,9 @@ public class com::lynx::tasm::behavior::PaintingContext : com.lynx.tasm.behavior
   public com.lynx.tasm.behavior.PaintingContext.PaintingContext(LynxUIOwner uiOwner, int threadStrategy);
   public void com.lynx.tasm.behavior.PaintingContext.destroy();
   public long com.lynx.tasm.behavior.PaintingContext.getNativePaintingContextPtr();
+  public PointF com.lynx.tasm.behavior.PaintingContext.convertPointInViewToScreen(int sign, PointF point);
+  public int com.lynx.tasm.behavior.PaintingContext.getTargetWidth(int sign);
+  public int com.lynx.tasm.behavior.PaintingContext.getTargetHeight(int sign);
   public void com.lynx.tasm.behavior.PaintingContext.rebuildViewTree();
   public void com.lynx.tasm.behavior.PaintingContext.updateLayout(int sign, float x, float y, float width, float height, float paddingLeft, float paddingTop, float paddingRight, float paddingBottom, float marginLeft, float marginTop, float marginRight, float marginBottom, float borderLeftWidth, float borderTopWidth, float borderRightWidth, float borderBottomWidth, float[] bounds, float[] sticky, float maxHeight, int nodeIndex);
   public void com.lynx.tasm.behavior.PaintingContext.updateProps(int sign, boolean tendToFlatten, PropBundle bundle, ReadableMapBuffer styles);
@@ -7945,12 +7997,9 @@ public interface com::lynx::tasm::behavior::PatchFinishListener {
 }
 
 public class com::lynx::tasm::performance::PerformanceController : com.lynx.tasm.performance.memory.IMemoryMonitor, com.lynx.tasm.performance.timing.ITimingCollector {
-  public static boolean com.lynx.tasm.performance.PerformanceController.isMemoryMonitorEnabled();
-  public static long com.lynx.tasm.performance.PerformanceController.getMemoryAcquisitionDelaySec();
-  public static long com.lynx.tasm.performance.PerformanceController.currentSystemTimeMicroseconds();
+  public void com.lynx.tasm.performance.PerformanceController.setEmbeddedMode(boolean useEmbeddedMode);
+  public boolean com.lynx.tasm.performance.PerformanceController.isEmbeddedMode();
   public void com.lynx.tasm.performance.PerformanceController.setPerformanceObserver(IPerformanceObserver observer);
-  public boolean com.lynx.tasm.performance.PerformanceController.isEnableController();
-  public void com.lynx.tasm.performance.PerformanceController.setEnableController(boolean enableController);
   public void com.lynx.tasm.performance.PerformanceController.setInstanceId(int instanceId);
   public void com.lynx.tasm.performance.PerformanceController.allocateMemory(IMemoryRecordBuilder builder);
   public void com.lynx.tasm.performance.PerformanceController.deallocateMemory(IMemoryRecordBuilder builder);
@@ -7966,6 +8015,9 @@ public class com::lynx::tasm::performance::PerformanceController : com.lynx.tasm
   public void com.lynx.tasm.performance.PerformanceController.setFSPTimingInfo(long usTimestamp, Map< String, String > detail);
   public void com.lynx.tasm.performance.PerformanceController.setExtraTiming(TimingHandler.ExtraTimingInfo extraTiming);
   public JavaOnlyArray com.lynx.tasm.performance.PerformanceController.getPendingPaintEndPipelineIds();
+  public static boolean com.lynx.tasm.performance.PerformanceController.isMemoryMonitorEnabled();
+  public static long com.lynx.tasm.performance.PerformanceController.getMemoryAcquisitionDelaySec();
+  public static long com.lynx.tasm.performance.PerformanceController.currentSystemTimeMicroseconds();
 }
 
 public class com::lynx::tasm::performance::performanceobserver::PerformanceEntry :  {
@@ -8058,10 +8110,13 @@ public class com::lynx::tasm::behavior::render::PlatformRendererContext : com.ly
   public com.lynx.tasm.behavior.render.PlatformRendererContext.PlatformRendererContext(@Nullable UIBody.UIBodyView rootView, LynxContext context);
   public void com.lynx.tasm.behavior.render.PlatformRendererContext.setRootView(@NonNull UIBody.UIBodyView rootView);
   public long com.lynx.tasm.behavior.render.PlatformRendererContext.getNativePtr();
+  public int com.lynx.tasm.behavior.render.PlatformRendererContext.getTargetWidth(int sign);
+  public int com.lynx.tasm.behavior.render.PlatformRendererContext.getTargetHeight(int sign);
   public void com.lynx.tasm.behavior.render.PlatformRendererContext.createPlatformRenderer(int sign, int type);
   public void com.lynx.tasm.behavior.render.PlatformRendererContext.destroyPlatformRenderer(int sign);
   public void com.lynx.tasm.behavior.render.PlatformRendererContext.insertPlatformRenderer(int parent, int child, int index);
   public void com.lynx.tasm.behavior.render.PlatformRendererContext.invalidatePlatformRenderer(int sign);
+  public void com.lynx.tasm.behavior.render.PlatformRendererContext.updatePlatformRendererFrame(int sign, int left, int top, int width, int height, int dx, int dy);
   public LynxImageManager com.lynx.tasm.behavior.render.PlatformRendererContext.getImage(int sign);
   public void com.lynx.tasm.behavior.render.PlatformRendererContext.createImage(int sign, String src, int width, int height);
   public void com.lynx.tasm.behavior.render.PlatformRendererContext.destroyImage(int sign);
@@ -8081,6 +8136,7 @@ public class com::lynx::tasm::behavior::render::PlatformRendererContext::Platfor
   public final int com.lynx.tasm.behavior.render.PlatformRendererContext.PlatformRendererType.kScroll kScroll;
   public final int com.lynx.tasm.behavior.render.PlatformRendererContext.PlatformRendererType.kText kText;
   public final int com.lynx.tasm.behavior.render.PlatformRendererContext.PlatformRendererType.kImage kImage;
+  public final int com.lynx.tasm.behavior.render.PlatformRendererContext.PlatformRendererType.kList kList;
 }
 
 public class com::lynx::tasm::event::LynxTouchEvent::Point :  {
@@ -8757,6 +8813,19 @@ public class com::lynx::tasm::performance::performanceobserver::ReloadBundleEntr
   public double com.lynx.tasm.performance.performanceobserver.ReloadBundleEntry.ffiStart ffiStart;
   public double com.lynx.tasm.performance.performanceobserver.ReloadBundleEntry.ffiEnd ffiEnd;
   public com.lynx.tasm.performance.performanceobserver.ReloadBundleEntry.ReloadBundleEntry(HashMap< String, Object > props);
+}
+
+public class com::lynx::tasm::behavior::render::Renderer :  {
+  public void com.lynx.tasm.behavior.render.Renderer.setLynxFrame(int l, int t, int r, int b, int dx, int dy);
+  public Point com.lynx.tasm.behavior.render.Renderer.getRenderOffset();
+  public void com.lynx.tasm.behavior.render.Renderer.setLynxFrame(int l, int t, int r, int b);
+  public Rect com.lynx.tasm.behavior.render.Renderer.getLynxFrame();
+  public com.lynx.tasm.behavior.render.Renderer.Renderer(@NonNull PlatformRendererContext platformRendererContext, int sign);
+  public void com.lynx.tasm.behavior.render.Renderer.onLayout(boolean changed, int l, int t, int r, int b);
+  public void com.lynx.tasm.behavior.render.Renderer.onDraw(Canvas canvas);
+  public void com.lynx.tasm.behavior.render.Renderer.beforeDrawChild(Canvas canvas, View child);
+  public void com.lynx.tasm.behavior.render.Renderer.afterDrawChild(Canvas canvas, View child);
+  public void com.lynx.tasm.behavior.render.Renderer.afterDispatchDraw(Canvas canvas);
 }
 
 public class abstract com::lynx::tasm::rendernode::compat::RenderNodeCompat :  {
@@ -9714,6 +9783,7 @@ public class com::lynx::tasm::performance::timing::TimingConstants :  {
   public final String com.lynx.tasm.performance.timing.TimingConstants.VERIFY_TASM_START VERIFY_TASM_START;
   public final String com.lynx.tasm.performance.timing.TimingConstants.VERIFY_TASM_END VERIFY_TASM_END;
   public final String com.lynx.tasm.performance.timing.TimingConstants.FFI_START FFI_START;
+  public final String com.lynx.tasm.performance.timing.TimingConstants.PAINT_END PAINT_END;
   public final String com.lynx.tasm.performance.timing.TimingConstants.HOST_PLATFORM_MEASURE_START HOST_PLATFORM_MEASURE_START;
   public final String com.lynx.tasm.performance.timing.TimingConstants.HOST_PLATFORM_MEASURE_END HOST_PLATFORM_MEASURE_END;
   public final String com.lynx.tasm.performance.timing.TimingConstants.HOST_PLATFORM_LAYOUT_START HOST_PLATFORM_LAYOUT_START;
@@ -9908,14 +9978,22 @@ public class com::lynx::tasm::base::trace::TraceEventDef :  {
   public final String com.lynx.tasm.base.trace.TraceEventDef.EXCEPTION EXCEPTION;
   public final String com.lynx.tasm.base.trace.TraceEventDef.WIDTH_MEASURE_SPEC WIDTH_MEASURE_SPEC;
   public final String com.lynx.tasm.base.trace.TraceEventDef.HEIGHT_MEASURE_SPEC HEIGHT_MEASURE_SPEC;
+  public final String com.lynx.tasm.base.trace.TraceEventDef.NEED_LAYOUT NEED_LAYOUT;
   public final String com.lynx.tasm.base.trace.TraceEventDef.PARAMS PARAMS;
   public final String com.lynx.tasm.base.trace.TraceEventDef.PIPELINE_IDS PIPELINE_IDS;
+  public final String com.lynx.tasm.base.trace.TraceEventDef.DUMP_UI_TREE_LAYOUT DUMP_UI_TREE_LAYOUT;
   public final String com.lynx.tasm.base.trace.TraceEventDef.PIPELINE_ID PIPELINE_ID;
   public final String com.lynx.tasm.base.trace.TraceEventDef.TIMING_KEY TIMING_KEY;
   public final String com.lynx.tasm.base.trace.TraceEventDef.TIMING_TIMESTAMP TIMING_TIMESTAMP;
   public final String com.lynx.tasm.base.trace.TraceEventDef.TIMING_KEY_PAINT_END TIMING_KEY_PAINT_END;
   public final String com.lynx.tasm.base.trace.TraceEventDef.MARK_TIMING MARK_TIMING;
   public final String com.lynx.tasm.base.trace.TraceEventDef.MARK_HOST_PLATFORM_TIMING MARK_HOST_PLATFORM_TIMING;
+  public final String com.lynx.tasm.base.trace.TraceEventDef.CATEGORY_DEFAULT CATEGORY_DEFAULT;
+  public final String com.lynx.tasm.base.trace.TraceEventDef.FSP_SNAPSHOT_BASE_64_BITMAP FSP_SNAPSHOT_BASE_64_BITMAP;
+  public final String com.lynx.tasm.base.trace.TraceEventDef.FSP_CONFIG_PARSE FSP_CONFIG_PARSE;
+  public final String com.lynx.tasm.base.trace.TraceEventDef.FSP_TRACER_ON_VALUABLE_SNAPSHOT FSP_TRACER_ON_VALUABLE_SNAPSHOT;
+  public final String com.lynx.tasm.base.trace.TraceEventDef.FSP_TRACER_SNAPSHOT_STABLE FSP_TRACER_SNAPSHOT_STABLE;
+  public final String com.lynx.tasm.base.trace.TraceEventDef.FSP_TIMING_MARK_FSP_END FSP_TIMING_MARK_FSP_END;
 }
 
 public class com::lynx::tasm::behavior::ui::utils::TransformOrigin :  {
@@ -10080,9 +10158,11 @@ public class com::lynx::tasm::behavior::ui::UIBody : com.lynx.tasm.behavior.ui.U
   public void com.lynx.tasm.behavior.ui.UIBody.setChildrenLynxPageUI(HashMap< String, EventTarget > childrenLynxPageUI);
 }
 
-public class com::lynx::tasm::behavior::ui::UIBody::UIBodyView : FrameLayout, com.lynx.tasm.behavior.ui.IDrawChildHook.IDrawChildHookBinding {
-  public int com.lynx.tasm.behavior.ui.UIBody.UIBodyView.mSign mSign;
-  public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.setPlatformRendererContext(PlatformRendererContext context);
+public class com::lynx::tasm::behavior::ui::UIBody::UIBodyView : FrameLayout, com.lynx.tasm.behavior.ui.IDrawChildHook.IDrawChildHookBinding, com.lynx.tasm.behavior.render.IRendererHost {
+  public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.setRenderer(Renderer renderer);
+  public Renderer com.lynx.tasm.behavior.ui.UIBody.UIBodyView.getRenderer();
+  public ViewGroup com.lynx.tasm.behavior.ui.UIBody.UIBodyView.getView();
+  public Renderer com.lynx.tasm.behavior.ui.UIBody.UIBodyView.createRenderer(PlatformRendererContext context, int sign);
   public com.lynx.tasm.behavior.ui.UIBody.UIBodyView.UIBodyView(Context context);
   public com.lynx.tasm.behavior.ui.UIBody.UIBodyView.UIBodyView(Context context, AttributeSet attrs);
   public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.cacheLayoutInfo(int width, int height);
@@ -10092,6 +10172,7 @@ public class com::lynx::tasm::behavior::ui::UIBody::UIBodyView : FrameLayout, co
   public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.registerViewAccordingToNodeIndex(int nodeIndex, View view);
   public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.registerImageAccordingToNodeIndex(int nodeIndex, LynxImageManager image);
   public LynxImageManager com.lynx.tasm.behavior.ui.UIBody.UIBodyView.obtainImageAccordingToNodeIndex(int nodeIndex);
+  public LynxImageManager com.lynx.tasm.behavior.ui.UIBody.UIBodyView.peekImageAccordingToNodeIndex(int nodeIndex);
   public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.clearNodeIndexImageMap();
   public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.markNeedRemoveExistingViews();
   public void com.lynx.tasm.behavior.ui.UIBody.UIBodyView.removeExistingViews();
@@ -10170,6 +10251,8 @@ public class com::lynx::tasm::behavior::ui::frame::UIFrame : com::lynx::tasm::be
   public void com.lynx.tasm.behavior.ui.frame.UIFrame.updateLayout(int left, int top, int width, int height, int paddingLeft, int paddingTop, int paddingRight, int paddingBottom, int marginLeft, int marginTop, int marginRight, int marginBottom, int borderLeftWidth, int borderTopWidth, int borderRightWidth, int borderBottomWidth, Rect bound);
   public void com.lynx.tasm.behavior.ui.frame.UIFrame.setData(ReadableMap value);
   public void com.lynx.tasm.behavior.ui.frame.UIFrame.setSrc(String value);
+  public void com.lynx.tasm.behavior.ui.frame.UIFrame.setGlobalProps(ReadableMap value);
+  public void com.lynx.tasm.behavior.ui.frame.UIFrame.onPropsUpdated();
 }
 
 public class abstract com::lynx::tasm::behavior::ui::UIGroup : com.lynx.tasm.behavior.ui.LynxUI< T >, com.lynx.tasm.behavior.ui.UIParent, com.lynx.tasm.behavior.ui.IDrawChildHook {
@@ -10426,7 +10509,7 @@ public class com::lynx::tasm::behavior::ui::list::container::UIListContainer : c
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.setBatchRenderStrategy(int batchRenderStrategy);
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.setDiffInfo(ReadableMap listContainerInfo);
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.setEnableListSticky(boolean value);
-  public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.setStickyOffset(Dynamic value);
+  public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.setStickyOffset(float value);
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.setEnableFadeInAnimation(boolean value);
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.setUpdateAnimationFadeInDuration(int value);
   public void com.lynx.tasm.behavior.ui.list.container.UIListContainer.setEnableRecycleStickyItem(boolean value);

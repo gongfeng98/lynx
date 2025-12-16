@@ -44,6 +44,7 @@
 #include "core/renderer/dom/fiber/wrapper_element.h"
 #include "core/renderer/dom/fragment/fragment.h"
 #include "core/renderer/dom/list_component_info.h"
+#include "core/renderer/dom/style_resolver.h"
 #include "core/renderer/dom/vdom/radon/node_select_options.h"
 #include "core/renderer/dom/vdom/radon/node_selector.h"
 #include "core/renderer/page_proxy.h"
@@ -206,7 +207,7 @@ void FiberElement::AttachToElementManager(
 }
 
 void FiberElement::OnNodeAdded(FiberElement *child) {
-  if (is_inline_element() && child != nullptr) {
+  if (is_inline_element() && child != nullptr && !is_component()) {
     child->ConvertToInlineElement();
   }
 
@@ -276,13 +277,12 @@ FiberElement::GetParentInheritedProperty() {
   return real_parent->GetInheritedProperty();
 }
 
-bool FiberElement::NeedFullFlushPath(
-    const std::pair<CSSPropertyID, tasm::CSSValue> &style) {
-  return style.second.IsEmpty() || LayoutProperty::IsLayoutOnly(style.first) ||
-         LayoutProperty::IsLayoutWanted(style.first) ||
-         starlight::CSSStyleUtils::IsLayoutRelatedTransform(style) ||
-         style.first == kPropertyIDColor || style.first == kPropertyIDFilter ||
-         style.first == kPropertyIDBackgroundPosition;
+bool FiberElement::NeedFullFlushPath(CSSPropertyID id, const CSSValue &value) {
+  return value.IsEmpty() || LayoutProperty::IsLayoutOnly(id) ||
+         LayoutProperty::IsLayoutWanted(id) ||
+         starlight::CSSStyleUtils::IsLayoutRelatedTransform(id, value) ||
+         id == kPropertyIDColor || id == kPropertyIDFilter ||
+         id == kPropertyIDBackgroundPosition;
 }
 
 void FiberElement::ResolveParentComponentElement() const {
@@ -454,6 +454,11 @@ void FiberElement::SetStyleObjects(
   style_objects_ = std::move(style_objects);
 
   MarkDirty(kDirtyForceUpdate | kDirtyStyleObjects);
+}
+
+void FiberElement::UpdateSimpleStyles(tasm::StyleMap &&style_map) {
+  parsed_styles_map_ = std::move(style_map);
+  UpdateSimpleStyles(parsed_styles_map_);
 }
 
 void FiberElement::UpdateSimpleStyles(const tasm::StyleMap &style_map) {
@@ -689,7 +694,10 @@ void FiberElement::RemovedFrom(FiberElement *insertion_point) {
       return;
     }
 
-    if (!action_param_list_.empty()) {
+    // If EnableFragmentLayerRender(), we need to handle the removal and
+    // insertion of descendant nodes with z-index or fixed in Fragment, so
+    // should not check the action_param_list_ here.
+    if (!action_param_list_.empty() && !EnableFragmentLayerRender()) {
       auto iter = action_param_list_.begin();
       while (iter != action_param_list_.end()) {
         if (iter->type_ == Action::kRemoveIntergenerationAct ||
@@ -705,7 +713,11 @@ void FiberElement::RemovedFrom(FiberElement *insertion_point) {
     }
   }
 
-  if ((parent() != insertion_point) && (ZIndex() != 0 || is_fixed_)) {
+  // If EnableFragmentLayerRender(), we need to handle the removal and insertion
+  // of descendant nodes with z-index or fixed in Fragment, so should not check
+  // the action_param_list_ here.
+  if ((parent() != insertion_point) && (ZIndex() != 0 || is_fixed_) &&
+      !EnableFragmentLayerRender()) {
     insertion_point->action_param_list_.emplace_back(
         Action::kRemoveIntergenerationAct, insertion_point,
         fml::RefPtr<FiberElement>(this), 0, nullptr, is_fixed_);
@@ -1041,6 +1053,24 @@ void FiberElement::HandleBeforeFlushActionsTask(
     parallel_before_flush_action_tasks_->emplace_back(std::move(operation));
   } else {
     operation();
+  }
+}
+
+void FiberElement::ResolveSimpleStyles() {
+  if (dirty_ & kDirtyStyleObjects) {
+    TRACE_EVENT(LYNX_TRACE_CATEGORY, "FiberElement::HandleStyleObjects");
+    if (element_manager_->EnablePropertyBasedSimpleStyle()) {
+      StyleResolver::ResolveStyleObjectsBasedOnExistingMap(
+          parsed_styles_map_, style_objects_ ? style_objects_.get() : nullptr,
+          this);
+    } else {
+      StyleResolver::ResolveStyleObjects(
+          last_style_objects_ ? last_style_objects_.get() : nullptr,
+          style_objects_ ? style_objects_.get() : nullptr, this);
+    }
+
+    // Animation and Direction should be handled here
+    dirty_ &= ~kDirtyStyleObjects;
   }
 }
 
@@ -1483,13 +1513,8 @@ ParallelFlushReturn FiberElement::PrepareForCreateOrUpdate() {
     MarkDirtyLite(kDirtyPropagateInherited);
   }
 
-  if (dirty_ & kDirtyStyleObjects) {
-    TRACE_EVENT(LYNX_TRACE_CATEGORY, "FiberElement::HandleStyleObjects");
-    StyleResolver::ResolveStyleObjects(
-        last_style_objects_ ? last_style_objects_.get() : nullptr,
-        style_objects_ ? style_objects_.get() : nullptr, this);
-    // Animation and Direction should be handled here
-    dirty_ &= ~kDirtyStyleObjects;
+  if (element_manager()->EnableSimpleStyle()) {
+    ResolveSimpleStyles();
   } else {
     ResolveCSSStyles(parsed_styles, reset_style_ids, need_update,
                      force_use_current_parsed_style_map);
@@ -2563,7 +2588,11 @@ void FiberElement::SetNativeProps(
           EXEC_EXPR_FOR_INSPECTOR(element_manager()->OnSetNativeProps(
               this, key.ToString(), value, true));
         } else {
-          SetAttribute(key_str, value);
+          if (IsRadonArch()) {
+            SetAttribute(key_str, value, false);
+          } else {
+            SetAttribute(key_str, value);
+          }
           EXEC_EXPR_FOR_INSPECTOR(element_manager()->OnSetNativeProps(
               this, key.ToString(), value, false));
         }
@@ -3306,7 +3335,7 @@ bool FiberElement::RefreshStyle(StyleMap &parsed_styles,
       ProcessFullRawInlineStyle(nullptr);
       MergeInlineStyles(parsed_styles_map_);
     }
-    // Handle CSS varibale
+    // Handle CSS variable
     HandleCSSVariables(parsed_styles_map_);
   }
   if (force_use_parsed_styles_map) {
@@ -3319,7 +3348,7 @@ bool FiberElement::RefreshStyle(StyleMap &parsed_styles,
   bool ret =
       DiffStyleImpl(pre_parsed_styles_map, parsed_styles_map_, parsed_styles);
   // styles left in old_map need to be removed
-  pre_parsed_styles_map.foreach (
+  pre_parsed_styles_map.for_each(
       [&](const CSSPropertyID &k, const CSSValue &v) {
         // Filter shorthand property that need to be expanded
         if (!CSSProperty::IsShorthandProperty(k)) {
@@ -3418,8 +3447,7 @@ bool FiberElement::IsDirectionChangedEnabled() const {
   // direction temporarily
   // DirectionChange is enabled by default in RadonArch mode.
   // TODO(kechenglong): Avoid using IsRadonArch() & IsFiberArch() in Dom layer.
-  return IsRadonArch() ||
-         element_manager_->GetDynamicCSSConfigs().enable_css_inheritance_;
+  return IsRadonArch() || element_manager_->GetCSSInheritance();
 }
 
 // return ture means the style has already been processed
@@ -4133,7 +4161,9 @@ void FiberElement::UpdateLayoutInfo() {
     customized_layout_node_->OnLayoutAfter();
   }
   if (EnableFragmentLayerRender()) {
-    static_cast<Fragment *>(element_container())->MarkNeedRedraw();
+    static_cast<Fragment *>(element_container())
+        ->MarkDirtyState(BaseElementContainer::kNeedRedraw);
+    static_cast<Fragment *>(element_container())->UpdateLayout(layout_result);
   }
   frame_changed_ = true;
 }
@@ -4208,56 +4238,7 @@ bool FiberElement::IsEventPathCatch() {
     LOGE("FiberElement::IsEventPathCatch error: the target is detached.");
     return true;
   }
-  // Compatible with the previous logic that position:fixed will modify
-  // the structure of the element tree.
-  bool enable_fiber_element_for_radon_diff =
-      element_manager()->GetEnableFiberElementForRadonDiff();
-  if (enable_fiber_element_for_radon_diff && IsRadonArch() && is_fixed()) {
-    auto root = element_manager()->root();
-    if (this != root) {
-      LOGI("FiberElement::IsEventPathCatch fixed target.");
-      return true;
-    }
-  }
-  return false;
-}
-
-lepus::Value FiberElement::GetEventTargetInfo(bool is_core_event) {
-  auto dict = lepus::Dictionary::Create();
-  if (data_model_ != nullptr) {
-    BASE_STATIC_STRING_DECL(kId, "id");
-    BASE_STATIC_STRING_DECL(kDataset, "dataset");
-    BASE_STATIC_STRING_DECL(kUid, "uid");
-
-    dict.get()->SetValue(kId, data_model_->idSelector());
-    auto dataset = lepus::Dictionary::Create();
-    for (const auto &[key, value] : data_model_->dataset()) {
-      dataset.get()->SetValue(key, value);
-    }
-    dict.get()->SetValue(kDataset, std::move(dataset));
-    dict.get()->SetValue(kUid, id_);
-  }
-
-  // element ref needed in fiber element worklet
-  if (is_core_event) {
-    BASE_STATIC_STRING_DECL(kElementRefptr, "elementRefptr");
-    dict.get()->SetValue(kElementRefptr, fml::RefPtr<tasm::FiberElement>(this));
-  }
-
-  return lepus::Value(std::move(dict));
-}
-
-lepus::Value FiberElement::GetEventControlInfo(const std::string &event_type,
-                                               bool is_global) {
-  auto array = lepus::CArray::Create();
-  if (InComponent()) {
-    array->emplace_back(false);
-    array->emplace_back(ParentComponentIdString());
-  } else {
-    array->emplace_back(true);
-    array->emplace_back("");
-  }
-  return lepus::Value(std::move(array));
+  return Element::IsEventPathCatch();
 }
 
 lepus::Value FiberElement::GetComputedStyleByKey(const base::String &key) {

@@ -27,11 +27,14 @@ export function loadCard(
     if (cardType == 'standalone') {
       tt = new StandaloneApp({ nativeApp, params, lynx }, params);
     } else {
-      tt = new ReactApp({
-        nativeApp,
-        params,
-        lynx,
-      });
+      tt = new ReactApp(
+        {
+          nativeApp,
+          params,
+          lynx,
+        },
+        nativeGlobal?.multiApps[id]
+      );
     }
     nativeGlobal.currentAppId = id;
     nativeGlobal.multiApps[id] = tt;
@@ -127,4 +130,25 @@ export function handleLoadCardError(
       }
     },
   });
+}
+
+/**
+ * Calls a callback function of the specified application instance
+ * @param instanceId Application instance ID
+ * @param methodName function name
+ * @param args Arguments to pass to the callback function (optional)
+ */
+export function __invokeAppMethod(
+  instanceId: string,
+  methodName: string,
+  ...args: unknown[]
+): void {
+  const appInstance = nativeGlobal.multiApps[instanceId];
+  if (!appInstance) {
+    console.error(`callCallback: App instance not found for ID ${instanceId}`);
+    return;
+  }
+  if (typeof appInstance[methodName] === 'function') {
+    appInstance[methodName](...args);
+  }
 }

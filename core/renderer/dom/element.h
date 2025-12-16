@@ -165,6 +165,8 @@ class Element : public lepus::RefCounted,
               const std::function<void(int32_t code, const pub::Value& data)>&
                   callback);
 
+  virtual SLNode* GetLayoutObject() const { return nullptr; }
+
   ElementManager* element_manager() const { return element_manager_; }
   Element* parent() const { return parent_; }
   Element* next_sibling() const { return Sibling(1); }
@@ -368,7 +370,10 @@ class Element : public lepus::RefCounted,
 
   bool IsCSSInlineVariablesEnabled() const;
 
-  BaseElementContainer* element_container() { return element_container_.get(); }
+  BaseElementContainer* element_container() const {
+    return element_container_.get();
+  }
+
   ElementContainer* element_container_impl();
   Fragment* fragment_impl();
 
@@ -400,6 +405,8 @@ class Element : public lepus::RefCounted,
 
   inline const auto& GlobalBindTarget() { return global_bind_target_set_; }
   virtual bool CanBeLayoutOnly() const = 0;
+
+  LYNX_EXPORT_FOR_DEVTOOL bool HasUIPrimitive() const;
 
   virtual void CheckHasInlineContainer(Element* parent);
 
@@ -640,8 +647,7 @@ class Element : public lepus::RefCounted,
   // Whether list uses platform component.
   virtual bool DisableListPlatformImplementation() const { return false; }
 
-  virtual bool NeedFullFlushPath(
-      const std::pair<CSSPropertyID, tasm::CSSValue>& style) = 0;
+  virtual bool NeedFullFlushPath(CSSPropertyID id, const CSSValue& value) = 0;
 
   virtual bool is_view() const { return false; }
 
@@ -726,13 +732,13 @@ class Element : public lepus::RefCounted,
 
   EventTarget* GetParentTarget() override { return parent_; }
 
-  auto& GetBindEventCatchMap() { return bind_event_catch_map_; }
-
-  bool IsEventCaptureCatch(const std::string& event) override;
-
-  bool IsEventBubbleCatch(const std::string& event) override;
+  bool IsEventPathCatch() override;
 
   virtual void HandleGlobalEvent(fml::RefPtr<event::Event> event) override;
+
+  virtual lepus::Value GetEventTargetInfo(bool is_core_event = false) override;
+
+  virtual lepus::Value GetEventControlInfo(bool is_core_event = false) override;
 
   virtual bool GetEnableMultiTouchParamsCompatible() override;
 
@@ -916,10 +922,6 @@ class Element : public lepus::RefCounted,
 
   // for devtool
   std::unique_ptr<InspectorAttribute> inspector_attribute_;
-
-  // Save the bind event information on the target, compatible with bind event
-  // interception. eg. capture-bindtap, catchtap
-  base::LinearFlatMap<std::string, BindEventCatch> bind_event_catch_map_;
 
  private:
   // Element state, used to identify whether the current Element is on the root

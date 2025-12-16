@@ -19,7 +19,8 @@ void RegisterCFunction(Context* context, const char* name, CFunction function);
 void RegisterBuiltinFunction(Context* context, const char* name,
                              CFunction function);
 inline void RegisterBuiltinFunction(Context* context, const char* name,
-                                    Value (*function)(VMContext*)) {
+                                    Value (*function)(VMContext*, Value*,
+                                                      int)) {
   RegisterBuiltinFunction(context, name, reinterpret_cast<CFunction>(function));
 }
 void RegisterBuiltinFunctionTable(Context* context, const char* name,
@@ -37,7 +38,7 @@ void RegisterTableFunction(Context* context,
 inline void RegisterTableFunction(Context* context,
                                   const fml::RefPtr<Dictionary>& table,
                                   const char* name,
-                                  Value (*function)(VMContext*)) {
+                                  Value (*function)(VMContext*, Value*, int)) {
   RegisterTableFunction(context, table, name,
                         reinterpret_cast<CFunction>(function));
 }
@@ -53,15 +54,6 @@ inline void RegisterNGCFunction(Context* ctx,
                                 const RenderBindingFunction* funcs,
                                 size_t size) {
   lepus::QuickContext::Cast(ctx)->RegisterGlobalFunction(funcs, size);
-  return;
-}
-
-inline void RegisterObjectNGCFunction(Context* ctx, lepus::Value& obj,
-                                      const char* name, LEPUSCFunction* func) {
-  LEPUSValue cf = LEPUS_NewCFunction(ctx->context(), func, name, 0);
-  Value value = MK_JS_LEPUS_VALUE(ctx->context(), cf);  // for tracing gc
-  LEPUSValueHelper::SetProperty(ctx->context(), WRAP_AS_JS_VALUE(obj.value()),
-                                name, cf);
   return;
 }
 

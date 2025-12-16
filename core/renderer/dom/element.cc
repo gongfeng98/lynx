@@ -462,6 +462,10 @@ bool Element::ResolveStyleValue(CSSPropertyID id, const tasm::CSSValue& value) {
   return resolve_success;
 }
 
+bool Element::HasUIPrimitive() const {
+  return element_container()->HasUIPrimitive();
+}
+
 void Element::CheckHasInlineContainer(Element* parent) {
   if (parent) {
     allow_layoutnode_inline_ = parent->IsShadowNodeCustom();
@@ -1336,8 +1340,7 @@ bool Element::IsStackingContextNode() {
 }
 
 bool Element::IsCSSInheritanceEnabled() const {
-  return element_manager_ &&
-         element_manager_->GetDynamicCSSConfigs().enable_css_inheritance_;
+  return element_manager_ && element_manager_->GetCSSInheritance();
 }
 
 bool Element::IsCSSInlineVariablesEnabled() const {
@@ -1551,7 +1554,7 @@ std::tuple<bool, bool> Element::FlushAnimatedStyle() {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, ELEMENT_FLUSH_ANIMATED_STYLE);
   bool has_layout_style = false;
   for (const auto& style : *final_animator_map_) {
-    if (NeedFullFlushPath(style)) {
+    if (NeedFullFlushPath(style.first, style.second)) {
       has_layout_style = true;
       break;
     }
@@ -1761,20 +1764,17 @@ bool Element::GetEnableFixedNew() const {
   return element_manager()->GetEnableFixedNew();
 }
 
-bool Element::IsEventCaptureCatch(const std::string& event) {
-  auto event_bind = bind_event_catch_map_.find(event);
-  if (event_bind != bind_event_catch_map_.end() &&
-      event_bind->second.capture_catch != 0) {
-    return true;
-  }
-  return false;
-}
-
-bool Element::IsEventBubbleCatch(const std::string& event) {
-  auto event_bind = bind_event_catch_map_.find(event);
-  if (event_bind != bind_event_catch_map_.end() &&
-      event_bind->second.bubble_catch != 0) {
-    return true;
+bool Element::IsEventPathCatch() {
+  // Compatible with the previous logic that position:fixed will modify
+  // the structure of the element tree.
+  bool enable_fiber_element_for_radon_diff =
+      element_manager()->GetEnableFiberElementForRadonDiff();
+  if (enable_fiber_element_for_radon_diff && IsRadonArch() && is_fixed()) {
+    auto root = element_manager()->root();
+    if (this != root) {
+      LOGI("Element::IsEventPathCatch fixed target.");
+      return true;
+    }
   }
   return false;
 }
@@ -1862,6 +1862,49 @@ void Element::HandleGlobalEvent(fml::RefPtr<event::Event> event) {
       }
     }
   }
+}
+
+lepus::Value Element::GetEventTargetInfo(bool is_core_event) {
+  auto dict = lepus::Dictionary::Create();
+  if (data_model_ != nullptr) {
+    BASE_STATIC_STRING_DECL(kId, "id");
+    BASE_STATIC_STRING_DECL(kDataset, "dataset");
+    BASE_STATIC_STRING_DECL(kUid, "uid");
+
+    dict.get()->SetValue(kId, data_model_->idSelector());
+    auto dataset = lepus::Dictionary::Create();
+    for (const auto& [key, value] : data_model_->dataset()) {
+      dataset.get()->SetValue(key, value);
+    }
+    dict.get()->SetValue(kDataset, std::move(dataset));
+    dict.get()->SetValue(kUid, id_);
+  }
+
+  // element ref needed in fiber element worklet
+  if (is_core_event && is_fiber_element()) {
+    BASE_STATIC_STRING_DECL(kElementRefptr, "elementRefptr");
+    dict.get()->SetValue(kElementRefptr, fml::RefPtr<tasm::Element>(this));
+  }
+
+  return lepus::Value(std::move(dict));
+}
+
+lepus::Value Element::GetEventControlInfo(bool is_core_event) {
+  auto array = lepus::CArray::Create();
+  if (is_core_event) {
+    array->emplace_back(ParentComponentId());
+    array->emplace_back(ParentComponentEntryName());
+    array->emplace_back(impl_id());
+  } else {
+    if (InComponent()) {
+      array->emplace_back(false);
+      array->emplace_back(ParentComponentIdString());
+    } else {
+      array->emplace_back(true);
+      array->emplace_back("");
+    }
+  }
+  return lepus::Value(std::move(array));
 }
 
 bool Element::GetEnableMultiTouchParamsCompatible() {

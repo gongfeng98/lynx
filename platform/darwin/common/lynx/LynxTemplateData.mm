@@ -7,7 +7,7 @@
 #import <sys/utsname.h>
 #import "LynxTemplateData+Converter.h"
 
-#import <Lynx/LynxLog.h>
+#import <LynxBase/LynxLog.h>
 #include "base/include/value/array.h"
 #include "base/include/value/byte_array.h"
 #include "core/renderer/data/lynx_view_data_manager.h"

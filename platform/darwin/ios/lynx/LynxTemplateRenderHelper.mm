@@ -31,12 +31,12 @@
 #import <Lynx/LynxTemplateData+Converter.h>
 #import <Lynx/LynxTemplateRender+Protected.h>
 #import <Lynx/LynxTextInfoModule.h>
-#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxUILayoutTick.h>
 #import <Lynx/LynxUIMethodModule.h>
 #import <Lynx/LynxUIRenderer.h>
 #import <Lynx/LynxViewBuilder+Internal.h>
 #import <Lynx/PaintingContextProxy.h>
+#import "LynxTraceEventDef.h"
 
 #include "core/base/darwin/lynx_env_darwin.h"
 #include "core/public/lynx_extension_delegate.h"
@@ -57,13 +57,7 @@
 - (void)setUpShadowNodeOwner {
   // FIXME(huangweiwu): fix layout tick both android.
   if (!_uilayoutTick) {
-    __weak typeof(self) weakSelf = self;
-    _uilayoutTick = [[LynxUILayoutTick alloc] initWithRoot:_containerView
-                                                     block:^() {
-                                                       __strong LynxTemplateRender* strongSelf =
-                                                           weakSelf;
-                                                       strongSelf->shell_->TriggerLayout();
-                                                     }];
+    _uilayoutTick = [[LynxUILayoutTick alloc] initWithRoot:_containerView];
   }
   if (!_isEngineInitFromReusePool) {
     BOOL isAsyncLayout = _threadStrategyForRendering != LynxThreadStrategyForRenderAllOnUI;
@@ -119,7 +113,7 @@
       [_shadowNodeOwner setDelegate:_paintingContextProxy];
       auto* painting_context_ref = reinterpret_cast<lynx::tasm::PaintingContextDarwinRef*>(
           painting_context->GetPlatformRef().get());
-      if (_embeddedMode == LynxEmbeddedModeUnset) {
+      if (_embeddedMode != LynxEmbeddedModeBase) {
         _performanceController =
             [[LynxPerformanceController alloc] initWithObserver:[self getLifecycleDispatcher]];
         painting_context_ref->SetPerformanceController(_performanceController);
@@ -179,8 +173,10 @@
 
   auto perf_proxy =
       std::make_shared<lynx::shell::PerfControllerProxyImpl>(shell_->GetPerfControllerActor());
+  auto layout_proxy = std::make_shared<lynx::shell::LynxLayoutProxyImpl>(shell_->GetLayoutActor());
   ui_delegate->OnLynxCreate(shell_->GetListEngineProxy(), [_lynxEngineProxy nativeProxy],
-                            std::move(js_proxy), std::move(perf_proxy), nullptr, nullptr, nullptr);
+                            std::move(js_proxy), std::move(layout_proxy), std::move(perf_proxy),
+                            nullptr, nullptr, nullptr, shell_->GetInstanceId(), _embeddedMode);
 
   // reset ui flush flag
   [self setNeedPendingUIOperation:_needPendingUIOperation];
@@ -290,11 +286,6 @@
 - (std::shared_ptr<lynx::piper::ModuleFactoryDarwin>)setUpMainThreadModuleFactory {
   std::shared_ptr<lynx::piper::ModuleFactoryDarwin> module_factory =
       std::make_shared<lynx::piper::ModuleFactoryDarwin>();
-  // setup user modules
-  if (_config) {
-    TRACE_EVENT(LYNX_TRACE_CATEGORY, MODULE_MANAGER_ADD_WRAPPERS);
-    module_factory->addWrappers([_builder getModuleWrapper]);
-  }
   // setup user global modules
   LynxConfig* globalConfig = [LynxEnv sharedInstance].config;
   if (_config != globalConfig && globalConfig) {
@@ -332,6 +323,15 @@
   }
   module_factory_ = module_factory;
 
+  // setup mts user modules
+  // If enable MTS module, merge MTS user modules with bts thread module factory.
+  if (_enableMTSModule && _config) {
+    auto main_thread_module_factory = main_thread_module_factory_.lock();
+    if (main_thread_module_factory) {
+      main_thread_module_factory->addWrappers([_builder getModuleWrapper]);
+    }
+  }
+
   LynxConfig* globalConfig = [LynxEnv sharedInstance].config;
   if (_config != globalConfig && globalConfig) {
     module_factory->parent = globalConfig.moduleFactoryPtr;
@@ -364,6 +364,8 @@
   std::shared_ptr<lynx::pub::LynxNativeModuleManager> native_module_manager =
       std::make_shared<lynx::pub::LynxNativeModuleManager>();
   native_module_manager->SetPlatformModuleFactory(module_factory);
+  auto ui_delegate = reinterpret_cast<lynx::tasm::UIDelegate*>([_lynxUIRenderer uiDelegate]);
+  native_module_manager->SetModuleFactory(ui_delegate->GetCustomModuleFactory());
 
   return native_module_manager;
 }

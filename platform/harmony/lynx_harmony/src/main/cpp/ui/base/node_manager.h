@@ -17,6 +17,8 @@
 #include <unordered_map>
 #include <utility>
 
+#include "base/include/base_export.h"
+
 typedef ArkUI_GestureInterruptResult (*GestureInterrupter)(
     ArkUI_GestureInterruptInfo* info);
 typedef void (*GestureReceiver)(ArkUI_GestureEvent* event, void* extraParams);
@@ -25,7 +27,7 @@ namespace lynx {
 namespace tasm {
 namespace harmony {
 class EventDispatcher;
-class NodeManager {
+class BASE_EXPORT NodeManager {
  public:
   static NodeManager& Instance() {
     static NodeManager instance;
@@ -142,12 +144,11 @@ class NodeManager {
 
   void DisposeGesture(ArkUI_GestureRecognizer* recognizer);
 
-  ArkUI_GestureRecognizerType GetGestureType(
-      ArkUI_GestureRecognizer* recognizer);
+  void SetEventDispatcher(EventDispatcher* dispatcher) {
+    event_dispatcher_ = dispatcher;
+  }
 
-  void SetUserData(ArkUI_NodeHandle node, void* user_data);
-
-  void* GetUserData(ArkUI_NodeHandle node);
+  EventDispatcher* GetEventDispatcher() { return event_dispatcher_; }
 
   template <typename... Args>
   void SetAttributeWithNumberValue(ArkUI_NodeHandle node,
@@ -258,6 +259,7 @@ class NodeManager {
 
   ArkUI_NativeNodeAPI_1* native_node_api_{nullptr};
   ArkUI_NativeGestureAPI_1* native_gesture_api_{nullptr};
+  EventDispatcher* event_dispatcher_{nullptr};
 };
 }  // namespace harmony
 }  // namespace tasm

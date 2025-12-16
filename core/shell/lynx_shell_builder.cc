@@ -251,8 +251,10 @@ LynxShell* LynxShellBuilder::build() {
   // object of the platform layer to establish a mapping relationship.
   if (performance_controller_platform_) {
     performance_controller_platform_->SetActor(shell->perf_controller_actor_);
-    shell->perf_controller_actor_->Impl()->SetPlatformImpl(
-        std::move(this->performance_controller_platform_));
+    if (shell->perf_controller_actor_->Impl() != nullptr) {
+      shell->perf_controller_actor_->Impl()->SetPlatformImpl(
+          std::move(this->performance_controller_platform_));
+    }
   }
   if (loader_ != nullptr) {
     loader_->SetPerfControllerActor(shell->perf_controller_actor_);
@@ -321,10 +323,6 @@ LynxShell* LynxShellBuilder::build() {
   }
   // after set shell members
   shell->engine_actor_->Impl()->SetOperationQueue(shell->tasm_operation_queue_);
-  shell->layout_actor_->Impl()->SetRequestLayoutCallback(
-      [layout_actor = shell->layout_actor_]() {
-        layout_actor->Act([](auto& layout) { layout->Layout(); });
-      });
   shell->prop_bundle_creator_ = prop_bundle_creator_;
   auto tasm = shell->engine_actor_->Impl()->GetTasm();
   // @note(lipin): avoid crash when lynx_shell_unittest
@@ -350,15 +348,6 @@ LynxShell* LynxShellBuilder::build() {
         shell->instance_id_);
     element_manager->painting_context()->SetPerfActor(
         shell->perf_controller_actor_);
-    if (shell_option_.page_options_.IsLayoutInElementModeOn()) {
-      element_manager->SetRequestLayoutCallback(
-          [engine_actor = shell->engine_actor_]() {
-            engine_actor->Act([](auto& engine) {
-              auto pipeline_option = std::make_shared<tasm::PipelineOptions>();
-              engine->GetTasm()->TriggerLayout(pipeline_option);
-            });
-          });
-    }
 
     shell->layout_mediator_->Init(shell->engine_actor_, shell->facade_actor_,
                                   shell->perf_controller_actor_,
@@ -433,8 +422,8 @@ std::unique_ptr<lynx::shell::LynxEngine> LynxShellBuilder::CreateLynxEngine(
   // new instance rather than tasm_mediator when LayoutScheduler is more
   // complex.
   auto tasm = std::make_unique<lynx::tasm::TemplateAssembler>(
-      *tasm_mediator, std::move(element_manager), *tasm_mediator, instance_id,
-      this->enable_unified_pipeline_, shell_option_.page_options_);
+      *tasm_mediator, std::move(element_manager), tasm_mediator.get(),
+      instance_id, this->enable_unified_pipeline_, shell_option_.page_options_);
   tasm->SetEnableLayoutOnly(this->enable_layout_only_);
   if (this->loader_ != nullptr) {
     tasm->SetLazyBundleLoader(this->loader_);

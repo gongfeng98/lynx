@@ -8,6 +8,7 @@ import {
   EnvKey,
   LifeEvent,
   loadCardParams,
+  LynxSetTimeout2,
   NativeApp,
   requireParamObj,
 } from './interface';
@@ -42,12 +43,12 @@ import {
 import Performance from '../modules/performance';
 import { reportError } from '../modules/report';
 import LynxJSBI from '../common/jsbi';
-import { BaseAppSingletonData } from '../standalone/StandaloneApp';
 import { CachedFunctionProxy } from '../util/cachedFunctionProxy';
 import { getPromiseMaybePolyfill } from '../util/setup-promise';
 import { createReadableStreamClass, Request, Response } from '../modules/fetch';
 import { MessageEventType } from '../lynx';
 import { TraceEventDef } from '../util/TraceEventDef';
+import { CallbackManager } from '../common/callbackManager';
 
 export abstract class BaseApp<
   NativeAppProxy extends NativeApp = NativeApp,
@@ -84,8 +85,8 @@ export abstract class BaseApp<
 
   setTimeout: LynxSetTimeout;
   setInterval: LynxSetTimeout;
-  clearInterval: (intervalId: number) => void;
-  clearTimeout: (timeoutId: number) => void;
+  clearInterval: LynxClearTimeout;
+  clearTimeout: LynxClearTimeout;
 
   _createReadableStreamClass: (
     Promise: PromiseConstructor
@@ -109,72 +110,117 @@ export abstract class BaseApp<
   private contextProxyTypeToMethod: {};
   private removeInternalEventListenersCallbacks: (() => void)[] = [];
 
+  _callbackManager: CallbackManager;
+
   constructor(
     options: AppProxyParams<NativeAppProxy>,
-    baseAppSingleData?: BaseAppSingletonData<NativeAppProxy, LynxImpl>
+    otherApp?: BaseApp /** StandaloneApp **/
   ) {
     this.initBase(options);
-    if (baseAppSingleData) {
-      baseAppSingleData.transferSingletonData(
-        this,
-        this.__internal__callLynxSetModule.bind(this)
-      );
-    } else {
-      this.initExtra(options);
-    }
-
-    // init timeout function
-    this.setTimeout = this.nativeApp.setTimeout;
-    this.setInterval = this.nativeApp.setInterval;
-    this.clearInterval = this.nativeApp.clearInterval;
-    this.clearTimeout = this.nativeApp.clearTimeout;
-
+    this.initWithReusedApp(options, otherApp);
     this.addInternalEventListeners();
+
+    nativeGlobal['notifyRuntimeReadyOnRT' + this.nativeAppId] &&
+      nativeGlobal['notifyRuntimeReadyOnRT' + this.nativeAppId](this.lynx);
   }
 
-  protected initExtra(options: AppProxyParams<NativeAppProxy>) {
-    const { lynx } = options;
+  private initWithReusedApp(
+    options: AppProxyParams<NativeAppProxy>,
+    otherApp?: BaseApp
+  ) {
+    if (otherApp) {
+      this._nativeApp = otherApp.nativeApp as NativeAppProxy;
+      this.sharedConsole = otherApp.sharedConsole;
+      this.dynamicComponentExports = otherApp.dynamicComponentExports;
+      this.loadedDynamicComponentsSet = otherApp.loadedDynamicComponentsSet;
+      this._apiList = otherApp._apiList;
+      this._intersectionObserverManager = otherApp._intersectionObserverManager;
+      this._exposureManager = otherApp._exposureManager;
+      this._textInfoManager = otherApp._textInfoManager;
+      otherApp.GlobalEventEmitter.setCallLynxSetModule(
+        this.__internal__callLynxSetModule.bind(this)
+      );
+      this.GlobalEventEmitter = otherApp.GlobalEventEmitter;
+      this._aopManager = otherApp._aopManager;
+      this.performance = otherApp.performance;
+      this.modules = otherApp.modules;
+      this._lazyCallableModules = otherApp._lazyCallableModules;
+      otherApp.lynx.rebind(() => this);
+      this.lynx = otherApp.lynx as LynxImpl;
+      otherApp.Reporter.rebind(() => this);
+      this.Reporter = otherApp.Reporter;
+      this._callbackManager = otherApp._callbackManager;
+      this.setTimeout = otherApp.setTimeout;
+      this.setInterval = otherApp.setInterval;
+      this.clearInterval = otherApp.clearInterval;
+      this.clearTimeout = otherApp.clearTimeout;
+      this.resolvedPromise = otherApp.resolvedPromise;
+      // fetch api related
+      this._createReadableStreamClass = otherApp._createReadableStreamClass;
+      this._ReadableStreamClass = otherApp._ReadableStreamClass;
+    } else {
+      const { lynx } = options;
 
-    this.modules = {};
-    this._lazyCallableModules = new Map();
-    this._nativeApp = CachedFunctionProxy.create<NativeAppProxy>(
-      this._nativeApp
-    );
-    this.sharedConsole = createSharedConsole(`runtimeId:${this.nativeAppId}`);
-    this.dynamicComponentExports = {};
-    this.loadedDynamicComponentsSet = new Set();
-    this._lazyCallableModules = new Map();
+      this._callbackManager = new CallbackManager();
+      this.setTimeout = this.wrapCallbackMethod(this.nativeApp.setTimeout);
+      this.setInterval = this.wrapCallbackMethod(
+        this.nativeApp.setInterval,
+        false
+      );
+      this.clearInterval = this.wrapClearTimerMethod(
+        this.nativeApp.clearInterval
+      );
+      this.clearTimeout = this.wrapClearTimerMethod(
+        this.nativeApp.clearTimeout
+      );
 
-    this.Reporter = new Reporter(
-      () => this,
-      () => this.nativeApp
-    );
+      this.modules = {};
+      this._apiList = {};
+      this._textInfoManager = new TextInfoManager(this.NativeModules);
+      this.setupGetTextInfoApi();
+      this._lazyCallableModules = new Map();
+      this._nativeApp = CachedFunctionProxy.create<NativeAppProxy>(
+        this._nativeApp
+      );
+      this.sharedConsole = createSharedConsole(`runtimeId:${this.nativeAppId}`);
+      this.dynamicComponentExports = {};
+      this.loadedDynamicComponentsSet = new Set();
+      this._lazyCallableModules = new Map();
 
-    // init eventEmitter
-    this.GlobalEventEmitter = new EventEmitter(
-      this.__internal__callLynxSetModule.bind(this)
-    );
-    this._intersectionObserverManager = new IntersectionObserverManager(
-      this.NativeModules
-    );
+      this.Reporter = new Reporter(
+        () => this,
+        () => this.nativeApp
+      );
 
-    this._exposureManager = new ExposureManager(this.NativeModules);
-    this.setupExposureApi();
-    this._aopManager = new AopManager();
-    this.beforePublishEvent = this._aopManager._beforePublishEvent;
+      // init eventEmitter
+      this.GlobalEventEmitter = new EventEmitter(
+        this.__internal__callLynxSetModule.bind(this)
+      );
+      this._intersectionObserverManager = new IntersectionObserverManager(
+        this.NativeModules
+      );
 
-    this.performance = new Performance(this.GlobalEventEmitter, this.nativeApp);
+      this._exposureManager = new ExposureManager(this.NativeModules);
+      this.setupExposureApi();
+      this._aopManager = new AopManager();
+      this.beforePublishEvent = this._aopManager._beforePublishEvent;
 
-    const promiseCtor = this.setupPromise(
-      this.nativeApp.setTimeout,
-      this.nativeApp.clearTimeout,
-      lynx
-    );
+      this.performance = new Performance(
+        this.GlobalEventEmitter,
+        this.nativeApp
+      );
 
-    this.lynx = this.createLynx(lynx, promiseCtor);
-    this.setupJSModule();
-    this.setupIntersectionApi();
-    this.setupFetchAPI(promiseCtor);
+      const promiseCtor = this.setupPromise(
+        this.setTimeout,
+        this.clearTimeout,
+        this.queueMicrotask
+      );
+
+      this.lynx = this.createLynx(lynx, promiseCtor);
+      this.setupJSModule();
+      this.setupIntersectionApi();
+      this.setupFetchAPI(promiseCtor);
+    }
   }
 
   protected initBase(options: AppProxyParams<NativeAppProxy>) {
@@ -193,11 +239,6 @@ export abstract class BaseApp<
     this.LynxAccessibilityModule =
       nativeApp.nativeModuleProxy.LynxAccessibilityModule;
     this.LynxSetModule = nativeApp.nativeModuleProxy.LynxSetModule;
-
-    //init appList
-    this._apiList = {};
-    this._textInfoManager = new TextInfoManager(this.NativeModules);
-    this.setupGetTextInfoApi();
   }
 
   static kDefaultSourceMapURL = 'default';
@@ -242,8 +283,78 @@ export abstract class BaseApp<
     return this.Reporter.getSourceMapRelease(url);
   };
 
+  queueMicrotask(callback: () => void): void {
+    if (!callback) {
+      return;
+    }
+    if (!this.params?.pageConfigSubset?.enableJSCallbackManager) {
+      this.lynx.getNativeLynx().queueMicrotask(callback);
+    } else {
+      const id = this._callbackManager.addCallback(callback);
+      if (id === undefined) {
+        return;
+      }
+      this.lynx.getNativeLynx().queueMicrotask(id);
+    }
+  }
+
+  /**
+   * pass id instead of callback for native.
+   * for setTimeout、setInterval、queueMicrotask and other.
+   */
+  private wrapCallbackMethod(
+    nativeMethod: LynxSetTimeout2,
+    isTimeout: boolean = true
+  ): (callback: (...args: unknown[]) => unknown, delay: number) => number {
+    if (!this.params?.pageConfigSubset?.enableJSCallbackManager) {
+      return nativeMethod;
+    }
+    const that = this;
+    return function (
+      callback: (...args: unknown[]) => unknown,
+      delay: number
+    ): number {
+      if (!callback) {
+        return -1;
+      }
+      const taskInfo = { taskId: undefined };
+      const cb = () => {
+        try {
+          callback.apply(callback, undefined);
+        } finally {
+          if (isTimeout) {
+            that._callbackManager.removeTaskId(taskInfo.taskId);
+          }
+        }
+      };
+      const id = that._callbackManager.addCallback(cb);
+      if (id === undefined) {
+        return -1;
+      }
+      const taskId = nativeMethod.call(undefined, id, delay);
+      if (taskId !== undefined) {
+        that._callbackManager.addTaskIdAndCallbackId(taskId, id);
+        taskInfo.taskId = taskId;
+      }
+      return taskId;
+    };
+  }
+
+  private wrapClearTimerMethod = (
+    nativeMethod: LynxClearTimeout
+  ): LynxClearTimeout => {
+    if (!this.params?.pageConfigSubset?.enableJSCallbackManager) {
+      return nativeMethod;
+    }
+    return (taskId: number) => {
+      nativeMethod.call(undefined, taskId);
+      this._callbackManager.removeCallbackByTaskId(taskId);
+    };
+  };
+
   destroy() {
     this.__removeInternalEventListeners();
+    this._callbackManager.destroy();
     this._nativeApp = null;
     this._params = null;
     this._lazyCallableModules = null;
@@ -848,7 +959,7 @@ export abstract class BaseApp<
   setupPromise(
     setTimeout: LynxSetTimeout,
     clearTimeout: LynxClearTimeout,
-    lynx: NativeLynxProxy
+    queueMicrotask: (callback: () => void) => void
   ) {
     const PromiseConstructor = getPromiseMaybePolyfill(
       setTimeout,
@@ -866,7 +977,7 @@ export abstract class BaseApp<
         }
       },
       clearTimeout,
-      lynx.queueMicrotask,
+      queueMicrotask,
       this._params?.pageConfigSubset?.enableMicrotaskPromisePolyfill ?? false
     );
     this.resolvedPromise = PromiseConstructor.resolve();
@@ -878,6 +989,10 @@ export abstract class BaseApp<
 
   cancelAnimationFrame = (animationId: number) =>
     this._nativeApp.cancelAnimationFrame(animationId);
+
+  invokeCallback(once: boolean, callbackId: number, ...args: unknown[]): void {
+    this._callbackManager.invokeCallback(once, callbackId, ...args);
+  }
 
   protected addInternalEventListener(
     contextProxyType: ContextProxyType,

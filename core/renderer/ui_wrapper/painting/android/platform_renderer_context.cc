@@ -108,16 +108,27 @@ void PlatformRendererContext::UnregisterPlatformRenderer(int32_t id) {
   renderer_registry_.erase(id);
 }
 
+void PlatformRendererContext::UpdatePlatformRendererFrame(
+    int32_t target, const float* frame, const float* render_offset) {
+  base::android::ScopedLocalJavaRef<jobject> local_ref(java_ref_);
+  if (local_ref.IsNull()) {
+    return;
+  }
+  JNIEnv* env = base::android::AttachCurrentThread();
+  Java_PlatformRendererContext_updatePlatformRendererFrame(
+      env, local_ref.Get(), target, static_cast<jint>(frame[0]),
+      static_cast<jint>(frame[1]), static_cast<jint>(frame[2]),
+      static_cast<jint>(frame[3]), static_cast<jint>(render_offset[0]),
+      static_cast<jint>(render_offset[1]));
+}
+
 }  // namespace tasm
 }  // namespace lynx
 
 // JNI function implementations
-jintArray GetDisplayListLengths(JNIEnv* env, jobject jcaller, jint id) {
-  // Get the PlatformRendererContext instance from the Java object
-  jclass clazz = env->GetObjectClass(jcaller);
-  jfieldID nativePtrField = env->GetFieldID(clazz, "mNativePtr", "J");
-  jlong nativePtr = env->GetLongField(jcaller, nativePtrField);
-
+jintArray GetDisplayListLengths(JNIEnv* env, jobject /*jcaller*/,
+                                jlong nativePtr, jint id) {
+  // Get the PlatformRendererContext instance from the native pointer
   if (nativePtr == 0) {
     return nullptr;
   }
@@ -156,17 +167,14 @@ jintArray GetDisplayListLengths(JNIEnv* env, jobject jcaller, jint id) {
  * If the arrays are smaller than expected, the method will only copy up to the
  * array's length.
  */
-void GetDisplayListData(JNIEnv* env, jobject jcaller, jint id, jintArray ops,
-                        jintArray iArgv, jfloatArray fArgv) {
+void GetDisplayListData(JNIEnv* env, jobject /*jcaller*/, jlong nativePtr,
+                        jint id, jintArray ops, jintArray iArgv,
+                        jfloatArray fArgv) {
   if (ops == nullptr || iArgv == nullptr || fArgv == nullptr) {
     return;
   }
 
-  // Get the PlatformRendererContext instance from the Java object
-  jclass clazz = env->GetObjectClass(jcaller);
-  jfieldID nativePtrField = env->GetFieldID(clazz, "mNativePtr", "J");
-  jlong nativePtr = env->GetLongField(jcaller, nativePtrField);
-
+  // Get the PlatformRendererContext instance from the native pointer
   if (nativePtr == 0) {
     return;
   }

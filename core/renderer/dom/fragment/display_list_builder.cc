@@ -12,7 +12,8 @@
 namespace lynx {
 namespace tasm {
 
-DisplayListBuilder::DisplayListBuilder() = default;
+DisplayListBuilder::DisplayListBuilder(float dx, float dy)
+    : display_list_(dx, dy) {}
 
 DisplayListBuilder::~DisplayListBuilder() = default;
 
@@ -37,6 +38,7 @@ DisplayListBuilder& DisplayListBuilder::Fill(uint32_t color) {
 
 DisplayListBuilder& DisplayListBuilder::DrawView(int view_id) {
   display_list_.AddOperation(DisplayListOpType::kDrawView, view_id);
+  display_list_.AddSubLayer(view_id);
   return *this;
 }
 
@@ -84,6 +86,23 @@ DisplayListBuilder& DisplayListBuilder::Border(
                              static_cast<int32_t>(border.style_right),
                              static_cast<int32_t>(border.style_bottom),
                              static_cast<int32_t>(border.style_left));
+  return *this;
+}
+
+// Set Clip Rect
+DisplayListBuilder& DisplayListBuilder::ClipRect(const RoundedRectangle& rect) {
+  if (rect.HasRadius()) {
+    display_list_.AddOperation(
+        DisplayListOpType::kClipRect, rect.GetX(), rect.GetY(), rect.GetWidth(),
+        rect.GetHeight(), rect.GetRadiusXTopLeft(), rect.GetRadiusYTopLeft(),
+        rect.GetRadiusXTopRight(), rect.GetRadiusYTopRight(),
+        rect.GetRadiusXBottomRight(), rect.GetRadiusYBottomRight(),
+        rect.GetRadiusXBottomLeft(), rect.GetRadiusYBottomLeft());
+  } else {
+    display_list_.AddOperation(DisplayListOpType::kClipRect, rect.GetX(),
+                               rect.GetY(), rect.GetWidth(), rect.GetHeight());
+  }
+
   return *this;
 }
 

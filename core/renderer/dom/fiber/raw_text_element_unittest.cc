@@ -41,7 +41,7 @@ class RawTextElementTest : public ::testing::Test {
         lynx_env_config);
     manager = unique_manager.get();
     tasm = std::make_shared<lynx::tasm::TemplateAssembler>(
-        *tasm_mediator.get(), std::move(unique_manager), *tasm_mediator.get(),
+        *tasm_mediator.get(), std::move(unique_manager), tasm_mediator.get(),
         0);
 
     auto test_entry = std::make_shared<TemplateEntry>();
@@ -71,7 +71,7 @@ TEST_F(RawTextElementTest, SetText) {
 
   page->FlushActionsAsRoot();
 
-  const auto& attributes = raw_text->data_model_->attributes();
+  auto& attributes = raw_text->data_model_->attributes();
   EXPECT_TRUE(attributes.at(RawTextElement::kTextAttr) ==
               lepus::Value("text-content"));
 }

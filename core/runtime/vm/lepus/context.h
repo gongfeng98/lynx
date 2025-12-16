@@ -28,11 +28,7 @@
 #include "core/template_bundle/template_codec/binary_decoder/page_config.h"
 #include "core/template_bundle/template_codec/compile_options.h"
 
-struct LEPUSRuntime;
-struct LEPUSContext;
-
 namespace lynx {
-
 namespace tasm {
 class AnimationFrameManager;
 class LepusCallbackManager;
@@ -41,21 +37,16 @@ class LepusCallbackManager;
 namespace lepus {
 class ContextBundle;
 
-class LEPUSRuntimeData {
- public:
-  LEPUSRuntimeData(bool disable_tracing_gc, int runtime_mode);
-  ~LEPUSRuntimeData();
-
-  LEPUSRuntime* runtime_;
-  LEPUSContext* lepus_context_;
-  // "length" cache
-  LEPUSAtom length_atom_;
-};
-
 enum ContextType {
   VMContextType,       // Run low level version lepus with VmContext
   LepusNGContextType,  // Run lepusNG with qucikjs code
-  LepusContextType     // Run low level version lepus with LepusNG
+};
+
+struct RenderBindingFunction {
+  const char* name;
+  CFunction function;
+  bool for_lepus = true;
+  bool for_lepusng = true;
 };
 
 #define LEPUS_DEFAULT_CONTEXT_NAME "__Card__"
@@ -106,6 +97,9 @@ class Context {
   // Once the Execute API is removed, only EvalBinary will remain as the unified
   // entry point.
   virtual bool Execute() = 0;
+
+  bool TryExecute();
+  bool HasPreExecuteSuccess();
 
   virtual void UpdateGCTiming(bool is_start){};
 
@@ -204,19 +198,6 @@ class Context {
   // check context type
   bool IsVMContext() const { return type_ == VMContextType; }
   bool IsLepusNGContext() const { return type_ == LepusNGContextType; }
-  bool IsLepusContext() const { return type_ == LepusContextType; }
-  virtual LEPUSContext* context() const { return nullptr; }
-  virtual LEPUSValue GetTopLevelFunction() const { return LEPUS_UNDEFINED; }
-
-  static LEPUSLepusRefCallbacks GetLepusRefCall();
-
-  static CellManager& GetContextCells();
-  static ContextCell* RegisterContextCell(lepus::QuickContext* qctx);
-
-  static inline ContextCell* GetContextCellFromCtx(LEPUSContext* ctx) {
-    return ctx ? reinterpret_cast<ContextCell*>(LEPUS_GetContextOpaque(ctx))
-               : nullptr;
-  }
 
   void EnsureLynx();
   void SetPropertyToLynx(const base::String& key, const lepus::Value& value);
@@ -264,7 +245,7 @@ class Context {
   // deleted.
   virtual lepus::Value GetCurrentThis(lepus::Value* argv, int32_t offset) {
     return lepus::Value();
-  }
+  };
 
   virtual void SetDebugInfoURL(const std::string& url,
                                const std::string& file_name);
@@ -313,6 +294,7 @@ class Context {
   std::string sdk_version_{"null"};
   // debugger source code
   std::string debug_source_;
+  bool has_pre_execute_success_{false};
 
   std::unique_ptr<LepusInspectorManager> inspector_manager_;
 

@@ -33,6 +33,8 @@ class BaseElementContainer {
   explicit BaseElementContainer(Element* element);
   virtual ~BaseElementContainer();
 
+  virtual bool HasUIPrimitive() const = 0;
+
   void set_parent(BaseElementContainer* parent) { parent_ = parent; }
   BaseElementContainer* parent() const { return parent_; }
 
@@ -55,12 +57,6 @@ class BaseElementContainer {
   bool was_position_fixed() const { return was_position_fixed_; }
   void set_was_position_fixed(bool was_position_fixed) {
     was_position_fixed_ = was_position_fixed;
-  }
-
-  // Only the element container with z-index 0 and not position fixed is a
-  // reliable sibling.
-  bool IsReliableSibling() const {
-    return old_z_index() == 0 && !was_position_fixed();
   }
 
   void MarkDirtyState(DirtyState state);

@@ -113,11 +113,12 @@ void CSSParseToken::ParseAttributes(const rapidjson::Value& value) {
           compile_options_.enable_css_variable_ &&
           type == tasm::CSSValueType::VARIABLE) {
         auto& target_css_value =
-            attributes_
-                .insert_or_assign(
-                    id, tasm::CSSValue(css_value, tasm::CSSValuePattern::STRING,
-                                       tasm::CSSValueType::VARIABLE))
-                .first->second;
+            *attributes_
+                 .insert_or_assign(
+                     id,
+                     tasm::CSSValue(css_value, tasm::CSSValuePattern::STRING,
+                                    tasm::CSSValueType::VARIABLE))
+                 .first;
         if (tasm::Config::IsHigherOrEqual(compile_options_.target_sdk_version_,
                                           LYNX_VERSION_2_14)) {
           if (value.HasMember("defaultValueMap")) {
@@ -275,13 +276,13 @@ bool CSSParseToken::IsGlobalPseudoStyleToken() const {
 
 const tasm::StyleMap& CSSParseToken::GetAttributes() {
   if (!raw_attributes_.empty()) {
-    attributes_.set_pool_capacity(
+    attributes_.reserve(
         tasm::CSSProperty::GetTotalParsedStyleCountFromMap(raw_attributes_));
-    raw_attributes_.foreach ([&](const tasm::CSSPropertyID& k,
+    raw_attributes_.for_each([&](const tasm::CSSPropertyID& k,
                                  const tasm::CSSValue& v) {
       tasm::UnitHandler::ProcessCSSValue(k, v, attributes_, parser_configs_);
     });
-    raw_attributes_.clear(true);
+    raw_attributes_.clear();
   }
 
   return attributes_;

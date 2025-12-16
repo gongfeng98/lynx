@@ -21,8 +21,11 @@
 #include "core/runtime/profile/runtime_profiler_manager.h"
 #include "core/runtime/trace/runtime_trace_event_def.h"
 #include "core/runtime/vm/lepus/exception.h"
+#include "core/runtime/vm/lepus/js_object.h"
 #include "core/runtime/vm/lepus/jsvalue_helper.h"
 #include "core/runtime/vm/lepus/lepus_error_helper.h"
+#include "core/runtime/vm/lepus/qjs_callback.h"
+#include "quickjs/include/quickjs.h"
 #ifdef OS_IOS
 #include "gc/trace-gc.h"
 #else
@@ -31,9 +34,259 @@
 
 namespace lynx {
 namespace lepus {
+
+namespace {
+
+static void PrintByALog(char* msg) { LOGE(msg); }
+
+static LEPUSValue LepusConvertToObjectCallBack(LEPUSContext* ctx,
+                                               LEPUSValue val);
+
+// register for quickjs to free LepusRef
+static LEPUSValue LepusRefFreeCallBack(LEPUSRuntime* rt, LEPUSValue val) {
+  LEPUSLepusRef* pref = static_cast<LEPUSLepusRef*>(LEPUS_VALUE_GET_PTR(val));
+  reinterpret_cast<fml::RefCountedThreadSafeStorage*>(pref->p)->Release();
+  if (!LEPUS_IsGCModeRT(rt)) {
+    LEPUS_FreeValueRT(rt, pref->lepus_val);
+    lepus_free_rt(rt, pref);
+  }
+  return LEPUS_UNDEFINED;
+}
+
+static void RefCountedObjVisitor(LEPUSRuntime* rt, void* p, uint64_t trace_tool,
+                                 int tag, LEPUS_MarkFunc* mark_func) {
+  if (tag != ValueType::Value_RefCounted) return;
+  auto* ref_counted = static_cast<lepus::RefCounted*>(p);
+  ref_counted->visitor(rt, reinterpret_cast<void*>(mark_func), trace_tool);
+}
+
+static LEPUSValue LepusReportSetConstValueError(LEPUSContext* ctx,
+                                                const LEPUSValue& obj,
+                                                LEPUSValue prop) {
+  lepus::QuickContext* qctx =
+      QuickContext::Cast(QuickContext::GetFromJsContext(ctx));
+  return qctx->ReportSetConstValueError(obj, prop);
+}
+
+// callback for quickjs setProperty for LepusRef
+static LEPUSValue LepusRefSetPropertyCallBack(LEPUSContext* ctx,
+                                              LEPUSValue thisObj,
+                                              LEPUSValue prop, int idx,
+                                              LEPUSValue val) {
+  DCHECK(LEPUS_IsLepusRef(thisObj));
+  LEPUSLepusRef* pref =
+      static_cast<LEPUSLepusRef*>(LEPUS_VALUE_GET_PTR(thisObj));
+  auto* ref_ptr = static_cast<lepus::RefCounted*>(pref->p);
+  if (ref_ptr->GetRefType() != RefType::kLepusTable &&
+      ref_ptr->GetRefType() != RefType::kLepusArray) {
+    // only table and array can set property
+    return LEPUS_UNDEFINED;
+  }
+  if (ref_ptr->IsConst()) {
+    return LepusReportSetConstValueError(ctx, thisObj, prop);
+  }
+
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, QUICK_CONTEXT_SET_PROPERTY_CALLBACK);
+  Value lepus_val = MK_JS_LEPUS_VALUE(ctx, val);
+  bool gc_flag = LEPUS_IsGCMode(ctx);
+  switch (pref->tag) {
+    case Value_Table: {
+      auto* dic = reinterpret_cast<lepus::Dictionary*>(ref_ptr);
+      const char* name = LEPUS_ToCString(ctx, prop);
+      HandleScope func_scope(ctx, reinterpret_cast<void*>(&name),
+                             HANDLE_TYPE_CSTRING);
+      dic->SetValue(name, lepus_val);
+      if (!gc_flag) LEPUS_FreeCString(ctx, name);
+    } break;
+    case Value_Array: {
+      CArray* array = reinterpret_cast<CArray*>(ref_ptr);
+      uint32_t old_size = static_cast<uint32_t>(array->size());
+      if (idx >= 0) {
+        array->set(idx, lepus_val);
+        for (auto i = old_size; i < static_cast<uint32_t>(idx); ++i) {
+          const_cast<lepus::Value&>(array->get(i)).SetUndefined();
+        }
+      } else {
+        LEPUSAtom prop_atom = LEPUS_ValueToAtom(ctx, prop);
+        LEPUSAtom len_atom =
+            QuickContext::GetFromJsContext(ctx)->GetLengthAtom();
+        if (prop_atom == len_atom) {
+          uint32_t new_array_len = 0;
+          if (LEPUS_ToUint32(ctx, &new_array_len, val) == 0) {
+            array->resize(new_array_len);
+            for (auto i = old_size; i < new_array_len; ++i) {
+              const_cast<lepus::Value&>(array->get(i)).SetUndefined();
+            }
+          }
+        }
+        if (!gc_flag) LEPUS_FreeAtom(ctx, prop_atom);
+      }
+    } break;
+  }
+  return LEPUS_UNDEFINED;
+}
+
+static void LepusRefFreeStringCache(void* old_p, void* p) {
+  if (old_p) {
+    base::RefCountedStringImpl* impl =
+        reinterpret_cast<base::RefCountedStringImpl*>(old_p);
+    impl->Release();
+  }
+
+  if (p) {
+    base::RefCountedStringImpl* impl =
+        reinterpret_cast<base::RefCountedStringImpl*>(p);
+    impl->AddRef();
+  }
+}
+
+static LEPUSValue LepusRefGetPropertyCallBack(LEPUSContext* ctx,
+                                              LEPUSValue thisObj,
+                                              LEPUSAtom prop, int idx) {
+  DCHECK(LEPUS_IsLepusRef(thisObj));
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, QUICK_CONTEXT_GET_PROPERTY_CALLBACK);
+  LEPUSLepusRef* pref =
+      static_cast<LEPUSLepusRef*>(LEPUS_VALUE_GET_PTR(thisObj));
+  switch (pref->tag) {
+    case Value_Table: {
+      const char* name = LEPUS_AtomToCString(ctx, prop);
+      HandleScope func_scope(ctx, reinterpret_cast<void*>(&name),
+                             HANDLE_TYPE_CSTRING);
+      auto* dic = LEPUSValueHelper::GetLepusTable(thisObj);
+      auto it = dic->find(name);
+      if (!LEPUS_IsGCMode(ctx)) LEPUS_FreeCString(ctx, name);
+      if (it != dic->end()) {
+        return LEPUSValueHelper::ToJsValue(ctx, it->second);
+      }
+    } break;
+    case Value_Array: {
+      auto* carray = LEPUSValueHelper::GetLepusArray(thisObj);
+      if (idx >= 0) {
+        if (static_cast<size_t>(idx) < carray->size()) {
+          return LEPUSValueHelper::ToJsValue(ctx, carray->get(idx));
+        }
+        return LEPUS_UNDEFINED;
+      } else if (LEPUSAtomIsLengthProp(ctx, prop)) {
+        return LEPUS_NewInt32(ctx, static_cast<int32_t>(carray->size()));
+      }
+    } break;
+    case Value_JSObject:
+    case Value_ByteArray:
+    case Value_RefCounted: {
+      return LEPUS_UNDEFINED;
+    }
+    default:
+      assert(false);
+      break;
+  }
+
+  return LEPUS_UNINITIALIZED;
+}
+
+static size_t LepusRefGetLengthCallBack(LEPUSContext* ctx, LEPUSValue val) {
+  if (!LEPUS_IsLepusRef(val)) return 0;
+  LEPUSLepusRef* pref = static_cast<LEPUSLepusRef*>(LEPUS_VALUE_GET_PTR(val));
+  if (!LEPUS_IsUndefined(pref->lepus_val))
+    return LEPUS_GetLength(ctx, pref->lepus_val);
+  switch (pref->tag) {
+    case Value_Table:
+      return reinterpret_cast<Dictionary*>(pref->p)->size();
+    case Value_Array:
+      return reinterpret_cast<CArray*>(pref->p)->size();
+    case Value_RefCounted:
+      return 0;
+    default:
+      assert(false);
+      break;
+  }
+  return 0;
+}
+
+static size_t LepusRefDeepEqualCallBack(LEPUSValue val1, LEPUSValue val2) {
+  if (!LEPUS_IsLepusRef(val1) || !LEPUS_IsLepusRef(val2)) return 0;
+  if (LEPUS_GetLepusRefTag(val1) != LEPUS_GetLepusRefTag(val2)) return 0;
+  int tag = LEPUS_GetLepusRefTag(val1);
+  void* pv1 = LEPUS_GetLepusRefPoint(val1);
+  void* pv2 = LEPUS_GetLepusRefPoint(val2);
+  switch (tag) {
+    case Value_Table:
+      return *static_cast<Dictionary*>(pv1) == *static_cast<Dictionary*>(pv2);
+    case Value_Array:
+      return *static_cast<CArray*>(pv1) == *static_cast<CArray*>(pv2);
+    case Value_JSObject:
+      return *static_cast<LEPUSObject*>(pv1) == *static_cast<LEPUSObject*>(pv2);
+    default:
+      return 0;
+  }
+}
+
+static LEPUSValue LepusConvertToObjectCallBack(LEPUSContext* ctx,
+                                               LEPUSValue val) {
+  TRACE_EVENT(LYNX_TRACE_CATEGORY, QUICK_CONTEXT_CONVERT_TO_OBJECT_CALLBACK);
+  LEPUSLepusRef* pref = static_cast<LEPUSLepusRef*>(LEPUS_VALUE_GET_PTR(val));
+  auto* ref_base_ptr = static_cast<lepus::RefCountedBase*>(pref->p);
+  LEPUSValue result;
+  switch (pref->tag) {
+    case Value_Table: {
+      result = LEPUSValueHelper::TableToJsValue(
+          ctx, *static_cast<const Dictionary*>(ref_base_ptr), false);
+    } break;
+    case Value_Array: {
+      result = LEPUSValueHelper::ArrayToJsValue(
+          ctx, *static_cast<const CArray*>(ref_base_ptr), false);
+    } break;
+    case Value_RefCounted: {
+      auto* ref_ptr = static_cast<lepus::RefCounted*>(ref_base_ptr);
+      if (ref_ptr->js_object_cache) {
+        return LEPUSValueHelper::ToJsValue(ctx, *(ref_ptr->js_object_cache));
+      }
+      result = LEPUSValueHelper::RefCountedToJSValue(ctx, *ref_ptr);
+      ref_ptr->js_object_cache = LepusValueFactory(ctx).CreatePtr(result);
+    } break;
+    default:
+      return LEPUS_UNDEFINED;
+  }
+  return result;
+}
+
+static LEPUSValue LepusrefToString(LEPUSContext* ctx, LEPUSValue val) {
+  if (!LEPUS_IsLepusRef(val)) return LEPUS_UNDEFINED;
+  LEPUSLepusRef* pref = static_cast<LEPUSLepusRef*>(LEPUS_VALUE_GET_PTR(val));
+  Value lepus_val;
+  std::ostringstream s;
+  switch (pref->tag) {
+    case Value_Table: {
+      return LEPUS_NewString(ctx, "[object Object]");
+    }
+
+    case Value_Array: {
+      lepus_val.SetArray(
+          fml::RefPtr<lepus::CArray>(reinterpret_cast<CArray*>(pref->p)));
+      s << lepus_val;
+      return LEPUS_NewString(ctx, s.str().c_str());
+    }
+
+    case Value_JSObject: {
+      return LEPUS_NewString(ctx, "[object JSObject]");
+    }
+
+    case Value_ByteArray: {
+      return LEPUS_NewString(ctx, "[object ByteArray]");
+    }
+
+    default: {
+      return LEPUS_NewString(ctx, "");
+    }
+  }
+
+  return LEPUS_UNDEFINED;
+}
+
+}  // namespace
+
 inline constexpr char kRawRuntimeMemoryInfo[] = "raw_memory_info_json_str";
 
-#define RENDERER_FUNCTION(name)                                       \
+#define PRIM_CFUNCTION(name)                                          \
   static LEPUSValue name(LEPUSContext* ctx, LEPUSValueConst this_val, \
                          int argc, LEPUSValueConst* argv)
 
@@ -49,7 +302,7 @@ static std::string GetPrintStr(LEPUSContext* ctx, int32_t argc,
   return ss.str();
 }
 
-RENDERER_FUNCTION(Console_Log) {
+PRIM_CFUNCTION(Console_Log) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("log", "[main-thread.js] " + result);
@@ -60,7 +313,7 @@ RENDERER_FUNCTION(Console_Log) {
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_Profile) {
+PRIM_CFUNCTION(Console_Profile) {
   if (argc == 0) {
     return LEPUS_UNDEFINED;
   }
@@ -76,26 +329,27 @@ RENDERER_FUNCTION(Console_Profile) {
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_ProfileEnd) {
+PRIM_CFUNCTION(Console_ProfileEnd) {
   TRACE_EVENT_END(LYNX_TRACE_CATEGORY);
 
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_ALog) {
+PRIM_CFUNCTION(Console_ALog) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("alog", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_Report) {
+PRIM_CFUNCTION(Console_Report) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("report", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
-RENDERER_FUNCTION(Console_Error) {
+
+PRIM_CFUNCTION(Console_Error) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("error", "[main-thread.js] " + result);
@@ -104,84 +358,84 @@ RENDERER_FUNCTION(Console_Error) {
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_Warn) {
+PRIM_CFUNCTION(Console_Warn) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("warn", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_Debug) {
+PRIM_CFUNCTION(Console_Debug) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("debug", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_Info) {
+PRIM_CFUNCTION(Console_Info) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("info", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_Count) {
+PRIM_CFUNCTION(Console_Count) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("count", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_CountReset) {
+PRIM_CFUNCTION(Console_CountReset) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("countReset", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_Group) {
+PRIM_CFUNCTION(Console_Group) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("group", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_GroupCollapsed) {
+PRIM_CFUNCTION(Console_GroupCollapsed) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("groupCollapsed", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_GroupEnd) {
+PRIM_CFUNCTION(Console_GroupEnd) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("groupEnd", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_Time) {
+PRIM_CFUNCTION(Console_Time) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("time", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_TimeLog) {
+PRIM_CFUNCTION(Console_TimeLog) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("timeLog", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_TimeEnd) {
+PRIM_CFUNCTION(Console_TimeEnd) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("timeEnd", "[main-thread.js] " + result);
   return LEPUS_UNDEFINED;
 }
 
-RENDERER_FUNCTION(Console_Table) {
+PRIM_CFUNCTION(Console_Table) {
   lepus::Context* lctx = lepus::QuickContext::GetFromJsContext(ctx);
   std::string result = GetPrintStr(ctx, argc, argv);
   lctx->OnBTSConsoleEvent("table", "[main-thread.js] " + result);
@@ -219,6 +473,51 @@ void RegisterConsole(QuickContext* ctx) {
   ctx->RegisterGlobalProperty("console", obj);
 }
 
+static void SetFuncsAndRegisterPrimJSCallbacks(LEPUSRuntime* rt) {
+  static void* funcs[] = {
+      reinterpret_cast<void*>(PrintByALog),
+      reinterpret_cast<void*>(LepusHasProperty),
+      reinterpret_cast<void*>(LepusDeleteProperty),
+      reinterpret_cast<void*>(LEPUSValueGetOwnPropertyNames),
+      reinterpret_cast<void*>(LEPUSValueDeepEqualCallBack),
+      reinterpret_cast<void*>(LEPUSRefArrayPushCallBack),
+      reinterpret_cast<void*>(LEPUSRefArrayPopCallBack),
+      reinterpret_cast<void*>(LEPUSRefArrayFindCallBack),
+      reinterpret_cast<void*>(LEPUSRefArrayReverse),
+      reinterpret_cast<void*>(LEPUSRefArraySlice)};
+
+  static constexpr int32_t kCountFuncs = sizeof(funcs) / sizeof(funcs[0]);
+  auto registered_count = 1;  // only PrintByALog
+  if (!tasm::LynxEnv::GetInstance().IsDisabledLepusngOptimize()) {
+    registered_count = kCountFuncs;
+  }
+  RegisterPrimJSCallbacks(rt, reinterpret_cast<void**>(funcs),
+                          registered_count);
+}
+
+LEPUSRuntimeData::LEPUSRuntimeData(bool disable_tracing_gc, int runtime_mode) {
+  runtime_ = LEPUS_NewRuntimeWithMode(runtime_mode);
+  if (disable_tracing_gc || tasm::LynxEnv::GetInstance().IsDisableTracingGC()) {
+    LEPUS_SetRuntimeInfo(runtime_, "Lynx_LepusNG_RC");
+  } else {
+    LEPUS_SetRuntimeInfo(runtime_, "Lynx_LepusNG");
+  }
+
+  SetFuncsAndRegisterPrimJSCallbacks(runtime_);
+  lepus_context_ = LEPUS_NewContext(runtime_);
+  length_atom_ = LEPUS_NewAtom(lepus_context_, "length");
+}
+
+LEPUSRuntimeData::~LEPUSRuntimeData() {
+  ContextCell* cell = QuickContext::GetContextCellFromCtx(lepus_context_);
+  LEPUS_FreeContext(lepus_context_);
+  cell->ctx_ = nullptr;
+  cell->qctx_ = nullptr;
+  LEPUS_FreeRuntime(runtime_);
+  cell->rt_ = nullptr;
+  cell->DetachEnv();
+}
+
 QuickContext::QuickContext(bool disable_tracing_gc, int runtime_mode,
                            const tasm::PageOptions& page_options)
     : LEPUSRuntimeData(disable_tracing_gc, runtime_mode),
@@ -234,10 +533,10 @@ QuickContext::QuickContext(bool disable_tracing_gc, int runtime_mode,
     EnableRuntimeLeakCheck(true);
     PushContextValidTid();
   }
-  LEPUSLepusRefCallbacks callbacks = Context::GetLepusRefCall();
+  LEPUSLepusRefCallbacks callbacks = GetLepusRefCall();
   RegisterLepusRefCallbacks(runtime_, &callbacks);
   LEPUS_SetMaxStackSize(context(), static_cast<size_t>(ULLONG_MAX));
-  LEPUS_SetContextOpaque(lepus_context_, Context::RegisterContextCell(this));
+  LEPUS_SetContextOpaque(lepus_context_, RegisterContextCell(this));
   Initialize();
   RegisterLepusType(runtime_, Value_Array, Value_Table);
   // data associated with debugger need to be initialized
@@ -377,10 +676,6 @@ void QuickContext::SetTopLevelFunction(LEPUSValue val) {
   }
 }
 
-LEPUSValue QuickContext::GetTopLevelFunction() const {
-  return top_level_function_;
-}
-
 void QuickContext::SetEnableStrictCheck(bool val) {
   use_lepus_strict_mode_ = val;
 }
@@ -404,6 +699,9 @@ void QuickContext::SetStackSize(uint32_t stack_size) {
 }
 
 bool QuickContext::Execute() {
+  if (HasPreExecuteSuccess()) {
+    return true;
+  }
   ScriptingScope scope(this);
 
   return ExecuteBinaryInternal(nullptr);
@@ -788,7 +1086,7 @@ void QuickContext::RegisterGlobalFunction(const char* name,
   RegisterGlobalProperty(name, c_func);
 }
 
-LEPUSValue QuickContext::NewBindingFunction(RenderBindingFunc func) {
+LEPUSValue QuickContext::NewBindingFunction(CFunction func) {
   LEPUSValue binding_func =
       LEPUS_MKPTR(LEPUS_TAG_LEPUS_CPOINTER, reinterpret_cast<void*>(func));
   return LEPUS_NewCFunctionData(
@@ -796,8 +1094,8 @@ LEPUSValue QuickContext::NewBindingFunction(RenderBindingFunc func) {
       [](LEPUSContext* ctx, LEPUSValue this_obj, int32_t argc,
          LEPUSValueConst* argv, int32_t magic, LEPUSValue* func_data) {
         auto* qctx = lepus::QuickContext::GetFromJsContext(ctx);
-        RenderBindingFunc func = reinterpret_cast<RenderBindingFunc>(
-            LEPUS_VALUE_GET_CPOINTER(func_data[0]));
+        CFunction func =
+            reinterpret_cast<CFunction>(LEPUS_VALUE_GET_CPOINTER(func_data[0]));
         // 1. prepare args.
         char args_buf[sizeof(lepus::Value) * argc];
         lepus::Value* largv = reinterpret_cast<lepus::Value*>(args_buf);
@@ -809,10 +1107,10 @@ LEPUSValue QuickContext::NewBindingFunction(RenderBindingFunc func) {
                 lepus::LEPUSValueHelper::ConstructLepusRefToLynxValue(ctx,
                                                                       val));
           } else {
-            new (largv + i)
-                lepus::Value(lepus::Context::GetContextCellFromCtx(ctx)->env_,
-                             LEPUS_VALUE_GET_INT64(val),
-                             lepus::LEPUSValueHelper::CalculateTag(val));
+            new (largv + i) lepus::Value(
+                lepus::QuickContext::GetContextCellFromCtx(ctx)->env_,
+                LEPUS_VALUE_GET_INT64(val),
+                lepus::LEPUSValueHelper::CalculateTag(val));
           }
         }
         qctx->set_current_this(this_obj);
@@ -1038,7 +1336,6 @@ bool QuickContext::debuginfo_outside() const { return debuginfo_outside_; }
 
 void QuickContext::RegisterCtxBuiltin(const tasm::ArchOption& option) {
 #ifndef LEPUS_PC
-  tasm::Utils::RegisterNGBuiltin(this);
   tasm::Renderer::RegisterNGBuiltin(this, option);
 #endif
   return;
@@ -1112,6 +1409,23 @@ bool QuickContext::IsTracingGCEnabled() {
     return LEPUS_IsGCMode(lepus_context);
   }
   return false;
+}
+
+LEPUSLepusRefCallbacks QuickContext::GetLepusRefCall() {
+  return {&LepusRefFreeCallBack,        &LepusRefGetPropertyCallBack,
+          &LepusRefGetLengthCallBack,   &LepusConvertToObjectCallBack,
+          &LepusRefSetPropertyCallBack, &LepusRefFreeStringCache,
+          &LepusRefDeepEqualCallBack,   &LepusrefToString,
+          &RefCountedObjVisitor};
+}
+
+CellManager& QuickContext::GetContextCells() {
+  thread_local CellManager cells_;
+  return cells_;
+}
+
+ContextCell* QuickContext::RegisterContextCell(lepus::QuickContext* qctx) {
+  return GetContextCells().AddCell(qctx);
 }
 
 #if ENABLE_TRACE_PERFETTO

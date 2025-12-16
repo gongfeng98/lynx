@@ -135,16 +135,6 @@ deps = {
         "ignore_in_git": True,
         "condition": system in ['linux', 'darwin', 'windows']
     },
-    'buildtools/android_sdk_manager': {
-        "type": "http",
-        "url": {
-            "darwin": "https://dl.google.com/android/repository/commandlinetools-mac-8512546_latest.zip",
-            "linux": "https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip",
-            "windows": "https://dl.google.com/android/repository/commandlinetools-win-8512546_latest.zip"
-        }.get(system, None),
-        "ignore_in_git": True,
-        "condition": system in ['linux', 'darwin', 'windows']
-    },
     'third_party/gyp': {
         "type": "git",
         "url": "https://chromium.googlesource.com/external/gyp",
@@ -155,7 +145,7 @@ deps = {
     'build': {
         "type": "git",
         "url": "https://github.com/lynx-family/buildroot.git",
-        "commit": "01f8665ff78d9f55c56b56db86106eba1ba81bad",
+        "commit": "2b6a631306054a2ff884b978ead2eafeaf0b328f",
         "ignore_in_git": True,
         "condition": system in ['linux', 'darwin', 'windows']
     },
@@ -227,7 +217,7 @@ deps = {
     'third_party/perfetto': {
         'type': 'git',
         'url': 'https://github.com/lynx-family/lynx-trace.git',
-        'commit': 'a5e90f9c8d2433622be6f3382c17cc6cbf254f81',
+        'commit': '7e8fa9df159fdd6461e77c36758e1e8c8af60842',
         "patches": [
               os.path.join(root_dir, 'patches', 'perfetto', '*.patch')
          ],
@@ -243,7 +233,7 @@ deps = {
     "third_party/quickjs/src": {
         "type": "git",
         "url": "https://github.com/lynx-family/primjs.git",
-        "commit": "1174a5aa8b187babc18489a444493a5163053d03",
+        "commit": "cdf39f87e8a2d5a1c33b691f5a0c5fd777c3bf85",
         "ignore_in_git": True,
     },
     "third_party/debug_router/src": {

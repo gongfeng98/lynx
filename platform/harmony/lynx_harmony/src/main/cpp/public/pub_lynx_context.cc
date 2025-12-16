@@ -24,7 +24,11 @@ PubLynxContext::PubLynxContext(
   ui_owner->SetContext(this);
   node_owner->SetContext(this);
   context_->SetTapSlop("50px");
+  context_->SetLongPressDuration(500);
   context_->SetEnableTextOverflow(true);
+  if (delegate->gesture_event_callback) {
+    ui_owner->Owner()->InitGestureArenaManager(context_.get());
+  }
   // The ui_task_runner is created separately here. MessageLoopTaskQueues
   // maintains its own ui_task_runner to prevent the same ui_task_runner from
   // being used in external MessageLoopTaskQueues
@@ -34,7 +38,7 @@ PubLynxContext::PubLynxContext(
               .GetLoopImpl());
   // TODO(@hujing.1)add list_engine_proxy
   context_->OnLynxCreate(nullptr, nullptr, nullptr, nullptr, resource_loader,
-                         ui_task_runner, ui_task_runner);
+                         ui_task_runner, ui_task_runner, false);
 }
 
 const std::shared_ptr<LynxContext>& PubLynxContext::Context() const {

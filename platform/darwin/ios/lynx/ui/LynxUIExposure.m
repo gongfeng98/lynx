@@ -7,7 +7,6 @@
 #import <Lynx/LynxEnv.h>
 #import <Lynx/LynxLog.h>
 #import <Lynx/LynxTraceEvent.h>
-#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxTraceEventWrapper.h>
 #import <Lynx/LynxUI+Internal.h>
 #import <Lynx/LynxUIExposure.h>
@@ -17,6 +16,7 @@
 #import <Lynx/LynxWeakProxy.h>
 #import "LynxGlobalObserver+Internal.h"
 #import "LynxTemplateRender+Internal.h"
+#import "LynxTraceEventDef.h"
 
 @interface LynxUIExposureDetail : NSObject
 @property(nonatomic, copy) NSString *exposureScene;
@@ -368,7 +368,10 @@
   BOOL isIntersectWithScreen = [self checkIntersect:frameOfUIInWindow
                                           otherRect:borderOfExposureScreen
                                               ratio:exposureAreaRatio];
-  return isIntersectWithRoot && isIntersectWithScreen;
+  BOOL isRootIntersectWithScreen = [self checkIntersect:frameOfRootUIInWindow
+                                              otherRect:borderOfExposureScreen
+                                                  ratio:0];
+  return isIntersectWithRoot && isIntersectWithScreen && isRootIntersectWithScreen;
 }
 
 - (BOOL)isLynxViewChanged {
@@ -386,11 +389,6 @@
 - (void)exposureHandler:(CADisplayLink *)sender {
   // Avoid performing exposure detection tasks after calling stopExposure.
   if (_isStopExposure) {
-    return;
-  }
-
-  // Lynx cards may be on the view tree but are in a hidden state.
-  if (_rootUI.view.isHidden) {
     return;
   }
 

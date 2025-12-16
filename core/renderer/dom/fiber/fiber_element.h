@@ -216,8 +216,8 @@ class FiberElement : public Element,
 
   const InheritedProperty GetParentInheritedProperty();
 
-  virtual bool NeedFullFlushPath(
-      const std::pair<CSSPropertyID, tasm::CSSValue>& style) override;
+  virtual bool NeedFullFlushPath(CSSPropertyID id,
+                                 const CSSValue& value) override;
 
   const StyleMap& GetParsedStylesMap() const { return parsed_styles_map_; }
 
@@ -565,7 +565,9 @@ class FiberElement : public Element,
    * @param style_map A constant reference to a tasm::StyleMap containing the
    *                  styles to be updated.
    */
-  void UpdateSimpleStyles(const tasm::StyleMap& style_map) override final;
+  void UpdateSimpleStyles(const tasm::StyleMap& style_map) final;
+
+  void UpdateSimpleStyles(tasm::StyleMap&& style_map) final;
 
   /**
    * @brief Reset the simple style associated with the specified CSS property
@@ -583,6 +585,7 @@ class FiberElement : public Element,
                         base::InlineVector<CSSPropertyID, 16>& reset_style_ids,
                         bool& need_update,
                         bool& force_use_current_parsed_style_map);
+  void ResolveSimpleStyles();
 
   const base::String& GetRawInlineStyles();
 
@@ -922,6 +925,8 @@ class FiberElement : public Element,
 
   virtual int32_t GetMemoryUsage() const override { return sizeof(*this); }
 
+  SLNode* GetLayoutObject() const override { return sl_node_.get(); }
+
   inline SLNode* slnode() const {
     if (sl_node_ != nullptr) {
       return sl_node_.get();
@@ -934,10 +939,6 @@ class FiberElement : public Element,
 
   bool IsEventPathCatch() override;
 
-  lepus::Value GetEventTargetInfo(bool is_core_event = false) override;
-
-  lepus::Value GetEventControlInfo(const std::string& event_type,
-                                   bool is_global = false) override;
   void SetMeasureFunc(std::unique_ptr<MeasureFunc> measure_func);
 
   lepus::Value GetComputedStyleByKey(const base::String& key);

@@ -1192,6 +1192,8 @@ inline constexpr const char* const FRAME_ELEMENT_ON_SET_SRC =
     "FrameElement::OnSetSrc";
 inline constexpr const char* const FRAME_ELEMENT_DID_BUNDLED_LOADED =
     "FrameElement::DidBundleLoaded";
+inline constexpr const char* const FRAME_ELEMENT_FLUSH_PROPS =
+    "FrameElement::FlushProps";
 
 inline constexpr const char* const SIGNAL_CONTEXT_COMPLETE_UPDATES =
     "SignalContext::CompleteUpdates";
@@ -1250,6 +1252,7 @@ inline constexpr const char* const
         "UIOperationQueue::CreatePaintingNodeSyncTask";
 inline constexpr const char* const UI_OPERATION_QUEUE_UPDATE_LAYOUT_TASK =
     "UIOperationQueue::UpdateLayoutTask";
+inline constexpr const char* const DUMP_UI_TREE_LAYOUT = "DumpUITreeLayout";
 
 #endif  // #if ENABLE_TRACE_PERFETTO || ENABLE_TRACE_SYSTRACE
 

@@ -7,6 +7,8 @@ package com.lynx.tasm.performance.fsp;
 import android.graphics.Rect;
 import androidx.annotation.AnyThread;
 import androidx.annotation.UiThread;
+import com.lynx.tasm.base.TraceEvent;
+import com.lynx.tasm.base.trace.TraceEventDef;
 import com.lynx.tasm.behavior.ui.ILynxUIMeaningfulContent;
 import com.lynx.tasm.behavior.ui.MeaningfulPaintingArea;
 import com.lynx.tasm.eventreport.LynxEventReporter;
@@ -59,6 +61,8 @@ public class FSPTracer {
   private static final String KEY_CONTENT_FILL_PERCENTAGE_Y = "contentFillPercentageY";
   private static final String KEY_CONTENT_FILL_PERCENTAGE_TOTAL_AREA =
       "contentFillPercentageTotalArea";
+  private static final String KEY_CONTAINER_FILL_PERCENTAGE_CONTAINER_AREA =
+      "containerFillPercentageContainerArea";
   // Tracer fields
   private final FSPConfig mConfig = new FSPConfig();
   private final AtomicBoolean mIsRunning = new AtomicBoolean(false);
@@ -197,6 +201,7 @@ public class FSPTracer {
                 area.getOffsetY() + area.getHeight()),
             area.getFirstMeaningfulContentPresentedTimestampMicros());
       }
+      snapshot.traceCurrentTimestampUs = rawSnapshot.getTraceCurrentTimestampUs();
       tracer.onCaptureSnapshot(snapshot);
     });
   }
@@ -214,10 +219,15 @@ public class FSPTracer {
       mPreviousSnapshot = null;
       return;
     }
-
+    if (TraceEvent.isTracingStarted()) {
+      TraceEvent.instant(TraceEventDef.CATEGORY_DEFAULT,
+          TraceEventDef.FSP_TRACER_ON_VALUABLE_SNAPSHOT, snapshot.traceCurrentTimestampUs,
+          snapshot.toMap());
+    }
     // If previous snapshot exists, check stability
     if (mPreviousSnapshot != null && mPreviousSnapshot.getLastChangeTimestampUs() > 0
         && isSnapshotStable(snapshot, mPreviousSnapshot, mConfig)) {
+      TraceEvent.beginSection(TraceEventDef.FSP_TRACER_SNAPSHOT_STABLE);
       long diffTUs =
           snapshot.getLastChangeTimestampUs() - mPreviousSnapshot.getLastChangeTimestampUs();
       long diffTMs = diffTUs / 1000;
@@ -227,11 +237,12 @@ public class FSPTracer {
         mIsRunning.set(false);
         handleFSPResult(
             ResultStatus.SUCCESS, mPreviousSnapshot, mPreviousSnapshot.getLastChangeTimestampUs());
-        return;
       }
+      TraceEvent.endSection(TraceEventDef.FSP_TRACER_SNAPSHOT_STABLE);
+      return;
     }
 
-    // Update previous snapshot if valuable
+    // Update previous snapshot if valuable.
     mPreviousSnapshot = snapshot;
   }
 
@@ -270,8 +281,14 @@ public class FSPTracer {
 
     snapshot.setContentFillPercentageTotalArea(
         (int) (snapshot.getTotalPresentedContentArea() * 100 / snapshot.getTotalContentArea()));
+    if (snapshot.getContentFillPercentageTotalArea() < config.minContentFillPercentageTotalArea) {
+      return false;
+    }
 
-    return snapshot.getContentFillPercentageTotalArea() >= config.minContentFillPercentageTotalArea;
+    snapshot.setContainerFillPercentageContainerArea(
+        (int) (snapshot.getTotalPresentedContentArea() * 100 / snapshot.getContainerArea()));
+    return snapshot.getContainerFillPercentageContainerArea()
+        >= config.minContainerFillPercentageContainerArea;
   }
 
   /// @note Run on ReportThread
@@ -305,11 +322,19 @@ public class FSPTracer {
       return false;
     }
 
-    // Check area change rate
+    // Check total meaningful content area change rate
     int areaChangeRate = (int) Math.abs(current.getTotalPresentedContentArea()
                              - previous.getTotalPresentedContentArea())
         * 1000 / (int) diffTMs;
     if (areaChangeRate > config.acceptableAreaDiffPerSec) {
+      return false;
+    }
+
+    // Check container area change rate
+    int containerAreaChangeRate = (int) Math.abs(current.getContainerFillPercentageContainerArea()
+                                      - previous.getContainerFillPercentageContainerArea())
+        * 1000 / (int) diffTMs;
+    if (containerAreaChangeRate > config.acceptableAreaDiffPerSec) {
       return false;
     }
 
@@ -340,6 +365,12 @@ public class FSPTracer {
       HashMap<String, String> info = new HashMap<>(1);
       info.put(KEY_FSP_STATUS, status.getValue());
       perfController.setFSPTimingInfo(currentTimestampUs, info);
+      if (TraceEvent.isTracingStarted()) {
+        UIThreadUtils.runOnUiThread(() -> {
+          TraceEvent.instant(
+              TraceEventDef.CATEGORY_DEFAULT, TraceEventDef.FSP_TIMING_MARK_FSP_END, info);
+        });
+      }
       return;
     }
     HashMap<String, String> info = new HashMap<>(1);
@@ -350,6 +381,16 @@ public class FSPTracer {
         KEY_CONTENT_FILL_PERCENTAGE_Y, String.valueOf(currentSnapshot.getContentFillPercentageY()));
     info.put(KEY_CONTENT_FILL_PERCENTAGE_TOTAL_AREA,
         String.valueOf(currentSnapshot.getContentFillPercentageTotalArea()));
+    info.put(KEY_CONTAINER_FILL_PERCENTAGE_CONTAINER_AREA,
+        String.valueOf(currentSnapshot.getContainerFillPercentageContainerArea()));
     perfController.setFSPTimingInfo(currentSnapshot.getLastChangeTimestampUs(), info);
+    if (TraceEvent.isTracingStarted()) {
+      UIThreadUtils.runOnUiThread(() -> {
+        // Add 1 us to make sure this evnet is after the snapshot bitmap
+        // event.
+        TraceEvent.instant(TraceEventDef.CATEGORY_DEFAULT, TraceEventDef.FSP_TIMING_MARK_FSP_END,
+            currentSnapshot.traceCurrentTimestampUs + 1, info);
+      });
+    }
   }
 }

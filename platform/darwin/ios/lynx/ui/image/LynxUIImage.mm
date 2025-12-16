@@ -16,12 +16,12 @@
 #import <Lynx/LynxService.h>
 #import <Lynx/LynxShadowNodeOwner.h>
 #import <Lynx/LynxTraceEvent.h>
-#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxUI+Internal.h>
 #import <Lynx/LynxUIImage.h>
 #import <Lynx/LynxUIUnitUtils.h>
 #import <Lynx/LynxUnitUtils.h>
 #import "LynxConvertUtils.h"
+#import "LynxTraceEventDef.h"
 #import "LynxUI+Private.h"
 
 #import <Lynx/LynxBackgroundUtils.h>
@@ -411,9 +411,6 @@ LYNX_REGISTER_UI("image")
 }
 
 - (BOOL)needSyncDisplay {
-  if (![self enableAsyncDisplay]) {
-    return YES;
-  }
   if ([LynxUIImage isAnimatedImage:self.image]) {
     return YES;
   }
@@ -428,13 +425,13 @@ LYNX_REGISTER_UI("image")
          ![self.backgroundManager hasDifferentBorderRadius];
 }
 
-- (bool)updateLayerMaskOnFrameChangedInner:(BOOL)needAsyncDisplay URL:(LynxURL*)requestUrl {
+- (bool)updateLayerMaskOnFrameChangedInner:(BOOL)processorUnsupported URL:(LynxURL*)requestUrl {
   // we do not need to run super, as overflow is not used for image,
   // border-radius will be processed by itself
   if (CGSizeEqualToSize(self.frame.size, CGSizeZero)) {
     return false;
   }
-  if (needAsyncDisplay) {
+  if (processorUnsupported) {
     if (self.image != nil) {
       if ([self needSyncDisplay]) {
         [self onImageReady:_image withRequest:requestUrl];

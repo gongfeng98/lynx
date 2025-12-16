@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "core/renderer/dom/fragment/fragment.h"
+#include "core/renderer/dom/fragment/list_fragment_behavior.h"
 #include "core/renderer/dom/list_component_info.h"
 #include "core/renderer/dom/vdom/radon/radon_list_base.h"
 #include "core/renderer/template_assembler.h"
@@ -357,6 +359,19 @@ ParallelFlushReturn ListElement::PrepareForCreateOrUpdate() {
       FiberElement::SetAttributeInternal(
           BASE_STATIC_STRING(list::kExperimentalBatchRenderStrategy),
           lepus::Value(static_cast<int>(batch_render_strategy)));
+      HandleDelayTask([this, batch_render_strategy]() {
+        std::string id_selector = data_model_->idSelector().str();
+        bool enable_parallel_element =
+            element_manager_->GetEnableParallelElement();
+        report::EventTracker::OnEvent([batch_render_strategy, id_selector,
+                                       enable_parallel_element](
+                                          report::MoveOnlyEvent& event) {
+          event.SetName("lynxsdk_list_batch_render_statistic");
+          event.SetProps("id_selector", id_selector);
+          event.SetProps("strategy", static_cast<int>(batch_render_strategy));
+          event.SetProps("enable_parallel_element", enable_parallel_element);
+        });
+      });
     }
     // Handle experimental-continuous-resolve-tree
     it = attr_map.find(
@@ -580,6 +595,10 @@ void ListElement::HydrateFinish() {
     // remove ssr helper when hydrate finish.
     ssr_helper_ = std::nullopt;
   }
+}
+
+void ListElement::SetupFragmentBehavior(Fragment* fragment) {
+  fragment->SetBehavior(std::make_unique<ListFragmentBehavior>(fragment));
 }
 
 void ListElement::AttachToElementManager(

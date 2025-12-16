@@ -22,12 +22,12 @@
 #import <Lynx/LynxTemplateRenderDelegate.h>
 #import <Lynx/LynxThreadManager.h>
 #import <Lynx/LynxTraceEvent.h>
-#import <Lynx/LynxTraceEventDef.h>
 #import <Lynx/LynxUIKitAPIAdapter.h>
 #import <Lynx/LynxView.h>
 #import <Lynx/LynxWeakProxy.h>
 #import "LynxFeatureCounter.h"
 #import "LynxTemplateRender+Internal.h"
+#import "LynxTraceEventDef.h"
 #import "LynxUIRendererProtocol.h"
 #import "LynxView+Protected.h"
 
@@ -335,6 +335,12 @@
 - (void)layoutSubviews {
   TRACE_EVENT(LYNX_TRACE_CATEGORY, LYNX_VIEW_LAYOUT_SUBVIEWS, INSTANCE_ID,
               [_templateRender instanceId]);
+
+  if (_enableAutoLayout) {
+    CGRect frame = CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height);
+    RUN_RENDER_SAFELY([_templateRender updateFrame:frame];);
+  }
+
   if (_enableSyncFlush && [self.subviews count] > 0) {
     [self syncFlush];
   }

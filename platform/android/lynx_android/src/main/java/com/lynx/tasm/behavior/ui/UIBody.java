@@ -29,9 +29,12 @@ import com.lynx.tasm.base.trace.TraceEventDef;
 import com.lynx.tasm.behavior.ILynxUIRenderer;
 import com.lynx.tasm.behavior.LynxContext;
 import com.lynx.tasm.behavior.event.EventTarget;
+import com.lynx.tasm.behavior.render.ContainerRenderer;
 import com.lynx.tasm.behavior.render.DisplayList;
 import com.lynx.tasm.behavior.render.DisplayListApplier;
+import com.lynx.tasm.behavior.render.IRendererHost;
 import com.lynx.tasm.behavior.render.PlatformRendererContext;
+import com.lynx.tasm.behavior.render.Renderer;
 import com.lynx.tasm.behavior.ui.UIBody.UIBodyView;
 import com.lynx.tasm.behavior.ui.accessibility.LynxAccessibilityWrapper;
 import com.lynx.tasm.behavior.ui.image.LynxImageManager;
@@ -42,10 +45,13 @@ import com.lynx.tasm.utils.SizeValue;
 import java.lang.annotation.Native;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class UIBody extends UIGroup<UIBodyView> {
   private final static String TAG = "UIBody";
@@ -67,6 +73,12 @@ public class UIBody extends UIGroup<UIBodyView> {
   public UIBody(LynxContext context, final UIBodyView view) {
     super(context);
     mBodyView = view;
+    if (mBodyView != null) {
+      if (context != null && context.isFragmentLayerRenderOn()) {
+        mBodyView.mLynxContext = context;
+        mBodyView.setClipChildren(false);
+      }
+    }
     initialize();
 
     mExceptionHandler = new Consumer<Exception>() {
@@ -132,6 +144,7 @@ public class UIBody extends UIGroup<UIBodyView> {
         }
 
         mContext = context;
+        mBodyView.mLynxContext = context;
         mContext.setUIBodyView(mBodyView);
 
         TraceEvent.beginSection(TraceEventDef.UI_BODY_ATTACH_UI_BODY_VIEW);
@@ -409,13 +422,9 @@ public class UIBody extends UIGroup<UIBodyView> {
   }
 
   public static class UIBodyView
-      extends FrameLayout implements IDrawChildHook.IDrawChildHookBinding {
+      extends FrameLayout implements IDrawChildHook.IDrawChildHookBinding, IRendererHost {
     private ConcurrentHashMap<Integer, View> mViewMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Integer, LynxImageManager> mImageMap = new ConcurrentHashMap<>();
-
-    public int mSign;
-    private DisplayListApplier mDisplayListApplier = null;
-    DisplayList mDisplayList = new DisplayList();
 
     private IDrawChildHook mDrawChildHook;
     private long mMeaningfulPaintTiming;
@@ -424,6 +433,7 @@ public class UIBody extends UIGroup<UIBodyView> {
 
     private boolean mInterceptRequestLayout;
     private boolean mHasPendingRequestLayout;
+    private LynxContext mLynxContext = null;
 
     private WeakReference<ITimingCollector> mTimingCollector = new WeakReference<>(null);
 
@@ -439,13 +449,26 @@ public class UIBody extends UIGroup<UIBodyView> {
     private int mCacheHeight;
     boolean mIsMeaningfulPaintingAreaInvalidate = false;
 
-    // XXX(zhongyr): The following methods can be better abstracted, since they are common methods
-    // for PlatformRender layer. Have to design a better way to compose the DisplayList based
-    // pipeline with legacy pipeline.
-    private PlatformRendererContext mPlatformRendererContext = null;
+    private Renderer mRenderer;
 
-    public void setPlatformRendererContext(PlatformRendererContext context) {
-      mPlatformRendererContext = context;
+    @Override
+    public void setRenderer(Renderer renderer) {
+      mRenderer = renderer;
+    }
+
+    @Override
+    public Renderer getRenderer() {
+      return mRenderer;
+    }
+
+    @Override
+    public ViewGroup getView() {
+      return this;
+    }
+
+    @Override
+    public Renderer createRenderer(PlatformRendererContext context, int sign) {
+      return new Renderer(context, sign);
     }
 
     // assign with the uiRenderer instance on TemplateRender
@@ -523,6 +546,10 @@ public class UIBody extends UIGroup<UIBodyView> {
       return image;
     }
 
+    public LynxImageManager peekImageAccordingToNodeIndex(int nodeIndex) {
+      return mImageMap.get(nodeIndex);
+    }
+
     public void clearNodeIndexImageMap() {
       mImageMap.clear();
     }
@@ -566,14 +593,14 @@ public class UIBody extends UIGroup<UIBodyView> {
     }
 
     private boolean shouldDrawWithDisplayList() {
-      return mPlatformRendererContext != null && mDisplayListApplier != null;
+      return mRenderer != null;
     }
 
     @Override
     protected void dispatchDraw(final Canvas canvas) {
       if (shouldDrawWithDisplayList()) {
         super.dispatchDraw(canvas);
-        mDisplayListApplier.drawTillNextView(canvas);
+        mRenderer.afterDispatchDraw(canvas);
         return;
       }
 
@@ -601,12 +628,48 @@ public class UIBody extends UIGroup<UIBodyView> {
       }
 
       if (timingCollector != null) {
+        if (!timingCollector.getPendingPaintEndPipelineIds().isEmpty()) {
+          TraceUITreeLayout();
+        }
         timingCollector.markHostPlatformTiming(HOST_PLATFORM_DRAW_END);
         timingCollector.markPaintEndTimingIfNeeded();
       }
       if (needLongTaskMonitor) {
         LynxLongTaskMonitor.didProcessTask();
       }
+    }
+
+    private void TraceUITreeLayout() {
+      if (!TraceEvent.isTracingStarted() || mLynxUIRender == null) {
+        return;
+      }
+
+      UIGroup<UIBodyView> rootUI = mLynxUIRender.getLynxRootUI();
+      if (rootUI instanceof UIBody) {
+        TraceEvent.beginSection(TraceEvent.CATEGORY_DEFAULT, TraceEventDef.DUMP_UI_TREE_LAYOUT);
+
+        JSONObject uiTree = getUITreeRecursively(rootUI);
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("detail", uiTree.toString());
+        TraceEvent.endSection(TraceEvent.CATEGORY_DEFAULT, TraceEventDef.DUMP_UI_TREE_LAYOUT, map);
+      }
+    }
+
+    private JSONObject getUITreeRecursively(@NonNull LynxBaseUI ui) {
+      JSONObject jsonData = new JSONObject();
+      try {
+        jsonData.put("name", ui.getClass().getName());
+        jsonData.put("frame",
+            new JSONArray(Arrays.asList(ui.getLeft(), ui.getTop(), ui.getWidth(), ui.getHeight())));
+        List<Object> list = new ArrayList<>();
+        for (LynxBaseUI child : ui.getChildren()) {
+          list.add(getUITreeRecursively(child));
+        }
+        jsonData.put("children", new JSONArray(list));
+      } catch (Exception e) {
+        LLog.e(TAG, "getUITreeRecursively error: " + e.getMessage());
+      }
+      return jsonData;
     }
 
     void notifyMeaningfulLayout() {
@@ -632,25 +695,28 @@ public class UIBody extends UIGroup<UIBodyView> {
     }
 
     @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+      super.onLayout(changed, l, t, r, b);
+      if (shouldDrawWithDisplayList()) {
+        mRenderer.onLayout(changed, l, t, r, b);
+      }
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
-      // TODO(zhongyr): to be optimized. Not every draw has to retrieve the DL from native.
       super.onDraw(canvas);
-      if (mPlatformRendererContext != null) {
-        mPlatformRendererContext.getDisplayList(mSign, mDisplayList);
-        if (mDisplayListApplier == null) {
-          mDisplayListApplier =
-              new DisplayListApplier(mDisplayList, mPlatformRendererContext, this);
-        } else {
-          mDisplayListApplier.setDisplayList(mDisplayList);
-        }
+      if (shouldDrawWithDisplayList()) {
+        mRenderer.onDraw(canvas);
       }
     }
 
     @Override
     protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
       if (shouldDrawWithDisplayList()) {
-        mDisplayListApplier.drawTillNextView(canvas);
-        return super.drawChild(canvas, child, drawingTime);
+        mRenderer.beforeDrawChild(canvas, child);
+        boolean ret = super.drawChild(canvas, child, drawingTime);
+        mRenderer.afterDrawChild(canvas, child);
+        return ret;
       }
       Rect bound = null;
       if (mDrawChildHook != null) {

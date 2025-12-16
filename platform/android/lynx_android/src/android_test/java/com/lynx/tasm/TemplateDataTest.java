@@ -11,8 +11,8 @@ import android.app.Application;
 import android.content.Context;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
-import com.lynx.tasm.TemplateData;
 import com.lynx.tasm.base.LLog;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -607,6 +607,21 @@ public class TemplateDataTest {
   }
 
   @Test
+  public void testByteArray() {
+    Map map = new HashMap();
+    map.put("key1", "value1");
+    map.put("key2", "value2".getBytes());
+    TemplateData data = TemplateData.fromMap(map);
+    Map testMap = data.toMap();
+    assertEquals(map.get("key1"), testMap.get("key1"));
+
+    byte[] bytes = ((byte[]) map.get("key2"));
+    byte[] testBytes = ((byte[]) testMap.get("key2"));
+    assertTrue(bytes.length == testBytes.length);
+    assertTrue(Arrays.equals(bytes, testBytes));
+  }
+
+  @Test
   public void testNestedJson() {
     try {
       String nestedJsonString =
@@ -629,6 +644,43 @@ public class TemplateDataTest {
     }
   }
 
+  @Test
+  public void testGetTemplateDataForJSThread() {
+    TemplateData templateData = TemplateData.fromMap(new HashMap<>());
+    templateData.put("key1", 1);
+    templateData.put("key2", 2);
+    templateData.put("key3", 3);
+    templateData.put("key4", 4);
+    templateData.flush();
+
+    TemplateData copiedJsTemplateData = templateData.getTemplateDataForJSThread();
+    Object copiedJsData = TemplateData.nativeGetData(copiedJsTemplateData.getDataForJSThread());
+
+    Object jsData = TemplateData.nativeGetData(templateData.getDataForJSThread());
+    assertEquals(copiedJsData, jsData);
+
+    templateData.put("key5", 5);
+    templateData.flush();
+    Object updatedJsData = TemplateData.nativeGetData(templateData.getDataForJSThread());
+    assertEquals(updatedJsData, templateData.toMap());
+  }
+
+  @Test
+  public void testDeepCloneBeforeGetTemplateDataForJSThread() {
+    TemplateData templateData = TemplateData.fromMap(new HashMap<>());
+    templateData.put("key1", 1);
+    templateData.put("key2", 2);
+    templateData.put("key3", 3);
+    templateData.put("key4", 4);
+    templateData.flush();
+    TemplateData clonedData = templateData.deepClone();
+
+    TemplateData copiedJsTemplateData = templateData.getTemplateDataForJSThread();
+    Object copiedJsData = TemplateData.nativeGetData(copiedJsTemplateData.getDataForJSThread());
+    assertEquals(copiedJsData, clonedData.toMap());
+  }
+
+  @Test
   public void testRemoveData() {
     TemplateData templateData = TemplateData.fromMap(new HashMap<>());
     templateData.put("key1", 1);

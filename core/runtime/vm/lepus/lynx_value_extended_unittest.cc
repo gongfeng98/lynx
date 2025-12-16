@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+#define private public
+#define protected public
+
 #include "base/include/value/lynx_value_extended.h"
 
 #include <cstdint>
@@ -24,7 +27,7 @@ class LynxValueLepusNGTest : public ::testing::Test {
         env_(lynx_value_api_new_env(ctx_)),
         cell_(new ContextCell(nullptr, ctx_, rt_)) {
     LEPUS_SetContextOpaque(ctx_, cell_);
-    LEPUSLepusRefCallbacks callbacks = Context::GetLepusRefCall();
+    LEPUSLepusRefCallbacks callbacks = QuickContext::GetLepusRefCall();
     RegisterLepusRefCallbacks(rt_, &callbacks);
   }
 

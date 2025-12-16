@@ -212,7 +212,8 @@ bool LynxEnv::IsLynxDebugEnabled() {
 }
 
 bool LynxEnv::IsDevToolEnabled() {
-  return GetBoolEnv(Key::ENABLE_DEVTOOL, false, EnvType::LOCAL);
+  return IsLynxDebugEnabled() &&
+         GetBoolEnv(Key::ENABLE_DEVTOOL, false, EnvType::LOCAL);
 }
 
 bool LynxEnv::IsLogBoxEnabled() {
@@ -549,6 +550,12 @@ bool LynxEnv::DisableJSModeStrip() {
   return disable_js_mode_strip;
 }
 
+bool LynxEnv::EnablePlatformDataFix() {
+  static bool enable_platform_data_fix =
+      GetBoolEnv(Key::ENABLE_PLATFORM_DATA_FIX, false);
+  return enable_platform_data_fix;
+}
+
 bool LynxEnv::EnableQuickJsThreadChecker() {
   static bool enable_quickjs_thread_checker =
       GetBoolEnv(Key::ENABLE_QUICKJS_THREAD_CHECKER, false);
@@ -557,6 +564,10 @@ bool LynxEnv::EnableQuickJsThreadChecker() {
 
 bool LynxEnv::EnableLevelOrderTraversing() {
   return GetBoolEnv(Key::ENABLE_LEVEL_ORDER_TRAVERSING, false);
+}
+
+bool LynxEnv::EnableHarmonyDrawBehind() {
+  return GetBoolEnv(Key::ENABLE_HARMONY_DRAW_BEHIND, true);
 }
 }  // namespace tasm
 }  // namespace lynx

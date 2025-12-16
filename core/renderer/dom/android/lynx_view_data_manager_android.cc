@@ -12,6 +12,8 @@
 #include "base/include/log/logging.h"
 #include "base/include/platform/android/jni_convert_helper.h"
 #include "base/include/value/table.h"
+#include "base/trace/native/trace_event.h"
+#include "core/base/trace/trace_event_def.h"
 #include "core/renderer/data/android/platform_data_android.h"
 #include "core/renderer/data/platform_data.h"
 #include "core/renderer/data/template_data.h"

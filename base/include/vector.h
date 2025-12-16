@@ -78,7 +78,11 @@ namespace base {
 
 namespace {  // NOLINT
 
+template <bool EnableCounter>
 BASE_VECTOR_INLINE void* HeapAlloc(const size_t size) {
+  if constexpr (EnableCounter) {
+    // Call counter
+  }
   return std::malloc(size);
 }
 
@@ -174,8 +178,12 @@ BASE_VECTOR_NEVER_INLINE void _nontrivial_construct_copy(T* dest, T* source,
  * and is transparent to Vector or InlineVector's insert, push_back or other
  * data modifier methods. But the data is copied along with array elements by
  * Vector's copy and move constructors and copy and move assign operators.
+ *
+ * `CountRealloc`: A flag for local performance debugging. When enabled,
+ * array buffer reallocation will be counted. Note that the first allocation
+ * will NOT be counted.
  */
-template <class T, size_t ExtraBytesPerElement>
+template <class T, size_t ExtraBytesPerElement, bool CountRealloc>
 struct VectorPrototype {
   static constexpr auto is_trivial =
       IsTrivial<T, is_instance<T, std::pair>{}>::value;
@@ -209,10 +217,10 @@ struct VectorPrototype {
   }
 
  protected:
-  template <class, size_t>
+  template <class, size_t, bool>
   friend struct VectorPrototype;
 
-  template <size_t>
+  template <size_t, bool>
   friend struct VectorTemplateless;
 
   template <class, class, class, size_t, bool>
@@ -227,9 +235,8 @@ struct VectorPrototype {
   BASE_VECTOR_NEVER_INLINE static void* _reallocate_buffer(void* array,
                                                            size_t element_size,
                                                            size_t count) {
-    auto* proto_array =
-        reinterpret_cast<VectorPrototype<uint8_t, ExtraBytesPerElement>*>(
-            array);
+    auto* proto_array = reinterpret_cast<
+        VectorPrototype<uint8_t, ExtraBytesPerElement, CountRealloc>*>(array);
     auto old_capacity = proto_array->capacity();
     // old*2 for consistent with std::vector of libc++.
     // But we do not use max(count, old_cap * 2).
@@ -249,7 +256,18 @@ struct VectorPrototype {
       extra_bytes_size = AlignUp(new_capacity * ExtraBytesPerElement, 8);
     }
     const auto buffer_size = extra_bytes_size + new_capacity * element_size;
-    auto buffer = static_cast<uint8_t*>(HeapAlloc(buffer_size));
+    uint8_t* buffer;
+    if constexpr (CountRealloc) {
+      if (old_capacity > 0) {
+        // This is a RE-allocation.
+        buffer = static_cast<uint8_t*>(HeapAlloc<true>(buffer_size));
+      } else {
+        // First time allocation, skip counter.
+        buffer = static_cast<uint8_t*>(HeapAlloc<false>(buffer_size));
+      }
+    } else {
+      buffer = static_cast<uint8_t*>(HeapAlloc<false>(buffer_size));
+    }
     if (BASE_VECTOR_UNLIKELY(buffer == nullptr)) {
       return nullptr;
     }
@@ -279,8 +297,9 @@ struct VectorPrototype {
     }
     bool need_free = !is_static_buffer();
     auto buffer =
-        VectorPrototype<uint8_t, ExtraBytesPerElement>::_reallocate_buffer(
-            this, sizeof(T), count);
+        VectorPrototype<uint8_t, ExtraBytesPerElement,
+                        CountRealloc>::_reallocate_buffer(this, sizeof(T),
+                                                          count);
     if (buffer && prev_begin) {
       /* Leading bytes should be copied separately. */
       if constexpr (ExtraBytesPerElement > 0) {
@@ -399,14 +418,13 @@ struct VectorPrototype {
  APIs to manipulate Vector without template argument T.
  Note that templateless manipulators should only be used for trivial T types.
 */
-template <size_t ExtraBytesPerElement>
+template <size_t ExtraBytesPerElement, bool CountRealloc>
 struct VectorTemplateless {
   BASE_VECTOR_NEVER_INLINE static void ReallocateTrivial(void* array,
                                                          size_t element_size,
                                                          size_t count) {
-    auto* proto_array =
-        reinterpret_cast<VectorPrototype<uint8_t, ExtraBytesPerElement>*>(
-            array);
+    auto* proto_array = reinterpret_cast<
+        VectorPrototype<uint8_t, ExtraBytesPerElement, CountRealloc>*>(array);
     const bool free_prev = !proto_array->is_static_buffer();
     auto prev_begin = proto_array->_begin_iter();
     [[maybe_unused]] void* prev_alloc_buffer;
@@ -414,8 +432,9 @@ struct VectorTemplateless {
       prev_alloc_buffer = proto_array->get_memory_allocate();
     }
     auto buffer =
-        VectorPrototype<uint8_t, ExtraBytesPerElement>::_reallocate_buffer(
-            array, element_size, count);
+        VectorPrototype<uint8_t, ExtraBytesPerElement,
+                        CountRealloc>::_reallocate_buffer(array, element_size,
+                                                          count);
     if (buffer && prev_begin) {
       /* Leading bytes should be copied separately. */
       if constexpr (ExtraBytesPerElement > 0) {
@@ -455,9 +474,8 @@ struct VectorTemplateless {
   BASE_VECTOR_NEVER_INLINE static bool Resize(void* array, size_t element_size,
                                               size_t count,
                                               const void* fill_value) {
-    auto* proto_array =
-        reinterpret_cast<VectorPrototype<uint8_t, ExtraBytesPerElement>*>(
-            array);
+    auto* proto_array = reinterpret_cast<
+        VectorPrototype<uint8_t, ExtraBytesPerElement, CountRealloc>*>(array);
     bool reallocated = false;
     if (BASE_VECTOR_LIKELY(count > proto_array->size())) {
       if (BASE_VECTOR_LIKELY(count > proto_array->capacity())) {
@@ -482,9 +500,8 @@ struct VectorTemplateless {
   BASE_VECTOR_NEVER_INLINE static void* PrepareInsert(void* array,
                                                       size_t element_size,
                                                       const void* dest) {
-    auto* proto_array =
-        reinterpret_cast<VectorPrototype<uint8_t, ExtraBytesPerElement>*>(
-            array);
+    auto* proto_array = reinterpret_cast<
+        VectorPrototype<uint8_t, ExtraBytesPerElement, CountRealloc>*>(array);
     auto diff = static_cast<const uint8_t*>(dest) - proto_array->_begin_iter();
     if (BASE_VECTOR_UNLIKELY(proto_array->size() == proto_array->capacity())) {
       ReallocateTrivial(array, element_size);
@@ -511,9 +528,8 @@ struct VectorTemplateless {
    */
   BASE_VECTOR_NEVER_INLINE static bool Erase(void* array, size_t element_size,
                                              size_t index, size_t count = 1) {
-    auto* proto_array =
-        reinterpret_cast<VectorPrototype<uint8_t, ExtraBytesPerElement>*>(
-            array);
+    auto* proto_array = reinterpret_cast<
+        VectorPrototype<uint8_t, ExtraBytesPerElement, CountRealloc>*>(array);
     if (BASE_VECTOR_UNLIKELY(index >= proto_array->size())) {
       return false;
     }
@@ -537,9 +553,8 @@ struct VectorTemplateless {
     if (BASE_VECTOR_UNLIKELY(source == nullptr)) {
       return;
     }
-    auto* proto_array =
-        reinterpret_cast<VectorPrototype<uint8_t, ExtraBytesPerElement>*>(
-            array);
+    auto* proto_array = reinterpret_cast<
+        VectorPrototype<uint8_t, ExtraBytesPerElement, CountRealloc>*>(array);
     if (proto_array->size() + count > proto_array->capacity()) {
       ReallocateTrivial(array, element_size, proto_array->size() + count);
     }
@@ -559,9 +574,8 @@ struct VectorTemplateless {
     if (BASE_VECTOR_UNLIKELY(source_count == 0)) {
       return;
     }
-    auto* proto_array =
-        reinterpret_cast<VectorPrototype<uint8_t, ExtraBytesPerElement>*>(
-            array);
+    auto* proto_array = reinterpret_cast<
+        VectorPrototype<uint8_t, ExtraBytesPerElement, CountRealloc>*>(array);
     auto count = source_count + position;
     ReallocateTrivial(array, element_size, count);
     auto dest = proto_array->_begin_iter() + position * element_size;
@@ -579,37 +593,46 @@ struct VectorTemplateless {
  * provides basic methods of Vector with the same method signatures. For
  * POD types, it also provides some non-stl-standard methods for convenience.
  */
-template <class T, size_t ExtraBytesPerElement = 0>
-struct Vector : protected VectorTemplateless<ExtraBytesPerElement>,
-                public VectorPrototype<T, ExtraBytesPerElement> {
-  using typename VectorPrototype<T, ExtraBytesPerElement>::iterator;
-  using typename VectorPrototype<T, ExtraBytesPerElement>::const_iterator;
-  using VectorPrototype<T, ExtraBytesPerElement>::is_trivial;
-  using VectorPrototype<T, ExtraBytesPerElement>::is_trivially_destructible;
-  using VectorPrototype<
-      T, ExtraBytesPerElement>::is_trivially_destructible_after_move;
-  using VectorPrototype<T, ExtraBytesPerElement>::is_trivially_relocatable;
-  using VectorPrototype<T, ExtraBytesPerElement>::size;
-  using VectorPrototype<T, ExtraBytesPerElement>::capacity;
-  using VectorPrototype<T, ExtraBytesPerElement>::is_static_buffer;
-  using VectorPrototype<T, ExtraBytesPerElement>::_begin_iter;
-  using VectorPrototype<T, ExtraBytesPerElement>::_end_iter;
-  using VectorPrototype<T, ExtraBytesPerElement>::_finish_iter;
-  using VectorPrototype<T, ExtraBytesPerElement>::_free;
-  using VectorPrototype<T, ExtraBytesPerElement>::_transfer_from;
-  using VectorPrototype<T, ExtraBytesPerElement>::_swap;
-  using VectorPrototype<T, ExtraBytesPerElement>::_reset;
-  using VectorPrototype<T, ExtraBytesPerElement>::_set_count;
-  using VectorPrototype<T, ExtraBytesPerElement>::_inc_count;
-  using VectorPrototype<T, ExtraBytesPerElement>::_dec_count;
-  using VectorPrototype<T, ExtraBytesPerElement>::_reallocate_nontrivial;
-  using VectorPrototype<T, ExtraBytesPerElement>::_copy_extra_bytes_from;
+template <class T, size_t ExtraBytesPerElement = 0, bool CountRealloc = false>
+struct Vector
+    : protected VectorTemplateless<ExtraBytesPerElement, CountRealloc>,
+      public VectorPrototype<T, ExtraBytesPerElement, CountRealloc> {
+  using
+      typename VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::iterator;
+  using typename VectorPrototype<T, ExtraBytesPerElement,
+                                 CountRealloc>::const_iterator;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::is_trivial;
+  using VectorPrototype<T, ExtraBytesPerElement,
+                        CountRealloc>::is_trivially_destructible;
+  using VectorPrototype<T, ExtraBytesPerElement,
+                        CountRealloc>::is_trivially_destructible_after_move;
+  using VectorPrototype<T, ExtraBytesPerElement,
+                        CountRealloc>::is_trivially_relocatable;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::size;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::capacity;
+  using VectorPrototype<T, ExtraBytesPerElement,
+                        CountRealloc>::is_static_buffer;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_begin_iter;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_end_iter;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_finish_iter;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_free;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_transfer_from;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_swap;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_reset;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_set_count;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_inc_count;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_dec_count;
+  using VectorPrototype<T, ExtraBytesPerElement,
+                        CountRealloc>::_reallocate_nontrivial;
+  using VectorPrototype<T, ExtraBytesPerElement,
+                        CountRealloc>::_copy_extra_bytes_from;
 
-  using VectorTemplateless<ExtraBytesPerElement>::ReallocateTrivial;
-  using VectorTemplateless<ExtraBytesPerElement>::Resize;
-  using VectorTemplateless<ExtraBytesPerElement>::PrepareInsert;
-  using VectorTemplateless<ExtraBytesPerElement>::PushBackBatch;
-  using VectorTemplateless<ExtraBytesPerElement>::Fill;
+  using VectorTemplateless<ExtraBytesPerElement,
+                           CountRealloc>::ReallocateTrivial;
+  using VectorTemplateless<ExtraBytesPerElement, CountRealloc>::Resize;
+  using VectorTemplateless<ExtraBytesPerElement, CountRealloc>::PrepareInsert;
+  using VectorTemplateless<ExtraBytesPerElement, CountRealloc>::PushBackBatch;
+  using VectorTemplateless<ExtraBytesPerElement, CountRealloc>::Fill;
 
   using size_type = size_t;
   using difference_type = ptrdiff_t;
@@ -1117,7 +1140,7 @@ struct Vector : protected VectorTemplateless<ExtraBytesPerElement>,
    */
   template <class W = T, class U>
   typename std::enable_if<std::is_same_v<W, T> && is_trivial>::type append(
-      const Vector<U, ExtraBytesPerElement>& other) {
+      const Vector<U, ExtraBytesPerElement, CountRealloc>& other) {
     if (!other.empty()) {
       fill(other.data(), other.size() * sizeof(U), size());
     }
@@ -1272,10 +1295,12 @@ struct Vector : protected VectorTemplateless<ExtraBytesPerElement>,
   }
 };
 
-template <class T, size_t ExtraBytesPerElement>
-inline bool operator==(const Vector<T, ExtraBytesPerElement>& __x,
-                       const Vector<T, ExtraBytesPerElement>& __y) {
-  const typename Vector<T, ExtraBytesPerElement>::size_type __sz = __x.size();
+template <class T, size_t ExtraBytesPerElement, bool CountRealloc>
+inline bool operator==(
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __x,
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __y) {
+  const typename Vector<T, ExtraBytesPerElement, CountRealloc>::size_type __sz =
+      __x.size();
   if (__sz != __y.size()) {
     return false;
   }
@@ -1294,34 +1319,39 @@ inline bool operator==(const Vector<T, ExtraBytesPerElement>& __x,
   return true;
 }
 
-template <class T, size_t ExtraBytesPerElement>
-inline bool operator!=(const Vector<T, ExtraBytesPerElement>& __x,
-                       const Vector<T, ExtraBytesPerElement>& __y) {
+template <class T, size_t ExtraBytesPerElement, bool CountRealloc>
+inline bool operator!=(
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __x,
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __y) {
   return !(__x == __y);
 }
 
-template <class T, size_t ExtraBytesPerElement>
-inline bool operator<(const Vector<T, ExtraBytesPerElement>& __x,
-                      const Vector<T, ExtraBytesPerElement>& __y) {
+template <class T, size_t ExtraBytesPerElement, bool CountRealloc>
+inline bool operator<(
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __x,
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __y) {
   return std::lexicographical_compare(__x.begin(), __x.end(), __y.begin(),
                                       __y.end());
 }
 
-template <class T, size_t ExtraBytesPerElement>
-inline bool operator>(const Vector<T, ExtraBytesPerElement>& __x,
-                      const Vector<T, ExtraBytesPerElement>& __y) {
+template <class T, size_t ExtraBytesPerElement, bool CountRealloc>
+inline bool operator>(
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __x,
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __y) {
   return __y < __x;
 }
 
-template <class T, size_t ExtraBytesPerElement>
-inline bool operator>=(const Vector<T, ExtraBytesPerElement>& __x,
-                       const Vector<T, ExtraBytesPerElement>& __y) {
+template <class T, size_t ExtraBytesPerElement, bool CountRealloc>
+inline bool operator>=(
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __x,
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __y) {
   return !(__x < __y);
 }
 
-template <class T, size_t ExtraBytesPerElement>
-inline bool operator<=(const Vector<T, ExtraBytesPerElement>& __x,
-                       const Vector<T, ExtraBytesPerElement>& __y) {
+template <class T, size_t ExtraBytesPerElement, bool CountRealloc>
+inline bool operator<=(
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __x,
+    const Vector<T, ExtraBytesPerElement, CountRealloc>& __y) {
   return !(__y < __x);
 }
 
@@ -1341,28 +1371,32 @@ ByteArray ByteArrayFromBuffer(const T (&data)[Num]) {
  * is inplace following up the array struct. When element count exceeds N, a new
  * external buffer will be allocated and the inplace_buffer_ will be wasted.
  */
-template <class T, size_t N, size_t ExtraBytesPerElement = 0>
-struct InlineVector : public Vector<T, ExtraBytesPerElement> {
-  using typename VectorPrototype<T, ExtraBytesPerElement>::iterator;
-  using typename VectorPrototype<T, ExtraBytesPerElement>::const_iterator;
-  using VectorPrototype<T, ExtraBytesPerElement>::is_trivial;
-  using VectorPrototype<T, ExtraBytesPerElement>::size;
-  using VectorPrototype<T, ExtraBytesPerElement>::capacity;
-  using VectorPrototype<T, ExtraBytesPerElement>::_set_memory;
-  using VectorPrototype<T, ExtraBytesPerElement>::_set_capacity;
-  using VectorPrototype<T, ExtraBytesPerElement>::_copy_extra_bytes_from;
-  using Vector<T, ExtraBytesPerElement>::_begin_iter;
-  using Vector<T, ExtraBytesPerElement>::_end_iter;
-  using Vector<T, ExtraBytesPerElement>::reserve;
-  using Vector<T, ExtraBytesPerElement>::clear;
-  using Vector<T, ExtraBytesPerElement>::clear_and_shrink;
-  using Vector<T, ExtraBytesPerElement>::_from;
-  using Vector<T, ExtraBytesPerElement>::_construct_fill;
-  using Vector<T, ExtraBytesPerElement>::_construct_fill_default;
+template <class T, size_t N, size_t ExtraBytesPerElement = 0,
+          bool CountRealloc = false>
+struct InlineVector : public Vector<T, ExtraBytesPerElement, CountRealloc> {
+  using
+      typename VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::iterator;
+  using typename VectorPrototype<T, ExtraBytesPerElement,
+                                 CountRealloc>::const_iterator;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::is_trivial;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::size;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::capacity;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_set_memory;
+  using VectorPrototype<T, ExtraBytesPerElement, CountRealloc>::_set_capacity;
+  using VectorPrototype<T, ExtraBytesPerElement,
+                        CountRealloc>::_copy_extra_bytes_from;
+  using Vector<T, ExtraBytesPerElement, CountRealloc>::_begin_iter;
+  using Vector<T, ExtraBytesPerElement, CountRealloc>::_end_iter;
+  using Vector<T, ExtraBytesPerElement, CountRealloc>::reserve;
+  using Vector<T, ExtraBytesPerElement, CountRealloc>::clear;
+  using Vector<T, ExtraBytesPerElement, CountRealloc>::clear_and_shrink;
+  using Vector<T, ExtraBytesPerElement, CountRealloc>::_from;
+  using Vector<T, ExtraBytesPerElement, CountRealloc>::_construct_fill;
+  using Vector<T, ExtraBytesPerElement, CountRealloc>::_construct_fill_default;
 
   static constexpr size_t kInlinedSize = N;
 
-  InlineVector() : Vector<T, ExtraBytesPerElement>() {
+  InlineVector() : Vector<T, ExtraBytesPerElement, CountRealloc>() {
     static_assert(N > 0,
                   "InlineVector must have initial capacity larger than 0.");
     _init_static();
@@ -1399,14 +1433,15 @@ struct InlineVector : public Vector<T, ExtraBytesPerElement> {
   }
 
   InlineVector(std::initializer_list<T> list)
-      : Vector<T, ExtraBytesPerElement>() {
+      : Vector<T, ExtraBytesPerElement, CountRealloc>() {
     static_assert(N > 0,
                   "InlineVector must have initial capacity larger than 0.");
     _init_static();
     *this = std::move(list);
   }
 
-  InlineVector(const Vector<T, ExtraBytesPerElement>& other) {  // NOLINT
+  InlineVector(
+      const Vector<T, ExtraBytesPerElement, CountRealloc>& other) {  // NOLINT
     static_assert(N > 0,
                   "InlineVector must have initial capacity larger than 0.");
     _init_static();
@@ -1421,14 +1456,16 @@ struct InlineVector : public Vector<T, ExtraBytesPerElement> {
   }
 
   template <size_t N2>
-  InlineVector(const InlineVector<T, N2, ExtraBytesPerElement>& other) {
+  InlineVector(
+      const InlineVector<T, N2, ExtraBytesPerElement, CountRealloc>& other) {
     static_assert(N > 0,
                   "InlineVector must have initial capacity larger than 0.");
     _init_static();
     *this = other;
   }
 
-  InlineVector(Vector<T, ExtraBytesPerElement>&& other) {  // NOLINT
+  InlineVector(
+      Vector<T, ExtraBytesPerElement, CountRealloc>&& other) {  // NOLINT
     static_assert(N > 0,
                   "InlineVector must have initial capacity larger than 0.");
     _init_static();
@@ -1443,7 +1480,8 @@ struct InlineVector : public Vector<T, ExtraBytesPerElement> {
   }
 
   template <size_t N2>
-  InlineVector(InlineVector<T, N2, ExtraBytesPerElement>&& other) {
+  InlineVector(
+      InlineVector<T, N2, ExtraBytesPerElement, CountRealloc>&& other) {
     static_assert(N > 0,
                   "InlineVector must have initial capacity larger than 0.");
     _init_static();
@@ -1451,35 +1489,41 @@ struct InlineVector : public Vector<T, ExtraBytesPerElement> {
   }
 
   InlineVector& operator=(std::initializer_list<T> list) {
-    reinterpret_cast<Vector<T, ExtraBytesPerElement>*>(this)->operator=(
-        std::move(list));
+    reinterpret_cast<Vector<T, ExtraBytesPerElement, CountRealloc>*>(this)->
+    operator=(std::move(list));
     return *this;
   }
 
-  InlineVector& operator=(const Vector<T, ExtraBytesPerElement>& other) {
-    reinterpret_cast<Vector<T, ExtraBytesPerElement>*>(this)->operator=(other);
+  InlineVector& operator=(
+      const Vector<T, ExtraBytesPerElement, CountRealloc>& other) {
+    reinterpret_cast<Vector<T, ExtraBytesPerElement, CountRealloc>*>(this)->
+    operator=(other);
     return *this;
   }
 
   InlineVector& operator=(const InlineVector& other) {
-    reinterpret_cast<Vector<T, ExtraBytesPerElement>*>(this)->operator=(other);
+    reinterpret_cast<Vector<T, ExtraBytesPerElement, CountRealloc>*>(this)->
+    operator=(other);
     return *this;
   }
 
   template <size_t N2>
   InlineVector& operator=(
-      const InlineVector<T, N2, ExtraBytesPerElement>& other) {
-    reinterpret_cast<Vector<T, ExtraBytesPerElement>*>(this)->operator=(other);
+      const InlineVector<T, N2, ExtraBytesPerElement, CountRealloc>& other) {
+    reinterpret_cast<Vector<T, ExtraBytesPerElement, CountRealloc>*>(this)->
+    operator=(other);
     return *this;
   }
 
-  InlineVector& operator=(Vector<T, ExtraBytesPerElement>&& other) {
+  InlineVector& operator=(
+      Vector<T, ExtraBytesPerElement, CountRealloc>&& other) {
     if (this != &other) {
       if (other.size() > capacity()) {
         if (!other.is_static_buffer()) {
           // Just swap pointers.
-          reinterpret_cast<Vector<T, ExtraBytesPerElement>*>(this)->operator=(
-              std::move(other));
+          reinterpret_cast<Vector<T, ExtraBytesPerElement, CountRealloc>*>(this)
+              ->
+              operator=(std::move(other));
           return *this;
         } else {
           reserve(other.size());
@@ -1496,18 +1540,21 @@ struct InlineVector : public Vector<T, ExtraBytesPerElement> {
   }
 
   InlineVector& operator=(InlineVector&& other) {
-    return operator=(
-        std::move(*reinterpret_cast<Vector<T, ExtraBytesPerElement>*>(&other)));
+    return operator=(std::move(
+        *reinterpret_cast<Vector<T, ExtraBytesPerElement, CountRealloc>*>(
+            &other)));
   }
 
   template <size_t N2>
-  InlineVector& operator=(InlineVector<T, N2, ExtraBytesPerElement>&& other) {
-    return operator=(
-        std::move(*reinterpret_cast<Vector<T, ExtraBytesPerElement>*>(&other)));
+  InlineVector& operator=(
+      InlineVector<T, N2, ExtraBytesPerElement, CountRealloc>&& other) {
+    return operator=(std::move(
+        *reinterpret_cast<Vector<T, ExtraBytesPerElement, CountRealloc>*>(
+            &other)));
   }
 
   void clear_and_shrink() {
-    Vector<T, ExtraBytesPerElement>::clear_and_shrink();
+    Vector<T, ExtraBytesPerElement, CountRealloc>::clear_and_shrink();
     _init_static();
   }
 
@@ -1589,6 +1636,7 @@ struct MapStatisticsBase<false> {
 
 BASE_VECTOR_HAS_MEMBER_OF_NAME(use_hash);
 BASE_VECTOR_HAS_MEMBER_OF_NAME(consecutive_key);
+BASE_VECTOR_HAS_MEMBER_OF_NAME(assign_existing_for_merge);
 BASE_VECTOR_HAS_TYPE_MEMBER_OF_NAME(hash);
 BASE_VECTOR_HAS_TYPE_MEMBER_OF_NAME(equal);
 BASE_VECTOR_HAS_TYPE_MEMBER_OF_NAME(equal_when_hash_equal);
@@ -1736,6 +1784,94 @@ struct MapKeyPolicyConsecutiveIntegers {
   using hash = ReducedHash<K>;
   using equal = std::equal_to<K>;
   using equal_when_hash_equal = typename hash::AlwaysEqualWhenHashEqual;
+
+  template <class T, bool Const>
+  struct Reference {
+    using key_iterator = const KeyPolicyReducedHashValueType*;
+    using value_iterator = std::conditional_t<Const, const T*, T*>;
+    using value_reference = std::conditional_t<Const, const T&, T&>;
+
+    // Mimic the behavior of ordinary value type `std::pair<K, T>`.
+    const K& first;
+    value_reference second;
+
+    Reference(key_iterator key_it, value_iterator value_it)
+        : first(*reinterpret_cast<const K*>(key_it)), second(*value_it) {}
+  };
+
+  template <class T, bool Const>
+  struct RangeLoopIterator {
+    using key_iterator = const KeyPolicyReducedHashValueType*;
+    using value_iterator = std::conditional_t<Const, const T*, T*>;
+    using value_reference = std::conditional_t<Const, const T&, T&>;
+
+    struct PointerView {
+      key_iterator first;
+      value_iterator second;
+    };
+
+    // Mimic the behavior of ordinary value type `std::pair<K, T>`.
+    const K& first;
+    value_reference second;
+
+    RangeLoopIterator(key_iterator key_it, value_iterator value_it)
+        : first(*reinterpret_cast<const K*>(key_it)), second(*value_it) {}
+    RangeLoopIterator(const RangeLoopIterator& other)
+        : first(other.first), second(other.second) {}
+    RangeLoopIterator& operator=(const RangeLoopIterator& other) {
+      *reinterpret_cast<PointerView*>(this) =
+          *reinterpret_cast<const PointerView*>(&other);
+      return *this;
+    }
+
+    RangeLoopIterator& operator*() { return *this; }
+    const RangeLoopIterator& operator*() const { return *this; }
+
+    RangeLoopIterator* operator->() { return this; }
+    const RangeLoopIterator* operator->() const { return this; }
+
+    operator std::pair<const K, T>() const { return {first, second}; }
+
+    RangeLoopIterator& operator++() {
+      reinterpret_cast<PointerView*>(this)->first++;
+      reinterpret_cast<PointerView*>(this)->second++;
+      return *this;
+    }
+
+    RangeLoopIterator operator++(int) {
+      RangeLoopIterator t(*this);
+      ++(*this);
+      return t;
+    }
+
+    friend bool operator==(const RangeLoopIterator& x, const T* y) {
+      return &x.second == y;
+    }
+
+    friend bool operator==(const T* x, const RangeLoopIterator& y) {
+      return x == &y.second;
+    }
+
+    friend bool operator!=(const RangeLoopIterator& x, const T* y) {
+      return &x.second != y;
+    }
+
+    friend bool operator!=(const T* x, const RangeLoopIterator& y) {
+      return x != &y.second;
+    }
+
+    friend bool operator==(const RangeLoopIterator& x,
+                           const RangeLoopIterator& y) {
+      return &x.second == &y.second;
+    }
+
+    friend bool operator!=(const RangeLoopIterator& x,
+                           const RangeLoopIterator& y) {
+      return &x.second != &y.second;
+    }
+
+    value_iterator value_it() const { return &second; }
+  };
 };
 
 /**
@@ -1761,6 +1897,11 @@ struct KeyValueArray : protected MapStatisticsBase<Stat> {
       return false;
     }
   }
+
+  template <typename AnyType>
+  struct type_identity {
+    using type = AnyType;
+  };
 
  public:
   static constexpr auto is_map = !std::is_void_v<T>;
@@ -1823,16 +1964,18 @@ struct KeyValueArray : protected MapStatisticsBase<Stat> {
   using container_type = typename std::conditional_t<
       (N > 0),
       InlineVector<value_type, N,
-                   is_key_hash ? sizeof(KeyPolicyReducedHashValueType) : 0>,
+                   is_key_hash ? sizeof(KeyPolicyReducedHashValueType) : 0,
+                   Stat>,
       Vector<value_type,
-             is_key_hash ? sizeof(KeyPolicyReducedHashValueType) : 0>>;
+             is_key_hash ? sizeof(KeyPolicyReducedHashValueType) : 0, Stat>>;
 
   using store_container_type = typename std::conditional_t<
       (N > 0),
       InlineVector<store_value_type, N,
-                   is_key_hash ? sizeof(KeyPolicyReducedHashValueType) : 0>,
+                   is_key_hash ? sizeof(KeyPolicyReducedHashValueType) : 0,
+                   Stat>,
       Vector<store_value_type,
-             is_key_hash ? sizeof(KeyPolicyReducedHashValueType) : 0>>;
+             is_key_hash ? sizeof(KeyPolicyReducedHashValueType) : 0, Stat>>;
   using store_iterator =
       std::conditional_t<is_map, typename store_container_type::iterator,
                          typename store_container_type::const_iterator>;
@@ -1860,15 +2003,69 @@ struct KeyValueArray : protected MapStatisticsBase<Stat> {
   using const_reverse_iterator =
       typename container_type::const_reverse_iterator;
 
+ private:
+  // For maps with Consecutive-Key policy enabled, since the key and value are
+  // separate, special iterators are used for the begin() and end() methods, and
+  // access to the key and value is provided through it.first() and it.second().
+  template <bool Const>
+  struct RangeLoopIteratorHelper {
+    static auto select() {
+      if constexpr (is_map && consecutive_key) {
+        return type_identity<
+            typename KeyPolicy::template RangeLoopIterator<T, Const>>{};
+      } else {
+        return type_identity<
+            std::conditional_t<Const, const_iterator, iterator>>{};
+      }
+    }
+  };
+
+  template <bool Const>
+  struct ReferenceHelper {
+    static auto select() {
+      if constexpr (is_map) {
+        if constexpr (consecutive_key) {
+          return type_identity<
+              typename KeyPolicy::template Reference<T, Const>>{};
+        } else {
+          return type_identity<
+              std::conditional_t<Const, const value_type&, value_type&>>{};
+        }
+      } else {
+        return type_identity<const value_type&>{};
+      }
+    }
+  };
+
+ public:
+  using range_loop_iterator =
+      typename decltype(RangeLoopIteratorHelper<false>::select())::type;
+  using range_loop_const_iterator =
+      typename decltype(RangeLoopIteratorHelper<true>::select())::type;
+
+  using reference_type =
+      typename decltype(ReferenceHelper<false>::select())::type;
+  using const_reference_type =
+      typename decltype(ReferenceHelper<true>::select())::type;
+
+ protected:
+  // To accommodate the Consecutive-Key feature, the begin() and end() method
+  // return a range_loop_iterator.
+  iterator value_begin() { return array().begin(); }
+  const_iterator value_begin() const { return array().begin(); }
+  iterator value_end() { return array().end(); }
+  const_iterator value_end() const { return array().end(); }
+
  public:
   KeyValueArray() {}
 
   // Only when not using hash, the internal array can be moved from source.
   // Because we are using extra leading bytes of array buffer to store hash
   // values.
-  template <size_t ExtraBytesPerElement,
+  template <size_t ExtraBytesPerElement, bool CountRealloc,
             typename = std::enable_if_t<ExtraBytesPerElement == 0>>
-  KeyValueArray(Vector<store_value_type, ExtraBytesPerElement>&& source_array)
+  KeyValueArray(Vector<store_value_type, ExtraBytesPerElement, CountRealloc>&&
+                    source_array)
       : array_(std::move(source_array)) {
     static_assert(!is_key_hash);
     UpdateMaxCount(array_.size());
@@ -1905,6 +2102,8 @@ struct KeyValueArray : protected MapStatisticsBase<Stat> {
 
   size_t size() const { return array_.size(); }
 
+  size_t capacity() const { return array_.capacity(); }
+
   bool empty() const { return array_.empty(); }
 
   void clear() {
@@ -1915,17 +2114,77 @@ struct KeyValueArray : protected MapStatisticsBase<Stat> {
 
   bool reserve(size_t count) { return array_.reserve(count); }
 
-  iterator begin() { return array().begin(); }
+  reference_type front() {
+    if constexpr (is_map && consecutive_key) {
+      return reference_type(_key_hash_data(), array().begin());
+    } else {
+      return array().front();
+    }
+  }
 
-  const_iterator begin() const { return array().begin(); }
+  const_reference_type front() const {
+    if constexpr (is_map && consecutive_key) {
+      return const_reference_type(_key_hash_data(), array().begin());
+    } else {
+      return array().front();
+    }
+  }
+
+  reference_type back() {
+    if constexpr (is_map && consecutive_key) {
+      return reference_type(&_key_hash_data()[array().size() - 1],
+                            &array().back());
+    } else {
+      return array().back();
+    }
+  }
+
+  const_reference_type back() const {
+    if constexpr (is_map && consecutive_key) {
+      return const_reference_type(&_key_hash_data()[array().size() - 1],
+                                  &array().back());
+    } else {
+      return array().back();
+    }
+  }
+
+  range_loop_iterator begin() {
+    if constexpr (is_map && consecutive_key) {
+      return range_loop_iterator(_key_hash_data(), array().begin());
+    } else {
+      return array().begin();
+    }
+  }
+
+  range_loop_const_iterator begin() const {
+    if constexpr (is_map && consecutive_key) {
+      return range_loop_const_iterator(_key_hash_data(), array().begin());
+    } else {
+      return array().begin();
+    }
+  }
 
   const_iterator cbegin() const { return array().cbegin(); }
 
-  iterator end() { return array().end(); }
+  range_loop_iterator end() {
+    if constexpr (is_map && consecutive_key) {
+      // RangeLoopIterator only compares value iterator.
+      return range_loop_iterator(nullptr, array().end());
+    } else {
+      return array().end();
+    }
+  }
 
   const_iterator cend() const { return array().cend(); }
 
-  const_iterator end() const { return array().end(); }
+  range_loop_const_iterator end() const {
+    if constexpr (is_map && consecutive_key) {
+      // RangeLoopIterator only compares value iterator.
+      return range_loop_const_iterator(nullptr, array().end());
+    } else {
+      return array().end();
+    }
+  }
 
   reverse_iterator rbegin() { return array().rbegin(); }
 
@@ -1945,7 +2204,7 @@ struct KeyValueArray : protected MapStatisticsBase<Stat> {
   iterator erase(It pos) {
     IncreaseEraseCount();
     if constexpr (is_key_hash) {
-      _erase_key_hash(pos - begin());
+      _erase_key_hash(pos - value_begin());
     }
     if constexpr (std::is_same_v<It, iterator>) {
       return reinterpret_cast<iterator>(
@@ -1953,6 +2212,26 @@ struct KeyValueArray : protected MapStatisticsBase<Stat> {
     } else {
       return reinterpret_cast<iterator>(
           array_.erase(reinterpret_cast<const_store_iterator>(pos)));
+    }
+  }
+
+  // For usage of `map.erase(map.begin());` when map is using
+  // MapKeyPolicyConsecutiveIntegers.
+  template <typename It, typename = std::enable_if_t<
+                             (is_map && consecutive_key) &&
+                             (std::is_same_v<It, range_loop_iterator> ||
+                              std::is_same_v<It, range_loop_const_iterator>)>>
+  iterator erase(const It& pos) {
+    IncreaseEraseCount();
+    if constexpr (is_key_hash) {
+      _erase_key_hash(pos.value_it() - value_begin());
+    }
+    if constexpr (std::is_same_v<It, range_loop_iterator>) {
+      return reinterpret_cast<iterator>(
+          array_.erase(reinterpret_cast<store_iterator>(pos.value_it())));
+    } else {
+      return reinterpret_cast<iterator>(
+          array_.erase(reinterpret_cast<const_store_iterator>(pos.value_it())));
     }
   }
 
@@ -2292,6 +2571,14 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
     }
   };
 
+  static constexpr bool get_assign_existing_for_merge() {
+    if constexpr (has_assign_existing_for_merge_member_v<KeyPolicy>) {
+      return KeyPolicy::assign_existing_for_merge;
+    } else {
+      return false;
+    }
+  }
+
  protected:
   template <class K2, class T2, class KeyPolicy2, size_t N2, bool Stat2>
   friend struct LinearSearchArray;
@@ -2305,8 +2592,13 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
   using KeyValueArray<K, T, KeyPolicy, N, Stat>::array_;
   using KeyValueArray<K, T, KeyPolicy, N, Stat>::_swap;
   using KeyValueArray<K, T, KeyPolicy, N, Stat>::_key_hash_data;
+  using KeyValueArray<K, T, KeyPolicy, N, Stat>::value_begin;
+  using KeyValueArray<K, T, KeyPolicy, N, Stat>::value_end;
 
  public:
+  static constexpr auto assign_existing_for_merge =
+      get_assign_existing_for_merge();
+
   using key_compare = void;
   using key_equal =
       typename decltype(KeyPolicyEqualHelper<
@@ -2316,6 +2608,7 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
                         has_equal_when_hash_equal_member_v<KeyPolicy>>::
                             select())::type;
   using typename KeyValueArray<K, T, KeyPolicy, N, Stat>::key_extractor;
+  using typename KeyValueArray<K, T, KeyPolicy, N, Stat>::value_extractor;
   using KeyValueArray<K, T, KeyPolicy, N, Stat>::is_key_hash;
   using KeyValueArray<K, T, KeyPolicy, N, Stat>::consecutive_key;
   using typename KeyValueArray<K, T, KeyPolicy, N, Stat>::insert_value_type;
@@ -2326,9 +2619,13 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
   using typename KeyValueArray<K, T, KeyPolicy, N, Stat>::iterator;
   using typename KeyValueArray<K, T, KeyPolicy, N, Stat>::const_iterator;
   using typename KeyValueArray<K, T, KeyPolicy, N, Stat>::store_iterator;
+  using typename KeyValueArray<K, T, KeyPolicy, N, Stat>::range_loop_iterator;
+  using typename KeyValueArray<K, T, KeyPolicy, N,
+                               Stat>::range_loop_const_iterator;
   using KeyValueArray<K, T, KeyPolicy, N, Stat>::begin;
   using KeyValueArray<K, T, KeyPolicy, N, Stat>::end;
   using KeyValueArray<K, T, KeyPolicy, N, Stat>::erase;
+  using KeyValueArray<K, T, KeyPolicy, N, Stat>::empty;
 
  protected:
   inline static KeyPolicyReducedHashValueType _reduced_key_hash(const K& key) {
@@ -2353,18 +2650,18 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
   // Only when not using hash, the internal array can be moved from source.
   // Because we are using extra leading bytes of array buffer to store hash
   // values.
-  template <size_t ExtraBytesPerElement,
+  template <size_t ExtraBytesPerElement, bool CountRealloc,
             typename = std::enable_if_t<ExtraBytesPerElement == 0>>
-  LinearSearchArray(
-      Vector<store_value_type, ExtraBytesPerElement>&& source_array)
+  LinearSearchArray(Vector<store_value_type, ExtraBytesPerElement,
+                           CountRealloc>&& source_array)
       : KeyValueArray<K, T, KeyPolicy, N, Stat>(std::move(source_array)) {
     static_assert(!is_key_hash);
   }
 
-  template <size_t ExtraBytesPerElement,
+  template <size_t ExtraBytesPerElement, bool CountRealloc,
             typename = std::enable_if_t<ExtraBytesPerElement == 0>>
-  LinearSearchArray& operator=(
-      Vector<store_value_type, ExtraBytesPerElement>&& source_array) {
+  LinearSearchArray& operator=(Vector<store_value_type, ExtraBytesPerElement,
+                                      CountRealloc>&& source_array) {
     static_assert(!is_key_hash);
     array_ = std::move(source_array);
     UpdateMaxCount(array_.size());
@@ -2673,7 +2970,7 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
     }
   }
 
-  iterator find(const K& key) {
+  range_loop_iterator find(const K& key) {
     RecordFind(MapStatisticsFindKind::kFind, array_.size());
     iterator pos;
     if constexpr (is_key_hash) {
@@ -2683,13 +2980,18 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
       pos = find_exact(key);
     }
     if (pos != nullptr) {
-      return pos;
+      if constexpr (is_map && consecutive_key) {
+        return range_loop_iterator(_key_hash_data() + (pos - value_begin()),
+                                   pos);
+      } else {
+        return pos;
+      }
     } else {
       return end();
     }
   }
 
-  const_iterator find(const K& key) const {
+  range_loop_const_iterator find(const K& key) const {
     RecordFind(MapStatisticsFindKind::kFind, array_.size());
     iterator pos;
     if constexpr (is_key_hash) {
@@ -2699,7 +3001,12 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
       pos = find_exact(key);
     }
     if (pos != nullptr) {
-      return pos;
+      if constexpr (is_map && consecutive_key) {
+        return range_loop_const_iterator(
+            _key_hash_data() + (pos - value_begin()), pos);
+      } else {
+        return pos;
+      }
     } else {
       return end();
     }
@@ -2723,10 +3030,33 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
   }
 
   template <size_t N2>
+  void merge(const LinearSearchArray<K, T, KeyPolicy, N2, Stat>& other) {
+    merge(const_cast<LinearSearchArray<K, T, KeyPolicy, N2, Stat>&>(other));
+  }
+
+  template <size_t N2>
   void merge(LinearSearchArray<K, T, KeyPolicy, N2, Stat>& other) {
     auto& other_array = other.array_;
-    const auto* other_key_hash_data = other._key_hash_data();
-    for (intptr_t i = other_array.size() - 1; i >= 0; i--) {
+    if (empty()) {
+      // Fast path when self is empty.
+      if constexpr (assign_existing_for_merge) {
+        array_ = other_array;
+      } else {
+        array_ = std::move(other_array);
+      }
+      return;
+    }
+
+    [[maybe_unused]] const KeyPolicyReducedHashValueType* other_key_hash_data;
+    if constexpr (is_key_hash) {
+      other_key_hash_data = other._key_hash_data();
+    }
+    // LinearSearchArray has an implicit property: the iteration order is
+    // consistent with the data insertion order. To ensure this property is not
+    // violated, the `other` container must also be traversed from front to back
+    // during the `merge` operation.
+    size_t other_size = other_array.size();
+    for (size_t i = 0; i < other_size;) {
       auto& object = other_array[i];
       [[maybe_unused]] KeyPolicyReducedHashValueType hash;
       iterator pos;
@@ -2740,14 +3070,32 @@ struct LinearSearchArray : public KeyValueArray<K, T, KeyPolicy, N, Stat> {
       } else {
         pos = find_exact(key_extractor()(object));
       }
-      if (pos == nullptr) {
-        array_.emplace_back(std::move(object));
-        if constexpr (is_key_hash) {
-          // Store hash value after array insertion because array may expand.
-          _key_hash_data()[array_.size() - 1] = hash;
+      if constexpr (assign_existing_for_merge) {
+        // If KeyPolicy specifies assign_existing_for_merge as true, for data
+        // that already exists in this, do assignment and do not modify other.
+        if (pos == nullptr) {
+          array_.emplace_back(object);
+          if constexpr (is_key_hash) {
+            // Store hash value after array insertion because array may expand.
+            _key_hash_data()[array_.size() - 1] = hash;
+          }
+        } else if constexpr (is_map) {
+          value_extractor()(*pos) = value_extractor()(object);
         }
-        other.erase(other.begin() + i);
+      } else {
+        // Behavior like std::unordered_map, splice from other.
+        if (pos == nullptr) {
+          array_.emplace_back(std::move(object));
+          if constexpr (is_key_hash) {
+            // Store hash value after array insertion because array may expand.
+            _key_hash_data()[array_.size() - 1] = hash;
+          }
+          other.erase(other.value_begin() + i);
+          other_size--;
+          continue;
+        }
       }
+      i++;
     }
   }
 
@@ -2915,25 +3263,17 @@ struct BinarySearchMap : public BinarySearchArray<K, T, N, Compare, Stat> {
 
   template <class U>
   T& operator[](U&& key) {
-    return try_insert(std::forward<U>(key))->second;
+    return try_insert(std::forward<U>(key)).first->second;
   }
 
-  T& at(const K& key) {
-    RecordFind(MapStatisticsFindKind::kFind, array_.size());
-    auto pos = lower_bound(key);
-    if (BASE_VECTOR_LIKELY(pos != end() && key_extractor()(*pos) == key)) {
-      return pos->second;
-    }
-    ::abort();  // Always nothrow
+  template <class U>
+  T& at(U&& key) {
+    return try_insert(std::forward<U>(key)).first->second;
   }
 
-  const T& at(const K& key) const {
-    RecordFind(MapStatisticsFindKind::kFind, array_.size());
-    auto pos = lower_bound(key);
-    if (BASE_VECTOR_LIKELY(pos != end() && key_extractor()(*pos) == key)) {
-      return pos->second;
-    }
-    ::abort();  // Always nothrow
+  template <class U>
+  std::pair<iterator, bool> insert_default_if_absent(U&& key) {
+    return try_insert(std::forward<U>(key));
   }
 
   template <class V>
@@ -3004,6 +3344,43 @@ struct BinarySearchMap : public BinarySearchArray<K, T, N, Compare, Stat> {
     }
   }
 
+  template <class... Args>
+  std::pair<iterator, bool> emplace_or_assign(const K& key, Args&&... args) {
+    auto pos = lower_bound(key);
+    if (pos != end() && key_extractor()(*pos) == key) {
+      RecordFind(MapStatisticsFindKind::kInsertFindCollision, array_.size());
+      pos->second.~T();
+      new (&(pos->second)) T(std::forward<Args>(args)...);
+      return {pos, false};
+    } else {
+      RecordFind(MapStatisticsFindKind::kInsertFind, array_.size());
+      return {reinterpret_cast<iterator>(array_.emplace(
+                  reinterpret_cast<store_iterator>(pos),
+                  std::piecewise_construct, std::forward_as_tuple(key),
+                  std::forward_as_tuple(std::forward<Args>(args)...))),
+              true};
+    }
+  }
+
+  template <class... Args>
+  std::pair<iterator, bool> emplace_or_assign(K&& key, Args&&... args) {
+    auto pos = lower_bound(key);
+    if (pos != end() && key_extractor()(*pos) == key) {
+      RecordFind(MapStatisticsFindKind::kInsertFindCollision, array_.size());
+      pos->second.~T();
+      new (&(pos->second)) T(std::forward<Args>(args)...);
+      return {pos, false};
+    } else {
+      RecordFind(MapStatisticsFindKind::kInsertFind, array_.size());
+      return {
+          reinterpret_cast<iterator>(array_.emplace(
+              reinterpret_cast<store_iterator>(pos), std::piecewise_construct,
+              std::forward_as_tuple(std::move(key)),
+              std::forward_as_tuple(std::forward<Args>(args)...))),
+          true};
+    }
+  }
+
   template <class U, class... Args>
   std::pair<iterator, bool> try_emplace(U&& key, Args&&... args) {
     return emplace(std::forward<U>(key), std::forward<Args>(args)...);
@@ -3042,30 +3419,38 @@ struct BinarySearchMap : public BinarySearchArray<K, T, N, Compare, Stat> {
   }
 
  protected:
-  iterator try_insert(const K& key) {
+  std::pair<iterator, bool> try_insert(const K& key) {
+    std::pair<iterator, bool> result;
     auto pos = lower_bound(key);
     if (pos != end() && key_extractor()(*pos) == key) {
       RecordFind(MapStatisticsFindKind::kInsertFindCollision, array_.size());
-      return pos;
+      result = {pos, false};
     } else {
       RecordFind(MapStatisticsFindKind::kInsertFind, array_.size());
-      return reinterpret_cast<iterator>(array_.emplace(
-          reinterpret_cast<store_iterator>(pos), std::piecewise_construct,
-          std::forward_as_tuple(key), std::tuple<>()));
+      result = {
+          reinterpret_cast<iterator>(array_.emplace(
+              reinterpret_cast<store_iterator>(pos), std::piecewise_construct,
+              std::forward_as_tuple(key), std::tuple<>())),
+          true};
     }
+    return result;
   }
 
-  iterator try_insert(K&& key) {
+  std::pair<iterator, bool> try_insert(K&& key) {
+    std::pair<iterator, bool> result;
     auto pos = lower_bound(key);
     if (pos != end() && key_extractor()(*pos) == key) {
       RecordFind(MapStatisticsFindKind::kInsertFindCollision, array_.size());
-      return pos;
+      result = {pos, false};
     } else {
       RecordFind(MapStatisticsFindKind::kInsertFind, array_.size());
-      return reinterpret_cast<iterator>(array_.emplace(
-          reinterpret_cast<store_iterator>(pos), std::piecewise_construct,
-          std::forward_as_tuple(std::move(key)), std::tuple<>()));
+      result = {
+          reinterpret_cast<iterator>(array_.emplace(
+              reinterpret_cast<store_iterator>(pos), std::piecewise_construct,
+              std::forward_as_tuple(std::move(key)), std::tuple<>())),
+          true};
     }
+    return result;
   }
 };
 
@@ -3171,17 +3556,18 @@ struct LinearSearchMap : public LinearSearchArray<K, T, KeyPolicy, N, Stat> {
   // Only when not using hash, the internal array can be moved from source.
   // Because we are using extra leading bytes of array buffer to store hash
   // values.
-  template <size_t ExtraBytesPerElement,
+  template <size_t ExtraBytesPerElement, bool CountRealloc,
             typename = std::enable_if_t<ExtraBytesPerElement == 0>>
-  LinearSearchMap(Vector<store_value_type, ExtraBytesPerElement>&& source_array)
+  LinearSearchMap(Vector<store_value_type, ExtraBytesPerElement, CountRealloc>&&
+                      source_array)
       : LinearSearchArray<K, T, KeyPolicy, N, Stat>(std::move(source_array)) {
     static_assert(!is_key_hash);
   }
 
-  template <size_t ExtraBytesPerElement,
+  template <size_t ExtraBytesPerElement, bool CountRealloc,
             typename = std::enable_if_t<ExtraBytesPerElement == 0>>
-  LinearSearchMap& operator=(
-      Vector<store_value_type, ExtraBytesPerElement>&& source_array) {
+  LinearSearchMap& operator=(Vector<store_value_type, ExtraBytesPerElement,
+                                    CountRealloc>&& source_array) {
     static_assert(!is_key_hash);
     array_ = std::move(source_array);
     UpdateMaxCount(array_.size());
@@ -3214,37 +3600,37 @@ struct LinearSearchMap : public LinearSearchArray<K, T, KeyPolicy, N, Stat> {
 
   template <class U>
   T& operator[](U&& key) {
-    return value_extractor()(*try_insert(std::forward<U>(key)));
+    return value_extractor()(*try_insert(std::forward<U>(key)).first);
   }
 
-  T& at(const K& key) {
-    RecordFind(MapStatisticsFindKind::kFind, array_.size());
-    iterator pos;
-    if constexpr (is_key_hash) {
-      auto hash = _reduced_key_hash(key);
-      pos = find_exact(key, hash);  // find with hash value
-    } else {
-      pos = find_exact(key);
-    }
-    if (BASE_VECTOR_LIKELY(pos != nullptr)) {
-      return value_extractor()(*pos);
-    }
-    ::abort();  // Always nothrow
+  template <class U>
+  T& at(U&& key) {
+    return value_extractor()(*try_insert(std::forward<U>(key)).first);
   }
 
-  const T& at(const K& key) const {
-    RecordFind(MapStatisticsFindKind::kFind, array_.size());
-    iterator pos;
-    if constexpr (is_key_hash) {
-      auto hash = _reduced_key_hash(key);
-      pos = find_exact(key, hash);  // find with hash value
-    } else {
-      pos = find_exact(key);
+  template <class U>
+  std::pair<iterator, bool> insert_default_if_absent(U&& key) {
+    return try_insert(std::forward<U>(key));
+  }
+
+  template <class U>
+  std::pair<iterator, bool> insert_if_absent(U&& key, const T& obj) {
+    auto result = try_insert(std::forward<U>(key));
+    if (result.second) {
+      // Insertion took place and that means key not exists before.
+      value_extractor()(*result.first) = obj;
     }
-    if (BASE_VECTOR_LIKELY(pos != nullptr)) {
-      return value_extractor()(*pos);
+    return result;
+  }
+
+  template <class U>
+  std::pair<iterator, bool> insert_if_absent(U&& key, T&& obj) {
+    auto result = try_insert(std::forward<U>(key));
+    if (result.second) {
+      // Insertion took place and that means key not exists before.
+      value_extractor()(*result.first) = std::move(obj);
     }
-    ::abort();  // Always nothrow
+    return result;
   }
 
   template <class V>
@@ -3471,6 +3857,83 @@ struct LinearSearchMap : public LinearSearchArray<K, T, KeyPolicy, N, Stat> {
     return result;
   }
 
+  template <class... Args>
+  std::pair<iterator, bool> emplace_or_assign(const K& key, Args&&... args) {
+    [[maybe_unused]] KeyPolicyReducedHashValueType hash;
+    iterator pos;
+    if constexpr (is_key_hash) {
+      hash = _reduced_key_hash(key);
+      pos = find_exact(key, hash);  // find with hash value
+    } else {
+      pos = find_exact(key);
+    }
+
+    std::pair<iterator, bool> result;
+    if (BASE_VECTOR_UNLIKELY(pos != nullptr)) {
+      RecordFind(MapStatisticsFindKind::kInsertFindCollision, array_.size());
+      auto& v = value_extractor()(*pos);
+      v.~T();
+      new (&v) T(std::forward<Args>(args)...);
+      result = {pos, false};
+    } else {
+      RecordFind(MapStatisticsFindKind::kInsertFind, array_.size());
+      if constexpr (consecutive_key) {
+        result = {reinterpret_cast<iterator>(
+                      &array_.emplace_back(std::forward<Args>(args)...)),
+                  true};
+      } else {
+        result = {reinterpret_cast<iterator>(&array_.emplace_back(
+                      std::piecewise_construct, std::forward_as_tuple(key),
+                      std::forward_as_tuple(std::forward<Args>(args)...))),
+                  true};
+      }
+      if constexpr (is_key_hash) {
+        // Store hash value after array insertion because array may expand.
+        _key_hash_data()[array_.size() - 1] = hash;
+      }
+    }
+    return result;
+  }
+
+  template <class... Args>
+  std::pair<iterator, bool> emplace_or_assign(K&& key, Args&&... args) {
+    [[maybe_unused]] KeyPolicyReducedHashValueType hash;
+    iterator pos;
+    if constexpr (is_key_hash) {
+      hash = _reduced_key_hash(key);
+      pos = find_exact(key, hash);  // find with hash value
+    } else {
+      pos = find_exact(key);
+    }
+
+    std::pair<iterator, bool> result;
+    if (BASE_VECTOR_UNLIKELY(pos != nullptr)) {
+      RecordFind(MapStatisticsFindKind::kInsertFindCollision, array_.size());
+      auto& v = value_extractor()(*pos);
+      v.~T();
+      new (&v) T(std::forward<Args>(args)...);
+      result = {pos, false};
+    } else {
+      RecordFind(MapStatisticsFindKind::kInsertFind, array_.size());
+      if constexpr (consecutive_key) {
+        result = {reinterpret_cast<iterator>(
+                      &array_.emplace_back(std::forward<Args>(args)...)),
+                  true};
+      } else {
+        result = {
+            reinterpret_cast<iterator>(&array_.emplace_back(
+                std::piecewise_construct, std::forward_as_tuple(std::move(key)),
+                std::forward_as_tuple(std::forward<Args>(args)...))),
+            true};
+      }
+      if constexpr (is_key_hash) {
+        // Store hash value after array insertion because array may expand.
+        _key_hash_data()[array_.size() - 1] = hash;
+      }
+    }
+    return result;
+  }
+
   template <class U, class... Args>
   std::pair<iterator, bool> try_emplace(U&& key, Args&&... args) {
     return emplace(std::forward<U>(key), std::forward<Args>(args)...);
@@ -3652,11 +4115,11 @@ struct LinearSearchMap : public LinearSearchArray<K, T, KeyPolicy, N, Stat> {
     bool equal = true;
     for_each([&](const K& k, const T& v) -> bool {
       auto it = other.find(k);
-      if (it == other.end()) {
+      if (it == other.value_end()) {
         equal = false;
         return true;  // stop
       }
-      if (value_extractor()(*it) != v) {
+      if (it->second != v) {
         equal = false;
         return true;  // stop
       }
@@ -3672,7 +4135,7 @@ struct LinearSearchMap : public LinearSearchArray<K, T, KeyPolicy, N, Stat> {
   }
 
  protected:
-  iterator try_insert(const K& key) {
+  std::pair<iterator, bool> try_insert(const K& key) {
     [[maybe_unused]] KeyPolicyReducedHashValueType hash;
     iterator pos;
     if constexpr (is_key_hash) {
@@ -3682,26 +4145,29 @@ struct LinearSearchMap : public LinearSearchArray<K, T, KeyPolicy, N, Stat> {
       pos = find_exact(key);
     }
 
+    std::pair<iterator, bool> result;
     if (pos != nullptr) {
       RecordFind(MapStatisticsFindKind::kInsertFindCollision, array_.size());
+      result = {pos, false};
     } else {
       RecordFind(MapStatisticsFindKind::kInsertFind, array_.size());
       if constexpr (consecutive_key) {
-        pos = reinterpret_cast<iterator>(&array_.emplace_back());
+        result = {reinterpret_cast<iterator>(&array_.emplace_back()), true};
       } else {
-        pos = reinterpret_cast<iterator>(
-            &array_.emplace_back(std::piecewise_construct,
-                                 std::forward_as_tuple(key), std::tuple<>()));
+        result = {reinterpret_cast<iterator>(&array_.emplace_back(
+                      std::piecewise_construct, std::forward_as_tuple(key),
+                      std::tuple<>())),
+                  true};
       }
       if constexpr (is_key_hash) {
         // Store hash value after array insertion because array may expand.
         _key_hash_data()[array_.size() - 1] = hash;
       }
     }
-    return pos;
+    return result;
   }
 
-  iterator try_insert(K&& key) {
+  std::pair<iterator, bool> try_insert(K&& key) {
     [[maybe_unused]] KeyPolicyReducedHashValueType hash;
     iterator pos;
     if constexpr (is_key_hash) {
@@ -3711,23 +4177,26 @@ struct LinearSearchMap : public LinearSearchArray<K, T, KeyPolicy, N, Stat> {
       pos = find_exact(key);
     }
 
+    std::pair<iterator, bool> result;
     if (pos != nullptr) {
       RecordFind(MapStatisticsFindKind::kInsertFindCollision, array_.size());
+      result = {pos, false};
     } else {
       RecordFind(MapStatisticsFindKind::kInsertFind, array_.size());
       if constexpr (consecutive_key) {
-        pos = reinterpret_cast<iterator>(&array_.emplace_back());
+        result = {reinterpret_cast<iterator>(&array_.emplace_back()), true};
       } else {
-        pos = reinterpret_cast<iterator>(&array_.emplace_back(
-            std::piecewise_construct, std::forward_as_tuple(std::move(key)),
-            std::tuple<>()));
+        result = {reinterpret_cast<iterator>(&array_.emplace_back(
+                      std::piecewise_construct,
+                      std::forward_as_tuple(std::move(key)), std::tuple<>())),
+                  true};
       }
       if constexpr (is_key_hash) {
         // Store hash value after array insertion because array may expand.
         _key_hash_data()[array_.size() - 1] = hash;
       }
     }
-    return pos;
+    return result;
   }
 };
 
@@ -3762,18 +4231,19 @@ struct LinearSearchSet : public LinearSearchArray<K, void, KeyPolicy, N, Stat> {
   // Only when not using hash, the internal array can be moved from source.
   // Because we are using extra leading bytes of array buffer to store hash
   // values.
-  template <size_t ExtraBytesPerElement,
+  template <size_t ExtraBytesPerElement, bool CountRealloc,
             typename = std::enable_if_t<ExtraBytesPerElement == 0>>
-  LinearSearchSet(Vector<store_value_type, ExtraBytesPerElement>&& source_array)
+  LinearSearchSet(Vector<store_value_type, ExtraBytesPerElement, CountRealloc>&&
+                      source_array)
       : LinearSearchArray<K, void, KeyPolicy, N, Stat>(
             std::move(source_array)) {
     static_assert(!is_key_hash);
   }
 
-  template <size_t ExtraBytesPerElement,
+  template <size_t ExtraBytesPerElement, bool CountRealloc,
             typename = std::enable_if_t<ExtraBytesPerElement == 0>>
-  LinearSearchSet& operator=(
-      Vector<store_value_type, ExtraBytesPerElement>&& source_array) {
+  LinearSearchSet& operator=(Vector<store_value_type, ExtraBytesPerElement,
+                                    CountRealloc>&& source_array) {
     static_assert(!is_key_hash);
     array_ = std::move(source_array);
     UpdateMaxCount(array_.size());
@@ -3912,9 +4382,9 @@ static_assert(std::is_same_v<Inlined<LinearFlatSet<int>, 5>::type,
 }  // namespace lynx
 
 namespace std {
-template <class T, size_t ExtraBytesPerElement>
-inline void swap(lynx::base::Vector<T, ExtraBytesPerElement>& x,
-                 lynx::base::Vector<T, ExtraBytesPerElement>& y) {
+template <class T, size_t ExtraBytesPerElement, bool CountRealloc>
+inline void swap(lynx::base::Vector<T, ExtraBytesPerElement, CountRealloc>& x,
+                 lynx::base::Vector<T, ExtraBytesPerElement, CountRealloc>& y) {
   x.swap(y);
 }
 
