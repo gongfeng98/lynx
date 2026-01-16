@@ -16,14 +16,12 @@ namespace piper {
 class JSVMContextWrapper : public JSIContext {
  public:
   explicit JSVMContextWrapper(std::shared_ptr<VMInstance> vm);
-  ~JSVMContextWrapper() override;
+  ~JSVMContextWrapper() override = default;
 
-  void Init();
   JSVM_Env getEnv() const { return env_; };
 
  private:
   JSVM_Env env_ = nullptr;
-  JSVM_EnvScope env_scope_ = nullptr;
 };
 }  // namespace piper
 }  // namespace lynx
