@@ -285,10 +285,8 @@ void FiberElement::RequireFlush() {
 }
 
 const FiberElement::InheritedProperty FiberElement::GetInheritedProperty() {
-  return {
-      children_propagate_inherited_styles_flag_, inherited_styles_.get(),
-      reset_inherited_ids_.get(),
-      custom_properties_.Get() ? &custom_properties_.Get()->Value() : nullptr};
+  return {children_propagate_inherited_styles_flag_, inherited_styles_.get(),
+          reset_inherited_ids_.get(), custom_properties_.get()};
 }
 
 const FiberElement::InheritedProperty
@@ -297,9 +295,7 @@ FiberElement::GetParentInheritedProperty() {
   // empty InheritedProperty indicating that it is not necessary to consider the
   // inheritance logic at this time.
   if (this->is_greedy_parallel_flush()) {
-    return {false, nullptr, nullptr,
-            custom_properties_.Get() ? &custom_properties_.Get()->Value()
-                                     : nullptr};
+    return {false, nullptr, nullptr, custom_properties_.get()};
   }
 
   FiberElement *real_parent = static_cast<FiberElement *>(parent());
@@ -4341,7 +4337,7 @@ lepus::Value FiberElement::GetComputedStyleByKey(const base::String &key) {
 }
 
 bool FiberElement::CollectCustomProperties(AttributeHolder *holder) {
-  if (custom_properties_.Get() != nullptr) {
+  if (custom_properties_.has_value()) {
     return true;
   }
 
@@ -4351,50 +4347,40 @@ bool FiberElement::CollectCustomProperties(AttributeHolder *holder) {
 
   if (FiberElement *real_parent = static_cast<FiberElement *>(parent());
       real_parent) {
-    if (!real_parent->CollectCustomProperties(real_parent->data_model())) {
+    if (!real_parent->CollectCustomProperties(holder)) {
       return false;
     }
-    // Share parent's map (Copy-On-Write)
-    // This is cheap - just increments refcount
-    custom_properties_ = real_parent->custom_properties_;
-  }
-
-  const auto &variables = holder->css_variables_map();
-  const auto &inline_variables = holder->GetCSSInlineVariables();
-
-  // If we don't have any new variables, we can just share the parent's map.
-  if (variables.empty() && inline_variables.empty()) {
-    if (custom_properties_.Get() == nullptr) {
-      custom_properties_.Init();
+    if (const auto parent_custom_properties = real_parent->custom_properties_;
+        parent_custom_properties) {
+      for (const auto &[name, css_value] : *parent_custom_properties) {
+        custom_properties_->insert_or_assign(name, css_value);
+      }
     }
-    return true;
   }
-
-  // Access() will copy the map if it's shared (refcount > 1)
-  if (custom_properties_.Get() == nullptr) {
-    custom_properties_.Init();
-  }
-  auto *map = &custom_properties_.Access()->Value();
 
   // TODO(renzhongyue): Variables declared in CSS must use the normal
   // custom-property declaration syntax, not {{}}.
-  for (const auto &[name, value] : variables) {
+  for (const auto &[name, value] : holder->css_variables_map()) {
     CSSStringParser parser{value.c_str(), static_cast<uint32_t>(value.length()),
                            element_manager()->GetCSSParserConfigs()};
-    map->insert_or_assign(name, parser.ParseVariable());
+    CSSValue css_value = parser.ParseVariable();
+    custom_properties_->insert_or_assign(name, std::move(css_value));
   }
 
-  for (const auto &[name, value] : inline_variables) {
+  for (const auto &[name, value] : holder->GetCSSInlineVariables()) {
     CSSStringParser parser{value.c_str(), static_cast<uint32_t>(value.length()),
                            element_manager()->GetCSSParserConfigs()};
-    map->insert_or_assign(name, parser.ParseVariable());
+    CSSValue css_value = parser.ParseVariable();
+    custom_properties_->insert_or_assign(name, std::move(css_value));
   }
 
-  CSSValue::SubstituteAll(*map);
+  if (custom_properties_.has_value()) {
+    CSSValue::SubstituteAll(*custom_properties_);
+  }
   return true;
 }
 
-void FiberElement::MarkCustomPropertiesDirty() { custom_properties_ = nullptr; }
+void FiberElement::MarkCustomPropertiesDirty() { custom_properties_.reset(); }
 
 bool FiberElement::NeedPropagateInheritedDirtyFlag(bool force_propagate) {
   // When level order traversing is enabled, mark kDirtyPropagateInherited is
