@@ -128,17 +128,13 @@ action("copy_devtool_resources") {
   script = "../../../devtool/lynx_devtool/resources/arrange_resources.py"
   args = [
     rebase_path("$root_build_dir/devtool_resources"),
-    rebase_path("$root_build_dir/lynx_explorer/resources"),
+    rebase_path("$root_build_dir/lynx_explorer/js_assets"),
   ]
   inputs = [
     "$root_build_dir/devtool_resources/logbox.zip",
     "$root_build_dir/devtool_resources/lynx-error-parser.js",
-    "$root_build_dir/devtool_resources/switchPage/devtoolSwitch.lynx.bundle",
   ]
-  outputs = [
-    "$root_build_dir/lynx_explorer/resources/logbox/lynx-error-parser.js",
-    "$root_build_dir/lynx_explorer/resources/switchPage/devtoolSwitch.lynx.bundle",
-  ]
+  outputs = [ "$root_build_dir/lynx_explorer/js_assets/lynx-error-parser.js" ]
   deps = [ "../../../devtool/lynx_devtool:devtool_assets" ]
 }
 
