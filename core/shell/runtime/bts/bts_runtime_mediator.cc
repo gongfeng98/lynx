@@ -93,13 +93,12 @@ std::vector<shell::CacheDataOp> BTSRuntimeMediator::FetchUpdatedCardData() {
   return card_cached_data_mgr_->ObtainCardCacheData();
 }
 
-std::shared_ptr<runtime::js::Buffer> BTSRuntimeMediator::GetLynxJSAsset(
-    const std::string& name) {
-  auto buf = LoadJSSource(name);
-  if (!buf || buf->size() == 0) {
+std::string BTSRuntimeMediator::GetLynxJSAsset(const std::string& name) {
+  std::string resource = LoadJSSource(name);
+  if (resource.empty()) {
     LOGE("GetLynxJSAsset failed, the source_url is: " << name);
   }
-  return buf;
+  return resource;
 }
 
 runtime::js::JsContent BTSRuntimeMediator::GetJSContentFromExternal(
@@ -339,8 +338,7 @@ void BTSRuntimeMediator::ElementAnimateV2(const std::string& component_id,
   });
 }
 
-void BTSRuntimeMediator::OnCoreJSUpdated(
-    std::shared_ptr<runtime::js::Buffer> core_js) {
+void BTSRuntimeMediator::OnCoreJSUpdated(std::string core_js) {
   // TODO(huzhanbo.luc): support devtool
   if (runtime_standalone_mode_) {
     return;
@@ -607,11 +605,10 @@ event::DispatchEventResult BTSRuntimeMediator::DispatchMessageEvent(
   return {event::EventCancelType::kNotCanceled, true};
 }
 
-std::shared_ptr<runtime::js::Buffer> BTSRuntimeMediator::LoadJSSource(
-    const std::string& name) {
+std::string BTSRuntimeMediator::LoadJSSource(const std::string& name) {
   auto result = external_resource_loader_->LoadJSSource(name);
-  return std::make_shared<runtime::js::ByteBuffer>(result.size(),
-                                                   std::move(result));
+  std::string str(result.begin(), result.end());
+  return str;
 }
 
 std::shared_ptr<runtime::js::Buffer> BTSRuntimeMediator::LoadBytecode(
@@ -619,8 +616,7 @@ std::shared_ptr<runtime::js::Buffer> BTSRuntimeMediator::LoadBytecode(
   auto info = external_resource_loader_->LoadByteCode(url, 5 /* 5s timeout */);
   std::shared_ptr<runtime::js::Buffer> buffer;
   if (info.Success()) {
-    buffer = std::make_shared<runtime::js::ByteBuffer>(info.data.size(),
-                                                       std::move(info.data));
+    buffer = std::make_shared<runtime::js::ByteBuffer>(std::move(info.data));
   }
   return buffer;
 }
