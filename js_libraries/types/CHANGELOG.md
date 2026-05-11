@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 3.10.1
+- Introduce `<webview>`.
+
 ## 3.10.0
 - Introduce `<blur-view>`.
 - Add missing `lynx.loadScript<T>(sectionName, { bundleName }): T` declaration on `CommonLynx`. The platform API has existed since LynxSDK 3.7; this is a types-only fix.
