@@ -1,11 +1,5 @@
 # CHANGELOG
 
-## 0.0.8
-
-### Patch Changes
-
-- Add ElementInfo for `__CreateComponent` API.
-
 ## 0.0.7
 
 ### Patch Changes
