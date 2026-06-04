@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "base/include/no_destructor.h"
-#include "base/trace/native/trace_event.h"
 
 namespace lynx {
 namespace base {
@@ -73,11 +72,6 @@ void NotificationCallback::OnNotification(const std::string& tag,
                                           intptr_t data) {
   for (const auto& callback : callbacks_) {
     if (callback.first == tag) {
-      TRACE_EVENT("NotificationCallback", tag,
-                  [data](lynx::perfetto::EventContext ctx) {
-                    ctx.event()->add_debug_annotations("data",
-                                                       std::to_string(data));
-                  });
       callback.second(tag, data);
       return;
     }
