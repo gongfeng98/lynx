@@ -17,5 +17,6 @@ jobs:
       - name: Keep CocoaPods Token alive
         run: |
           cd $GITHUB_WORKSPACE/lynx
-          SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk bundle install --path .bundle
+          bundle config set path '.bundle'
+          SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk bundle install
           bundle exec pod trunk me --silent
