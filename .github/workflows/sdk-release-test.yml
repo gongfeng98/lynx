@@ -58,7 +58,7 @@ jobs:
     runs-on: macos-14
     env:
       LOCAL_POD_NAME: 'local_pod'
-      POD_VERSION: '0.0.1-alpha.1'
+      POD_VERSION: '4.3.0-alpha.999'
     steps:
       - name: Download Source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
